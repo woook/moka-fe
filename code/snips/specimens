@@ -1,5 +1,5 @@
 
-e.g. Blood (B) EDTA
+To display specimen type, e.g. Blood (B) EDTA
 
 Type: [dbo_SpecimenLinked].[SpecimenType] & " (" & [dbo_SpecimenLinked].[SpecimenTypeCode] & ") " & [dbo_SpecimenLinked].[ContainerType]
 
