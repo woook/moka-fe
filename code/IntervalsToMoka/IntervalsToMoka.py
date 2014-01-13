@@ -11,9 +11,11 @@ Pyhton version:
 most versions (untested)
 
 Usage:
-    IntervalsToMoka inputfilename outputfilename
-    Input file should be in F:\Moka\Files\Analysis\IntervalsToMoka\IntervalBasedReports
-    Output will be generated in F:\Moka\Files\Analysis\IntervalsToMoka\IntervalsForMoka
+    IntervalsToMoka RunNumber
+    This will search for an input file called RunNumber + _IntervalBasedReport.xls
+    in F:\Moka\Files\Analysis\Year\Run\
+    This will output a file called RunNumber + _IFM.csv
+    in F:\Moka\Files\Analysis\Year\Run\
 """
 
 import pandas as pd
@@ -83,7 +85,7 @@ cursor.close
 #Generate a data frame where the headers for the columns start on line 17
 #argv[1] is the name of the interval based report file which is supplied as an argument when calling the script
 #test version: df = pd.read_table('F:\\Moka\\Files\\Analysis\\IntervalsToMoka\\IntervalBasedReports\\130220_IntervalBasedReport.xls', header= 17)
-df = pd.read_table('F:\\Moka\\Files\\Analysis\\IntervalsToMoka\\IntervalBasedReports\\' + sys.argv[1], header= 17)
+df = pd.read_table('F:\\Moka\\Files\\Analysis\\20' + sys.argv[1][0] + sys.argv[1][1] + '\\' + sys.argv[1] + '\\' + sys.argv[1] + '_IntervalBasedReport.xls', header= 17)
 chrom = pd.read_csv('F:\\Moka\\Files\\Analysis\\IntervalsToMoka\\temp\\chromosomelookup.csv', header= 0)
 #print df[:5]
 #print df[:9]
@@ -226,4 +228,4 @@ df4 = pd.DataFrame(zip(InternalPatientID, DNALabellingID, Ratio, Chr19, Band19, 
 "Start19", "Stop19"])
 
 #argv[2] is the output file name to be supplied by user
-df4.to_csv(path_or_buf='F:\\Moka\\Files\\Analysis\\IntervalsToMoka\\IntervalsForMoka\\' + sys.argv[2], sep=',')
+df4.to_csv(path_or_buf='F:\\Moka\\Files\\Analysis\\20' + sys.argv[1][0] + sys.argv[1][1] + '\\' + sys.argv[1] + '\\' + sys.argv[1] + '_IFM.csv', sep=',')
