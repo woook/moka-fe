@@ -59,11 +59,11 @@ cursor = cnxn.cursor()
 #pull data from moka and write to local csv files
 SQL = 'SELECT * FROM dbo.v_Chromosome'
 SQLHybPatient = 'SELECT * FROM dbo.v_DNALabellingHybPatients'
-SQLFinalTable = 'SELECT * FROM dbo.ArrayOligoPreliminaryResults'
+##SQLFinalTable = 'SELECT * FROM dbo.ArrayOligoPreliminaryResults'
 
 rows = cursor.execute(SQL).fetchall()
 rowsHyb = cursor.execute(SQLHybPatient).fetchall()
-rowsFinal = cursor.execute(SQLFinalTable).fetchall()
+##rowsFinal = cursor.execute(SQLFinalTable).fetchall()
 
 with open("C:\\Array\\Software\\IntervalsToMoka\\temp\\chromosomelookup.csv", 'wb') as f:
     rows = [[unicode(x) for x in row] for row in rows]
