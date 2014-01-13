@@ -1,10 +1,10 @@
 """
 Prerequisites:
     python & pyodbc
-    C:\Array\Software\IntervalsToMoka
-    C:\Array\Software\IntervalsToMoka\IntervalBasedReports
-    C:\Array\Software\IntervalsToMoka\IntervalsForMoka
-    C:\Array\Software\IntervalsToMoka\temp
+    F:\Moka\Files\Analysis\IntervalsToMoka
+    F:\Moka\Files\Analysis\IntervalsToMoka\IntervalBasedReports
+    F:\Moka\Files\Analysis\IntervalsToMoka\IntervalsForMoka
+    F:\Moka\Files\Analysis\IntervalsToMoka\temp
 
 Pyhton version:
     This script was created using python 3.3 but will probably run on
@@ -12,8 +12,8 @@ most versions (untested)
 
 Usage:
     IntervalsToMoka inputfilename outputfilename
-    Input file should be in C:\Array\Software\IntervalsToMoka\IntervalBasedReports
-    Output will be generated in C:\Array\Software\IntervalsToMoka\IntervalsForMoka
+    Input file should be in F:\Moka\Files\Analysis\IntervalsToMoka\IntervalBasedReports
+    Output will be generated in F:\Moka\Files\Analysis\IntervalsToMoka\IntervalsForMoka
 """
 
 import pandas as pd
@@ -65,12 +65,12 @@ SQLHybPatient = 'SELECT * FROM dbo.v_DNALabellingHybPatients'
 rows = cursor.execute(SQL).fetchall()
 rowsHyb = cursor.execute(SQLHybPatient).fetchall()
 
-with open("C:\\Array\\Software\\IntervalsToMoka\\temp\\chromosomelookup.csv", 'wb') as f:
+with open("F:\\Moka\\Files\\Analysis\\IntervalsToMoka\\temp\\chromosomelookup.csv", 'wb') as f:
     rows = [[unicode(x) for x in row] for row in rows]
     writer= UnicodeWriter(f)
     writer.writerow(["ChrID", "Chr"])
     writer.writerows(rows)
-with open("C:\\Array\\Software\\IntervalsToMoka\\temp\\DNALabellingHybPatient.csv", 'wb') as f:
+with open("F:\\Moka\\Files\\Analysis\\IntervalsToMoka\\temp\\DNALabellingHybPatient.csv", 'wb') as f:
     rowsHyb = [[unicode(x) for x in row] for row in rowsHyb]
     writer= UnicodeWriter(f)
     writer.writerow(["DNALabellingID", "HybID", "Cy3InternalPatientID", "Cy5InternalPatientID"])
@@ -82,9 +82,9 @@ cursor.close
 
 #Generate a data frame where the headers for the columns start on line 17
 #argv[1] is the name of the interval based report file which is supplied as an argument when calling the script
-#test version: df = pd.read_table('C:\\Array\\Software\\IntervalsToMoka\\IntervalBasedReports\\130220_IntervalBasedReport.xls', header= 17)
-df = pd.read_table('C:\\Array\\Software\\IntervalsToMoka\\IntervalBasedReports\\' + sys.argv[1], header= 17)
-chrom = pd.read_csv('C:\\Array\\Software\\IntervalsToMoka\\temp\\chromosomelookup.csv', header= 0)
+#test version: df = pd.read_table('F:\\Moka\\Files\\Analysis\\IntervalsToMoka\\IntervalBasedReports\\130220_IntervalBasedReport.xls', header= 17)
+df = pd.read_table('F:\\Moka\\Files\\Analysis\\IntervalsToMoka\\IntervalBasedReports\\' + sys.argv[1], header= 17)
+chrom = pd.read_csv('F:\\Moka\\Files\\Analysis\\IntervalsToMoka\\temp\\chromosomelookup.csv', header= 0)
 #print df[:5]
 #print df[:9]
 
@@ -176,10 +176,10 @@ print df3.ChrNo
 df3["Band"] = (df3.Chr + df3.Cytoband)
 
 #Write the df3 dataframe to file as a csv file
-df3.to_csv(path_or_buf='C:\\Array\\Software\\IntervalsToMoka\\temp\\test1.csv', sep=',')
+df3.to_csv(path_or_buf='F:\\Moka\\Files\\Analysis\\IntervalsToMoka\\temp\\test1.csv', sep=',')
 
-dfcy = pd.read_csv('C:\\Array\\Software\\IntervalsToMoka\\temp\\DNALabellingHybPatient.csv', header= 0)
-df3 = pd.read_csv('C:\\Array\\Software\\IntervalsToMoka\\temp\\test1.csv', header= 0)
+dfcy = pd.read_csv('F:\\Moka\\Files\\Analysis\\IntervalsToMoka\\temp\\DNALabellingHybPatient.csv', header= 0)
+df3 = pd.read_csv('F:\\Moka\\Files\\Analysis\\IntervalsToMoka\\temp\\test1.csv', header= 0)
 
 InternalPatientID=[]
 DNALabellingID=[]
@@ -226,4 +226,4 @@ df4 = pd.DataFrame(zip(InternalPatientID, DNALabellingID, Ratio, Chr19, Band19, 
 "Start19", "Stop19"])
 
 #argv[2] is the output file name to be supplied by user
-df4.to_csv(path_or_buf='C:\\Array\\Software\\IntervalsToMoka\\IntervalsForMoka\\' + sys.argv[2], sep=',')
+df4.to_csv(path_or_buf='F:\\Moka\\Files\\Analysis\\IntervalsToMoka\\IntervalsForMoka\\' + sys.argv[2], sep=',')
