@@ -52,18 +52,18 @@ class UnicodeWriter:
             self.writerow(row)
 
 #Make connection to database on the GSTTV Moka server
-#cnxn = pyodbc.connect("DRIVER={SQL Server}; SERVER=GSTTV-MOKA; DATABASE=devdatabase;")
+#for testing on devdatabase cnxn = pyodbc.connect("DRIVER={SQL Server};
+#SERVER=GSTTV-MOKA; DATABASE=devdatabase;")
 cnxn = pyodbc.connect("DRIVER={SQL Server}; SERVER=GSTTV-MOKA; DATABASE=mokadata;")
 cursor = cnxn.cursor()
 
-#pull data from moka and write to local csv files
+#pull chromosome lookup table and DNALabellingID-HybID-Cy3PatientID-Cy5PatientID
+#table from moka and write to local csv files
 SQL = 'SELECT * FROM dbo.v_Chromosome'
 SQLHybPatient = 'SELECT * FROM dbo.v_DNALabellingHybPatients'
-##SQLFinalTable = 'SELECT * FROM dbo.ArrayOligoPreliminaryResults'
 
 rows = cursor.execute(SQL).fetchall()
 rowsHyb = cursor.execute(SQLHybPatient).fetchall()
-##rowsFinal = cursor.execute(SQLFinalTable).fetchall()
 
 with open("C:\\Array\\Software\\IntervalsToMoka\\temp\\chromosomelookup.csv", 'wb') as f:
     rows = [[unicode(x) for x in row] for row in rows]
@@ -75,11 +75,6 @@ with open("C:\\Array\\Software\\IntervalsToMoka\\temp\\DNALabellingHybPatient.cs
     writer= UnicodeWriter(f)
     writer.writerow(["DNALabellingID", "HybID", "Cy3InternalPatientID", "Cy5InternalPatientID"])
     writer.writerows(rowsHyb)
-##with open("C:\\Array\\Software\\IntervalsToMoka\\temp\\FinalTable.csv", 'wb') as f:
-##    rowsFinal = [[unicode(x) for x in row] for row in rowsFinal]
-##    writer= UnicodeWriter(f)
-##    writer.writerow(["OligoResultID", "InternalPatientID", "HybID", "DNALabellingID", "ChrID19", "Band19", "Start19", "Stop19"])
-##    writer.writerows(rowsFinal)
 
 cnxn.commit()
 
@@ -87,7 +82,7 @@ cursor.close
 
 #Generate a data frame where the headers for the columns start on line 17
 #argv[1] is the name of the interval based report file which is supplied as an argument when calling the script
-#test veriosn: df = pd.read_table('C:\\Array\\Software\\IntervalsToMoka\\IntervalBasedReports\\130220_IntervalBasedReport.xls', header= 17)
+#test version: df = pd.read_table('C:\\Array\\Software\\IntervalsToMoka\\IntervalBasedReports\\130220_IntervalBasedReport.xls', header= 17)
 df = pd.read_table('C:\\Array\\Software\\IntervalsToMoka\\IntervalBasedReports\\' + sys.argv[1], header= 17)
 chrom = pd.read_csv('C:\\Array\\Software\\IntervalsToMoka\\temp\\chromosomelookup.csv', header= 0)
 #print df[:5]
@@ -136,8 +131,6 @@ for row in match:
 
 "print AbNo"
 
-
-
 #Add the column entitled AbNo to the df2 dataframe
 df2["AbNO"] = AbNo
 
@@ -179,7 +172,7 @@ df3["Chr"] = ChrNew
 
 print df3.ChrNo
 
-#Generate a new column called Band which involces merging ChrNo and Cytoband together
+#Generate a new column called Band which involves merging ChrNo and Cytoband together
 df3["Band"] = (df3.Chr + df3.Cytoband)
 
 #Write the df3 dataframe to file as a csv file
