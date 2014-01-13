@@ -1,10 +1,9 @@
 """
 Prerequisites:
     python & pyodbc
+
+Script location:
     F:\Moka\Files\Analysis\IntervalsToMoka
-    F:\Moka\Files\Analysis\IntervalsToMoka\IntervalBasedReports
-    F:\Moka\Files\Analysis\IntervalsToMoka\IntervalsForMoka
-    F:\Moka\Files\Analysis\IntervalsToMoka\temp
 
 Pyhton version:
     This script was created using python 3.3 but will probably run on
