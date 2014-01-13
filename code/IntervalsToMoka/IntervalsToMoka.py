@@ -84,7 +84,8 @@ cursor.close
 #Generate a data frame where the headers for the columns start on line 17
 #argv[1] is the name of the interval based report file which is supplied as an argument when calling the script
 #test version: df = pd.read_table('F:\\Moka\\Files\\Analysis\\IntervalsToMoka\\IntervalBasedReports\\130220_IntervalBasedReport.xls', header= 17)
-df = pd.read_table('F:\\Moka\\Files\\Analysis\\20' + sys.argv[1][0] + sys.argv[1][1] + '\\' + sys.argv[1] + '\\' + sys.argv[1] + '_IntervalBasedReport.xls', header= 17)
+##df = pd.read_table('F:\\Moka\\Files\\Analysis\\20' + sys.argv[1][0] + sys.argv[1][1] + '\\' + sys.argv[1] + '\\' + sys.argv[1] + '_IntervalBasedReport.xls', header= 17)
+df = pd.read_table('F:\\Moka\\Files\\Analysis\\20' + sys.argv[1][0] + sys.argv[1][1] + '\\' + sys.argv[1] + '\\' + sys.argv[1] + '_IntervalBasedReport.xls', header= 17, names=['AberrationNo','Chr','Cytoband','Start','Stop','Probes','Amplification','Deletion','pval','Gene Names'])
 chrom = pd.read_csv('F:\\Moka\\Files\\Analysis\\IntervalsToMoka\\temp\\chromosomelookup.csv', header= 0)
 #print df[:5]
 #print df[:9]
@@ -189,6 +190,7 @@ Band19=[]
 Start19=[]
 Stop19=[]
 Ratio=[]
+Probes=[]
 
 rowcount=0
 
@@ -198,13 +200,14 @@ for part in df3.AbNO:
 	innerrow=0
 	for row in dfcy.HybID:
 		if row == part:
-			InternalPatientID.extend([dfcy.Cy3InternalPatientID[innerrow], dfcy.Cy5InternalPatientID[innerrow]])
-			DNALabellingID.extend([dfcy.DNALabellingID[innerrow]]*2)
-			Ratio.extend([-df3.AmpDel[rowcount], df3.AmpDel[rowcount]])
-			Chr19.extend([df3.ChrNo[rowcount]]*2)
-			Band19.extend([df3.Band[rowcount]]*2)
-			Start19.extend([df3.Start[rowcount]]*2)
-			Stop19.extend([df3.Stop[rowcount]]*2)
+                        InternalPatientID.extend([dfcy.Cy3InternalPatientID[innerrow], dfcy.Cy5InternalPatientID[innerrow]])
+                        DNALabellingID.extend([dfcy.DNALabellingID[innerrow]]*2)
+                        Ratio.extend([-df3.AmpDel[rowcount], df3.AmpDel[rowcount]])
+                        Chr19.extend([df3.ChrNo[rowcount]]*2)
+                        Band19.extend([df3.Band[rowcount]]*2)
+                        Start19.extend([df3.Start[rowcount]]*2)
+                        Stop19.extend([df3.Stop[rowcount]]*2)
+                        Probes.extend([df3.Probes[rowcount]]*2)
 
 			innerrow += 1
 		else:
@@ -219,12 +222,15 @@ Chr19 = pd.Series(Chr19)
 Band19 = pd.Series(Band19)
 Start19 = pd.Series(Start19)
 Stop19 = pd.Series(Stop19)
+Probes = pd.Series(Probes)
 
 print InternalPatientID
 
 #Generate a dataframe from the columns series generated in the previous step
-df4 = pd.DataFrame(zip(InternalPatientID, DNALabellingID, Ratio, Chr19, Band19, Start19, Stop19),  columns = ["InternalPatientID", "DNALabellingID", "Ratio", "Chr19", "Band19",
-"Start19", "Stop19"])
+##df4 = pd.DataFrame(zip(InternalPatientID, DNALabellingID, Ratio, Chr19, Band19, Start19, Stop19, Probes),  columns = ["InternalPatientID", "DNALabellingID", "Ratio", "Chr19", "Band19",
+##"Start19", "Stop19"])
+df4 = pd.DataFrame(zip(InternalPatientID, DNALabellingID, Ratio, Chr19, Band19, Start19, Stop19, Probes),  columns = ["InternalPatientID", "DNALabellingID", "Ratio", "Chr19", "Band19",
+"Start19", "Stop19", "Probes"])
 
 #argv[2] is the output file name to be supplied by user
 df4.to_csv(path_or_buf='F:\\Moka\\Files\\Analysis\\20' + sys.argv[1][0] + sys.argv[1][1] + '\\' + sys.argv[1] + '\\' + sys.argv[1] + '_IFM.csv', sep=',')
