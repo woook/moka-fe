@@ -197,22 +197,22 @@ rowcount=0
 #print dfcy.Cy3InternalPatientID[2]
 #For each row of df3 iterate through each row of dfcy and if the Aberration Numbers match populate the following columns
 for part in df3.AbNO:
-	innerrow=0
-	for row in dfcy.HybID:
-		if row == part:
-                        InternalPatientID.extend([dfcy.Cy3InternalPatientID[innerrow], dfcy.Cy5InternalPatientID[innerrow]])
-                        DNALabellingID.extend([dfcy.DNALabellingID[innerrow]]*2)
-                        Ratio.extend([-df3.AmpDel[rowcount], df3.AmpDel[rowcount]])
-                        Chr19.extend([df3.ChrNo[rowcount]]*2)
-                        Band19.extend([df3.Band[rowcount]]*2)
-                        Start19.extend([df3.Start[rowcount]]*2)
-                        Stop19.extend([df3.Stop[rowcount]]*2)
-                        Probes.extend([df3.Probes[rowcount]]*2)
+    innerrow=0
+    for row in dfcy.HybID:
+        if row == part:
+            InternalPatientID.extend([dfcy.Cy3InternalPatientID[innerrow], dfcy.Cy5InternalPatientID[innerrow]])
+            DNALabellingID.extend([dfcy.DNALabellingID[innerrow]]*2)
+            Ratio.extend([-df3.AmpDel[rowcount], df3.AmpDel[rowcount]])
+            Chr19.extend([df3.ChrNo[rowcount]]*2)
+            Band19.extend([df3.Band[rowcount]]*2)
+            Start19.extend([df3.Start[rowcount]]*2)
+            Stop19.extend([df3.Stop[rowcount]]*2)
+            Probes.extend([df3.Probes[rowcount]]*2)
 
-			innerrow += 1
-		else:
-			innerrow += 1
-	rowcount += 1
+            innerrow += 1
+        else:
+            innerrow += 1
+    rowcount += 1
 
 #Transform column lists into column series
 InternalPatientID = pd.Series(InternalPatientID)
