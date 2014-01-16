@@ -1,13 +1,23 @@
 """
-Prerequisites:
-    python & pyodbc
+Prerequisites & installation:
+    python 2.7.5 (python-2.7.5.msi)
+    pyodbc 3.0.7 (pyodbc-3.0.7.win32-py2.7.exe)
+    pandas 12 (pandas-0.12.0.win32-py2.7.exe)
+    numpty 1.8.0 (numpy-1.8.0-win32-superpack-python2.7.exe)
+    dateutil 1.5 (copy the dateutil folder into the python directory)
+
+    All packages are in F:\Moka\Files\Software\IntervalsToMoka\
+    Install python into C:\Array\Software\python27
+    Then install pyodbc, pandas and numpty
+    Then copy the dateutil folder
+    F:\Moka\Files\Software\IntervalsToMoka\python-dateutil-1.5\dateutil\
+    into the python27 directory
 
 Script location:
     F:\Moka\Files\Analysis\IntervalsToMoka
 
 Pyhton version:
-    This script was created using python 3.3 but will probably run on
-most versions (untested)
+    This script was created using python 2.7.5
 
 Usage:
     IntervalsToMoka RunNumber
