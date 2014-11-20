@@ -148,158 +148,159 @@ Private Sub Checked_AfterUpdate()
         CHE = Me.Checked.Column(1)
         GSI = Me.GWSpecID
     
-        ''email detailing test requests
-        If Me.TickPCR = True Or Me.TickSex = True Or Me.TickArray = True Or Me.TickArrayTargeted Then
-            
-            If Me.TickPCR = True And Me.TickSex = True And Me.TickArray = True Then
-                subjectline = "Prenatal test request for " & LDS & " " & STL
-                emailbody = "<font face='arial' size='3'>" _
-                & "Prenatal test request for:<br /><br />" _
-                & "<b>QF-PCR trisomies, prenatal</b><br />" _
-                & "<b>QF-PCR sex test</b><br />" _
-                & "<b>Prenatal aCGH</b><br /><br />" _
-                & "Specimen no: <b>" & LDS & "</b>, type " & STL & "<br /><br />" _
-                & "Name-DOB-Sex: <b>" & DBN & "</b><br /><br />" _
-                & "Any comments: " & CM & "<br /><br /><br />" _
-                & "Duty scientist: " & SIG & "<br />" _
-                & "Checked by: " & CHE & "</font>"
-                
-            ElseIf Me.TickPCR = True And Me.TickSex = True And Me.TickArrayTargeted = True Then
-                subjectline = "Prenatal test request for " & LDS & " " & STL
-                emailbody = "<font face='arial' size='3'>" _
-                & "Prenatal test request for:<br /><br />" _
-                & "<b>QF-PCR trisomies, prenatal</b><br />" _
-                & "<b>QF-PCR sex test</b><br />" _
-                & "<b><font color='blue'>Targeted</font> Prenatal aCGH</b><br /><br />" _
-                & "Specimen no: <b>" & LDS & "</b>, type " & STL & "<br /><br />" _
-                & "Name-DOB-Sex: <b>" & DBN & "</b><br /><br />" _
-                & "Any comments: " & CM & "<br /><br /><br />" _
-                & "Duty scientist: " & SIG & "<br />" _
-                & "Checked by: " & CHE & "</font>"
-                
-            ElseIf Me.TickPCR = True And Me.TickSex = True And Me.TickArray = False And Me.TickArrayTargeted = False Then
-                subjectline = "Prenatal test request for " & LDS & " " & STL
-                emailbody = "<font face='arial' size='3'>" _
-                & "Prenatal test request for:<br /><br />" _
-                & "<b>QF-PCR trisomies, prenatal</b><br />" _
-                & "<b>QF-PCR sex test</b><br /><br />" _
-                & "Specimen no: <b>" & LDS & "</b>, type " & STL & "<br /><br />" _
-                & "Name-dob-sex: <b>" & DBN & "</b><br /><br />" _
-                & "Any comments: " & CM & "<br /><br /><br />" _
-                & "Duty scientist: " & SIG & "<br />" _
-                & "Checked by: " & CHE & "</font>"
-            
-            ElseIf Me.TickPCR = False And Me.TickSex = True And Me.TickArray = True Then
-                subjectline = "Prenatal test request for " & LDS & " " & STL
-                emailbody = "<font face='arial' size='3'>" _
-                & "Prenatal test request for:<br /><br />" _
-                & "<b>QF-PCR sex test</b><br />" _
-                & "<b>Prenatal aCGH</b><br /><br />" _
-                & "Specimen no: <b>" & LDS & "</b>, type " & STL & "<br /><br />" _
-                & "Name-dob-sex: <b>" & DBN & "</b><br /><br />" _
-                & "Any comments: " & CM & "<br /><br /><br />" _
-                & "Duty scientist: " & SIG & "<br />" _
-                & "Checked by: " & CHE & "</font>"
-            
-            ElseIf Me.TickPCR = False And Me.TickSex = True And Me.TickArrayTargeted = True Then
-                subjectline = "Prenatal test request for " & LDS & " " & STL
-                emailbody = "<font face='arial' size='3'>" _
-                & "Prenatal test request for:<br /><br />" _
-                & "<b>QF-PCR sex test</b><br />" _
-                & "<b><font color='blue'>Targeted</font> Prenatal aCGH</b><br /><br />" _
-                & "Specimen no: <b>" & LDS & "</b>, type " & STL & "<br /><br />" _
-                & "Name-dob-sex: <b>" & DBN & "</b><br /><br />" _
-                & "Any comments: " & CM & "<br /><br /><br />" _
-                & "Duty scientist: " & SIG & "<br />" _
-                & "Checked by: " & CHE & "</font>"
-            
-            ElseIf Me.TickPCR = True And Me.TickSex = False And Me.TickArray = True Then
-                subjectline = "Prenatal test request for " & LDS & " " & STL
-                emailbody = "<font face='arial' size='3'>" _
-                & "Prenatal test request for:<br /><br />" _
-                & "<b>QF-PCR trisomies, prenatal</b><br />" _
-                & "<b>Prenatal aCGH</b><br /><br />" _
-                & "Specimen no: <b>" & LDS & "</b>, type " & STL & "<br /><br />" _
-                & "Name-dob-sex: <b>" & DBN & "</b><br /><br />" _
-                & "Any comments: " & CM & "<br /><br /><br />" _
-                & "Duty scientist: " & SIG & "<br />" _
-                & "Checked by: " & CHE & "</font>"
-                
-            ElseIf Me.TickPCR = True And Me.TickSex = False And Me.TickArrayTargeted = True Then
-                subjectline = "Prenatal test request for " & LDS & " " & STL
-                emailbody = "<font face='arial' size='3'>" _
-                & "Prenatal test request for:<br /><br />" _
-                & "<b>QF-PCR trisomies, prenatal</b><br />" _
-                & "<b><font color='blue'>Targeted</font> Prenatal aCGH</b><br /><br />" _
-                & "Specimen no: <b>" & LDS & "</b>, type " & STL & "<br /><br />" _
-                & "Name-dob-sex: <b>" & DBN & "</b><br /><br />" _
-                & "Any comments: " & CM & "<br /><br /><br />" _
-                & "Duty scientist: " & SIG & "<br />" _
-                & "Checked by: " & CHE & "</font>"
-            
-            ElseIf Me.TickPCR = True And Me.TickSex = False And Me.TickArray = False And Me.TickArrayTargeted = False Then
-                subjectline = "Prenatal test request for " & LDS & " " & STL
-                emailbody = "<font face='arial' size='3'>" _
-                & "Prenatal test request for:<br /><br />" _
-                & "<b>QF-PCR trisomies, prenatal</b><br /><br />" _
-                & "Specimen no: <b>" & LDS & "</b>, type " & STL & "<br /><br />" _
-                & "Name-dob-sex: <b>" & DBN & "</b><br /><br />" _
-                & "Any comments: " & CM & "<br /><br /><br />" _
-                & "Duty scientist: " & SIG & "<br />" _
-                & "Checked by: " & CHE & "</font>"
-            
-            ElseIf Me.TickPCR = False And Me.TickSex = True And Me.TickArray = False And Me.TickArrayTargeted = False Then
-                subjectline = "Prenatal test request for " & LDS & " " & STL
-                emailbody = "<font face='arial' size='3'>" _
-                & "Prenatal test request for:<br /><br />" _
-                & "<b>QF-PCR sex test</b><br /><br />" _
-                & "Specimen no: <b>" & LDS & "</b>, type " & STL & "<br /><br />" _
-                & "Name-dob-sex: <b>" & DBN & "</b><br /><br />" _
-                & "Any comments: " & CM & "<br /><br /><br />" _
-                & "Duty scientist: " & SIG & "<br />" _
-                & "Checked by: " & CHE & "</font>"
-                
-            ElseIf Me.TickPCR = False And Me.TickSex = False And Me.TickArray = True Then
-                subjectline = "Prenatal test request for " & LDS & " " & STL
-                emailbody = "<font face='arial' size='3'>" _
-                & "Prenatal test request for:<br /><br />" _
-                & "<b>Prenatal aCGH</b><br /><br />" _
-                & "Specimen no: <b>" & LDS & "</b>, type " & STL & "<br /><br />" _
-                & "Name-dob-sex: <b>" & DBN & "</b><br /><br />" _
-                & "Any comments: " & CM & "<br /><br /><br />" _
-                & "Duty scientist: " & SIG & "<br />" _
-                & "Checked by: " & CHE & "</font>"
-                
-            ElseIf Me.TickPCR = False And Me.TickSex = False And Me.TickArrayTargeted = True Then
-                subjectline = "Prenatal test request for " & LDS & " " & STL
-                emailbody = "<font face='arial' size='3'>" _
-                & "Prenatal test request for:<br /><br />" _
-                & "<b><font color='blue'>Targeted</font> Prenatal aCGH</b><br /><br />" _
-                & "Specimen no: <b>" & LDS & "</b>, type " & STL & "<br /><br />" _
-                & "Name-dob-sex: <b>" & DBN & "</b><br /><br />" _
-                & "Any comments: " & CM & "<br /><br /><br />" _
-                & "Duty scientist: " & SIG & "<br />" _
-                & "Checked by: " & CHE & "</font>"
-                
-                End If
-        
-            Set iMsg = New CDO.Message
-            With iMsg
-            Set .Configuration = iCfg
-            .From = """Moka Alerts"" <moka.alerts@gstt.nhs.uk>"
-            .Sender = "moka.alerts@gstt.nhs.uk"
-            .ReplyTo = "Prenatal-array@gstt.nhs.uk"
-            .Subject = subjectline
-            .HTMLBody = emailbody
-            .To = emailto
-            .BCC = "moka.alerts@gstt.nhs.uk"
-            .Send
-            End With
-        
-            ''Tell user that email has been sent
-            MsgBox "Moka alert sent (will take a few minutes to arrive)", , "Don't be a dummy"
-        
-            End If
+'Disabled 141120 as this email is no longer required
+'        ''email detailing test requests
+'        If Me.TickPCR = True Or Me.TickSex = True Or Me.TickArray = True Or Me.TickArrayTargeted Then
+'
+'            If Me.TickPCR = True And Me.TickSex = True And Me.TickArray = True Then
+'                subjectline = "Prenatal test request for " & LDS & " " & STL
+'                emailbody = "<font face='arial' size='3'>" _
+'                & "Prenatal test request for:<br /><br />" _
+'                & "<b>QF-PCR trisomies, prenatal</b><br />" _
+'                & "<b>QF-PCR sex test</b><br />" _
+'                & "<b>Prenatal aCGH</b><br /><br />" _
+'                & "Specimen no: <b>" & LDS & "</b>, type " & STL & "<br /><br />" _
+'                & "Name-DOB-Sex: <b>" & DBN & "</b><br /><br />" _
+'                & "Any comments: " & CM & "<br /><br /><br />" _
+'                & "Duty scientist: " & SIG & "<br />" _
+'                & "Checked by: " & CHE & "</font>"
+'
+'            ElseIf Me.TickPCR = True And Me.TickSex = True And Me.TickArrayTargeted = True Then
+'                subjectline = "Prenatal test request for " & LDS & " " & STL
+'                emailbody = "<font face='arial' size='3'>" _
+'                & "Prenatal test request for:<br /><br />" _
+'                & "<b>QF-PCR trisomies, prenatal</b><br />" _
+'                & "<b>QF-PCR sex test</b><br />" _
+'                & "<b><font color='blue'>Targeted</font> Prenatal aCGH</b><br /><br />" _
+'                & "Specimen no: <b>" & LDS & "</b>, type " & STL & "<br /><br />" _
+'                & "Name-DOB-Sex: <b>" & DBN & "</b><br /><br />" _
+'                & "Any comments: " & CM & "<br /><br /><br />" _
+'                & "Duty scientist: " & SIG & "<br />" _
+'                & "Checked by: " & CHE & "</font>"
+'
+'            ElseIf Me.TickPCR = True And Me.TickSex = True And Me.TickArray = False And Me.TickArrayTargeted = False Then
+'                subjectline = "Prenatal test request for " & LDS & " " & STL
+'                emailbody = "<font face='arial' size='3'>" _
+'                & "Prenatal test request for:<br /><br />" _
+'                & "<b>QF-PCR trisomies, prenatal</b><br />" _
+'                & "<b>QF-PCR sex test</b><br /><br />" _
+'                & "Specimen no: <b>" & LDS & "</b>, type " & STL & "<br /><br />" _
+'                & "Name-dob-sex: <b>" & DBN & "</b><br /><br />" _
+'                & "Any comments: " & CM & "<br /><br /><br />" _
+'                & "Duty scientist: " & SIG & "<br />" _
+'                & "Checked by: " & CHE & "</font>"
+'
+'            ElseIf Me.TickPCR = False And Me.TickSex = True And Me.TickArray = True Then
+'                subjectline = "Prenatal test request for " & LDS & " " & STL
+'                emailbody = "<font face='arial' size='3'>" _
+'                & "Prenatal test request for:<br /><br />" _
+'                & "<b>QF-PCR sex test</b><br />" _
+'                & "<b>Prenatal aCGH</b><br /><br />" _
+'                & "Specimen no: <b>" & LDS & "</b>, type " & STL & "<br /><br />" _
+'                & "Name-dob-sex: <b>" & DBN & "</b><br /><br />" _
+'                & "Any comments: " & CM & "<br /><br /><br />" _
+'                & "Duty scientist: " & SIG & "<br />" _
+'                & "Checked by: " & CHE & "</font>"
+'
+'            ElseIf Me.TickPCR = False And Me.TickSex = True And Me.TickArrayTargeted = True Then
+'                subjectline = "Prenatal test request for " & LDS & " " & STL
+'                emailbody = "<font face='arial' size='3'>" _
+'                & "Prenatal test request for:<br /><br />" _
+'                & "<b>QF-PCR sex test</b><br />" _
+'                & "<b><font color='blue'>Targeted</font> Prenatal aCGH</b><br /><br />" _
+'                & "Specimen no: <b>" & LDS & "</b>, type " & STL & "<br /><br />" _
+'                & "Name-dob-sex: <b>" & DBN & "</b><br /><br />" _
+'                & "Any comments: " & CM & "<br /><br /><br />" _
+'                & "Duty scientist: " & SIG & "<br />" _
+'                & "Checked by: " & CHE & "</font>"
+'
+'            ElseIf Me.TickPCR = True And Me.TickSex = False And Me.TickArray = True Then
+'                subjectline = "Prenatal test request for " & LDS & " " & STL
+'                emailbody = "<font face='arial' size='3'>" _
+'                & "Prenatal test request for:<br /><br />" _
+'                & "<b>QF-PCR trisomies, prenatal</b><br />" _
+'                & "<b>Prenatal aCGH</b><br /><br />" _
+'                & "Specimen no: <b>" & LDS & "</b>, type " & STL & "<br /><br />" _
+'                & "Name-dob-sex: <b>" & DBN & "</b><br /><br />" _
+'                & "Any comments: " & CM & "<br /><br /><br />" _
+'                & "Duty scientist: " & SIG & "<br />" _
+'                & "Checked by: " & CHE & "</font>"
+'
+'            ElseIf Me.TickPCR = True And Me.TickSex = False And Me.TickArrayTargeted = True Then
+'                subjectline = "Prenatal test request for " & LDS & " " & STL
+'                emailbody = "<font face='arial' size='3'>" _
+'                & "Prenatal test request for:<br /><br />" _
+'                & "<b>QF-PCR trisomies, prenatal</b><br />" _
+'                & "<b><font color='blue'>Targeted</font> Prenatal aCGH</b><br /><br />" _
+'                & "Specimen no: <b>" & LDS & "</b>, type " & STL & "<br /><br />" _
+'                & "Name-dob-sex: <b>" & DBN & "</b><br /><br />" _
+'                & "Any comments: " & CM & "<br /><br /><br />" _
+'                & "Duty scientist: " & SIG & "<br />" _
+'                & "Checked by: " & CHE & "</font>"
+'
+'            ElseIf Me.TickPCR = True And Me.TickSex = False And Me.TickArray = False And Me.TickArrayTargeted = False Then
+'                subjectline = "Prenatal test request for " & LDS & " " & STL
+'                emailbody = "<font face='arial' size='3'>" _
+'                & "Prenatal test request for:<br /><br />" _
+'                & "<b>QF-PCR trisomies, prenatal</b><br /><br />" _
+'                & "Specimen no: <b>" & LDS & "</b>, type " & STL & "<br /><br />" _
+'                & "Name-dob-sex: <b>" & DBN & "</b><br /><br />" _
+'                & "Any comments: " & CM & "<br /><br /><br />" _
+'                & "Duty scientist: " & SIG & "<br />" _
+'                & "Checked by: " & CHE & "</font>"
+'
+'            ElseIf Me.TickPCR = False And Me.TickSex = True And Me.TickArray = False And Me.TickArrayTargeted = False Then
+'                subjectline = "Prenatal test request for " & LDS & " " & STL
+'                emailbody = "<font face='arial' size='3'>" _
+'                & "Prenatal test request for:<br /><br />" _
+'                & "<b>QF-PCR sex test</b><br /><br />" _
+'                & "Specimen no: <b>" & LDS & "</b>, type " & STL & "<br /><br />" _
+'                & "Name-dob-sex: <b>" & DBN & "</b><br /><br />" _
+'                & "Any comments: " & CM & "<br /><br /><br />" _
+'                & "Duty scientist: " & SIG & "<br />" _
+'                & "Checked by: " & CHE & "</font>"
+'
+'            ElseIf Me.TickPCR = False And Me.TickSex = False And Me.TickArray = True Then
+'                subjectline = "Prenatal test request for " & LDS & " " & STL
+'                emailbody = "<font face='arial' size='3'>" _
+'                & "Prenatal test request for:<br /><br />" _
+'                & "<b>Prenatal aCGH</b><br /><br />" _
+'                & "Specimen no: <b>" & LDS & "</b>, type " & STL & "<br /><br />" _
+'                & "Name-dob-sex: <b>" & DBN & "</b><br /><br />" _
+'                & "Any comments: " & CM & "<br /><br /><br />" _
+'                & "Duty scientist: " & SIG & "<br />" _
+'                & "Checked by: " & CHE & "</font>"
+'
+'            ElseIf Me.TickPCR = False And Me.TickSex = False And Me.TickArrayTargeted = True Then
+'                subjectline = "Prenatal test request for " & LDS & " " & STL
+'                emailbody = "<font face='arial' size='3'>" _
+'                & "Prenatal test request for:<br /><br />" _
+'                & "<b><font color='blue'>Targeted</font> Prenatal aCGH</b><br /><br />" _
+'                & "Specimen no: <b>" & LDS & "</b>, type " & STL & "<br /><br />" _
+'                & "Name-dob-sex: <b>" & DBN & "</b><br /><br />" _
+'                & "Any comments: " & CM & "<br /><br /><br />" _
+'                & "Duty scientist: " & SIG & "<br />" _
+'                & "Checked by: " & CHE & "</font>"
+'
+'                End If
+'
+'            Set iMsg = New CDO.Message
+'            With iMsg
+'            Set .Configuration = iCfg
+'            .From = """Moka Alerts"" <moka.alerts@gstt.nhs.uk>"
+'            .Sender = "moka.alerts@gstt.nhs.uk"
+'            .ReplyTo = "Prenatal-array@gstt.nhs.uk"
+'            .Subject = subjectline
+'            .HTMLBody = emailbody
+'            .To = emailto
+'            .BCC = "moka.alerts@gstt.nhs.uk"
+'            .Send
+'            End With
+'
+'            ''Tell user that email has been sent
+'            MsgBox "Moka alert sent (will take a few minutes to arrive)", , "Don't be a dummy"
+'
+'            End If
     
     
         ''Additional email for additional PCR genotyping
