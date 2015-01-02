@@ -1,0 +1,8 @@
+Private Sub Array_ID_DblClick(Cancel As Integer)
+    Dim n As String
+    Dim a As String
+    n = """\\gstt.local\shared\Genetics_Data2\Array\Software\Workstation\Notepad++Portable\Notepad++Portable.exe"""
+    a = """\\gstt.local\shared\Genetics_Data2\Array\Runsheets\2014\attrib.txt"""
+    Set objShell = CreateObject("Wscript.Shell")
+    objShell.Run (n & " " & a)
+End Sub
