@@ -13,6 +13,16 @@ Private Sub Form_AfterInsert()
     S = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + ",'Phenotype: Referral indication added manually [" + Me![Phenotype] + "], ID " + CStr(Me![PhenotypeID]) + "',#" + d + "#,'" + un + "','" + cn + "')"
     Q.Open S, CurrentProject.Connection
     Set Q = Nothing
+
+    If Me.Phenotype Like "*22q*" Or Me.Phenotype Like "*digeorge*" Or Me.Phenotype Like "*VCFS*" Then
+        Dim nb As String
+        nb = 1201865448
+        Set Q = New ADODB.Recordset
+        S = "INSERT INTO PatientNote(InternalPatientID, [Date], PatientNote, NotedByID) VALUES(" + CStr(Me![InternalPatientID]) + ",#" + d + "#,'22q11.21 queried therefore add transfusion comment to array report.','" + nb + "')"
+        Q.Open S, CurrentProject.Connection
+        Set Q = Nothing
+        End If
+
 End Sub
 
 Private Sub Form_Delete(Cancel As Integer)
@@ -45,4 +55,14 @@ If Not IsNull([PhenotypeID]) Then
     Q.Open S, CurrentProject.Connection
     Set Q = Nothing
     End If
+
+    If Me.Phenotype Like "*22q*" Or Me.Phenotype Like "*digeorge*" Or Me.Phenotype Like "*VCFS*" Then
+        Dim nb As String
+        nb = 1201865448
+        Set Q = New ADODB.Recordset
+        S = "INSERT INTO PatientNote(InternalPatientID, [Date], PatientNote, NotedByID) VALUES(" + CStr(Me![InternalPatientID]) + ",#" + d + "#,'22q11.21 queried therefore add transfusion comment to array report.','" + nb + "')"
+        Q.Open S, CurrentProject.Connection
+        Set Q = Nothing
+        End If
+
 End Sub
