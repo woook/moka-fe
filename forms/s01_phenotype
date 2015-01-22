@@ -41,10 +41,11 @@ Private Sub Form_Delete(Cancel As Integer)
 End Sub
 
 Private Sub Phenotype_AfterUpdate()
+    
 If Not IsNull([PhenotypeID]) Then
+    Dim d As String
     Dim Q As ADODB.Recordset
     Dim S As String
-    Dim d As String
     Dim un As String
     Dim cn As String
     d = Format(Now, "dd/mmm/yyyy Hh:Nn:ss")
@@ -54,7 +55,6 @@ If Not IsNull([PhenotypeID]) Then
     S = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + ",'Phenotype: Referral indication updated manually to [" + Me![Phenotype] + "], ID " + CStr(Me![PhenotypeID]) + "',#" + d + "#,'" + un + "','" + cn + "')"
     Q.Open S, CurrentProject.Connection
     Set Q = Nothing
-    End If
 
     If Me.Phenotype Like "*22q*" Or Me.Phenotype Like "*digeorge*" Or Me.Phenotype Like "*VCFS*" Then
         Dim nb As String
@@ -65,4 +65,5 @@ If Not IsNull([PhenotypeID]) Then
         Set Q = Nothing
         End If
 
+    End If
 End Sub
