@@ -870,6 +870,10 @@ Private Sub Command83_Click()
         stLinkCriteria = "[SpecimenNo]=" & "'" & Me![SpecimenNo] & "'"
         DoCmd.OpenReport stDocName, acViewNormal, , stLinkCriteria
         
+        stDocName = "FamilyResults_Auto_PGD_Report"
+        DoCmd.OpenReport stDocName, acViewNormal, , stLinkCriteria
+        
+        
     End If
 End Sub
 
