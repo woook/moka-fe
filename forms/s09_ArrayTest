@@ -847,34 +847,33 @@ End Sub
 Private Sub Command83_Click()
     If IsNull(Me!SpecimenNo) Then
         MsgBox "Specimen number needs to be assigned", , "Don't be a dummy"
-    ElseIf IsNull(Me!Check2ID) Then
-        MsgBox "No intials have been entered for checking", , "Don't be a dummy"
-    Else
-        Dim d As String
-        Dim un As String
-        Dim cn As String
-        Dim S As String
-        d = Format(Now, "dd/mmm/yyyy Hh:Nn:ss")
-        un = VBA.Environ("USERNAME")
-        cn = VBA.Environ("COMPUTERNAME")
-        S = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + ",'Moka PGD result sheet generated for PGD case entered under PatientID " + CStr(Me!FamilyTrustID) + "',#" + d + "#,'" + un + "','" + cn + "')"
-        DoCmd.SetWarnings False
-        DoCmd.RunSQL S
-        DoCmd.SetWarnings True
-        
-        DoCmd.DoMenuItem acFormBar, acRecordsMenu, 5, , acMenuVer70
-
-        Dim stDocName As String
-        Dim stLinkCriteria As String
-        stDocName = "FamilyResults_Auto_PGD"
-        stLinkCriteria = "[SpecimenNo]=" & "'" & Me![SpecimenNo] & "'"
-        DoCmd.OpenReport stDocName, acViewNormal, , stLinkCriteria
-        
-        stDocName = "FamilyResults_Auto_PGD_Report"
-        DoCmd.OpenReport stDocName, acViewNormal, , stLinkCriteria
-        
-        
-    End If
+        ElseIf IsNull(Me!Check2ID) Then
+            MsgBox "No intials have been entered for checking", , "Don't be a dummy"
+        Else
+            Dim d As String
+            Dim un As String
+            Dim cn As String
+            Dim S As String
+            d = Format(Now, "dd/mmm/yyyy Hh:Nn:ss")
+            un = VBA.Environ("USERNAME")
+            cn = VBA.Environ("COMPUTERNAME")
+            S = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + ",'Moka PGD result sheet generated for PGD case entered under PatientID " + CStr(Me!FamilyTrustID) + "',#" + d + "#,'" + un + "','" + cn + "')"
+            DoCmd.SetWarnings False
+            DoCmd.RunSQL S
+            DoCmd.SetWarnings True
+            
+            DoCmd.DoMenuItem acFormBar, acRecordsMenu, 5, , acMenuVer70
+    
+            Dim stDocName As String
+            Dim stLinkCriteria As String
+            stDocName = "FamilyResults_Auto_PGD"
+            stLinkCriteria = "[SpecimenNo]=" & "'" & Me![SpecimenNo] & "'"
+            DoCmd.OpenReport stDocName, acViewNormal, , stLinkCriteria
+            
+            stDocName = "FamilyResults_Auto_PGD_Report"
+            DoCmd.OpenReport stDocName, acViewNormal, , stLinkCriteria
+            
+        End If
 End Sub
 
 ''email result to prenatal mailing list
