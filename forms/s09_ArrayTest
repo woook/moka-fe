@@ -1,0 +1,942 @@
+Option Compare Database
+
+''logging
+
+Private Sub StatusID_AfterUpdate()
+    Dim Q As ADODB.Recordset
+    Dim S As String
+    Dim d As String
+    Dim un As String
+    Dim cn As String
+    d = Format(Now, "dd/mmm/yyyy Hh:Nn:ss")
+    un = VBA.Environ("USERNAME")
+    cn = VBA.Environ("COMPUTERNAME")
+    Set Q = New ADODB.Recordset
+        S = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + ",'Array test: Status updated to " + Me![StatusID].Column(1) + " for test requested " + CStr(Me![RequestedDate]) + "',#" + d + "#,'" + un + "','" + cn + "')"
+        Q.Open S, CurrentProject.Connection
+        Set Q = Nothing
+    'If Me![StatusID].Column(1) = "Complete" Then MsgBox "Don't forget to update overall status", , "Don't be a dummy"
+End Sub
+
+'Deprecated 140707
+'Private Sub ArrayTestAnalysisTypeID_AfterUpdate()
+'    Dim Q As ADODB.Recordset
+'    Dim S As String
+'    Dim d As String
+'    Dim un As String
+'    Dim cn As String
+'    d = Format(Now, "dd/mmm/yyyy Hh:Nn:ss")
+'    un = VBA.Environ("USERNAME")
+'    cn = VBA.Environ("COMPUTERNAME")
+'    Set Q = New ADODB.Recordset
+'    If IsNull([ArrayTestAnalysisTypeID]) Then
+'        S = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + ",'Array test: Hyb strategy removed for test requested " + CStr(Me![RequestedDate]) + "',#" + d + "#,'" + un + "','" + cn + "')"
+'    Else
+'        S = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + ",'Array test: Hyb strategy updated to " + Me![ArrayTestAnalysisTypeID].Column(1) + " for test requested " + CStr(Me![RequestedDate]) + "',#" + d + "#,'" + un + "','" + cn + "')"
+'    End If
+'    Q.Open S, CurrentProject.Connection
+'    Set Q = Nothing
+'End Sub
+
+Private Sub ArrayTestAnalysisTypeID_DblClick(Cancel As Integer)
+    Dim stDocName As String
+    stDocName = "s09_ChangeAnalysisType"
+    DoCmd.OpenForm stDocName
+End Sub
+
+'Deprecated 140707
+'Private Sub DyeSwapID_AfterUpdate()
+'    Dim Q As ADODB.Recordset
+'    Dim S As String
+'    Dim d As String
+'    Dim un As String
+'    Dim cn As String
+'    d = Format(Now, "dd/mmm/yyyy Hh:Nn:ss")
+'    un = VBA.Environ("USERNAME")
+'    cn = VBA.Environ("COMPUTERNAME")
+'    Set Q = New ADODB.Recordset
+'    If IsNull([DyeSwapID]) Then
+'        S = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + ",'Array analysis ID removed for array test requested " + CStr(Me![RequestedDate]) + "',#" + d + "#,'" + un + "','" + cn + "')"
+'    Else
+'        S = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + ",'Array analysis ID changed to " + Me![DyeSwapID].Column(2) + " for array test requested " + CStr(Me![RequestedDate]) + "',#" + d + "#,'" + un + "','" + cn + "')"
+'    End If
+'    Q.Open S, CurrentProject.Connection
+'    Set Q = Nothing
+'End Sub
+
+Private Sub DNALabellingID_AfterUpdate()
+    Dim Q As ADODB.Recordset
+    Dim S As String
+    Dim d As String
+    Dim un As String
+    Dim cn As String
+    d = Format(Now, "dd/mmm/yyyy Hh:Nn:ss")
+    un = VBA.Environ("USERNAME")
+    cn = VBA.Environ("COMPUTERNAME")
+    Set Q = New ADODB.Recordset
+    If IsNull([DNALabellingID]) Then
+        S = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + ",'Array test: HybID deleted for test requested " + CStr(Me![RequestedDate]) + "',#" + d + "#,'" + un + "','" + cn + "')"
+    Else
+        S = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + ",'Array test: HybID " + Me![DNALabellingID].Column(1) + " assigned to test requested " + CStr(Me![RequestedDate]) + "',#" + d + "#,'" + un + "','" + cn + "')"
+    End If
+    Q.Open S, CurrentProject.Connection
+    Set Q = Nothing
+End Sub
+
+Private Sub ArrayResultCodeID_AfterUpdate()
+    Dim Q As ADODB.Recordset
+    Dim S As String
+    Dim d As String
+    Dim un As String
+    Dim cn As String
+    d = Format(Now, "dd/mmm/yyyy Hh:Nn:ss")
+    un = VBA.Environ("USERNAME")
+    cn = VBA.Environ("COMPUTERNAME")
+    Set Q = New ADODB.Recordset
+    If IsNull([ArrayResultCodeID]) Then
+        S = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + ",'Array test: Rresult code deleted for test requested " + CStr(Me![RequestedDate]) + "',#" + d + "#,'" + un + "','" + cn + "')"
+    Else
+        S = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + ",'Array test: Result code changed to " + Me![ArrayResultCodeID].Column(1) + " for test requested " + CStr(Me![RequestedDate]) + "',#" + d + "#,'" + un + "','" + cn + "')"
+    End If
+    Q.Open S, CurrentProject.Connection
+    Set Q = Nothing
+End Sub
+
+Private Sub ArrayResult_AfterUpdate()
+    Dim Q As ADODB.Recordset
+    Dim S As String
+    Dim d As String
+    Dim un As String
+    Dim cn As String
+    d = Format(Now, "dd/mmm/yyyy Hh:Nn:ss")
+    un = VBA.Environ("USERNAME")
+    cn = VBA.Environ("COMPUTERNAME")
+    Set Q = New ADODB.Recordset
+    If IsNull([ArrayResult]) Then
+        S = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + ",'Array test: Result deleted for test requested " + CStr(Me![RequestedDate]) + "',#" + d + "#,'" + un + "','" + cn + "')"
+    Else
+        S = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + ",'Array test: Result changed to " + Me![ArrayResult] + " for test requested " + CStr(Me![RequestedDate]) + "',#" + d + "#,'" + un + "','" + cn + "')"
+    End If
+    Q.Open S, CurrentProject.Connection
+    Set Q = Nothing
+    
+    If IsNull(Me.ArrayResultBuild) Then
+        MsgBox "Genome build?", , "Don't be a dummy"
+        End If
+End Sub
+
+Private Sub ArrayResultComment_AfterUpdate()
+    Dim Q As ADODB.Recordset
+    Dim r As ADODB.Recordset
+    Dim S As String
+    Dim t As String
+    Dim d As String
+    Dim un As String
+    Dim cn As String
+    d = Format(Now, "dd/mmm/yyyy Hh:Nn:ss")
+    un = VBA.Environ("USERNAME")
+    cn = VBA.Environ("COMPUTERNAME")
+    Set Q = New ADODB.Recordset
+    If IsNull([ArrayResultComment]) Then
+        S = "INSERT INTO PatientLogMemo(InternalPatientID, ArrayTestID, LogMemoEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + "," + CStr(Me![ArrayTestID]) + ",'Array test: Result comment deleted for test requested " + CStr(Me![RequestedDate]) + "',#" + d + "#,'" + un + "','" + cn + "')"
+    Else
+        Dim rc As String
+        rc = Replace(Me![ArrayResultComment], "'", "''")
+        S = "INSERT INTO PatientLogMemo(InternalPatientID, ArrayTestID, LogMemoEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + "," + CStr(Me![ArrayTestID]) + ",'Array test: Result comment updated for array test requested " + CStr(Me![RequestedDate]) + " - " + rc + "',#" + d + "#,'" + un + "','" + cn + "')"
+    End If
+    Q.Open S, CurrentProject.Connection
+    Set Q = Nothing
+
+    Set r = New ADODB.Recordset
+    If IsNull([ArrayResultComment]) Then
+        t = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + ",'Array test: Result comment deleted for test requested " + CStr(Me![RequestedDate]) + "',#" + d + "#,'" + un + "','" + cn + "')"
+    Else
+        t = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + ",'Array test: Result comment updated for array test requested " + CStr(Me![RequestedDate]) + " - see memo log',#" + d + "#,'" + un + "','" + cn + "')"
+    End If
+    r.Open t, CurrentProject.Connection
+    Set r = Nothing
+
+End Sub
+
+Private Sub Check1ID_AfterUpdate()
+    Dim Q As ADODB.Recordset
+    Dim S As String
+    Dim d As String
+    Dim un As String
+    Dim cn As String
+    d = Format(Now, "dd/mmm/yyyy Hh:Nn:ss")
+    un = VBA.Environ("USERNAME")
+    cn = VBA.Environ("COMPUTERNAME")
+    Set Q = New ADODB.Recordset
+    If IsNull([Check1ID]) Then
+        S = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + ",'Array test: Initials for analysis removed for test requested " + CStr(Me![RequestedDate]) + "',#" + d + "#,'" + un + "','" + cn + "')"
+        Else
+            S = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + ",'Array test: Analysis entered by " + Me![Check1ID].Column(1) + " for test requested " + CStr(Me![RequestedDate]) + "',#" + d + "#,'" + un + "','" + cn + "')"
+        End If
+    Q.Open S, CurrentProject.Connection
+    Set Q = Nothing
+    
+    Check1Date = Now()
+    If IsNull(Check2ID) Then
+        ArrayResultDate = Now()
+        Me.ArrayResultDate.Requery
+        Dim cred As Long
+        Dim cgrey As Long
+        cred = RGB(255, 0, 0)
+        cgrey = RGB(192, 192, 192)
+        Me.Label35.BackColor = cred
+        Dim PauseTime, Start
+        PauseTime = 1
+        Start = Timer
+        Do While Timer < Start + PauseTime
+             DoEvents
+        Loop
+        Me.Label35.BackColor = cgrey
+        End If
+        
+'    If IsNull(Check05ID) Then
+'        MsgBox "You can't sign off analysis if data entry has not been checked", , "Don't be a dummy"
+'        End If
+                
+End Sub
+
+'Deprecated 140707
+'Private Sub Check1ID_DblClick(Cancel As Integer)
+'
+'If IsNull([Check1ID]) Then
+'
+'    DoCmd.DoMenuItem acFormBar, acRecordsMenu, acSaveRecord, , acMenuVer70
+'
+'    Dim Q As ADODB.Recordset
+'    Dim S As String
+'    Dim d As String
+'    Dim un As String
+'    Dim cn As String
+'    Dim f As String
+'    Dim g As String
+'
+'    d = Format(Now, "dd/mmm/yyyy Hh:Nn:ss")
+'    un = VBA.Environ("USERNAME")
+'    cn = VBA.Environ("COMPUTERNAME")
+'
+'
+'    If un = "abergbaum" Then
+'        f = 1165930718
+'        ElseIf un = "ahills" Then
+'        f = -1851434593
+'        ElseIf un = "adavies" Then
+'        f = 1165930720
+'        ElseIf un = "cdonaghue" Then
+'        f = 1165930710
+'        ElseIf un = "cogilvie" Then
+'        f = 1199711614
+'        ElseIf un = "dtindall" Then
+'        f = 1201865440
+'        ElseIf un = "hkuoppamaa" Then
+'        f = 1201865439
+'        ElseIf un = "hthomas" Then
+'        f = -1997500324
+'        ElseIf un = "agull" Then
+'        f = 1158065575
+'        ElseIf un = "jahn" Then
+'        f = 1
+'        ElseIf un = "kmann" Then
+'        f = 2
+'        ElseIf un = "mcoldwell" Then
+'        f = 1165930743
+'        ElseIf un = "rbegum" Then
+'        f = 1165930735
+'        ElseIf un = "rdunn" Then
+'        f = 1165930717
+'        ElseIf un = "rhall" Then
+'        f = 1165930738
+'        ElseIf un = "sbint" Then
+'        f = 1165930739
+'        ElseIf un = "schu" Then
+'        f = 1165930715
+'        ElseIf un = "zdocherty" Then
+'        f = 1165930742
+'        Else: f = 1201865434
+'        End If
+'
+'    g = "UPDATE ArrayTest SET Check1ID = " & CStr(f) & " WHERE ArrayTest.ArrayTestID = " & Me![ArrayTestID]
+'    DoCmd.SetWarnings False
+'    DoCmd.RunSQL g
+'    DoCmd.SetWarnings True
+'
+'
+'    [Form_09 ArrayResultsByPostition].s09_ArrayTest.Requery
+'
+'    Set Q = New ADODB.Recordset
+'    If IsNull([Check1ID]) Then
+'        S = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + ",'Array test: Initials for analysis removed for test requested " + CStr(Me![RequestedDate]) + "',#" + d + "#,'" + un + "','" + cn + "')"
+'        Else
+'            S = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + ",'Array test: Analysis entered by " + Me![Check1ID].Column(1) + " for test requested " + CStr(Me![RequestedDate]) + "',#" + d + "#,'" + un + "','" + cn + "')"
+'        End If
+'    Q.Open S, CurrentProject.Connection
+'    Set Q = Nothing
+'
+'    Check1Date = Now()
+'    If IsNull(Check2ID) Then
+'        ArrayResultDate = Now()
+'        Me.ArrayResultDate.Requery
+'        Dim cred As Long
+'        Dim cgrey As Long
+'        cred = RGB(255, 0, 0)
+'        cgrey = RGB(192, 192, 192)
+'        Me.Label35.BackColor = cred
+'        Dim PauseTime, Start
+'        PauseTime = 1
+'        Start = Timer
+'        Do While Timer < Start + PauseTime
+'             DoEvents
+'        Loop
+'        Me.Label35.BackColor = cgrey
+'        End If
+'
+'    End If
+'End Sub
+
+Private Sub Check2ID_AfterUpdate()
+    Dim Q As ADODB.Recordset
+    Dim S As String
+    Dim d As String
+    Dim un As String
+    Dim cn As String
+    d = Format(Now, "dd/mmm/yyyy Hh:Nn:ss")
+    un = VBA.Environ("USERNAME")
+    cn = VBA.Environ("COMPUTERNAME")
+    Set Q = New ADODB.Recordset
+    If IsNull([Check2ID]) Then
+        S = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + ",'Array test: Initials for checking result page removed " + CStr(Me![RequestedDate]) + "',#" + d + "#,'" + un + "','" + cn + "')"
+        Else
+            S = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + ",'Array test: Result page checked by " + Me![Check2ID].Column(1) + " for test requested " + CStr(Me![RequestedDate]) + "',#" + d + "#,'" + un + "','" + cn + "')"
+        End If
+    Q.Open S, CurrentProject.Connection
+    Set Q = Nothing
+    
+    Check2Date = Now()
+    ArrayResultDate = Now()
+    
+    Dim cred As Long
+    Dim cgrey As Long
+    cred = RGB(255, 0, 0)
+    cgrey = RGB(192, 192, 192)
+    Me.Label35.BackColor = cred
+    Dim PauseTime, Start
+    PauseTime = 1
+    Start = Timer
+    Do While Timer < Start + PauseTime
+         DoEvents
+    Loop
+    Me.Label35.BackColor = cgrey
+
+'Disabled by Geneworks3 upgrade 140707
+'    ''Check to see if one of the proband only charging families
+'    If Me.FamilyTrustID = Me.familynumber Then
+'        MsgBox "The proband in this family was charged at the proband only rate. Therefore after any inheritance studies are done, " & _
+'        "an additional file only report must be created for each parent that is tested. There is a standard report wording in Geneworks " & _
+'        "for these called -aCGH Parent following proband only charge-. Please also remember to enter a charge the each parent, this " & _
+'        "is called -GenCyto-aCGHparent-. Finally, the parents' reports should be printed off and attached to the proband's followup " & _
+'        "report so that the authoriser is prompted to check the charges on the parent.", , "Don't be a dummy"
+'        End If
+    
+End Sub
+
+'Deprecated 140707
+'Private Sub Check2ID_DblClick(Cancel As Integer)
+'If IsNull([Check2ID]) Then
+'    DoCmd.DoMenuItem acFormBar, acRecordsMenu, acSaveRecord, , acMenuVer70
+'    Dim Q As ADODB.Recordset
+'    Dim S As String
+'    Dim d As String
+'    Dim un As String
+'    Dim cn As String
+'    Dim f As String
+'    Dim g As String
+'
+'    d = Format(Now, "dd/mmm/yyyy Hh:Nn:ss")
+'    un = VBA.Environ("USERNAME")
+'    cn = VBA.Environ("COMPUTERNAME")
+'
+'    If un = "abergbaum" Then
+'        f = 1165930718
+'        ElseIf un = "ahills" Then
+'        f = -1851434593
+'        ElseIf un = "adavies" Then
+'        f = 1165930720
+'        ElseIf un = "cdonaghue" Then
+'        f = 1165930710
+'        ElseIf un = "cogilvie" Then
+'        f = 1199711614
+'        ElseIf un = "dtindall" Then
+'        f = 1201865440
+'        ElseIf un = "hkuoppamaa" Then
+'        f = 1201865439
+'        ElseIf un = "hthomas" Then
+'        f = -1997500324
+'        ElseIf un = "agull" Then
+'        f = 1158065575
+'        ElseIf un = "jahn" Then
+'        f = 1
+'        ElseIf un = "kmann" Then
+'        f = 2
+'        ElseIf un = "mcoldwell" Then
+'        f = 1165930743
+'        ElseIf un = "rbegum" Then
+'        f = 1165930735
+'        ElseIf un = "rdunn" Then
+'        f = 1165930717
+'        ElseIf un = "rhall" Then
+'        f = 1165930738
+'        ElseIf un = "sbint" Then
+'        f = 1165930739
+'        ElseIf un = "shcu" Then
+'        f = 1165930715
+'        ElseIf un = "zdocherty" Then
+'        f = 1165930742
+'        Else: f = 1201865434
+'        End If
+'
+'    g = "UPDATE ArrayTest SET Check2ID = " & CStr(f) & " WHERE ArrayTest.ArrayTestID = " & Me![ArrayTestID]
+'    DoCmd.SetWarnings False
+'    DoCmd.RunSQL g
+'    DoCmd.SetWarnings True
+'
+'    [Form_09 ArrayResultsByPostition].s09_ArrayTest.Requery
+'
+'    Set Q = New ADODB.Recordset
+'    If IsNull([Check2ID]) Then
+'        S = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + ",'Array test: Initials for checking result page removed " + CStr(Me![RequestedDate]) + "',#" + d + "#,'" + un + "','" + cn + "')"
+'        Else
+'            S = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + ",'Array test: Result page checked by " + Me![Check2ID].Column(1) + " for test requested " + CStr(Me![RequestedDate]) + "',#" + d + "#,'" + un + "','" + cn + "')"
+'        End If
+'    Q.Open S, CurrentProject.Connection
+'    Set Q = Nothing
+'
+'    Check2Date = Now()
+'    ArrayResultDate = Now()
+'
+'    Dim cred As Long
+'    Dim cgrey As Long
+'    cred = RGB(255, 0, 0)
+'    cgrey = RGB(192, 192, 192)
+'    Me.Label35.BackColor = cred
+'    Dim PauseTime, Start
+'    PauseTime = 1
+'    Start = Timer
+'    Do While Timer < Start + PauseTime
+'         DoEvents
+'    Loop
+'    Me.Label35.BackColor = cgrey
+'
+'    End If
+'End Sub
+
+Private Sub Check3ID_AfterUpdate()
+    Dim Q As ADODB.Recordset
+    Dim S As String
+    Dim d As String
+    Dim un As String
+    Dim cn As String
+    d = Format(Now, "dd/mmm/yyyy Hh:Nn:ss")
+    un = VBA.Environ("USERNAME")
+    cn = VBA.Environ("COMPUTERNAME")
+    Set Q = New ADODB.Recordset
+    If IsNull([Check3ID]) Then
+        S = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + ",'Array test: Initials for updating result page for test requested " + CStr(Me![RequestedDate]) + "',#" + d + "#,'" + un + "','" + cn + "')"
+        Else
+            S = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + ",'Array test: Result page updated by " + Me![Check3ID].Column(1) + " for test requested " + CStr(Me![RequestedDate]) + "',#" + d + "#,'" + un + "','" + cn + "')"
+        End If
+    Q.Open S, CurrentProject.Connection
+    Set Q = Nothing
+    
+    Check3Date = Now()
+    If IsNull(Check2ID) Then
+        ArrayResultDate = Now()
+        Me.ArrayResultDate.Requery
+        Dim cred As Long
+        Dim cgrey As Long
+        cred = RGB(255, 0, 0)
+        cgrey = RGB(192, 192, 192)
+        Me.Label35.BackColor = cred
+        Dim PauseTime, Start
+        PauseTime = 1
+        Start = Timer
+        Do While Timer < Start + PauseTime
+             DoEvents
+        Loop
+        Me.Label35.BackColor = cgrey
+        End If
+ 
+End Sub
+
+'Deprecated 140707
+'Private Sub Check3ID_DblClick(Cancel As Integer)
+'If IsNull([Check3ID]) Then
+'    DoCmd.DoMenuItem acFormBar, acRecordsMenu, acSaveRecord, , acMenuVer70
+'    Dim Q As ADODB.Recordset
+'    Dim S As String
+'    Dim d As String
+'    Dim un As String
+'    Dim cn As String
+'    Dim f As String
+'    Dim g As String
+'
+'    d = Format(Now, "dd/mmm/yyyy Hh:Nn:ss")
+'    un = VBA.Environ("USERNAME")
+'    cn = VBA.Environ("COMPUTERNAME")
+'
+'    If un = "abergbaum" Then
+'        f = 1165930718
+'        ElseIf un = "ahills" Then
+'        f = -1851434593
+'        ElseIf un = "adavies" Then
+'        f = 1165930720
+'        ElseIf un = "cdonaghue" Then
+'        f = 1165930710
+'        ElseIf un = "cogilvie" Then
+'        f = 1199711614
+'        ElseIf un = "dtindall" Then
+'        f = 1201865440
+'        ElseIf un = "hkuoppamaa" Then
+'        f = 1201865439
+'        ElseIf un = "hthomas" Then
+'        f = -1997500324
+'        ElseIf un = "agull" Then
+'        f = 1158065575
+'        ElseIf un = "jahn" Then
+'        f = 1
+'        ElseIf un = "kmann" Then
+'        f = 2
+'        ElseIf un = "mcoldwell" Then
+'        f = 1165930743
+'        ElseIf un = "rbegum" Then
+'        f = 1165930735
+'        ElseIf un = "rdunn" Then
+'        f = 1165930717
+'        ElseIf un = "rhall" Then
+'        f = 1165930738
+'        ElseIf un = "sbint" Then
+'        f = 1165930739
+'        ElseIf un = "schu" Then
+'        f = 1165930715
+'        ElseIf un = "zdocherty" Then
+'        f = 1165930742
+'        Else: f = 1201865434
+'        End If
+'
+'    g = "UPDATE ArrayTest SET Check3ID = " & CStr(f) & " WHERE ArrayTest.ArrayTestID = " & Me![ArrayTestID]
+'    DoCmd.SetWarnings False
+'    DoCmd.RunSQL g
+'    DoCmd.SetWarnings True
+'
+'    [Form_09 ArrayResultsByPostition].s09_ArrayTest.Requery
+'
+'    Set Q = New ADODB.Recordset
+'    If IsNull([Check1ID]) Then
+'        S = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + ",'Array test: Initials for updating result page for test requested " + CStr(Me![RequestedDate]) + "',#" + d + "#,'" + un + "','" + cn + "')"
+'        Else
+'            S = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + ",'Array test: Result page updated by " + Me![Check3ID].Column(1) + " for test requested " + CStr(Me![RequestedDate]) + "',#" + d + "#,'" + un + "','" + cn + "')"
+'        End If
+'    Q.Open S, CurrentProject.Connection
+'    Set Q = Nothing
+'
+'    Check3Date = Now()
+'    If IsNull(Check2ID) Then
+'        ArrayResultDate = Now()
+'        Me.ArrayResultDate.Requery
+'        Dim cred As Long
+'        Dim cgrey As Long
+'        cred = RGB(255, 0, 0)
+'        cgrey = RGB(192, 192, 192)
+'        Me.Label35.BackColor = cred
+'        Dim PauseTime, Start
+'        PauseTime = 1
+'        Start = Timer
+'        Do While Timer < Start + PauseTime
+'             DoEvents
+'        Loop
+'        Me.Label35.BackColor = cgrey
+'        End If
+'
+'    End If
+'End Sub
+
+Private Sub Check0ID_AfterUpdate()
+    Dim Q As ADODB.Recordset
+    Dim S As String
+    Dim d As String
+    Dim un As String
+    Dim cn As String
+    d = Format(Now, "dd/mmm/yyyy Hh:Nn:ss")
+    un = VBA.Environ("USERNAME")
+    cn = VBA.Environ("COMPUTERNAME")
+    Set Q = New ADODB.Recordset
+    If IsNull([Check0ID]) Then
+        S = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + ",'Array test: Data entry initials removed for test requested " + CStr(Me![RequestedDate]) + "',#" + d + "#,'" + un + "','" + cn + "')"
+        Else
+            S = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + ",'Array test: Data entry signed off by " + Me![Check0ID].Column(1) + " for test requested " + CStr(Me![RequestedDate]) + "',#" + d + "#,'" + un + "','" + cn + "')"
+        End If
+    Q.Open S, CurrentProject.Connection
+    Set Q = Nothing
+    
+    Check0Date = Now()
+    If IsNull(Check2ID) Then
+        ArrayResultDate = Now()
+        Me.ArrayResultDate.Requery
+        Dim cred As Long
+        Dim cgrey As Long
+        cred = RGB(255, 0, 0)
+        cgrey = RGB(192, 192, 192)
+        Me.Label35.BackColor = cred
+        Dim PauseTime, Start
+        PauseTime = 1
+        Start = Timer
+        Do While Timer < Start + PauseTime
+             DoEvents
+        Loop
+        Me.Label35.BackColor = cgrey
+        End If
+End Sub
+
+Private Sub Check05ID_AfterUpdate()
+    Dim Q As ADODB.Recordset
+    Dim S As String
+    Dim d As String
+    Dim un As String
+    Dim cn As String
+    d = Format(Now, "dd/mmm/yyyy Hh:Nn:ss")
+    un = VBA.Environ("USERNAME")
+    cn = VBA.Environ("COMPUTERNAME")
+    Set Q = New ADODB.Recordset
+    If IsNull([Check05ID]) Then
+        S = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + ",'Array test: Data checking initials removed for test requested " + CStr(Me![RequestedDate]) + "',#" + d + "#,'" + un + "','" + cn + "')"
+        Else
+            S = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + ",'Array test: Data checking signed off by " + Me![Check05ID].Column(1) + " for test requested " + CStr(Me![RequestedDate]) + "',#" + d + "#,'" + un + "','" + cn + "')"
+        End If
+    Q.Open S, CurrentProject.Connection
+    Set Q = Nothing
+    
+    Check05Date = Now()
+    If IsNull(Check2ID) Then
+        ArrayResultDate = Now()
+        Me.ArrayResultDate.Requery
+        Dim cred As Long
+        Dim cgrey As Long
+        cred = RGB(255, 0, 0)
+        cgrey = RGB(192, 192, 192)
+        Me.Label35.BackColor = cred
+        Dim PauseTime, Start
+        PauseTime = 1
+        Start = Timer
+        Do While Timer < Start + PauseTime
+             DoEvents
+        Loop
+        Me.Label35.BackColor = cgrey
+        End If
+End Sub
+
+Private Sub ArrayResultDate_AfterUpdate()
+    Dim Q As ADODB.Recordset
+    Dim S As String
+    Dim d As String
+    Dim un As String
+    Dim cn As String
+    d = Format(Now, "dd/mmm/yyyy Hh:Nn:ss")
+    un = VBA.Environ("USERNAME")
+    cn = VBA.Environ("COMPUTERNAME")
+    Set Q = New ADODB.Recordset
+    If IsNull([ArrayResultDate]) Then
+        S = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + ",'Array test: Result check date removed for test requested " + CStr(Me![RequestedDate]) + "',#" + d + "#,'" + un + "','" + cn + "')"
+    Else
+        S = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + ",'Array test: Result check date updated to " + CStr(Me![ArrayResultDate]) + " for test requested " + CStr(Me![RequestedDate]) + "',#" + d + "#,'" + un + "','" + cn + "')"
+    End If
+    Q.Open S, CurrentProject.Connection
+    Set Q = Nothing
+    Dim cred As Long
+    Dim cgrey As Long
+    cred = RGB(255, 0, 0)
+    cgrey = RGB(192, 192, 192)
+    Me.Label35.BackColor = cred
+    Dim PauseTime, Start
+    PauseTime = 1
+    Start = Timer
+    Do While Timer < Start + PauseTime
+         DoEvents
+    Loop
+    Me.Label35.BackColor = cgrey
+End Sub
+
+''autodate
+
+Private Sub ArrayResultDate_DblClick(Cancel As Integer)
+    If (Not IsNull([Check1ID]) And Not IsNull([Check2ID])) Then
+ 
+    Else
+        [ArrayResultDate] = Now()
+    End If
+End Sub
+
+
+''open forms
+Private Sub open_s09_HybPartners_Click()
+On Error GoTo Err_open_s09_HybPartners_Click
+    
+    Dim stDocName As String
+    Dim stLinkCriteria As String
+    stDocName = "s09_HybsAndPartners"
+    stLinkCriteria = "[InternalPatientID]=" & Me![InternalPatientID]
+    DoCmd.OpenForm stDocName, acFormDS, , stLinkCriteria
+    
+Exit_open_s09_HybPartners_Click:
+    Exit Sub
+Err_open_s09_HybPartners_Click:
+    MsgBox Err.Description
+    Resume Exit_open_s09_HybPartners_Click
+End Sub
+Private Sub Command71_Click()
+On Error GoTo Err_Command71_Click
+
+    Dim stDocName As String
+    stDocName = "s09_Candidate"
+    DoCmd.OpenForm stDocName, acFormDS
+
+Exit_Command71_Click:
+    Exit Sub
+
+Err_Command71_Click:
+    MsgBox Err.Description
+    Resume Exit_Command71_Click
+    
+End Sub
+
+Private Sub ArrayResultComment_DblClick(Cancel As Integer)
+    Dim stDocName As String
+    stDocName = "s09_PatientLogMemo"
+    stLinkCriteria = "[ArrayTestID]=" & Me![ArrayTestID]
+    DoCmd.OpenForm stDocName, acFormDS, , stLinkCriteria
+End Sub
+
+
+''auto karyotype
+Private Sub ArrayResult_DblClick(Cancel As Integer)
+
+    Dim Q As ADODB.Recordset
+    Set Q = New ADODB.Recordset
+    Dim r As String
+    Dim S As String
+    Dim t As String
+    Dim u As ADODB.Recordset
+    Set u = New ADODB.Recordset
+    Dim V As String
+    Dim x As String
+    Dim Y As String
+    x = Me.InternalPatientID
+    Y = Me.ArrayResult
+    Dim d As String
+    Dim un As String
+    Dim cn As String
+    d = Format(Now, "dd/mmm/yyyy Hh:Nn:ss")
+    un = VBA.Environ("USERNAME")
+    cn = VBA.Environ("COMPUTERNAME")
+
+    r = "SELECT OverallResultComments FROM Patients WHERE InternalPatientID = " + x + ""
+    Q.Open r, CurrentProject.Connection, adOpenKeyset, adLockOptimistic, adCmdText
+    If Not IsNull(Q!OverallResultComments) Then
+        t = Q!OverallResultComments
+        S = "" + t + "," + Y + ""
+    Else: S = "" + Y + ""
+    End If
+
+    Q!OverallResultComments = S
+    Q.Update
+    Set Q = Nothing
+
+    V = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + ",'Patient: Result changed to [" + S + "]',#" + d + "#,'" + un + "','" + cn + "')"
+    u.Open V, CurrentProject.Connection
+    Set u = Nothing
+
+    Me.Parent.Form.Requery
+    
+End Sub
+
+
+''show results sheet
+Private Sub Command73_Click()
+    If IsNull(Me!SpecimenNo) Then
+        MsgBox "Specimen number needs to be assigned", , "Don't be a dummy"
+    ElseIf IsNull(Me!Check2ID) Then
+        MsgBox "No intials have been entered for checking", , "Don't be a dummy"
+    Else
+        Dim d As String
+        Dim un As String
+        Dim cn As String
+        Dim S As String
+        d = Format(Now, "dd/mmm/yyyy Hh:Nn:ss")
+        un = VBA.Environ("USERNAME")
+        cn = VBA.Environ("COMPUTERNAME")
+        S = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + ",'Moka result sheet generated for specimen " + Me!SpecimenNo + "',#" + d + "#,'" + un + "','" + cn + "')"
+        DoCmd.SetWarnings False
+        DoCmd.RunSQL S
+        DoCmd.SetWarnings True
+        
+        DoCmd.DoMenuItem acFormBar, acRecordsMenu, 5, , acMenuVer70
+
+        Dim stDocName As String
+        Dim stLinkCriteria As String
+        stDocName = "FamilyResults_Auto_R"
+        stLinkCriteria = "[SpecimenNo]=" & "'" & Me![SpecimenNo] & "'"
+        DoCmd.OpenReport stDocName, acViewPreview, , stLinkCriteria
+    End If
+End Sub
+
+''print results sheet
+Private Sub Command79_Click()
+    If IsNull(Me!SpecimenNo) Then
+        MsgBox "Specimen number needs to be assigned", , "Don't be a dummy"
+    ElseIf IsNull(Me!Check2ID) Then
+        MsgBox "No intials have been entered for checking", , "Don't be a dummy"
+    Else
+        Dim d As String
+        Dim un As String
+        Dim cn As String
+        Dim S As String
+        d = Format(Now, "dd/mmm/yyyy Hh:Nn:ss")
+        un = VBA.Environ("USERNAME")
+        cn = VBA.Environ("COMPUTERNAME")
+        S = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + ",'Moka result sheet generated for specimen " + Me!SpecimenNo + "',#" + d + "#,'" + un + "','" + cn + "')"
+        DoCmd.SetWarnings False
+        DoCmd.RunSQL S
+        DoCmd.SetWarnings True
+        
+        DoCmd.DoMenuItem acFormBar, acRecordsMenu, 5, , acMenuVer70
+
+        Dim stDocName As String
+        Dim stLinkCriteria As String
+        stDocName = "FamilyResults_Auto_R"
+        stLinkCriteria = "[SpecimenNo]=" & "'" & Me![SpecimenNo] & "'"
+        DoCmd.OpenReport stDocName, acViewNormal, , stLinkCriteria
+    End If
+End Sub
+
+
+''print test sheet
+Private Sub Command80_Click()
+On Error GoTo Err_Command80_Click
+
+    Dim stDocName As String
+    Dim stLinkCriteria As String
+
+    stDocName = "ArrayTestSheet"
+    stLinkCriteria = "[ArrayTestID]=" & Me![ArrayTestID]
+    'DoCmd.OpenReport stDocName, acViewPreview, , stLinkCriteria
+    DoCmd.OpenReport stDocName, acNormal, , stLinkCriteria
+
+
+Exit_Command80_Click:
+    Exit Sub
+
+Err_Command80_Click:
+    MsgBox Err.Description
+    Resume Exit_Command80_Click
+    
+End Sub
+
+''print PGD test sheet
+Private Sub Command83_Click()
+    If IsNull(Me!SpecimenNo) Then
+        MsgBox "Specimen number needs to be assigned", , "Don't be a dummy"
+    ElseIf IsNull(Me!Check2ID) Then
+        MsgBox "No intials have been entered for checking", , "Don't be a dummy"
+    Else
+        Dim d As String
+        Dim un As String
+        Dim cn As String
+        Dim S As String
+        d = Format(Now, "dd/mmm/yyyy Hh:Nn:ss")
+        un = VBA.Environ("USERNAME")
+        cn = VBA.Environ("COMPUTERNAME")
+        S = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + ",'Moka PGD result sheet generated for PGD case entered under PatientID " + CStr(Me!FamilyTrustID) + "',#" + d + "#,'" + un + "','" + cn + "')"
+        DoCmd.SetWarnings False
+        DoCmd.RunSQL S
+        DoCmd.SetWarnings True
+        
+        DoCmd.DoMenuItem acFormBar, acRecordsMenu, 5, , acMenuVer70
+
+        Dim stDocName As String
+        Dim stLinkCriteria As String
+        stDocName = "FamilyResults_Auto_PGD"
+        stLinkCriteria = "[SpecimenNo]=" & "'" & Me![SpecimenNo] & "'"
+        DoCmd.OpenReport stDocName, acViewNormal, , stLinkCriteria
+        
+    End If
+End Sub
+
+''email result to prenatal mailing list
+Private Sub Command82_Click()
+
+If Not IsNull(Me.ArrayResult) And (Me.StatusID = 4 Or Me.StatusID = 5) Then
+
+    Dim un As String
+    Dim iCfg As CDO.Configuration
+    Dim iMsg As CDO.Message
+    Dim emailto As String
+    Dim subjectline As String
+    Dim emailbody As String
+    
+    un = VBA.Environ("USERNAME")
+    
+    Set iCfg = New CDO.Configuration
+    
+    With iCfg
+    '.Fields(cdoSMTPServer) = "sv-pr-ex33.gstt.local"  '<---this works but IT want me to use the smtp server instead
+    '.Fields(cdoSMTPServer) = "smtp.gstt.local"       '<---old smtp that will go offline 10/04/2014
+    .Fields(cdoSMTPServer) = "relay.gstt.local"        '<---new smtp
+    .Fields(cdoSMTPServerPort) = 25 ' typically
+    .Fields(cdoSendUsingMethod) = cdoSendUsingPort
+    .Fields(cdoSMTPConnectionTimeout) = 200
+    .Fields.Update
+    End With
+    
+    emailto = "Prenatal-array@gstt.nhs.uk;cytodutyscientist@gstt.nhs.uk"
+    'emailto = "joowook.ahn@gstt.nhs.uk"
+    'subjectline = "Moka alert: " & Me.Referral & " array result for " & Me!SpecimenType & " sample " & Me!SpecimenNo
+    subjectline = Me.Referral & " result for specimen " & Me!SpecimenNo
+    emailbody = "<font face='arial' size='3'><br /><br />" _
+        & "ARRAY RESULT<br /><br /><br />" _
+        & "Referral category: <b>" & Me!Referral & "</b><br /><br />" _
+        & "PatientID: <b>" & Me!PatientID & "</b><br />" _
+        & "Specimen: <b>" & Me!SpecimenNo & "</b><br />" _
+        & "Name: <b>" & Me!Name & "</b><br />" _
+        & "Result: <b>" & Me!ArrayResult & "</b><br /><br /><br /><br />" _
+        & "Result checked by: <b>" & Me.Check2ID.Column(1) & "</b><br />" _
+        & "Message sent by: <b>" & un & "</b><br /><br /><br /><br /></font>"
+        '& "Specimen type: <b>" & Me!SpecimenType & "</b><br /><br />"
+    
+    Set iMsg = New CDO.Message
+    With iMsg
+    Set .Configuration = iCfg
+    .From = """Moka Alerts"" <moka.alerts@gstt.nhs.uk>"
+    .Sender = "moka.alerts@gstt.nhs.uk"
+    .ReplyTo = "Prenatal-array@gstt.nhs.uk"
+    .Subject = subjectline
+    .HTMLBody = emailbody
+    .To = emailto
+    .BCC = "moka.alerts@gstt.nhs.uk"
+    .Send
+    End With
+    
+    Set iMsg = Nothing
+    Set iCfg = Nothing
+    
+    MsgBox "Moka alert sent (will take a few minutes to arrive)", , "Don't be a dummy"
+    
+Else
+    
+    MsgBox "Array status not complete or no array result entered", , "Don't be a dummy"
+    
+    End If
+    
+End Sub
+
