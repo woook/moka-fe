@@ -1,0 +1,43 @@
+Option Compare Database
+
+Private Sub Form_DblClick(Cancel As Integer)
+On Error GoTo Err_Form_DblClick
+
+    Dim stDocName As String
+    Dim stLinkCriteria As String
+
+    stDocName = "02 Patient Details"
+    
+    stLinkCriteria = "[PatientID]=" & "'" & Me![PatientID] & "'"
+    DoCmd.OpenForm stDocName, , , stLinkCriteria
+
+Exit_Form_DblClick:
+    Exit Sub
+
+Err_Form_DblClick:
+    MsgBox Err.Description
+    Resume Exit_Form_DblClick
+ 
+End Sub
+Private Sub Command19_Click()
+
+    PrintZebraLabel "HELLO!MELLO!COWSGOHOME"
+  
+End Sub
+
+Private Function PrintZebraLabel(StringToPrint As String)
+
+    Dim rn As String
+        rn = InputBox("DNA prep run number? e.g. 100722")
+        rn = rn & " " & Desc
+'        rn = Conc & "ng/ul  prep: " & rn
+
+
+    Dim ZebraFormat As String
+        ZebraFormat = "^XA^FO0,25^A0,40,40^FD" & DNANumber & "^FS^FO0,70^A0,25,25^FD" & LastName & "^FS^FO0,100^A0,25,25^FD" & FirstName & "^FS^FO0,130^A0,15,15^FD" & rn & "^FS^XZ"
+    WindowsPrintWrapper.SendStringToZebraPrinter ZebraFormat, "Zebra TLP3844-Z"
+    
+    'ZebraFormat = "^XA^FO530,70^BCN,50,N,N,N^FD" & StringToPrint & "^FS^FO530,170^A,0,30,30^FD" & StringToPrint & "^FS^XZ"
+    'ZebraFormat = "^XA^FO40,40^A0,40,40^FD" & DNANumber & "^FS^FO40,85^A0,30,30^FD" & LastName & "^FS^FO40,120^A0,25,25^FD" & FirstName & "^FS^XZ"
+    
+End Function
