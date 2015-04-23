@@ -27,17 +27,10 @@ End Sub
 
 Private Function PrintZebraLabel(StringToPrint As String)
 
-    Dim rn As String
-        rn = InputBox("DNA prep run number? e.g. 100722")
-        rn = rn & " " & Desc
-'        rn = Conc & "ng/ul  prep: " & rn
-
-
     Dim ZebraFormat As String
-        ZebraFormat = "^XA^FO0,25^A0,40,40^FD" & DNANumber & "^FS^FO0,70^A0,25,25^FD" & LastName & "^FS^FO0,100^A0,25,25^FD" & FirstName & "^FS^FO0,130^A0,15,15^FD" & rn & "^FS^XZ"
-    WindowsPrintWrapper.SendStringToZebraPrinter ZebraFormat, "Zebra TLP3844-Z"
+        
+    ZebraFormat = "^XA^FO27,36^A0,38,38^FD" & DNANumber & "^FS^FO30,74^A0,25,25^FD" & LastName & "^FS^FO30,98^A0,20,20^FD" & FirstName & "^FS^XZ"
     
-    'ZebraFormat = "^XA^FO530,70^BCN,50,N,N,N^FD" & StringToPrint & "^FS^FO530,170^A,0,30,30^FD" & StringToPrint & "^FS^XZ"
-    'ZebraFormat = "^XA^FO40,40^A0,40,40^FD" & DNANumber & "^FS^FO40,85^A0,30,30^FD" & LastName & "^FS^FO40,120^A0,25,25^FD" & FirstName & "^FS^XZ"
+    WindowsPrintWrapper.SendStringToZebraPrinter ZebraFormat, "Zebra TLP3844-Z"
     
 End Function
