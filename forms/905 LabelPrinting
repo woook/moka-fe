@@ -17,8 +17,10 @@ Private Function PrintZebraLabel(StringToPrint As String)
     
     Dim ZebraFormat As String
     
-    ZebraFormat = "^XA^FO40,40^A0,40,40^FD" & Text1 & "^FS^FO40,85^A0,30,30^FD" & Text3 & "^FS^XZ"
+    'formatted for 30(W) x 9(H) mm labels
+    ZebraFormat = "^XA^FO2,40^A0,40,40^FD" & Text1 & "^FS^FO2,85^A0,30,30^FD" & Text3 & "^FS^XZ"
     
     WindowsPrintWrapper.SendStringToZebraPrinter ZebraFormat, "Zebra TLP3844-Z"
     
 End Function
+
