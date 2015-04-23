@@ -1,0 +1,15 @@
+Option Compare Database
+Option Explicit
+
+Private Function PrintZebraLabel(StringToPrint As String)
+    Dim rn As String
+        rn = InputBox("DNA prep run number? e.g. 100722")
+        rn = Conc & "ng/ul  prep: " & rn
+    Dim ZebraFormat As String
+        ZebraFormat = "^XA^FO0,25^A0,40,40^FD" & DNANumber & "^FS^FO0,70^A0,25,25^FD" & LastName & "^FS^FO0,100^A0,25,25^FD" & FirstName & "^FS^FO0,130^A0,15,15^FD" & rn & "^FS^XZ"
+    WindowsPrintWrapper.SendStringToZebraPrinter ZebraFormat, "Zebra TLP3844-Z"
+End Function
+
+Private Sub Command13_Click()
+    PrintZebraLabel "HELLO!MELLO!COWSGOHOME"
+End Sub
