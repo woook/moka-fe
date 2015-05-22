@@ -1,0 +1,3 @@
+SELECT dbo_Patient.PatientID, dbo_Patient.LastName, dbo_Patient.FirstName, dbo_Patient.DoB, dbo_Patient.Sex, dbo_Patient.CreatedBy, dbo_Patient.CreatedDate, Patients.s_StatusOverall, Patients.InternalPatientID, Patients.MokaCreated, Patients.MokaCreatedBy, Patients.BookinLastName, Patients.BookinFirstName, Patients.BookinSex, Patients.BookinDOB, Patients.BookinCreatedBy, Patients.BookinCreatedDate, dbo_PatientNotesTrace.FamilyID
+FROM (dbo_Patient LEFT JOIN Patients ON dbo_Patient.PatientID = Patients.PatientID) LEFT JOIN dbo_PatientNotesTrace ON dbo_Patient.FamilyNo = dbo_PatientNotesTrace.FamilyID
+WHERE (((dbo_Patient.PatientID)=[Patient ID?]));
