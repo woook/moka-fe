@@ -1,0 +1,48 @@
+Option Compare Database
+
+Private Sub Form_AfterInsert()
+    Dim Q As ADODB.Recordset
+    Dim S As String
+    Dim d As String
+    Dim un As String
+    Dim cn As String
+    d = Format(Now, "dd/mmm/yyyy Hh:Nn:ss")
+    un = VBA.Environ("USERNAME")
+    cn = VBA.Environ("COMPUTERNAME")
+    Set Q = New ADODB.Recordset
+    S = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + ",'Phenotype: Referral indication added manually [" + Me![Phenotype] + "], ID " + CStr(Me![PhenotypeID]) + "',#" + d + "#,'" + un + "','" + cn + "')"
+    Q.Open S, CurrentProject.Connection
+    Set Q = Nothing
+End Sub
+
+Private Sub Form_Delete(Cancel As Integer)
+    Dim Q As ADODB.Recordset
+    Dim S As String
+    Dim d As String
+    Dim un As String
+    Dim cn As String
+    d = Format(Now, "dd/mmm/yyyy Hh:Nn:ss")
+    un = VBA.Environ("USERNAME")
+    cn = VBA.Environ("COMPUTERNAME")
+    Set Q = New ADODB.Recordset
+    S = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + ",'Phenotype: Referral indication deleted manually [" + Me![Phenotype] + "], ID " + CStr(Me![PhenotypeID]) + "',#" + d + "#,'" + un + "','" + cn + "')"
+    Q.Open S, CurrentProject.Connection
+    Set Q = Nothing
+End Sub
+
+Private Sub Phenotype_AfterUpdate()
+If Not IsNull([PhenotypeID]) Then
+    Dim Q As ADODB.Recordset
+    Dim S As String
+    Dim d As String
+    Dim un As String
+    Dim cn As String
+    d = Format(Now, "dd/mmm/yyyy Hh:Nn:ss")
+    un = VBA.Environ("USERNAME")
+    cn = VBA.Environ("COMPUTERNAME")
+    Set Q = New ADODB.Recordset
+    S = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + ",'Phenotype: Referral indication updated manually to [" + Me![Phenotype] + "], ID " + CStr(Me![PhenotypeID]) + "',#" + d + "#,'" + un + "','" + cn + "')"
+    Q.Open S, CurrentProject.Connection
+    Set Q = Nothing
+    End If
+End Sub
