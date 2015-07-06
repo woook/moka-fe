@@ -1,4 +1,4 @@
-SELECT Checker.Check1ID, Checker.Initials, LogTraining.TrainingID, LogTraining.TrainingAreaID, LogTraining.ProcedureClassID, LogTraining.TrainingProcedureID, LogTraining.Date, LogTraining.[Number of samples] AS Expr1, LogTraining.SupervisorID, LogTraining.TraineeID, LogTraining.TraineeComments, LogTraining.SupervisorComments
+SELECT Checker.Check1ID, Checker.Initials, LogTraining.TrainingID, LogTraining.TrainingAreaID, LogTraining.ProcedureClassID, LogTraining.TrainingProcedureID, LogTraining.Date, LogTraining.NumberOfSamples, LogTraining.SupervisorID, LogTraining.TraineeID, LogTraining.TraineeComments, LogTraining.SupervisorComments
 FROM LogTraining INNER JOIN Checker ON LogTraining.TraineeID = Checker.Check1ID
 WHERE (((Checker.Initials)=[Whose training log? (initals)]))
 ORDER BY LogTraining.Date DESC;
