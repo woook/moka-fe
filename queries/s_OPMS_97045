@@ -1,5 +1,5 @@
 SELECT Format([ArrayResultDate],"yyyy") & "-" & Format(Format([ArrayResultDate],"mm"),"00") AS [Month], Count(ArrayTest.ArrayTestID) AS Followups
 FROM ArrayTest INNER JOIN Patients ON ArrayTest.InternalPatientID = Patients.InternalPatientID
-WHERE (((ArrayTest.ReferralID)=1185356884) AND ((ArrayTest.ArrayResultDate)>#8/1/2007#) AND ((Patients.s_StatusOverall)=4))
+WHERE (((ArrayTest.ReferralID)=1185356884 Or (ArrayTest.ReferralID)=1199901195 Or (ArrayTest.ReferralID)=1199901197 Or (ArrayTest.ReferralID)=1199901204 Or (ArrayTest.ReferralID)=1199901198 Or (ArrayTest.ReferralID)=1199901200 Or (ArrayTest.ReferralID)=1199901201) AND ((ArrayTest.ArrayResultDate)>#8/1/2007#) AND ((Patients.s_StatusOverall)=4))
 GROUP BY Format([ArrayResultDate],"yyyy") & "-" & Format(Format([ArrayResultDate],"mm"),"00")
 ORDER BY Format([ArrayResultDate],"yyyy") & "-" & Format(Format([ArrayResultDate],"mm"),"00");
