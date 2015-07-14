@@ -264,6 +264,16 @@ Private Sub OverallResultComments_DblClick(Cancel As Integer)
     DoCmd.OpenForm stDocName, acFormDS, , stLinkCriteria
 End Sub
 
+Private Sub Patient_DblClick(Cancel As Integer)
+    Dim stDocName As String
+    Dim stLinkCriteria As String
+
+    stDocName = "s02_SameFID"
+    
+    stLinkCriteria = "[FamilyNo]=" & "'" & Me![FamilyNo] & "'"
+    DoCmd.OpenForm stDocName, acFormDS, , stLinkCriteria
+End Sub
+
 ''moka alert
 Private Sub Command161_Click()
 On Error GoTo Err_Command161_Click
