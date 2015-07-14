@@ -1,0 +1,334 @@
+Option Compare Database
+Option Explicit
+
+'' Refresh HybID & Lock
+
+Private Sub Form_Current()
+    'Deprecated to imrpove load time: Form_s09_ArrayTest.DyeSwapID.Requery
+    Form_s09_ArrayTest.DNALabellingID.Requery
+    Form_s09_OligoPreliminaryResults.DNALabellingID.Requery
+    
+    If (Not IsNull(Form_s09_ArrayTest.Check1ID) And Not IsNull(Form_s09_ArrayTest.Check2ID) And [Form_09 ArrayResultsByPostition].SafetyCheck.Value = False) Then
+        Form_s09_ArrayTest.AllowEdits = False
+        Form_s09_OligoPreliminaryResults.AllowEdits = False
+        Form_s09_OligoPreliminaryResults.AllowDeletions = False
+        Form_s09_OligoPreliminaryResults.AllowAdditions = False
+        Form_s09_ArrayTestFile.AllowEdits = False
+        Form_s09_ArrayTestFile.AllowDeletions = False
+        Form_s09_ArrayTestFile.AllowAdditions = False
+        '[Form_09 ArrayResultsByPostition].AllowEdits = False
+        Form_s09_ArrayTest.PriorityCase.Visible = False
+    Else
+        Form_s09_ArrayTest.AllowEdits = True
+        Form_s09_OligoPreliminaryResults.AllowEdits = True
+        Form_s09_OligoPreliminaryResults.AllowDeletions = True
+        Form_s09_OligoPreliminaryResults.AllowAdditions = True
+        Form_s09_ArrayTestFile.AllowEdits = True
+        Form_s09_ArrayTestFile.AllowDeletions = True
+        Form_s09_ArrayTestFile.AllowAdditions = True
+        '[Form_09 ArrayResultsByPostition].AllowEdits = True
+        If Form_s09_ArrayTest.Priority <> -1 Then
+            Form_s09_ArrayTest.PriorityCase.Visible = False
+            Else
+            Form_s09_ArrayTest.PriorityCase.Visible = True
+            End If
+    End If
+
+End Sub
+
+
+''safety switch
+
+Private Sub SafetyOnOff_Click()
+    SafetyCheck.Value = Not SafetyCheck.Value
+'    DoCmd.DoMenuItem acFormBar, acRecordsMenu, acSaveRecord, , acMenuVer70
+    Form_Current
+
+End Sub
+
+''logging
+
+Private Sub s_StatusOverall_AfterUpdate()
+    Dim r As ADODB.Recordset
+    Dim S As String
+    Dim d As String
+    
+    Dim cn As String
+    Dim un As String
+    un = VBA.Environ("USERNAME")
+    cn = VBA.Environ("COMPUTERNAME")
+    
+    d = Format(Now, "dd/mmm/yyyy Hh:Nn:ss")
+    Set r = New ADODB.Recordset
+    S = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + ",'Patient: Status changed to " + Me![s_StatusOverall].Column(1) + "',#" + d + "#,'" + un + "','" + cn + "')"
+    r.Open S, CurrentProject.Connection
+    Set r = Nothing
+End Sub
+
+Private Sub ResultCode_AfterUpdate()
+    Dim r As ADODB.Recordset
+    Dim S As String
+    Dim d As String
+    
+    Dim cn As String
+    Dim un As String
+    un = VBA.Environ("USERNAME")
+    cn = VBA.Environ("COMPUTERNAME")
+    
+    d = Format(Now, "dd/mmm/yyyy Hh:Nn:ss")
+    Set r = New ADODB.Recordset
+    If IsNull(Me![OverallResultCodeID]) Then
+        S = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + ",'Patient: ResultCode deleted',#" + d + "#,'" + un + "','" + cn + "')"
+    Else
+        S = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + ",'Patient: ResultCode changed to " + Me![ResultCode].Column(1) + "',#" + d + "#,'" + un + "','" + cn + "')"
+    End If
+    r.Open S, CurrentProject.Connection
+    Set r = Nothing
+
+    If (Me!OverallResultCodeID = 10 And Me!s_StatusOverall <> 1168443116) Then
+        MsgBox "Paternity and maternity confirmed?", , "Don't be a dummy"
+    End If
+End Sub
+
+Private Sub OverallResultComments_AfterUpdate()
+    Dim r As ADODB.Recordset
+    Dim S As String
+    Dim d As String
+    Dim t As String
+    Dim cn As String
+    Dim un As String
+    un = VBA.Environ("USERNAME")
+    cn = VBA.Environ("COMPUTERNAME")
+    
+    d = Format(Now, "dd/mmm/yyyy Hh:Nn:ss")
+    Set r = New ADODB.Recordset
+    If IsNull(Me![OverallResultComments]) Then
+        S = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + ",'Patient: Result deleted',#" + d + "#,'" + un + "','" + cn + "')"
+        t = "INSERT INTO PrevOverallResult(InternalPatientID, OverallResult, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + ",'Patient result deleted',#" + d + "#,'" + un + "','" + cn + "')"
+    Else
+        S = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + ",'Patient: Result changed to [" + Me![OverallResultComments] + "]',#" + d + "#,'" + un + "','" + cn + "')"
+        t = "INSERT INTO PrevOverallResult(InternalPatientID, OverallResult, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + ",'" & Me![OverallResultComments] & "',#" + d + "#,'" + un + "','" + cn + "')"
+    End If
+    r.Open S, CurrentProject.Connection
+    r.Open t, CurrentProject.Connection
+    Set r = Nothing
+End Sub
+
+
+'This function seems redundant now, inactivated 140707
+''' Refresh DGV linkout
+'
+'Private Sub Label9_DblClick(Cancel As Integer)
+'    Form_s09_DGVlinkout.Requery
+'End Sub
+
+
+'' Open forms
+
+Private Sub openArrayResults_Click()
+On Error GoTo Err_openArrayResults_Click
+
+    DoCmd.DoMenuItem acFormBar, acRecordsMenu, 5, , acMenuVer70
+    
+    Dim stDocName As String
+    Dim stLinkCriteria As String
+
+    stDocName = "06 ChooseArrayResults"
+    
+    stLinkCriteria = "[PatientID]=" & "'" & Me![PatientID] & "'"
+    DoCmd.OpenForm stDocName, , , stLinkCriteria
+
+Exit_openArrayResults_Click:
+    Exit Sub
+
+Err_openArrayResults_Click:
+    MsgBox Err.Description
+    Resume Exit_openArrayResults_Click
+    
+End Sub
+
+Private Sub OpenPatientArrays_Click()
+On Error GoTo Err_OpenPatientArrays_Click
+
+    DoCmd.DoMenuItem acFormBar, acRecordsMenu, 5, , acMenuVer70
+    
+    Dim stDocName As String
+    Dim stLinkCriteria As String
+
+    stDocName = "04 Patient Arrays"
+    
+    stLinkCriteria = "[PatientID]=" & "'" & Me![PatientID] & "'"
+    DoCmd.OpenForm stDocName, , , stLinkCriteria
+
+Exit_OpenPatientArrays_Click:
+    Exit Sub
+
+Err_OpenPatientArrays_Click:
+    MsgBox Err.Description
+    Resume Exit_OpenPatientArrays_Click
+    
+End Sub
+
+Private Sub OpenPatientDetails_Click()
+On Error GoTo Err_OpenPatientDetails_Click
+
+    DoCmd.DoMenuItem acFormBar, acRecordsMenu, 5, , acMenuVer70
+    
+    Dim stDocName As String
+    Dim stLinkCriteria As String
+
+    stDocName = "02 Patient Details"
+    
+    stLinkCriteria = "[PatientID]=" & "'" & Me![PatientID] & "'"
+    DoCmd.OpenForm stDocName, , , stLinkCriteria
+
+Exit_OpenPatientDetails_Click:
+    Exit Sub
+
+Err_OpenPatientDetails_Click:
+    MsgBox Err.Description
+    Resume Exit_OpenPatientDetails_Click
+    
+End Sub
+
+
+Private Sub Command149_Click()
+On Error GoTo Err_Command149_Click
+
+    Dim stDocName As String
+    Dim stLinkCriteria As String
+
+    stDocName = "s09_OligoPreliminaryResults_hg18"
+    
+    stLinkCriteria = "[InternalPatientID]=" & Me![InternalPatientID]
+    DoCmd.OpenForm stDocName, acFormDS, , stLinkCriteria
+
+Exit_Command149_Click:
+    Exit Sub
+
+Err_Command149_Click:
+    MsgBox Err.Description
+    Resume Exit_Command149_Click
+    
+End Sub
+
+Private Sub Command152_Click()
+On Error GoTo Err_Command152_Click
+
+    Dim stDocName As String
+    Dim stLinkCriteria As String
+
+    stDocName = "s09_AddingArrayRequest"
+    
+    stLinkCriteria = "[InternalPatientID]=" & Me![InternalPatientID]
+    DoCmd.OpenForm stDocName, , , stLinkCriteria
+
+Exit_Command152_Click:
+    Exit Sub
+
+Err_Command152_Click:
+    MsgBox Err.Description
+    Resume Exit_Command152_Click
+    
+End Sub
+
+Private Sub Command156_Click()
+On Error GoTo Err_Command156_Click
+    Dim stDocName As String
+    Dim stLinkCriteria As String
+    stDocName = "s09_FamilyDNA"
+    'stLinkCriteria = "[FamilyNo]=" & "'" & Me![FamilyNo] & "'"
+    'DoCmd.OpenForm stDocName, acFormDS, , stLinkCriteria
+    DoCmd.OpenForm stDocName, acFormDS
+Exit_Command156_Click:
+    Exit Sub
+Err_Command156_Click:
+    MsgBox Err.Description
+    Resume Exit_Command156_Click
+End Sub
+
+Private Sub Command158_Click()
+    Dim stDocName As String
+    Dim stLinkCriteria As String
+    stDocName = "s09_FamilyHybs"
+    'stLinkCriteria = "[FamilyNo]=" & "'" & Me![FamilyNo] & "'"
+    'DoCmd.OpenForm stDocName, acFormDS, , stLinkCriteria
+    DoCmd.OpenForm stDocName, acFormDS
+End Sub
+
+Private Sub OverallResultComments_DblClick(Cancel As Integer)
+    Dim stDocName As String
+    Dim stLinkCriteria As String
+    stDocName = "s02_PrevOverallResults"
+    stLinkCriteria = "[InternalPatientID]=" & Me![InternalPatientID]
+    DoCmd.OpenForm stDocName, acFormDS, , stLinkCriteria
+End Sub
+
+''moka alert
+Private Sub Command161_Click()
+On Error GoTo Err_Command161_Click
+
+
+If Me.s_StatusOverall = 4 And Not IsNull(Me.OverallResultComments) Then
+    
+    Dim iCfg As CDO.Configuration
+    Dim iMsg As CDO.Message
+    Dim emailto As String
+    Dim subjectline As String
+    Dim emailbody As String
+    
+    Set iCfg = New CDO.Configuration
+    
+    With iCfg
+    '.Fields(cdoSMTPServer) = "sv-pr-ex33.gstt.local"  '<---this works but IT want me to use the smtp server instead
+    '.Fields(cdoSMTPServer) = "smtp.gstt.local"       '<---old smtp that will go offline 10/04/2014
+    .Fields(cdoSMTPServer) = "relay.gstt.local"        '<---new smtp
+    .Fields(cdoSMTPServerPort) = 25 ' typically
+    .Fields(cdoSendUsingMethod) = cdoSendUsingPort
+    .Fields(cdoSMTPConnectionTimeout) = 200
+    .Fields.Update
+    End With
+    
+    emailto = "Prenatal-array@gstt.nhs.uk;cytodutyscientist@gstt.nhs.uk"
+    'emailto = "joowook.ahn@gstt.nhs.uk"
+    'subjectline = "Prenatal array result for " & Me!SpecimenType & " sample " & Me!SpecimenNo
+    subjectline = "Prenatal array result for specimen " & Me!SpecimenNo
+    emailbody = "<font face='arial' size='3'><br /><br />" _
+        & "Prenatal array result<br /><br />" _
+        & "Specimen: <b>" & Me!SpecimenNo & "</b><br />" _
+        & "PatientID: <b>" & Me!PatientID & "</b><br />" _
+        & "Name: <b>" & Me!PatientName & "</b><br />" _
+        & "Result: <b>" & Me!OverallResultComments & "</b><br /><br /><br /><br /></font>"
+        '& "Specimen: <b>" & Me!SpecimenNo & " (" & Me!SpecimenType & ")</b><br />"
+    Set iMsg = New CDO.Message
+    With iMsg
+    Set .Configuration = iCfg
+    .From = """Moka Alerts"" <moka.alerts@gstt.nhs.uk>"
+    .Sender = "moka.alerts@gstt.nhs.uk"
+    .ReplyTo = "Prenatal-array@gstt.nhs.uk"
+    .Subject = subjectline
+    .HTMLBody = emailbody
+    .To = emailto
+    .BCC = "moka.alerts@gstt.nhs.uk"
+    .Send
+    End With
+    
+    Set iMsg = Nothing
+    Set iCfg = Nothing
+    
+    MsgBox "Moka alert sent (will take a few minutes to arrive)", , "Don't be a dummy"
+    
+    Else
+    
+        MsgBox "Patient result not complete", , "Don't be a dummy"
+    
+    End If
+
+Exit_Command161_Click:
+    Exit Sub
+
+Err_Command161_Click:
+    MsgBox Err.Description
+    Resume Exit_Command161_Click
+    
+End Sub
