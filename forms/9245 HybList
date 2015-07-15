@@ -1,23 +1,25 @@
 Option Compare Database
 
 Private Sub HybID_DblClick(Cancel As Integer)
-
-Do While Not Recordset.EOF
-    Dim stDocName As String
-    Dim stLinkCriteria As String
-    stDocName = "ArrayTestSheet"
-    stLinkCriteria = "[ArrayTestID]=" & Me![ArrayTestID]
-    DoCmd.OpenReport stDocName, acNormal, , stLinkCriteria
-    'DoCmd.OpenReport stDocName, acViewPreview, , stLinkCriteria
-    Recordset.MoveNext
-    Loop
-
+    Do While Not Recordset.EOF
+        If Me!ReferralID <> 1199901184 Then
+            Dim stDocName As String
+            Dim stLinkCriteria As String
+            stDocName = "ArrayTestSheet"
+            stLinkCriteria = "[ArrayTestID]=" & Me![ArrayTestID]
+            DoCmd.OpenReport stDocName, acNormal, , stLinkCriteria
+            'DoCmd.OpenReport stDocName, acViewPreview, , stLinkCriteria
+            End If
+        Recordset.MoveNext
+        Loop
 End Sub
 
 Private Sub Referral_DblClick(Cancel As Integer)
-    Dim stDocName As String
-    Dim stLinkCriteria As String
-    stDocName = "ArrayTestSheet"
-    stLinkCriteria = "[ArrayTestID]=" & Me![ArrayTestID]
-    DoCmd.OpenReport stDocName, acNormal, , stLinkCriteria
+    If Me!ReferralID <> 1199901184 Then
+        Dim stDocName As String
+        Dim stLinkCriteria As String
+        stDocName = "ArrayTestSheet"
+        stLinkCriteria = "[ArrayTestID]=" & Me![ArrayTestID]
+        DoCmd.OpenReport stDocName, acNormal, , stLinkCriteria
+        End If
 End Sub
