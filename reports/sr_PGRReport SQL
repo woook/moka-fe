@@ -1,4 +1,4 @@
-SELECT Left([Patients].[PatientID],6) AS Family, Mid([dbo_Patient_Table].[FirstName],InStr([dbo_Patient_Table].[FirstName],"E"),20) AS Embryo, ResultCode.CodeDescription AS [Biopsy Diagnosis], ResultCode.AdditionalDescription AS [Suitable for Transfer]
+SELECT Left([Patients].[PatientID],6) AS Family, Mid([dbo_Patient_Table].[FirstName],InStr([dbo_Patient_Table].[FirstName],"E"),20) AS Embryo, ResultCode.CodeDescription AS [Biopsy Diagnosis], ResultCode.AdditionalDescription AS [Suitable for Transfer], Val(Mid([dbo_Patient_Table].[FirstName],InStr([dbo_Patient_Table].[FirstName],"E")+1,20)) AS EN
 FROM ((Patients INNER JOIN dbo_Patient_Table ON Patients.PatientID = dbo_Patient_Table.PatientTrustID) INNER JOIN ArrayTest ON Patients.InternalPatientID = ArrayTest.InternalPatientID) INNER JOIN ResultCode ON ArrayTest.ArrayResultCodeID = ResultCode.ResultCodeID
 WHERE (((ResultCode.CodeDescription) Is Not Null) AND ((ResultCode.AdditionalDescription) Is Not Null))
-ORDER BY Mid([dbo_Patient_Table].[FirstName],InStr([dbo_Patient_Table].[FirstName],"E"),20);
+ORDER BY Val(Mid([dbo_Patient_Table].[FirstName],InStr([dbo_Patient_Table].[FirstName],"E")+1,20));
