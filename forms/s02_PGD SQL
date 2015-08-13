@@ -1,3 +1,3 @@
-SELECT ePGDCycle.ePGDCycleID, ePGDCycle.CarrierInternalPatientID, ePGDCycle.EggCollectionDate, ePGDCycle.IVFNo, ePGDCycle.CycleNo, ePGDCycle.EmbryoBiopsyDate, ePGDCycle.EmbryosForPGD, ePGDCycle.EmbryosForTransfer, ePGDCycle.PGDResultComment
+SELECT ePGDCycle.ePGDCycleID, ePGDCycle.CarrierInternalPatientID, ePGDCycle.EggCollectionDate, ePGDCycle.IVFNo, ePGDCycle.CycleNo, ePGDCycle.EmbryosForPGD, ePGDCycle.EmbryosForTransfer, ePGDCycle.PGDResultComment
 FROM ePGDCycle
 ORDER BY ePGDCycle.EggCollectionDate DESC;
