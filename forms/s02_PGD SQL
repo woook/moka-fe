@@ -1,0 +1,3 @@
+SELECT ePGDCycle.ePGDCycleID, ePGDCycle.CarrierInternalPatientID, ePGDCycle.EggCollectionDate, ePGDCycle.IVFNo, ePGDCycle.EmbryoBiopsyDate, ePGDCycle.EmbryosForPGD, ePGDCycle.EmbryosForTransfer, ePGDCycle.PGDCycleComment
+FROM ePGDCycle
+ORDER BY ePGDCycle.EggCollectionDate DESC;
