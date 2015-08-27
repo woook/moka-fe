@@ -1,0 +1,29 @@
+Option Compare Database
+
+''open forms
+Private Sub Category_DblClick(Cancel As Integer)
+    Dim stDocName As String
+    Dim stLinkCriteria As String
+    stDocName = "s87000_AddCategories"
+    DoCmd.OpenForm stDocName, , , stLinkCriteria
+End Sub
+
+''Auto Pan number
+Private Sub Checker1_AfterUpdate()
+If Not IsNull(Me.Checker2) Then
+    Me.Panel = Me.Category.Column(1) & " - " & Me.SubCategory.Column(1)
+    Me.PanelCode = "Pan" & Me.NGSPanelID
+    Else
+    Me.Panel = Null
+    Me.PanelCode = ""
+    End If
+End Sub
+
+''autodate
+Private Sub Checker2_AfterUpdate()
+If Not IsNull(Me.Checker2) Then
+    Me.CheckDate = Now()
+    Else
+    Me.CheckDate = Null
+    End If
+End Sub
