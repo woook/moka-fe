@@ -1,0 +1,6 @@
+Option Compare Database
+
+
+Private Sub GenesHGNC_140714ID_AfterUpdate()
+    Me.Symbol = Me.GenesHGNC_140714ID.Column(1)
+End Sub
