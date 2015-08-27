@@ -16,6 +16,7 @@ If Not IsNull(Me.Checker1) Then
         Me.Dirty = False
         End If
     Me.PanelCode = "Pan" & Me.NGSPanelID
+    Me.Active = 0
     Else
     Me.Panel = Null
     Me.PanelCode = ""
@@ -26,6 +27,7 @@ End Sub
 Private Sub Checker2_AfterUpdate()
 If Not IsNull(Me.Checker2) Then
     Me.CheckDate = Now()
+    Me.Active = 1
     Else
     Me.CheckDate = Null
     End If
