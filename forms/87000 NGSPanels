@@ -32,3 +32,33 @@ If Not IsNull(Me.Checker2) Then
     Me.CheckDate = Null
     End If
 End Sub
+
+Private Sub PanelCode_DblClick(Cancel As Integer)
+''Write file of gene symbols in the panel
+    Dim DestFile As String
+    Dim DestFolder As String
+    Dim PanID As String
+    Dim DateTime As String
+    
+    DestFile = Me.PanelCode & ".txt"
+    DestFolder = "C:\Array\TMP"
+    DestFile = DestFolder & "\" & DestFile
+    PanID = Me.NGSPanelID
+    DateTime = Format(Now, "dd/mmm/yyyy Hh:Nn:ss")
+    
+    Set fs = CreateObject("Scripting.FileSystemObject")
+    Set a = fs.CreateTextFile(DestFile, False)
+    a.WriteLine ("#Created by Moka " & DateTime)
+    Dim rst As DAO.Recordset
+    Set rst = CurrentDb.OpenRecordset("SELECT NGSPanelGenes.Symbol, NGSPanelGenes.NGSPanelID From NGSPanelGenes WHERE NGSPanelGenes.NGSPanelID=" + PanID, dbOpenSnapshot)
+    Do While Not rst.EOF
+        a.WriteLine (rst!Symbol)
+        rst.MoveNext
+    Loop
+    rst.Close
+    Set rst = Nothing
+    
+''Open folder containing file
+    Set objShell = CreateObject("Wscript.Shell")
+    objShell.Run (DestFolder)
+End Sub
