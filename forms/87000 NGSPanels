@@ -40,7 +40,7 @@ Private Sub PanelCode_DblClick(Cancel As Integer)
     Dim PanID As String
     Dim DateTime As String
     
-    DestFile = Me.PanelCode & ".txt"
+    DestFile = Me.PanelCode & "_genes.txt"
     DestFolder = "C:\Array\TMP"
     DestFile = DestFolder & "\" & DestFile
     PanID = Me.NGSPanelID
