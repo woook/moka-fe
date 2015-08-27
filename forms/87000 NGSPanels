@@ -12,6 +12,9 @@ End Sub
 Private Sub Checker1_AfterUpdate()
 If Not IsNull(Me.Checker1) Then
     Me.Panel = Me.Category.Column(1) & " - " & Me.SubCategory.Column(1)
+    If Me.Dirty Then
+        Me.Dirty = False
+        End If
     Me.PanelCode = "Pan" & Me.NGSPanelID
     Else
     Me.Panel = Null
