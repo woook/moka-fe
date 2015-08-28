@@ -93,12 +93,18 @@ Private Sub Command103_Click()
             End If
         If Not IsNull(Me![DOB]) Then
             b = Format(Me![DOB], "dd/mmm/yyyy Hh:Nn:ss")
-            S = "INSERT INTO Patients(PatientID, s_StatusOverall, MokaCreated, MokaCreatedBy, MokaCreatedPC, BookinLastName, BookinFirstName, BookinSex, BookinDOB, BookinCreatedBy, BookinCreatedDate) VALUES ('" & Me![PatientID] & "','" + CStr(Me![s_StatusOverall]) + "',#" + d + "#,'" + t + "','" + p + "','" + ln + "','" + fn + "','" + x + "',#" + b + "#,'" + c + "',#" + i + "#)"
+            If Not IsNull(Me!ePGDCycleID) Then
+                S = "INSERT INTO Patients(PatientID, s_StatusOverall, ePGDCycleID, MokaCreated, MokaCreatedBy, MokaCreatedPC, BookinLastName, BookinFirstName, BookinSex, BookinDOB, BookinCreatedBy, BookinCreatedDate) VALUES ('" & Me![PatientID] & "','" + CStr(Me![s_StatusOverall]) + "','" + CStr(Me![ePGDCycleID]) + "',#" + d + "#,'" + t + "','" + p + "','" + ln + "','" + fn + "','" + x + "',#" + b + "#,'" + c + "',#" + i + "#)"
+                Else
+                S = "INSERT INTO Patients(PatientID, s_StatusOverall, MokaCreated, MokaCreatedBy, MokaCreatedPC, BookinLastName, BookinFirstName, BookinSex, BookinDOB, BookinCreatedBy, BookinCreatedDate) VALUES ('" & Me![PatientID] & "','" + CStr(Me![s_StatusOverall]) + "',#" + d + "#,'" + t + "','" + p + "','" + ln + "','" + fn + "','" + x + "',#" + b + "#,'" + c + "',#" + i + "#)"
+                End If
             Else
-            S = "INSERT INTO Patients(PatientID, s_StatusOverall, MokaCreated, MokaCreatedBy, MokaCreatedPC, BookinLastName, BookinFirstName, BookinSex, BookinCreatedBy, BookinCreatedDate) VALUES ('" & Me![PatientID] & "','" + CStr(Me![s_StatusOverall]) + "',#" + d + "#,'" + t + "','" + p + "','" + ln + "','" + fn + "','" + x + "','" + c + "',#" + i + "#)"
+            If Not IsNull(Me!ePGDCycleID) Then
+                S = "INSERT INTO Patients(PatientID, s_StatusOverall, ePGDCycleID, MokaCreated, MokaCreatedBy, MokaCreatedPC, BookinLastName, BookinFirstName, BookinSex, BookinCreatedBy, BookinCreatedDate) VALUES ('" & Me![PatientID] & "','" + CStr(Me![s_StatusOverall]) + "','" + CStr(Me![ePGDCycleID]) + "',#" + d + "#,'" + t + "','" + p + "','" + ln + "','" + fn + "','" + x + "','" + c + "',#" + i + "#)"
+                Else
+                S = "INSERT INTO Patients(PatientID, s_StatusOverall, MokaCreated, MokaCreatedBy, MokaCreatedPC, BookinLastName, BookinFirstName, BookinSex, BookinCreatedBy, BookinCreatedDate) VALUES ('" & Me![PatientID] & "','" + CStr(Me![s_StatusOverall]) + "',#" + d + "#,'" + t + "','" + p + "','" + ln + "','" + fn + "','" + x + "','" + c + "',#" + i + "#)"
+                End If
             End If
-
-        
 
         DoCmd.SetWarnings False
         DoCmd.RunSQL S
