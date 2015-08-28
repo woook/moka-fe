@@ -1,0 +1,2 @@
+SELECT TOP 1 Patients.PatientID, dbo_FamilyNotesTrace_Table.FamilyID
+FROM Patients INNER JOIN (dbo_Patient_Table LEFT JOIN dbo_FamilyNotesTrace_Table ON dbo_Patient_Table.FamilyID = dbo_FamilyNotesTrace_Table.FamilyID) ON Patients.PatientID = dbo_Patient_Table.PatientTrustID;
