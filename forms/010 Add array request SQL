@@ -1,0 +1,2 @@
+SELECT Patients.s_StatusOverall, Patients.InternalPatientID, Patients.PatientID, Patients.Sexed, [LastName] & " " & [FirstName] AS Name, dbo_Patient_Table.DoB, dbo_FamilyNotesTrace_Table.FamilyID, Left([patients].[patientID],6) AS FamilyNo, gw_GenderTable.GenderShort AS Sex
+FROM ((Patients INNER JOIN dbo_Patient_Table ON Patients.PatientID = dbo_Patient_Table.PatientTrustID) LEFT JOIN dbo_FamilyNotesTrace_Table ON dbo_Patient_Table.FamilyID = dbo_FamilyNotesTrace_Table.FamilyID) LEFT JOIN gw_GenderTable ON dbo_Patient_Table.GenderID = gw_GenderTable.GenderID;
