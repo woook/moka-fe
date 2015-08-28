@@ -1,0 +1,1680 @@
+Option Compare Database
+
+Private Sub Form_Open(Cancel As Integer)
+    DoCmd.Maximize
+End Sub
+
+Private Sub Command152_Click()
+    Dim stDocName As String
+    Dim stLinkCriteria As String
+
+    stDocName = "7001 ACRDMatches"
+    DoCmd.OpenForm stDocName, acFormDS, , stLinkCriteria
+End Sub
+
+Private Sub Command27_Click()
+On Error GoTo Err_Command27_Click
+
+    Dim stDocName As String
+    Dim stLinkCriteria As String
+
+    stDocName = "s08_ProbeFrequency"
+    DoCmd.OpenForm stDocName, acFormDS, , stLinkCriteria
+
+Exit_Command27_Click:
+    Exit Sub
+
+Err_Command27_Click:
+    MsgBox Err.Description
+    Resume Exit_Command27_Click
+End Sub
+
+Private Sub Command100_Click()
+    Dim stDocName As String
+    Dim stLinkCriteria As String
+
+    stDocName = "9241 CheckArrayAssignment"
+    DoCmd.OpenForm stDocName, acFormDS, , stLinkCriteria
+End Sub
+
+Private Sub Command101_Click()
+    Dim stDocName As String
+    Dim stLinkCriteria As String
+
+    stDocName = "377 AddMLPAProbe"
+    DoCmd.OpenForm stDocName, , , stLinkCriteria
+End Sub
+
+Private Sub Command102_Click()
+    Dim stDocName As String
+    Dim stLinkCriteria As String
+
+    stDocName = "980 DLRS"
+    DoCmd.OpenForm stDocName, , , stLinkCriteria
+End Sub
+
+Private Sub Command103_Click()
+    Dim stDocName As String
+    Dim stLinkCriteria As String
+
+    stDocName = "460 TrainingLog"
+    DoCmd.OpenForm stDocName, acFormDS, , stLinkCriteria
+End Sub
+
+Private Sub Command111_Click()
+    Dim stDocName As String
+    Dim stLinkCriteria As String
+
+    stDocName = "701 LeagueOfClinicians"
+    DoCmd.OpenForm stDocName, acFormDS, , stLinkCriteria
+End Sub
+
+Private Sub Command3_Click()
+On Error GoTo Err_Command3_Click
+
+    Dim stDocName As String
+    Dim stLinkCriteria As String
+
+    stDocName = "01 Add Patients"
+    DoCmd.OpenForm stDocName, , , stLinkCriteria
+
+Exit_Command3_Click:
+    Exit Sub
+
+Err_Command3_Click:
+    MsgBox Err.Description
+    Resume Exit_Command3_Click
+    
+End Sub
+
+Private Sub Command127_Click()
+    Dim stDocName As String
+    Dim stLinkCriteria As String
+
+    stDocName = "906 CleanupLabels"
+    DoCmd.OpenForm stDocName, , , stLinkCriteria
+End Sub
+
+Private Sub Command128_Click()
+    Dim stDocName As String
+    Dim stLinkCriteria As String
+
+    stDocName = "task_hybIDs"
+    DoCmd.OpenForm stDocName, acFormDS, , stLinkCriteria
+End Sub
+
+Private Sub Command129_Click()
+    Dim stDocName As String
+    Dim stLinkCriteria As String
+
+    stDocName = "935 UpdatePurified"
+    DoCmd.OpenForm stDocName, acFormDS, , stLinkCriteria
+End Sub
+
+Private Sub Command130_Click()
+    Dim stDocName As String
+    Dim stLinkCriteria As String
+
+    stDocName = "924 CheckHybDetails"
+    DoCmd.OpenForm stDocName, acFormDS, , stLinkCriteria
+End Sub
+
+Private Sub Command131_Click()
+    Dim stDocName As String
+    Dim stLinkCriteria As String
+
+    stDocName = "907 LabellingLabels"
+    DoCmd.OpenForm stDocName, , , stLinkCriteria
+End Sub
+
+Private Sub Command132_Click()
+    Dim stDocName As String
+    Dim stLinkCriteria As String
+
+    stDocName = "908 HybLabels"
+    DoCmd.OpenForm stDocName, , , stLinkCriteria
+End Sub
+
+Private Sub Command139_Click()
+    Dim stDocName As String
+    Dim stLinkCriteria As String
+
+    stDocName = "9228 HybRun"
+    DoCmd.OpenForm stDocName, acFormDS, , stLinkCriteria
+End Sub
+
+Private Sub Command140_Click()
+    Dim stDocName As String
+    Dim stLinkCriteria As String
+
+    stDocName = "9233 CleanupLabels"
+    DoCmd.OpenForm stDocName, , , stLinkCriteria
+End Sub
+
+Private Sub Command141_Click()
+    Dim stDocName As String
+    Dim stLinkCriteria As String
+
+    stDocName = "9229 StatusToHybridising"
+    DoCmd.OpenForm stDocName, , , stLinkCriteria
+End Sub
+
+Private Sub Command145_Click()
+    Dim stDocName As String
+    Dim stLinkCriteria As String
+
+    stDocName = "9235 OnHybRun"
+    DoCmd.OpenForm stDocName, , , stLinkCriteria
+End Sub
+
+Private Sub Command147_Click()
+    Dim stDocName As String
+    Dim stLinkCriteria As String
+
+    stDocName = "9237 HybPartners"
+    DoCmd.OpenForm stDocName, acFormDS, , stLinkCriteria
+End Sub
+
+Private Sub Command148_Click()
+    Dim stDocName As String
+    Dim stLinkCriteria As String
+
+    stDocName = "331 OutstandingOrders"
+    DoCmd.OpenForm stDocName, acFormDS, , stLinkCriteria
+End Sub
+
+
+Private Sub Command4_Click()
+On Error GoTo Err_Command4_Click
+
+    Dim stDocName As String
+    Dim stLinkCriteria As String
+
+    stDocName = "02 Patient Details"
+    DoCmd.OpenForm stDocName, , , stLinkCriteria
+
+Exit_Command4_Click:
+    Exit Sub
+
+Err_Command4_Click:
+    MsgBox Err.Description
+    Resume Exit_Command4_Click
+    
+End Sub
+
+Private Sub Command46_Click()
+On Error GoTo Err_Command46_Click
+
+    Dim stDocName As String
+    Dim stLinkCriteria As String
+
+    stDocName = "58 BAC Array Tests Needing Checking"
+    DoCmd.OpenForm stDocName, acFormDS, , stLinkCriteria
+
+Exit_Command46_Click:
+    Exit Sub
+
+Err_Command46_Click:
+    MsgBox Err.Description
+    Resume Exit_Command46_Click
+    
+End Sub
+
+Private Sub Command47_Click()
+On Error GoTo Err_Command47_Click
+
+    Dim stDocName As String
+    Dim stLinkCriteria As String
+
+    stDocName = "940 Scanned"
+    DoCmd.OpenForm stDocName, acFormDS, , stLinkCriteria
+
+Exit_Command47_Click:
+    Exit Sub
+
+Err_Command47_Click:
+    MsgBox Err.Description
+    Resume Exit_Command47_Click
+    
+End Sub
+
+Private Sub Command5_Click()
+On Error GoTo Err_Command5_Click
+
+    Dim stDocName As String
+    Dim stLinkCriteria As String
+
+    stDocName = "04 Patient Arrays"
+    DoCmd.OpenForm stDocName, , , stLinkCriteria
+
+Exit_Command5_Click:
+    Exit Sub
+
+Err_Command5_Click:
+    MsgBox Err.Description
+    Resume Exit_Command5_Click
+    
+End Sub
+Private Sub Command6_Click()
+On Error GoTo Err_Command6_Click
+
+    Dim stDocName As String
+    Dim stLinkCriteria As String
+
+    stDocName = "04b Anon Patient Arrays"
+    DoCmd.OpenForm stDocName, , , stLinkCriteria
+
+Exit_Command6_Click:
+    Exit Sub
+
+Err_Command6_Click:
+    MsgBox Err.Description
+    Resume Exit_Command6_Click
+    
+End Sub
+
+Private Sub Command56_Click()
+On Error GoTo Err_Command56_Click
+
+    Dim stDocName As String
+    Dim stLinkCriteria As String
+
+    stDocName = "919 DNACheck"
+    DoCmd.OpenForm stDocName, acFormDS, , stLinkCriteria
+
+Exit_Command56_Click:
+    Exit Sub
+
+Err_Command56_Click:
+    MsgBox Err.Description
+    Resume Exit_Command56_Click
+End Sub
+
+Private Sub Command64_Click()
+On Error GoTo Err_Command64_Click
+
+    Dim stDocName As String
+    Dim stLinkCriteria As String
+
+    stDocName = "970 LabellingGraphs"
+    DoCmd.OpenForm stDocName, , , stLinkCriteria
+
+Exit_Command64_Click:
+    Exit Sub
+
+Err_Command64_Click:
+    MsgBox Err.Description
+    Resume Exit_Command64_Click
+End Sub
+
+Private Sub Command8_Click()
+On Error GoTo Err_Command8_Click
+
+    Dim stDocName As String
+    Dim stLinkCriteria As String
+
+    stDocName = "35 Probe Browser"
+    DoCmd.OpenForm stDocName, , , stLinkCriteria
+
+Exit_Command8_Click:
+    Exit Sub
+
+Err_Command8_Click:
+    MsgBox Err.Description
+    Resume Exit_Command8_Click
+    
+End Sub
+
+Private Sub Command85_Click()
+    Dim stDocName As String
+    Dim stLinkCriteria As String
+
+    stDocName = "9224 RunSetup1"
+    DoCmd.OpenForm stDocName, acFormDS, , stLinkCriteria
+End Sub
+
+Private Sub Command86_Click()
+    Dim stDocName As String
+    Dim stLinkCriteria As String
+
+    stDocName = "01 Add Patients"
+    DoCmd.OpenForm stDocName, , , stLinkCriteria
+End Sub
+
+Private Sub Command9_Click()
+On Error GoTo Err_Command9_Click
+
+    Dim stDocName As String
+    Dim stLinkCriteria As String
+
+    stDocName = "370 MLPA Probes"
+    DoCmd.OpenForm stDocName, acFormDS, , stLinkCriteria
+
+Exit_Command9_Click:
+    Exit Sub
+
+Err_Command9_Click:
+    MsgBox Err.Description
+    Resume Exit_Command9_Click
+    
+End Sub
+
+Private Sub Command17_Click()
+On Error GoTo Err_Command17_Click
+
+
+    DoCmd.Close
+
+Exit_Command17_Click:
+    Exit Sub
+
+Err_Command17_Click:
+    MsgBox Err.Description
+    Resume Exit_Command17_Click
+    
+End Sub
+
+Private Sub Command18_Click()
+On Error GoTo Err_Command18_Click
+
+    Dim stDocName As String
+    Dim stLinkCriteria As String
+
+    stDocName = "50 Array Clinic Patients"
+    DoCmd.OpenForm stDocName, acFormDS, , stLinkCriteria
+
+Exit_Command18_Click:
+    Exit Sub
+
+Err_Command18_Click:
+    MsgBox Err.Description
+    Resume Exit_Command18_Click
+    
+End Sub
+Private Sub Command19_Click()
+On Error GoTo Err_Command19_Click
+
+    Dim stDocName As String
+    Dim stLinkCriteria As String
+
+    stDocName = "55 Array All Patients"
+    DoCmd.OpenForm stDocName, acFormDS, , stLinkCriteria
+
+Exit_Command19_Click:
+    Exit Sub
+
+Err_Command19_Click:
+    MsgBox Err.Description
+    Resume Exit_Command19_Click
+    
+End Sub
+
+Private Sub Command96_Click()
+    Dim stDocName As String
+    Dim stLinkCriteria As String
+
+    stDocName = "901 M_DNASamplesForGel"
+    DoCmd.OpenForm stDocName, acFormDS, , stLinkCriteria
+End Sub
+
+Private Sub Command97_Click()
+    Dim stDocName As String
+    Dim stLinkCriteria As String
+
+    stDocName = "01 Add Patients"
+    DoCmd.OpenForm stDocName, , , stLinkCriteria
+End Sub
+
+Private Sub open_372_Click()
+On Error GoTo Err_open_372_Click
+
+    Dim stDocName As String
+    Dim stLinkCriteria As String
+
+    stDocName = "372 MLPAProbePositions"
+    DoCmd.OpenForm stDocName, acFormDS, , stLinkCriteria
+
+Exit_open_372_Click:
+    Exit Sub
+
+Err_open_372_Click:
+    MsgBox Err.Description
+    Resume Exit_open_372_Click
+End Sub
+
+Private Sub open_381_Click()
+On Error GoTo Err_open_381_Click
+
+    Dim stDocName As String
+    Dim stLinkCriteria As String
+
+    stDocName = "381 FISHDevelopmentProbes"
+    DoCmd.OpenForm stDocName, acFormDS, , stLinkCriteria
+
+Exit_open_381_Click:
+    Exit Sub
+
+Err_open_381_Click:
+    MsgBox Err.Description
+    Resume Exit_open_381_Click
+    
+End Sub
+
+Private Sub open_9234_Click()
+    Dim stDocName As String
+    Dim stLinkCriteria As String
+
+    stDocName = "9605 AnalysisOrder"
+    DoCmd.OpenForm stDocName, acFormDS, , stLinkCriteria
+End Sub
+
+Private Sub open_926_Click()
+
+    Dim stDocName As String
+    Dim stLinkCriteria As String
+
+    stDocName = "926 CheckCleanupDetails"
+    DoCmd.OpenForm stDocName, acFormDS, , stLinkCriteria
+    
+End Sub
+
+Private Sub OpenConsumables_Click()
+On Error GoTo Err_OpenConsumables_Click
+
+    Dim stDocName As String
+    Dim stLinkCriteria As String
+
+    stDocName = "33 Inventory Consumables"
+    DoCmd.OpenForm stDocName, , , stLinkCriteria
+
+Exit_OpenConsumables_Click:
+    Exit Sub
+
+Err_OpenConsumables_Click:
+    MsgBox Err.Description
+    Resume Exit_OpenConsumables_Click
+    
+End Sub
+Private Sub Command22_Click()
+On Error GoTo Err_Command22_Click
+
+    Dim stDocName As String
+    Dim stLinkCriteria As String
+
+    stDocName = "376 MLPAProbeDetails"
+    DoCmd.OpenForm stDocName, , , stLinkCriteria
+
+Exit_Command22_Click:
+    Exit Sub
+
+Err_Command22_Click:
+    MsgBox Err.Description
+    Resume Exit_Command22_Click
+    
+End Sub
+
+Private Sub Command23_Click()
+On Error GoTo Err_Command23_Click
+
+    Dim stDocName As String
+    Dim stLinkCriteria As String
+
+    stDocName = "38 FISH Probes"
+    DoCmd.OpenForm stDocName, acFormDS, , stLinkCriteria
+
+Exit_Command23_Click:
+    Exit Sub
+
+Err_Command23_Click:
+    MsgBox Err.Description
+    Resume Exit_Command23_Click
+    
+End Sub
+
+Private Sub Command24_Click()
+On Error GoTo Err_Command24_Click
+
+    Dim stDocName As String
+    Dim stLinkCriteria As String
+
+    stDocName = "57 Array Tests Needing Checking"
+    DoCmd.OpenForm stDocName, acFormDS, , stLinkCriteria
+
+Exit_Command24_Click:
+    Exit Sub
+
+Err_Command24_Click:
+    MsgBox Err.Description
+    Resume Exit_Command24_Click
+    
+End Sub
+Private Sub Command28_Click()
+On Error GoTo Err_Command28_Click
+
+    Dim stDocName As String
+    Dim stLinkCriteria As String
+
+    stDocName = "00 DayBook"
+    DoCmd.OpenForm stDocName, , , stLinkCriteria
+
+Exit_Command28_Click:
+    Exit Sub
+
+Err_Command28_Click:
+    MsgBox Err.Description
+    Resume Exit_Command28_Click
+    
+End Sub
+Private Sub Command29_Click()
+On Error GoTo Err_Command29_Click
+
+    Dim stDocName As String
+    Dim stLinkCriteria As String
+
+    stDocName = "900 A_ DNASamplesForGel"
+    DoCmd.OpenForm stDocName, acFormDS, , stLinkCriteria
+
+Exit_Command29_Click:
+    Exit Sub
+
+Err_Command29_Click:
+    MsgBox Err.Description
+    Resume Exit_Command29_Click
+    
+End Sub
+Private Sub Command30_Click()
+On Error GoTo Err_Command30_Click
+
+    Dim stDocName As String
+    Dim stLinkCriteria As String
+
+    stDocName = "39 FISH Probes to Order"
+    DoCmd.OpenForm stDocName, acFormDS, , stLinkCriteria
+
+Exit_Command30_Click:
+    Exit Sub
+
+Err_Command30_Click:
+    MsgBox Err.Description
+    Resume Exit_Command30_Click
+    
+End Sub
+Private Sub Command31_Click()
+On Error GoTo Err_Command31_Click
+
+    Dim stDocName As String
+    Dim stLinkCriteria As String
+
+    stDocName = "87 FISH pending"
+    DoCmd.OpenForm stDocName, acFormDS, , stLinkCriteria
+
+Exit_Command31_Click:
+    Exit Sub
+
+Err_Command31_Click:
+    MsgBox Err.Description
+    Resume Exit_Command31_Click
+    
+End Sub
+Private Sub Command32_Click()
+On Error GoTo Err_Command32_Click
+
+    Dim stDocName As String
+    Dim stLinkCriteria As String
+
+    stDocName = "910_PatientLog"
+    DoCmd.OpenForm stDocName, acFormDS, , stLinkCriteria
+
+Exit_Command32_Click:
+    Exit Sub
+
+Err_Command32_Click:
+    MsgBox Err.Description
+    Resume Exit_Command32_Click
+    
+End Sub
+Private Sub Command33_Click()
+On Error GoTo Err_Command33_Click
+
+    Dim stDocName As String
+    Dim stLinkCriteria As String
+
+    stDocName = "560 Array Tests Needing Checking"
+    DoCmd.OpenForm stDocName, acFormDS, , stLinkCriteria
+
+Exit_Command33_Click:
+    Exit Sub
+
+Err_Command33_Click:
+    MsgBox Err.Description
+    Resume Exit_Command33_Click
+    
+End Sub
+Private Sub Command34_Click()
+On Error GoTo Err_Command34_Click
+
+    Dim stDocName As String
+    Dim stLinkCriteria As String
+
+    stDocName = "951 Marwa DNAs for gel"
+    DoCmd.OpenForm stDocName, acFormDS, , stLinkCriteria
+
+Exit_Command34_Click:
+    Exit Sub
+
+Err_Command34_Click:
+    MsgBox Err.Description
+    Resume Exit_Command34_Click
+    
+End Sub
+Private Sub Command35_Click()
+On Error GoTo Err_Command35_Click
+
+    Dim stDocName As String
+    Dim stLinkCriteria As String
+
+    stDocName = "00b DayBookEntries"
+    DoCmd.OpenForm stDocName, acFormDS, , stLinkCriteria
+
+Exit_Command35_Click:
+    Exit Sub
+
+Err_Command35_Click:
+    MsgBox Err.Description
+    Resume Exit_Command35_Click
+    
+End Sub
+Private Sub openform371_Click()
+On Error GoTo Err_openform371_Click
+
+    Dim stDocName As String
+    Dim stLinkCriteria As String
+
+    stDocName = "371 MLPA Regions"
+    DoCmd.OpenForm stDocName, acFormDS, , stLinkCriteria
+
+Exit_openform371_Click:
+    Exit Sub
+
+Err_openform371_Click:
+    MsgBox Err.Description
+    Resume Exit_openform371_Click
+    
+End Sub
+Private Sub OpenDNASummary_Click()
+On Error GoTo Err_OpenDNASummary_Click
+
+    Dim stDocName As String
+    Dim stLinkCriteria As String
+
+    stDocName = "890 DNA Summary"
+    DoCmd.OpenForm stDocName, acFormDS, , stLinkCriteria
+
+Exit_OpenDNASummary_Click:
+    Exit Sub
+
+Err_OpenDNASummary_Click:
+    MsgBox Err.Description
+    Resume Exit_OpenDNASummary_Click
+    
+End Sub
+Private Sub open_680_Click()
+On Error GoTo Err_680_Click
+
+    Dim stDocName As String
+    Dim stLinkCriteria As String
+
+    stDocName = "681 CustomMLPAActiveWithProbes"
+    DoCmd.OpenForm stDocName, acFormDS, , stLinkCriteria
+
+Exit_680_Click:
+    Exit Sub
+
+Err_680_Click:
+    MsgBox Err.Description
+    Resume Exit_680_Click
+    
+End Sub
+Private Sub OpenAddFISHProbes_Click()
+On Error GoTo Err_OpenAddFISHProbes_Click
+
+    Dim stDocName As String
+    Dim stLinkCriteria As String
+
+    stDocName = "361 Add FISH probes"
+    DoCmd.OpenForm stDocName, , , stLinkCriteria
+
+Exit_OpenAddFISHProbes_Click:
+    Exit Sub
+
+Err_OpenAddFISHProbes_Click:
+    MsgBox Err.Description
+    Resume Exit_OpenAddFISHProbes_Click
+    
+End Sub
+Private Sub OpenArrayDNAs_Click()
+On Error GoTo Err_OpenArrayDNAs_Click
+
+    Dim stDocName As String
+    Dim stLinkCriteria As String
+
+    stDocName = "920 ArrayDNAforLabelling"
+    DoCmd.OpenForm stDocName, acFormDS, , stLinkCriteria
+
+Exit_OpenArrayDNAs_Click:
+    Exit Sub
+
+Err_OpenArrayDNAs_Click:
+    MsgBox Err.Description
+    Resume Exit_OpenArrayDNAs_Click
+    
+End Sub
+Private Sub openListCustomMLPAProbes_Click()
+On Error GoTo Err_openListCustomMLPAProbes_Click
+
+    Dim stDocName As String
+    Dim stLinkCriteria As String
+
+    stDocName = "378 ListCustomMLPAProbes"
+    DoCmd.OpenForm stDocName, acFormDS, , stLinkCriteria
+
+Exit_openListCustomMLPAProbes_Click:
+    Exit Sub
+
+Err_openListCustomMLPAProbes_Click:
+    MsgBox Err.Description
+    Resume Exit_openListCustomMLPAProbes_Click
+    
+End Sub
+Private Sub OpenLabelledDNA_Click()
+On Error GoTo Err_OpenLabelledDNA_Click
+
+    Dim stDocName As String
+    Dim stLinkCriteria As String
+
+    stDocName = "930 ArrayLabelledDNA"
+    DoCmd.OpenForm stDocName, acFormDS, , stLinkCriteria
+
+Exit_OpenLabelledDNA_Click:
+    Exit Sub
+
+Err_OpenLabelledDNA_Click:
+    MsgBox Err.Description
+    Resume Exit_OpenLabelledDNA_Click
+    
+End Sub
+Private Sub OpenPatientsForArrays_Click()
+On Error GoTo Err_OpenPatientsForArrays_Click
+
+    Dim stDocName As String
+    Dim stLinkCriteria As String
+
+    stDocName = "915 PatientsEnteredForArrays"
+    DoCmd.OpenForm stDocName, acFormDS, , stLinkCriteria
+
+Exit_OpenPatientsForArrays_Click:
+    Exit Sub
+
+Err_OpenPatientsForArrays_Click:
+    MsgBox Err.Description
+    Resume Exit_OpenPatientsForArrays_Click
+    
+End Sub
+
+Private Sub Command50_Click()
+On Error GoTo Err_Command50_Click
+
+    Dim stDocName As String
+    Dim stLinkCriteria As String
+
+    stDocName = "943 AnalysisEntered"
+    DoCmd.OpenForm stDocName, acFormDS, , stLinkCriteria
+
+Exit_Command50_Click:
+    Exit Sub
+
+Err_Command50_Click:
+    MsgBox Err.Description
+    Resume Exit_Command50_Click
+    
+End Sub
+Private Sub open_AnalysisInProgess_Click()
+On Error GoTo Err_open_AnalysisInProgess_Click
+
+    Dim stDocName As String
+    Dim stLinkCriteria As String
+
+    stDocName = "942 AnalysisInProgress"
+    DoCmd.OpenForm stDocName, acFormDS, , stLinkCriteria
+
+Exit_open_AnalysisInProgess_Click:
+    Exit Sub
+
+Err_open_AnalysisInProgess_Click:
+    MsgBox Err.Description
+    Resume Exit_open_AnalysisInProgess_Click
+    
+End Sub
+Private Sub open_ArraysComplete_Click()
+On Error GoTo Err_open_ArraysComplete_Click
+
+    Dim stDocName As String
+    Dim stLinkCriteria As String
+
+    stDocName = "945_ArrayCompletedPatients"
+    DoCmd.OpenForm stDocName, acFormDS, , stLinkCriteria
+
+Exit_open_ArraysComplete_Click:
+    Exit Sub
+
+Err_open_ArraysComplete_Click:
+    MsgBox Err.Description
+    Resume Exit_open_ArraysComplete_Click
+    
+End Sub
+Private Sub open_971_Click()
+On Error GoTo Err_open_971_Click
+
+    Dim stDocName As String
+    Dim stLinkCriteria As String
+
+    stDocName = "971 LabellingGraphsOverall"
+    DoCmd.OpenForm stDocName, , , stLinkCriteria
+
+Exit_open_971_Click:
+    Exit Sub
+
+Err_open_971_Click:
+    MsgBox Err.Description
+    Resume Exit_open_971_Click
+    
+End Sub
+Private Sub open_632_Click()
+On Error GoTo Err_open_632_Click
+
+    Dim stDocName As String
+    Dim stLinkCriteria As String
+
+    stDocName = "633 CustomMLPAProbesRequired"
+    DoCmd.OpenForm stDocName, acFormDS, , stLinkCriteria
+
+Exit_open_632_Click:
+    Exit Sub
+
+Err_open_632_Click:
+    MsgBox Err.Description
+    Resume Exit_open_632_Click
+    
+End Sub
+Private Sub Command60_Click()
+On Error GoTo Err_Command60_Click
+
+    Dim stDocName As String
+    Dim stLinkCriteria As String
+
+    stDocName = "w_080710_alison"
+    DoCmd.OpenForm stDocName, acFormDS, , stLinkCriteria
+
+Exit_Command60_Click:
+    Exit Sub
+
+Err_Command60_Click:
+    MsgBox Err.Description
+    Resume Exit_Command60_Click
+    
+End Sub
+Private Sub open_634_Click()
+On Error GoTo Err_open_634_Click
+
+    Dim stDocName As String
+    Dim stLinkCriteria As String
+
+    stDocName = "634 MLPAProbesAssigned"
+    DoCmd.OpenForm stDocName, acFormDS, , stLinkCriteria
+
+Exit_open_634_Click:
+    Exit Sub
+
+Err_open_634_Click:
+    MsgBox Err.Description
+    Resume Exit_open_634_Click
+    
+End Sub
+Private Sub Command62_Click()
+On Error GoTo Err_Command62_Click
+
+    Dim stDocName As String
+    Dim stLinkCriteria As String
+
+    stDocName = "w_080710_custom"
+    DoCmd.OpenForm stDocName, acFormDS, , stLinkCriteria
+
+Exit_Command62_Click:
+    Exit Sub
+
+Err_Command62_Click:
+    MsgBox Err.Description
+    Resume Exit_Command62_Click
+    
+End Sub
+Private Sub Command63_Click()
+On Error GoTo Err_Command63_Click
+
+    Dim stDocName As String
+    Dim stLinkCriteria As String
+
+    stDocName = "w_080715b"
+    DoCmd.OpenForm stDocName, , , stLinkCriteria
+
+Exit_Command63_Click:
+    Exit Sub
+
+Err_Command63_Click:
+    MsgBox Err.Description
+    Resume Exit_Command63_Click
+    
+End Sub
+Private Sub open_700_Click()
+On Error GoTo Err_open_700_Click
+
+    Dim stDocName As String
+    Dim stLinkCriteria As String
+
+    stDocName = "700 OligoArraysAudit"
+    DoCmd.OpenForm stDocName, acFormDS, , stLinkCriteria
+
+Exit_open_700_Click:
+    Exit Sub
+
+Err_open_700_Click:
+    MsgBox Err.Description
+    Resume Exit_open_700_Click
+    
+End Sub
+Private Sub open_16_Click()
+On Error GoTo Err_open_16_Click
+
+    Dim stDocName As String
+    Dim stLinkCriteria As String
+
+    stDocName = "16 Sample Storage"
+    DoCmd.OpenForm stDocName, acFormDS, , stLinkCriteria
+
+Exit_open_16_Click:
+    Exit Sub
+
+Err_open_16_Click:
+    MsgBox Err.Description
+    Resume Exit_open_16_Click
+    
+End Sub
+
+Private Sub open_710_Click()
+On Error GoTo Err_open_710_Click
+
+    Dim stDocName As String
+    Dim stLinkCriteria As String
+
+    stDocName = "710 CustomMLPANotRecieved"
+    DoCmd.OpenForm stDocName, acFormDS, , stLinkCriteria
+
+Exit_open_710_Click:
+    Exit Sub
+
+Err_open_710_Click:
+    MsgBox Err.Description
+    Resume Exit_open_710_Click
+    
+End Sub
+Private Sub open_712_Click()
+On Error GoTo Err_open_712_Click
+
+    Dim stDocName As String
+    Dim stLinkCriteria As String
+
+    stDocName = "712 CustomMLPAToOrder"
+    DoCmd.OpenForm stDocName, acFormDS, , stLinkCriteria
+
+Exit_open_712_Click:
+    Exit Sub
+
+Err_open_712_Click:
+    MsgBox Err.Description
+    Resume Exit_open_712_Click
+    
+End Sub
+Private Sub open_714_Click()
+On Error GoTo Err_open_714_Click
+
+    Dim stDocName As String
+    Dim stLinkCriteria As String
+
+    stDocName = "714 SetsToMake"
+    DoCmd.OpenForm stDocName, , , stLinkCriteria
+
+Exit_open_714_Click:
+    Exit Sub
+
+Err_open_714_Click:
+    MsgBox Err.Description
+    Resume Exit_open_714_Click
+    
+End Sub
+Private Sub open_672_Click()
+On Error GoTo Err_open_672_Click
+
+    Dim stDocName As String
+    Dim stLinkCriteria As String
+
+    stDocName = "672 MRequestsToCheck"
+    DoCmd.OpenForm stDocName, acFormDS, , stLinkCriteria
+
+Exit_open_672_Click:
+    Exit Sub
+
+Err_open_672_Click:
+    MsgBox Err.Description
+    Resume Exit_open_672_Click
+    
+End Sub
+Private Sub open_552_Click()
+On Error GoTo Err_open_552_Click
+
+    Dim stDocName As String
+    Dim stLinkCriteria As String
+
+    stDocName = "552 AllArrayProbands"
+    DoCmd.OpenForm stDocName, acFormDS, , stLinkCriteria
+
+Exit_open_552_Click:
+    Exit Sub
+
+Err_open_552_Click:
+    MsgBox Err.Description
+    Resume Exit_open_552_Click
+    
+End Sub
+Private Sub open_450_Click()
+On Error GoTo Err_open_450_Click
+
+    Dim stDocName As String
+    Dim stLinkCriteria As String
+
+    stDocName = "450 CytoBands"
+    DoCmd.OpenForm stDocName, acFormDS, , stLinkCriteria
+
+Exit_open_450_Click:
+    Exit Sub
+
+Err_open_450_Click:
+    MsgBox Err.Description
+    Resume Exit_open_450_Click
+    
+End Sub
+Private Sub open_932_Click()
+On Error GoTo Err_open_932_Click
+
+    Dim stDocName As String
+    Dim stLinkCriteria As String
+
+    stDocName = "932 PostLabellingCheck"
+    DoCmd.OpenForm stDocName, acFormDS, , stLinkCriteria
+
+Exit_open_932_Click:
+    Exit Sub
+
+Err_open_932_Click:
+    MsgBox Err.Description
+    Resume Exit_open_932_Click
+    
+End Sub
+Private Sub open_922_Click()
+On Error GoTo Err_open_922_Click
+
+    Dim stDocName As String
+    Dim stLinkCriteria As String
+
+    stDocName = "922"
+    DoCmd.OpenForm stDocName, acFormDS, , stLinkCriteria
+
+Exit_open_922_Click:
+    Exit Sub
+
+Err_open_922_Click:
+    MsgBox Err.Description
+    Resume Exit_open_922_Click
+    
+End Sub
+Private Sub open_923_Click()
+On Error GoTo Err_open_923_Click
+
+    Dim stDocName As String
+    Dim stLinkCriteria As String
+
+    stDocName = "923 HybDetails"
+    DoCmd.OpenForm stDocName, acFormDS, , stLinkCriteria
+
+Exit_open_923_Click:
+    Exit Sub
+
+Err_open_923_Click:
+    MsgBox Err.Description
+    Resume Exit_open_923_Click
+    
+End Sub
+Private Sub open_379_Click()
+On Error GoTo Err_open_379_Click
+
+    Dim stDocName As String
+    Dim stLinkCriteria As String
+
+    stDocName = "379 ListCustomMLPAProbeToCheck"
+    DoCmd.OpenForm stDocName, acFormDS, , stLinkCriteria
+
+Exit_open_379_Click:
+    Exit Sub
+
+Err_open_379_Click:
+    MsgBox Err.Description
+    Resume Exit_open_379_Click
+    
+End Sub
+Private Sub open_685_Click()
+On Error GoTo Err_open_685_Click
+
+    Dim stDocName As String
+    Dim stLinkCriteria As String
+
+    stDocName = "685 CustomMLPAOngoing"
+    DoCmd.OpenForm stDocName, acFormDS, , stLinkCriteria
+
+Exit_open_685_Click:
+    Exit Sub
+
+Err_open_685_Click:
+    MsgBox Err.Description
+    Resume Exit_open_685_Click
+    
+End Sub
+Private Sub open_687_Click()
+On Error GoTo Err_open_687_Click
+
+    Dim stDocName As String
+    Dim stLinkCriteria As String
+
+    stDocName = "687 MLPAComplete"
+    DoCmd.OpenForm stDocName, acFormDS, , stLinkCriteria
+
+Exit_open_687_Click:
+    Exit Sub
+
+Err_open_687_Click:
+    MsgBox Err.Description
+    Resume Exit_open_687_Click
+    
+End Sub
+Private Sub open_551_Click()
+On Error GoTo Err_open_551_Click
+
+    Dim stDocName As String
+    Dim stLinkCriteria As String
+
+    stDocName = "551 OngoingArrayTests"
+    DoCmd.OpenForm stDocName, acFormDS, , stLinkCriteria
+
+Exit_open_551_Click:
+    Exit Sub
+
+Err_open_551_Click:
+    MsgBox Err.Description
+    Resume Exit_open_551_Click
+    
+End Sub
+Private Sub open_953_Click()
+On Error GoTo Err_open_953_Click
+
+    Dim stDocName As String
+    Dim stLinkCriteria As String
+
+    stDocName = "953 BACPatients"
+    DoCmd.OpenForm stDocName, acFormDS, , stLinkCriteria
+
+Exit_open_953_Click:
+    Exit Sub
+
+Err_open_953_Click:
+    MsgBox Err.Description
+    Resume Exit_open_953_Click
+    
+End Sub
+Private Sub open_367_Click()
+On Error GoTo Err_open_367_Click
+
+    Dim stDocName As String
+    Dim stLinkCriteria As String
+
+    stDocName = "367 AddProbe"
+    DoCmd.OpenForm stDocName, , , stLinkCriteria
+
+Exit_open_367_Click:
+    Exit Sub
+
+Err_open_367_Click:
+    MsgBox Err.Description
+    Resume Exit_open_367_Click
+    
+End Sub
+Private Sub open_366_Click()
+On Error GoTo Err_open_366_Click
+
+    Dim stDocName As String
+    Dim stLinkCriteria As String
+
+    stDocName = "366 ProbeDetails"
+    DoCmd.OpenForm stDocName, , , stLinkCriteria
+
+Exit_open_366_Click:
+    Exit Sub
+
+Err_open_366_Click:
+    MsgBox Err.Description
+    Resume Exit_open_366_Click
+    
+End Sub
+Private Sub open_365_Click()
+On Error GoTo Err_open_365_Click
+
+    Dim stDocName As String
+    Dim stLinkCriteria As String
+
+    stDocName = "635 CustomMLPAAssignCheck"
+    DoCmd.OpenForm stDocName, acFormDS, , stLinkCriteria
+
+Exit_open_365_Click:
+    Exit Sub
+
+Err_open_365_Click:
+    MsgBox Err.Description
+    Resume Exit_open_365_Click
+    
+End Sub
+Private Sub open_368_Click()
+On Error GoTo Err_open_368_Click
+
+    Dim stDocName As String
+    Dim stLinkCriteria As String
+
+    stDocName = "368 PCRProbePositions"
+    DoCmd.OpenForm stDocName, acFormDS, , stLinkCriteria
+
+Exit_open_368_Click:
+    Exit Sub
+
+Err_open_368_Click:
+    MsgBox Err.Description
+    Resume Exit_open_368_Click
+    
+End Sub
+Private Sub open_290_Click()
+On Error GoTo Err_open_290_Click
+
+    Dim stDocName As String
+    Dim stLinkCriteria As String
+
+    stDocName = "290 AddArrayError"
+    DoCmd.OpenForm stDocName, , , stLinkCriteria
+
+Exit_open_290_Click:
+    Exit Sub
+
+Err_open_290_Click:
+    MsgBox Err.Description
+    Resume Exit_open_290_Click
+    
+End Sub
+Private Sub open_291_Click()
+On Error GoTo Err_open_291_Click
+
+    Dim stDocName As String
+    Dim stLinkCriteria As String
+
+    stDocName = "291 ShowArrayErrors"
+    DoCmd.OpenForm stDocName, , , stLinkCriteria
+
+Exit_open_291_Click:
+    Exit Sub
+
+Err_open_291_Click:
+    MsgBox Err.Description
+    Resume Exit_open_291_Click
+    
+End Sub
+Private Sub open_470_Click()
+On Error GoTo Err_open_470_Click
+
+    Dim stDocName As String
+    Dim stLinkCriteria As String
+
+    stDocName = "470 ServiceLog"
+    DoCmd.OpenForm stDocName, , , stLinkCriteria
+
+Exit_open_470_Click:
+    Exit Sub
+
+Err_open_470_Click:
+    MsgBox Err.Description
+    Resume Exit_open_470_Click
+    
+End Sub
+Private Sub open_934_Click()
+On Error GoTo Err_open_934_Click
+
+    Dim stDocName As String
+    Dim stLinkCriteria As String
+
+    stDocName = "934 ArrayPurifiedDNA"
+    DoCmd.OpenForm stDocName, acFormDS, , stLinkCriteria
+
+Exit_open_934_Click:
+    Exit Sub
+
+Err_open_934_Click:
+    MsgBox Err.Description
+    Resume Exit_open_934_Click
+    
+End Sub
+Private Sub open_925_Click()
+On Error GoTo Err_open_925_Click
+
+    Dim stDocName As String
+    Dim stLinkCriteria As String
+
+    stDocName = "925 EnterCheckCleanupDetails"
+    DoCmd.OpenForm stDocName, acFormDS, , stLinkCriteria
+
+Exit_open_925_Click:
+    Exit Sub
+
+Err_open_925_Click:
+    MsgBox Err.Description
+    Resume Exit_open_925_Click
+    
+End Sub
+Private Sub open_9221_Click()
+On Error GoTo Err_open_9221_Click
+
+    Dim stDocName As String
+    Dim stLinkCriteria As String
+
+    stDocName = "9221 CheckLabellingDetails"
+    DoCmd.OpenForm stDocName, acFormDS, , stLinkCriteria
+
+Exit_open_9221_Click:
+    Exit Sub
+
+Err_open_9221_Click:
+    MsgBox Err.Description
+    Resume Exit_open_9221_Click
+    
+End Sub
+Private Sub open_903_Click()
+On Error GoTo Err_open_903_Click
+
+    Dim stDocName As String
+    Dim stLinkCriteria As String
+
+    stDocName = "903 A_ DNASamplesForGelLabels"
+    DoCmd.OpenForm stDocName, , , stLinkCriteria
+
+Exit_open_903_Click:
+    Exit Sub
+
+Err_open_903_Click:
+    MsgBox Err.Description
+    Resume Exit_open_903_Click
+    
+End Sub
+Private Sub open_904_Click()
+On Error GoTo Err_open_904_Click
+
+    Dim stDocName As String
+    Dim stLinkCriteria As String
+
+    stDocName = "904 M_ DNASamplesForGelLabels"
+    DoCmd.OpenForm stDocName, , , stLinkCriteria
+
+Exit_open_904_Click:
+    Exit Sub
+
+Err_open_904_Click:
+    MsgBox Err.Description
+    Resume Exit_open_904_Click
+    
+End Sub
+Private Sub open_927_Click()
+On Error GoTo Err_open_927_Click
+
+    Dim stDocName As String
+    Dim stLinkCriteria As String
+
+    stDocName = "927 EnterCheckHybedArrayStatus"
+    DoCmd.OpenForm stDocName, acFormDS, , stLinkCriteria
+
+Exit_open_927_Click:
+    Exit Sub
+
+Err_open_927_Click:
+    MsgBox Err.Description
+    Resume Exit_open_927_Click
+    
+End Sub
+Private Sub open_553_Click()
+On Error GoTo Err_open_553_Click
+
+    Dim stDocName As String
+    Dim stLinkCriteria As String
+
+    stDocName = "553 OligoArrayAbnormalities"
+    DoCmd.OpenForm stDocName, acFormDS, , stLinkCriteria
+
+Exit_open_553_Click:
+    Exit Sub
+
+Err_open_553_Click:
+    MsgBox Err.Description
+    Resume Exit_open_553_Click
+    
+End Sub
+Private Sub open_DNAPRepRunsheet_Click()
+On Error GoTo Err_open_DNAPRepRunsheet_Click
+
+    Dim stDocName As String
+
+    stDocName = "DNAPrepRunsheet"
+    DoCmd.OpenReport stDocName, acPreview
+
+Exit_open_DNAPRepRunsheet_Click:
+    Exit Sub
+
+Err_open_DNAPRepRunsheet_Click:
+    MsgBox Err.Description
+    Resume Exit_open_DNAPRepRunsheet_Click
+    
+End Sub
+
+Private Sub Command126_Click()
+
+    Dim stDocName As String
+
+    stDocName = "DNAConcRunsheet"
+    DoCmd.OpenReport stDocName, acPreview
+
+End Sub
+
+Private Sub open_554_Click()
+On Error GoTo Err_open_554_Click
+
+    Dim stDocName As String
+    Dim stLinkCriteria As String
+
+    stDocName = "554 Limbos"
+    DoCmd.OpenForm stDocName, acFormDS, , stLinkCriteria
+
+Exit_open_554_Click:
+    Exit Sub
+
+Err_open_554_Click:
+    MsgBox Err.Description
+    Resume Exit_open_554_Click
+    
+End Sub
+Private Sub open_555_Click()
+On Error GoTo Err_open_555_Click
+
+    Dim stDocName As String
+    Dim stLinkCriteria As String
+
+    stDocName = "555 PatientStatusAudit"
+    DoCmd.OpenForm stDocName, acFormDS, , stLinkCriteria
+
+Exit_open_555_Click:
+    Exit Sub
+
+Err_open_555_Click:
+    MsgBox Err.Description
+    Resume Exit_open_555_Click
+    
+End Sub
+Private Sub open_9222_Click()
+On Error GoTo Err_open_9222_Click
+
+    Dim stDocName As String
+    Dim stLinkCriteria As String
+
+    stDocName = "9225 RunSetup2"
+    DoCmd.OpenForm stDocName, acFormDS, , stLinkCriteria
+
+Exit_open_9222_Click:
+    Exit Sub
+
+Err_open_9222_Click:
+    MsgBox Err.Description
+    Resume Exit_open_9222_Click
+    
+End Sub
+
+Private Sub open_9221_2_Click()
+On Error GoTo Err_open_9221_2_Click
+
+    Dim stDocName As String
+    Dim stLinkCriteria As String
+
+    stDocName = "9221 CheckLabellingDetails"
+    DoCmd.OpenForm stDocName, acFormDS, , stLinkCriteria
+
+Exit_open_9221_2_Click:
+    Exit Sub
+
+Err_open_9221_2_Click:
+    MsgBox Err.Description
+    Resume Exit_open_9221_2_Click
+    
+End Sub
+Private Sub open_929_Click()
+On Error GoTo Err_open_929_Click
+
+    Dim stDocName As String
+    Dim stLinkCriteria As String
+
+    stDocName = "929 CheckHybPairs"
+    DoCmd.OpenForm stDocName, acFormDS, , stLinkCriteria
+
+Exit_open_929_Click:
+    Exit Sub
+
+Err_open_929_Click:
+    MsgBox Err.Description
+    Resume Exit_open_929_Click
+    
+End Sub
+Private Sub Command133_Click()
+On Error GoTo Err_Command133_Click
+
+    Dim stDocName As String
+    Dim stLinkCriteria As String
+
+    stDocName = "04 NoGWArraysLabelling"
+    DoCmd.OpenForm stDocName, , , stLinkCriteria
+
+Exit_Command133_Click:
+    Exit Sub
+
+Err_Command133_Click:
+    MsgBox Err.Description
+    Resume Exit_Command133_Click
+    
+End Sub
+
+Private Sub Command134_Click()
+
+    Dim stDocName As String
+    Dim stLinkCriteria As String
+
+    stDocName = "9226 RunSetup3"
+    DoCmd.OpenForm stDocName, , , stLinkCriteria
+End Sub
+    
+Private Sub open_9227_Click()
+On Error GoTo Err_open_9227_Click
+
+    Dim stDocName As String
+    Dim stLinkCriteria As String
+
+    stDocName = "9227 RunSetup4"
+    DoCmd.OpenForm stDocName, acFormDS, , stLinkCriteria
+
+Exit_open_9227_Click:
+    Exit Sub
+
+Err_open_9227_Click:
+    MsgBox Err.Description
+    Resume Exit_open_9227_Click
+    
+End Sub
+
+Private Sub open_9232_Click()
+On Error GoTo Err_open_9232_Click
+
+    Dim stDocName As String
+    Dim stLinkCriteria As String
+
+    stDocName = "9232 EnterHybIDs"
+    DoCmd.OpenForm stDocName, acFormDS, , stLinkCriteria
+
+Exit_open_9232_Click:
+    Exit Sub
+
+Err_open_9232_Click:
+    MsgBox Err.Description
+    Resume Exit_open_9232_Click
+    
+End Sub
+Private Sub open_9300_Click()
+On Error GoTo Err_open_9300_Click
+
+    Dim stDocName As String
+    Dim stLinkCriteria As String
+
+    stDocName = "9300 MyAnalyses"
+    DoCmd.OpenForm stDocName, acFormDS, , stLinkCriteria
+
+Exit_open_9300_Click:
+    Exit Sub
+
+Err_open_9300_Click:
+    MsgBox Err.Description
+    Resume Exit_open_9300_Click
+    
+End Sub
+
+
