@@ -1,0 +1,240 @@
+Option Compare Database
+Option Explicit
+
+''open forms
+
+Private Sub OpenS01_GeneworksDNAs_Click()
+On Error GoTo Err_OpenS01_GeneworksDNAs_Click
+
+    Dim stDocName As String
+    Dim stLinkCriteria As String
+
+    stDocName = "S01_GeneworksDNA"
+    
+    stLinkCriteria = "[PatientID]=" & "'" & Me![PatientID] & "'"
+    DoCmd.OpenForm stDocName, acFormDS, , stLinkCriteria
+
+Exit_OpenS01_GeneworksDNAs_Click:
+    Exit Sub
+
+Err_OpenS01_GeneworksDNAs_Click:
+    MsgBox Err.Description
+    Resume Exit_OpenS01_GeneworksDNAs_Click
+    
+End Sub
+
+Private Sub Opens02_MLPA_Click()
+On Error GoTo Err_Opens02_MLPA_Click
+
+    Dim stDocName As String
+    Dim stLinkCriteria As String
+
+    stDocName = "s02_MLPA"
+    
+    stLinkCriteria = "[PRU]=" & "'" & Me![PatientID] & "'"
+    DoCmd.OpenForm stDocName, , , stLinkCriteria
+
+Exit_Opens02_MLPA_Click:
+    Exit Sub
+
+Err_Opens02_MLPA_Click:
+    MsgBox Err.Description
+    Resume Exit_Opens02_MLPA_Click
+    
+End Sub
+
+Private Sub Command103_Click()
+    Dim Q As ADODB.Recordset
+    Set Q = New ADODB.Recordset
+
+        
+    If IsNull(Me.InternalPatientID) Then
+    
+        Dim d As String
+        Dim t As String
+        Dim p As String
+        Dim b As String
+        Dim i As String
+        Dim c As String
+        Dim x As String
+        Dim ln As String
+        Dim fn As String
+        Dim S As String
+ 
+        d = Format(Now, "dd/mmm/yyyy Hh:Nn:ss")
+        t = VBA.Environ("USERNAME")
+        p = VBA.Environ("COMPUTERNAME")
+        If Not IsNull(Me![CreatedDate]) Then
+            i = Format(Me![CreatedDate], "dd/mmm/yyyy Hh:Nn:ss")
+            Else
+            i = "01/Jan/1901 00:00:00"
+            End If
+        If Not IsNull(Me![CreatedBy]) Then
+            c = Me![CreatedBy]
+            Else
+            c = "unknown"
+            End If
+        If Not IsNull(Me![Sex]) Then
+            x = Me![Sex]
+            Else
+            x = "unknown"
+            End If
+        If Not IsNull(Me![LastName]) Then
+            ln = Me![LastName]
+            ln = Replace(ln, "'", "''")
+            Else
+            ln = "unknown"
+            End If
+        If Not IsNull(Me![FirstName]) Then
+            fn = Me![FirstName]
+            fn = Replace(fn, "'", "''")
+            Else
+            fn = "unknown"
+            End If
+        If Not IsNull(Me![DOB]) Then
+            b = Format(Me![DOB], "dd/mmm/yyyy Hh:Nn:ss")
+            S = "INSERT INTO Patients(PatientID, s_StatusOverall, MokaCreated, MokaCreatedBy, MokaCreatedPC, BookinLastName, BookinFirstName, BookinSex, BookinDOB, BookinCreatedBy, BookinCreatedDate) VALUES ('" & Me![PatientID] & "','" + CStr(Me![s_StatusOverall]) + "',#" + d + "#,'" + t + "','" + p + "','" + ln + "','" + fn + "','" + x + "',#" + b + "#,'" + c + "',#" + i + "#)"
+            Else
+            S = "INSERT INTO Patients(PatientID, s_StatusOverall, MokaCreated, MokaCreatedBy, MokaCreatedPC, BookinLastName, BookinFirstName, BookinSex, BookinCreatedBy, BookinCreatedDate) VALUES ('" & Me![PatientID] & "','" + CStr(Me![s_StatusOverall]) + "',#" + d + "#,'" + t + "','" + p + "','" + ln + "','" + fn + "','" + x + "','" + c + "',#" + i + "#)"
+            End If
+
+        
+
+        DoCmd.SetWarnings False
+        DoCmd.RunSQL S
+        DoCmd.SetWarnings True
+    
+        End If
+    
+    Dim stDocName As String
+    Dim stLinkCriteria As String
+    stDocName = "010 Add array request"
+    stLinkCriteria = "[PatientID]=" & "'" & Me![PatientID] & "'"
+    DoCmd.Close
+    DoCmd.OpenForm stDocName, , , stLinkCriteria
+End Sub
+
+Private Sub Command67_Click()
+On Error GoTo Err_Command67_Click
+
+    Dim Q As ADODB.Recordset
+    Set Q = New ADODB.Recordset
+
+        
+    If IsNull(Me.InternalPatientID) Then
+    
+        Dim d As String
+        Dim t As String
+        Dim p As String
+        Dim b As String
+        Dim i As String
+        Dim c As String
+        Dim x As String
+        Dim ln As String
+        Dim fn As String
+        Dim S As String
+ 
+        d = Format(Now, "dd/mmm/yyyy Hh:Nn:ss")
+        t = VBA.Environ("USERNAME")
+        p = VBA.Environ("COMPUTERNAME")
+        If Not IsNull(Me![CreatedDate]) Then
+            i = Format(Me![CreatedDate], "dd/mmm/yyyy Hh:Nn:ss")
+            Else
+            i = "01/Jan/1901 00:00:00"
+            End If
+        If Not IsNull(Me![CreatedBy]) Then
+            c = Me![CreatedBy]
+            Else
+            c = "unknown"
+            End If
+        If Not IsNull(Me![Sex]) Then
+            x = Me![Sex]
+            Else
+            x = "unknown"
+            End If
+        If Not IsNull(Me![LastName]) Then
+            ln = Me![LastName]
+            ln = Replace(ln, "'", "''")
+            Else
+            ln = "unknown"
+            End If
+        If Not IsNull(Me![FirstName]) Then
+            fn = Me![FirstName]
+            fn = Replace(fn, "'", "''")
+            Else
+            fn = "unknown"
+            End If
+        If Not IsNull(Me![DOB]) Then
+            b = Format(Me![DOB], "dd/mmm/yyyy Hh:Nn:ss")
+            S = "INSERT INTO Patients(PatientID, s_StatusOverall, MokaCreated, MokaCreatedBy, MokaCreatedPC, BookinLastName, BookinFirstName, BookinSex, BookinDOB, BookinCreatedBy, BookinCreatedDate) VALUES ('" & Me![PatientID] & "','" + CStr(Me![s_StatusOverall]) + "',#" + d + "#,'" + t + "','" + p + "','" + ln + "','" + fn + "','" + x + "',#" + b + "#,'" + c + "',#" + i + "#)"
+            Else
+            S = "INSERT INTO Patients(PatientID, s_StatusOverall, MokaCreated, MokaCreatedBy, MokaCreatedPC, BookinLastName, BookinFirstName, BookinSex, BookinCreatedBy, BookinCreatedDate) VALUES ('" & Me![PatientID] & "','" + CStr(Me![s_StatusOverall]) + "',#" + d + "#,'" + t + "','" + p + "','" + ln + "','" + fn + "','" + x + "','" + c + "',#" + i + "#)"
+            End If
+
+        
+
+        DoCmd.SetWarnings False
+        DoCmd.RunSQL S
+        DoCmd.SetWarnings True
+    
+        End If
+    
+    Dim stDocName As String
+    Dim stLinkCriteria As String
+    stDocName = "02 Patient Details"
+    stLinkCriteria = "[PatientID]=" & "'" & Me![PatientID] & "'"
+    DoCmd.Close
+    DoCmd.OpenForm stDocName, , , stLinkCriteria
+
+Exit_Command67_Click:
+    Exit Sub
+
+Err_Command67_Click:
+    MsgBox Err.Description
+    Resume Exit_Command67_Click
+    
+End Sub
+
+Private Sub Command102_Click()
+    Dim url As String
+    url = "http://barista.omnilounge.co.uk/Array/Array_Workflows/Booking_in_patients"
+    firefoxurl url
+    'chromeurlserv url
+End Sub
+
+
+''status logging
+
+Private Sub s_StatusOverall_AfterUpdate()
+If Not IsNull(Me.InternalPatientID) Then
+    Dim d As String
+    Dim un As String
+    Dim cn As String
+    Dim t As String
+    d = Format(Now, "dd/mmm/yyyy Hh:Nn:ss")
+    un = VBA.Environ("USERNAME")
+    cn = VBA.Environ("COMPUTERNAME")
+    t = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" & Me!InternalPatientID & ",'Patient status changed to " & Me!s_StatusOverall.Column(1) & "',#" + d + "#,'" + un + "','" + cn + "')"
+    DoCmd.SetWarnings False
+    DoCmd.RunSQL t
+    DoCmd.SetWarnings True
+    End If
+    
+End Sub
+
+
+''reset
+
+Private Sub Command98_Click()
+On Error GoTo Err_Command98_Click
+
+DoCmd.ShowAllRecords
+
+Exit_Command98_Click:
+    Exit Sub
+
+Err_Command98_Click:
+    MsgBox Err.Description
+    Resume Exit_Command98_Click
+    
+End Sub
