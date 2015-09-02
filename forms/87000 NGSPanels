@@ -41,7 +41,8 @@ Private Sub PanelCode_DblClick(Cancel As Integer)
     Dim DateTime As String
     
     DestFile = Me.PanelCode & "_genes.txt"
-    DestFolder = "C:\Array\TMP"
+    'ForTesting DestFolder = "C:\Array\TMP"
+    DestFolder = "\\SV-PR-FS13\Genetics\DNA LAB\R&D\New Tests\WES\Ingenuity\Moka Panels"
     DestFile = DestFolder & "\" & DestFile
     PanID = Me.NGSPanelID
     DateTime = Format(Now, "dd/mmm/yyyy Hh:Nn:ss")
@@ -59,6 +60,8 @@ Private Sub PanelCode_DblClick(Cancel As Integer)
     Set rst = Nothing
     
 ''Open folder containing file
-    Set objShell = CreateObject("Wscript.Shell")
-    objShell.Run (DestFolder)
+    ''normal way of opening and showing the directory doesn't want to work so switching to an alternative method
+    'Set objShell = CreateObject("Wscript.Shell")
+    'objShell.Run (DestFolder)
+    shell "explorer.exe """ & DestFolder & "", vbNormalFocus
 End Sub
