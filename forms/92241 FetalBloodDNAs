@@ -1,0 +1,4 @@
+SELECT DISTINCT TOP 100 Patients.PatientID, [dbo_PatientLinked].[Gender] & " " & [patients].[Sexed] AS Sex, DNA.DNANumber, DNA.Concentration, DNA.DNAComment, ResultCode.ResultCode AS PatientResult, DNAGelQuality.GelQuality, Patients.BookinCreatedDate
+FROM (dbo_SpecimenLinked INNER JOIN dbo_PatientLinked ON dbo_SpecimenLinked.PatientID = dbo_PatientLinked.PatientID) INNER JOIN (((Patients INNER JOIN DNA ON Patients.InternalPatientID = DNA.InternalPatientID) INNER JOIN ResultCode ON Patients.OverallResultCodeID = ResultCode.ResultCodeID) INNER JOIN DNAGelQuality ON DNA.GelQualityID = DNAGelQuality.GelQualityID) ON dbo_PatientLinked.PatientTrustID = Patients.PatientID
+WHERE (((ResultCode.ResultCode)="n") AND ((DNA.Active)=True) AND ((dbo_SpecimenLinked.SpecimenType)="Fetal Blood"))
+ORDER BY Patients.BookinCreatedDate DESC;
