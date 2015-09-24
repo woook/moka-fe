@@ -1,0 +1,33 @@
+USE [mokadata]
+GO
+/****** Object:  Table [dbo].[GenesHumanPseudogenes81]    Script Date: 09/24/2015 17:07:16 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[GenesHumanPseudogenes81](
+	[PsuedoID] [int] IDENTITY(1,1) NOT NULL,
+	[ID] [nvarchar](50) NOT NULL,
+	[Chromosome] [nvarchar](50) NULL,
+	[StartCoordinate] [int] NULL,
+	[StopCoordinate] [int] NULL,
+	[Strand] [nvarchar](50) NULL,
+	[ParentProtein] [nvarchar](50) NULL,
+	[ProteinStart] [int] NULL,
+	[ProteinStop] [int] NULL,
+	[ParentGene] [nvarchar](50) NULL,
+	[Fraction] [int] NULL,
+	[NumInsertions] [int] NULL,
+	[NumDeletions] [int] NULL,
+	[NumShifts] [int] NULL,
+	[NumStops] [int] NULL,
+	[EValue] [decimal](18, 0) NULL,
+	[IdentityScore] [decimal](18, 0) NULL,
+	[PolyA] [int] NULL,
+	[Disablements] [nvarchar](50) NULL,
+	[Exons] [nvarchar](max) NULL,
+	[Introns] [nvarchar](max) NULL,
+	[Class] [nvarchar](50) NULL,
+	[Sequence] [nvarchar](max) NULL,
+	[Link] [nvarchar](100) NULL
+) ON [PRIMARY]
