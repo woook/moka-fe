@@ -1,0 +1,23 @@
+USE [mokadata]
+GO
+/****** Object:  Table [dbo].[GenesDGDv71]    Script Date: 09/24/2015 17:41:42 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[GenesDGDv71](
+	[dgdID] [int] IDENTITY(1,1) NOT NULL,
+	[chr] [nvarchar](5) NULL,
+	[group_id] [int] NULL,
+	[NB_genes] [int] NULL,
+	[start] [int] NULL,
+	[stopend] [int] NULL,
+	[strand] [nvarchar](5) NULL,
+	[ENS_ID] [nvarchar](50) NULL,
+	[Name] [nvarchar](50) NULL,
+	[Description] [nvarchar](max) NULL,
+ CONSTRAINT [PK_dgd_v71] PRIMARY KEY CLUSTERED 
+(
+	[dgdID] ASC
+)WITH (PAD_INDEX  = OFF, STATISTICS_NORECOMPUTE  = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS  = ON, ALLOW_PAGE_LOCKS  = ON) ON [PRIMARY]
+) ON [PRIMARY]
