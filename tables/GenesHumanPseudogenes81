@@ -1,6 +1,6 @@
 USE [mokadata]
 GO
-/****** Object:  Table [dbo].[GenesHumanPseudogenes81]    Script Date: 09/24/2015 17:07:16 ******/
+/****** Object:  Table [dbo].[GenesHumanPseudogenes81]    Script Date: 09/24/2015 17:38:21 ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -29,5 +29,9 @@ CREATE TABLE [dbo].[GenesHumanPseudogenes81](
 	[Introns] [nvarchar](max) NULL,
 	[Class] [nvarchar](50) NULL,
 	[Sequence] [nvarchar](max) NULL,
-	[Link] [nvarchar](100) NULL
+	[Link] [nvarchar](100) NULL,
+ CONSTRAINT [PK_GenesHumanPseudogenes81] PRIMARY KEY CLUSTERED 
+(
+	[PsuedoID] ASC
+)WITH (PAD_INDEX  = OFF, STATISTICS_NORECOMPUTE  = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS  = ON, ALLOW_PAGE_LOCKS  = ON) ON [PRIMARY]
 ) ON [PRIMARY]
