@@ -15,41 +15,16 @@ Private Sub Form_AfterInsert()
     Set Q = Nothing
  
     If Me.Phenotype Like "*22q*" Or Me.Phenotype Like "*digeorge*" Or Me.Phenotype Like "*VCFS*" Then
-        If Not IsNull([Form_02 Patient Details]!DOB) Then
-            Dim DB As String
-            Dim dr As String
-            Dim dd As String
-            DB = FormatDateTime([Form_02 Patient Details]![DOB], vbShortDate)
-            dr = FormatDateTime(Now(), vbShortDate)
-            dd = DateDiff("y", DB, dr)
-            If dd < 730 Then
-                Dim nb As String
-                nb = 1201865448
-                Set Q = New ADODB.Recordset
-                S = "INSERT INTO PatientNote(InternalPatientID, [Date], PatientNote, NotedByID) VALUES(" + CStr(Me![InternalPatientID]) + ",#" + d + "#,'22q11.21 queried therefore add transfusion comment to array report.','" + nb + "')"
-                Q.Open S, CurrentProject.Connection
-                Set Q = Nothing
-                End If
-            End If
+        Dim nb As String
+        nb = 1201865448
+        Set Q = New ADODB.Recordset
+        S = "INSERT INTO PatientNote(InternalPatientID, [Date], PatientNote, NotedByID) VALUES(" + CStr(Me![InternalPatientID]) + ",#" + d + "#,'22q11.21 queried therefore add transfusion comment to array report. See http://bit.ly/1MrtA8b','" + nb + "')"
+        Q.Open S, CurrentProject.Connection
+        Set Q = Nothing
         End If
 
 
 
-End Sub
-
-Private Sub Form_Delete(Cancel As Integer)
-    Dim Q As ADODB.Recordset
-    Dim S As String
-    Dim d As String
-    Dim un As String
-    Dim cn As String
-    d = Format(Now, "dd/mmm/yyyy Hh:Nn:ss")
-    un = VBA.Environ("USERNAME")
-    cn = VBA.Environ("COMPUTERNAME")
-    Set Q = New ADODB.Recordset
-    S = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + ",'Phenotype: Referral indication deleted manually [" + Me![Phenotype] + "], ID " + CStr(Me![PhenotypeID]) + "',#" + d + "#,'" + un + "','" + cn + "')"
-    Q.Open S, CurrentProject.Connection
-    Set Q = Nothing
 End Sub
 
 Private Sub Phenotype_AfterUpdate()
@@ -67,24 +42,29 @@ Private Sub Phenotype_AfterUpdate()
         Q.Open S, CurrentProject.Connection
         Set Q = Nothing
         
-    If Me.Phenotype Like "*22q*" Or Me.Phenotype Like "*digeorge*" Or Me.Phenotype Like "*VCFS*" Then
-        If Not IsNull([Form_02 Patient Details]!DOB) Then
-            Dim DB As String
-            Dim dr As String
-            Dim dd As String
-            DB = FormatDateTime([Form_02 Patient Details]![DOB], vbShortDate)
-            dr = FormatDateTime(Now(), vbShortDate)
-            dd = DateDiff("y", DB, dr)
-            If dd < 730 Then
-                Dim nb As String
-                nb = 1201865448
-                Set Q = New ADODB.Recordset
-                S = "INSERT INTO PatientNote(InternalPatientID, [Date], PatientNote, NotedByID) VALUES(" + CStr(Me![InternalPatientID]) + ",#" + d + "#,'22q11.21 queried therefore add transfusion comment to array report.','" + nb + "')"
-                Q.Open S, CurrentProject.Connection
-                Set Q = Nothing
-                End If
+        If Me.Phenotype Like "*22q*" Or Me.Phenotype Like "*digeorge*" Or Me.Phenotype Like "*VCFS*" Then
+            Dim nb As String
+            nb = 1201865448
+            Set Q = New ADODB.Recordset
+            S = "INSERT INTO PatientNote(InternalPatientID, [Date], PatientNote, NotedByID) VALUES(" + CStr(Me![InternalPatientID]) + ",#" + d + "#,'22q11.21 queried therefore add transfusion comment to array report. See http://bit.ly/1MrtA8b','" + nb + "')"
+            Q.Open S, CurrentProject.Connection
+            Set Q = Nothing
             End If
-        End If
         
         End If
+End Sub
+
+Private Sub Form_Delete(Cancel As Integer)
+    Dim Q As ADODB.Recordset
+    Dim S As String
+    Dim d As String
+    Dim un As String
+    Dim cn As String
+    d = Format(Now, "dd/mmm/yyyy Hh:Nn:ss")
+    un = VBA.Environ("USERNAME")
+    cn = VBA.Environ("COMPUTERNAME")
+    Set Q = New ADODB.Recordset
+    S = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + ",'Phenotype: Referral indication deleted manually [" + Me![Phenotype] + "], ID " + CStr(Me![PhenotypeID]) + "',#" + d + "#,'" + un + "','" + cn + "')"
+    Q.Open S, CurrentProject.Connection
+    Set Q = Nothing
 End Sub
