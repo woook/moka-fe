@@ -22,12 +22,10 @@ Private Sub Form_AfterInsert()
         Q.Open S, CurrentProject.Connection
         Set Q = Nothing
         End If
+    
+    End Sub
 
-
-
-End Sub
-
-Private Sub Phenotype_AfterUpdate()
+Private Sub Form_AfterUpdate()
     If Not IsNull([PhenotypeID]) Then
         Dim Q As ADODB.Recordset
         Dim S As String
@@ -67,4 +65,4 @@ Private Sub Form_Delete(Cancel As Integer)
     S = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + ",'Phenotype: Referral indication deleted manually [" + Me![Phenotype] + "], ID " + CStr(Me![PhenotypeID]) + "',#" + d + "#,'" + un + "','" + cn + "')"
     Q.Open S, CurrentProject.Connection
     Set Q = Nothing
-End Sub
+    End Sub
