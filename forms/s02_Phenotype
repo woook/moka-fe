@@ -18,7 +18,7 @@ Private Sub Form_AfterInsert()
         Dim nb As String
         nb = 1201865448
         Set Q = New ADODB.Recordset
-        S = "INSERT INTO PatientNote(InternalPatientID, [Date], PatientNote, NotedByID) VALUES(" + CStr(Me![InternalPatientID]) + ",#" + d + "#,'22q11.21 queried therefore add transfusion comment to array report. See http://bit.ly/1MrtA8b','" + nb + "')"
+        S = "INSERT INTO PatientNote(InternalPatientID, [Date], PatientNote, NotedByID) VALUES(" + CStr(Me![InternalPatientID]) + ",#" + d + "#,'22q11.21 queried therefore add transfusion comment to array report. See http://bit.ly/1iOGmo3','" + nb + "')"
         Q.Open S, CurrentProject.Connection
         Set Q = Nothing
         End If
@@ -44,13 +44,13 @@ Private Sub Form_AfterUpdate()
             Dim nb As String
             nb = 1201865448
             Set Q = New ADODB.Recordset
-            S = "INSERT INTO PatientNote(InternalPatientID, [Date], PatientNote, NotedByID) VALUES(" + CStr(Me![InternalPatientID]) + ",#" + d + "#,'22q11.21 queried therefore add transfusion comment to array report. See http://bit.ly/1MrtA8b','" + nb + "')"
+            S = "INSERT INTO PatientNote(InternalPatientID, [Date], PatientNote, NotedByID) VALUES(" + CStr(Me![InternalPatientID]) + ",#" + d + "#,'22q11.21 queried therefore add transfusion comment to array report. See http://bit.ly/1iOGmo3','" + nb + "')"
             Q.Open S, CurrentProject.Connection
             Set Q = Nothing
             End If
         
         End If
-End Sub
+    End Sub
 
 Private Sub Form_Delete(Cancel As Integer)
     Dim Q As ADODB.Recordset
