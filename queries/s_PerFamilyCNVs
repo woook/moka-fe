@@ -1,0 +1,4 @@
+SELECT DISTINCT Left([PatientID],6) AS Family, Chromosome.Chr, ArrayOligoPreliminaryResults.Start19, ArrayOligoPreliminaryResults.Stop19, Change.Change
+FROM (((ArrayTest INNER JOIN ArrayOligoPreliminaryResults ON (ArrayTest.DNALabellingID = ArrayOligoPreliminaryResults.DNALabellingID) AND (ArrayTest.InternalPatientID = ArrayOligoPreliminaryResults.InternalPatientID)) INNER JOIN Patients ON ArrayTest.InternalPatientID = Patients.InternalPatientID) INNER JOIN Chromosome ON ArrayOligoPreliminaryResults.ChrID19 = Chromosome.ChrID) INNER JOIN Change ON ArrayOligoPreliminaryResults.Copies = Change.ChangeID
+WHERE (((ArrayOligoPreliminaryResults.WholeChromosome) Is Null Or (ArrayOligoPreliminaryResults.WholeChromosome)<>1202218774) AND ((ArrayTest.Service)=True) AND ((ArrayTest.ReferralID)=2))
+ORDER BY Left([PatientID],6);
