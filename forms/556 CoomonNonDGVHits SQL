@@ -1,6 +1,5 @@
-SELECT Chromosome.Chr, ArrayOligoPreliminaryResults.Start19, ArrayOligoPreliminaryResults.Stop19, Change_1.Change, Count(Change_1.Change) AS Hits
-FROM ((ArrayOligoPreliminaryResults INNER JOIN Change AS Change_1 ON ArrayOligoPreliminaryResults.Copies = Change_1.ChangeID) INNER JOIN Chromosome ON ArrayOligoPreliminaryResults.ChrID19 = Chromosome.ChrID) INNER JOIN (ArrayTest INNER JOIN Referral ON ArrayTest.ReferralID = Referral.ReferralID) ON ArrayOligoPreliminaryResults.DNALabellingID = ArrayTest.DNALabellingID
-WHERE (((ArrayOligoPreliminaryResults.WholeChromosome) Is Null Or (ArrayOligoPreliminaryResults.WholeChromosome)<>1202218774) AND ((ArrayTest.Service)=True) AND ((ArrayTest.ReferralID)=2))
-GROUP BY Chromosome.Chr, ArrayOligoPreliminaryResults.Start19, ArrayOligoPreliminaryResults.Stop19, Change_1.Change
-HAVING (((ArrayOligoPreliminaryResults.Start19) Is Not Null) AND ((Count(Change_1.Change))>1))
-ORDER BY Count(Change_1.Change) DESC;
+SELECT s_PerFamilyCNVs.Chr, s_PerFamilyCNVs.Start19, s_PerFamilyCNVs.Stop19, s_PerFamilyCNVs.Change, Count(s_PerFamilyCNVs.Change) AS Hits
+FROM s_PerFamilyCNVs
+GROUP BY s_PerFamilyCNVs.Chr, s_PerFamilyCNVs.Start19, s_PerFamilyCNVs.Stop19, s_PerFamilyCNVs.Change
+HAVING (((s_PerFamilyCNVs.Start19) Is Not Null) AND ((Count(s_PerFamilyCNVs.Change))>1))
+ORDER BY Count(s_PerFamilyCNVs.Change) DESC;
