@@ -1,0 +1,280 @@
+Option Compare Database
+
+''open form
+Private Sub DNANumber_DblClick(Cancel As Integer)
+    Dim stDocName As String
+    Dim stLinkCriteria As String
+    stDocName = "s02_DNALabel"
+    stLinkCriteria = "[DNANumber]=" & "'" & Me![DNANumber] & "'"
+    DoCmd.OpenForm stDocName, , , stLinkCriteria
+End Sub
+
+Private Sub Concentration_DblClick(Cancel As Integer)
+    Dim x As String
+    x = """P:\Cyto\Array\Runsheets\Nanodrop reports\Data\Default\Nucleic Acid"""
+    Set objShell = CreateObject("Wscript.Shell")
+    objShell.Run (x)
+End Sub
+
+''locking
+
+Private Sub DNANumber_Enter()
+    If Me.Active = -1 And Not IsNull(Me.DNACheckRun) Then
+        Me.DNANumber.Locked = True
+    Else
+        Me.DNANumber.Locked = False
+    End If
+End Sub
+
+''logging
+
+Private Sub Form_AfterInsert()
+    If IsNull([DNANumber]) Then
+        MsgBox "Which DNA?", , "Don't be a dummy"
+    Else
+        Dim Q As ADODB.Recordset
+        Dim S As String
+        Dim d As String
+        d = Format(Now, "dd/mmm/yyyy Hh:Nn:ss")
+        Dim cn As String
+        Dim un As String
+        un = VBA.Environ("USERNAME")
+        cn = VBA.Environ("COMPUTERNAME")
+        Set Q = New ADODB.Recordset
+        S = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + ",'DNA: New DNA number [" + CStr(Me![DNANumber]) + "] added',#" + d + "#,'" + un + "','" + cn + "')"
+        Q.Open S, CurrentProject.Connection
+        Set Q = Nothing
+    End If
+    
+    If (DCount("[DNANumber]", "[DNA]", "InternalPatientID = Forms![02 Patient Details]![s02_DNA]![InternalPatientID] AND [Active] = true")) <> 1 Then
+        MsgBox "There should be ONE active DNA, please activate the one that is being tested." & vbNewLine & "If you need to activate more than one, then discuss with SB/JWA." & vbNewLine & "If you are deactivating all DNA samples then no more testing will occur.", , "Don't be a dummy"
+        End If
+    
+End Sub
+
+Private Sub Form_AfterUpdate()
+    If (DCount("[DNANumber]", "[DNA]", "InternalPatientID = Forms![02 Patient Details]![s02_DNA]![InternalPatientID] AND [Active] = true")) <> 1 Then
+        MsgBox "There should be ONE active DNA, please activate the one that is being tested." & vbNewLine & "If you need to activate more than one, then discuss with SB/JWA." & vbNewLine & "If you are deactivating all DNA samples then no more testing will occur.", , "Don't be a dummy"
+        End If
+End Sub
+
+Private Sub Form_Delete(Cancel As Integer)
+On Error GoTo Err_Form_Delete
+
+    Dim Q As ADODB.Recordset
+    Dim S As String
+    Dim d As String
+    Dim cn As String
+    Dim un As String
+    un = VBA.Environ("USERNAME")
+    cn = VBA.Environ("COMPUTERNAME")
+    d = Format(Now, "dd/mmm/yyyy Hh:Nn:ss")
+    Set Q = New ADODB.Recordset
+    If IsNull(Me![DNANumber]) Then
+        S = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + ",'DNA: (null) entry deleted',#" + d + "#,'" + un + "','" + cn + "')"
+    Else
+        S = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + ",'DNA: [" + CStr(Me![DNANumber]) + "] entry deleted',#" + d + "#,'" + un + "','" + cn + "')"
+    End If
+    Q.Open S, CurrentProject.Connection
+    Set Q = Nothing
+
+Exit_Form_Delete:
+    Exit Sub
+
+Err_Form_Delete:
+    MsgBox Err.Description
+    Resume Exit_Form_Delete
+
+End Sub
+
+Private Sub DNANumber_AfterUpdate()
+    If Not IsNull(Me.DNANumber.OldValue) Then
+        Dim Q As ADODB.Recordset
+        Dim S As String
+        Dim d As String
+        d = Format(Now, "dd/mmm/yyyy Hh:Nn:ss")
+        Dim cn As String
+        Dim un As String
+        un = VBA.Environ("USERNAME")
+        cn = VBA.Environ("COMPUTERNAME")
+        Set Q = New ADODB.Recordset
+        If Not IsNull(Me.DNANumber) Then
+            S = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + ",'DNA: DNA number changed to [" + CStr(Me![DNANumber]) + "] from [" + CStr(Me![DNANumber].OldValue) + "]',#" + d + "#,'" + un + "','" + cn + "')"
+        ElseIf IsNull(Me.DNANumber) Then
+            S = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + ",'DNA: DNA number deleted (was [" + CStr(Me![DNANumber].OldValue) + "])',#" + d + "#,'" + un + "','" + cn + "')"
+        End If
+        
+        Q.Open S, CurrentProject.Connection
+        Set Q = Nothing
+    End If
+End Sub
+
+Private Sub FromTissue_AfterUpdate()
+    
+    If IsNull([DNANumber]) Then
+        MsgBox "Which DNA?", , "Don't be a dummy"
+    Else
+        Dim Q As ADODB.Recordset
+        Dim S As String
+        Dim d As String
+        Dim cn As String
+        Dim un As String
+        un = VBA.Environ("USERNAME")
+        cn = VBA.Environ("COMPUTERNAME")
+        d = Format(Now, "dd/mmm/yyyy Hh:Nn:ss")
+        Set Q = New ADODB.Recordset
+        
+        If IsNull([FromTissue]) Then
+            S = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" + CStr(Me.InternalPatientID) + ",'DNA: Tissue type of DNA number [" + CStr(Me.DNANumber) + "] deleted',#" + d + "#,'" + un + "','" + cn + "')"
+        Else
+            S = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" + CStr(Me.InternalPatientID) + ",'DNA: Tissue type of DNA number [" + CStr(Me.DNANumber) + "] changed to " + Me![FromTissue].Column(1) + " " + Me![FromTissue].Column(2) + "',#" + d + "#,'" + un + "','" + cn + "')"
+        End If
+        
+        Q.Open S, CurrentProject.Connection
+        Set Q = Nothing
+
+    End If
+End Sub
+
+Private Sub Concentration_AfterUpdate()
+    If IsNull([DNANumber]) Then
+        MsgBox "Which DNA?", , "Don't be a dummy"
+    Else
+        Dim Q As ADODB.Recordset
+        Dim S As String
+        Dim d As String
+        Dim cn As String
+        Dim un As String
+        un = VBA.Environ("USERNAME")
+        cn = VBA.Environ("COMPUTERNAME")
+        d = Format(Now, "dd/mmm/yyyy Hh:Nn:ss")
+        Set Q = New ADODB.Recordset
+        
+        If IsNull([Concentration]) Then
+            S = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" + CStr(Me.InternalPatientID) + ",'DNA: Concentration of DNA number [" + CStr(Me.DNANumber) + "] deleted',#" + d + "#,'" + un + "','" + cn + "')"
+        Else
+            S = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" + CStr(Me.InternalPatientID) + ",'DNA: Concentration of DNA number [" + CStr(Me.DNANumber) + "] changed to " + CStr(Me.Concentration) + "',#" + d + "#,'" + un + "','" + cn + "')"
+        End If
+        
+        Q.Open S, CurrentProject.Connection
+        Set Q = Nothing
+
+    End If
+End Sub
+
+Private Sub GelQualityID_AfterUpdate()
+    If IsNull([DNANumber]) Then
+        MsgBox "Which DNA?", , "Don't be a dummy"
+    Else
+        Dim Q As ADODB.Recordset
+        Dim S As String
+        Dim d As String
+        Dim cn As String
+        Dim un As String
+        un = VBA.Environ("USERNAME")
+        cn = VBA.Environ("COMPUTERNAME")
+        d = Format(Now, "dd/mmm/yyyy Hh:Nn:ss")
+        Set Q = New ADODB.Recordset
+        
+        If IsNull([GelQualityID]) Then
+            S = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" + CStr(Me.InternalPatientID) + ",'DNA: Gel quality of DNA number [" + CStr(Me.DNANumber) + "] deleted',#" + d + "#,'" + un + "','" + cn + "')"
+        Else
+            S = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" + CStr(Me.InternalPatientID) + ",'DNA: Gel quality of DNA number [" + CStr(Me.DNANumber) + "] changed to " + Me![GelQualityID].Column(1) + "',#" + d + "#,'" + un + "','" + cn + "')"
+        End If
+        
+        Q.Open S, CurrentProject.Connection
+        Set Q = Nothing
+
+    End If
+End Sub
+
+Private Sub DNACheckRun_AfterUpdate()
+    If IsNull([DNANumber]) Then
+        MsgBox "Which DNA?", , "Don't be a dummy"
+    Else
+        Dim Q As ADODB.Recordset
+        Dim S As String
+        Dim d As String
+        Dim cn As String
+        Dim un As String
+        un = VBA.Environ("USERNAME")
+        cn = VBA.Environ("COMPUTERNAME")
+        d = Format(Now, "dd/mmm/yyyy Hh:Nn:ss")
+        Set Q = New ADODB.Recordset
+        
+        If IsNull(DNACheckRun) Then
+            S = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" + CStr(Me.InternalPatientID) + ",'DNA: DNA prep run number for DNA number [" + CStr(Me.DNANumber) + "] deleted',#" + d + "#,'" + un + "','" + cn + "')"
+        Else
+            S = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" + CStr(Me.InternalPatientID) + ",'DNA: DNA prep run number for DNA number [" + CStr(Me.DNANumber) + "] changed to " + CStr(Me.DNACheckRun) + "',#" + d + "#,'" + un + "','" + cn + "')"
+        End If
+        
+        Q.Open S, CurrentProject.Connection
+        Set Q = Nothing
+
+    End If
+End Sub
+
+Private Sub Active_AfterUpdate()
+On Error GoTo Err_Active_AfterUpdate
+    
+    If IsNull([DNANumber]) Then
+        MsgBox "Which DNA?", , "Don't be a dummy"
+    Else
+        Dim Q As ADODB.Recordset
+        Dim S As String
+        Dim d As String
+        Dim cn As String
+        Dim un As String
+        un = VBA.Environ("USERNAME")
+        cn = VBA.Environ("COMPUTERNAME")
+        d = Format(Now, "dd/mmm/yyyy Hh:Nn:ss")
+        Set Q = New ADODB.Recordset
+        S = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" + CStr(Me.InternalPatientID) + ",'DNA: Active status changed for DNA number [" + CStr(Me.DNANumber) + "]',#" + d + "#,'" + un + "','" + cn + "')"
+        Q.Open S, CurrentProject.Connection
+        Set Q = Nothing
+    End If
+          
+Exit_Active_AfterUpdate:
+    Exit Sub
+
+Err_Active_AfterUpdate:
+    MsgBox Err.Description
+    Resume Exit_Active_AfterUpdate
+    
+End Sub
+
+Private Sub DNAComment_AfterUpdate()
+    If IsNull([DNANumber]) Then
+        MsgBox "Which DNA?", , "Don't be a dummy"
+    Else
+        Dim Q As ADODB.Recordset
+        Dim S As String
+        Dim d As String
+        Dim cn As String
+        Dim un As String
+        un = VBA.Environ("USERNAME")
+        cn = VBA.Environ("COMPUTERNAME")
+        d = Format(Now, "dd/mmm/yyyy Hh:Nn:ss")
+        Set Q = New ADODB.Recordset
+        
+        If IsNull(DNAComment) Then
+            S = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" + CStr(Me.InternalPatientID) + ",'DNA: Comment for DNA number [" + CStr(Me.DNANumber) + "] deleted',#" + d + "#,'" + un + "','" + cn + "')"
+        Else
+            S = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" + CStr(Me.InternalPatientID) + ",'DNA: Comment for DNA number [" + CStr(Me.DNANumber) + "] changed to " + CStr(Me.DNAComment) + "',#" + d + "#,'" + un + "','" + cn + "')"
+        End If
+        
+        Q.Open S, CurrentProject.Connection
+        Set Q = Nothing
+
+    End If
+End Sub
+
+''refresh
+
+Private Sub FromDNAID_Enter()
+    Me.FromDNAID.Requery
+End Sub
+
+Private Sub FromTissue_Enter()
+    Me.FromTissue.Requery
+End Sub
