@@ -1,6 +1,12 @@
 Private Sub DNANo_DblClick(Cancel As Integer)
 
 If Not IsNull(Me.DNANo) Then
+    Dim DNAThere As Integer
+    DNAThere = 0
+    DNAThere = DCount("[DNANumber]", "DNA", "[DNANumber] like " + CStr(Me!DNANo))
+    If DNAThere <> 0 Then
+        MsgBox "DNA already in Moka", , "Don't be a dummy"
+        Else
         Dim Q As ADODB.Recordset
         Dim S As String
         Dim d As String
@@ -18,6 +24,7 @@ If Not IsNull(Me.DNANo) Then
         Q.Open S, CurrentProject.Connection
         Set Q = Nothing
         [Form_02 Patient Details].s02_DNA.Requery
+        End If
     End If
     
 End Sub
