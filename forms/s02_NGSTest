@@ -60,3 +60,8 @@ Private Sub NGSPanelID_AfterUpdate()
     Set Q = Nothing
 
 End Sub
+
+''Refresh
+Private Sub DNA_Enter()
+    Me.DNA.Requery
+End Sub
