@@ -9,12 +9,6 @@ Private Sub DNANumber_DblClick(Cancel As Integer)
     DoCmd.OpenForm stDocName, , , stLinkCriteria
 End Sub
 
-Private Sub Concentration_DblClick(Cancel As Integer)
-    Dim x As String
-    x = """P:\Cyto\Array\Runsheets\Nanodrop reports\Data\Default\Nucleic Acid"""
-    Set objShell = CreateObject("Wscript.Shell")
-    objShell.Run (x)
-End Sub
 
 ''locking
 
