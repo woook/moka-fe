@@ -41,14 +41,14 @@ Private Sub Form_AfterInsert()
     End If
     
     If (DCount("[DNANumber]", "[DNA]", "InternalPatientID = Forms![02 Patient Details]![s02_DNA]![InternalPatientID] AND [Active] = true")) <> 1 Then
-        MsgBox "There should be ONE active DNA, please activate the one that is being tested." & vbNewLine & "If you need to activate more than one, then discuss with SB/JWA." & vbNewLine & "If you are deactivating all DNA samples then no more testing will occur.", , "Don't be a dummy"
+        MsgBox "There should be ONE active DNA, please activate the one that is being tested." & vbNewLine & "If you need to activate more than one, then discuss with array duty scientist." & vbNewLine & "If you are deactivating all DNA samples then no more testing will occur.", , "Don't be a dummy"
         End If
     
 End Sub
 
 Private Sub Form_AfterUpdate()
     If (DCount("[DNANumber]", "[DNA]", "InternalPatientID = Forms![02 Patient Details]![s02_DNA]![InternalPatientID] AND [Active] = true")) <> 1 Then
-        MsgBox "There should be ONE active DNA, please activate the one that is being tested." & vbNewLine & "If you need to activate more than one, then discuss with SB/JWA." & vbNewLine & "If you are deactivating all DNA samples then no more testing will occur.", , "Don't be a dummy"
+        MsgBox "There should be ONE active DNA, please activate the one that is being tested." & vbNewLine & "If you need to activate more than one, then discuss with array duty scientist." & vbNewLine & "If you are deactivating all DNA samples then no more testing will occur.", , "Don't be a dummy"
         End If
 End Sub
 
