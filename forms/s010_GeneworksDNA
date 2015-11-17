@@ -1,25 +1,39 @@
 Option Compare Database
 
+''autoadd DNA into Moka and log
 Private Sub DNANo_DblClick(Cancel As Integer)
 
 If Not IsNull(Me.DNANo) Then
     Dim DNAThere As Integer
     DNAThere = 0
     DNAThere = DCount("[DNANumber]", "DNA", "[DNANumber] like " + CStr(Me!DNANo))
+    
     If DNAThere <> 0 Then
         MsgBox "DNA already in Moka", , "Don't be a dummy"
-        Else
+    Else
         Dim Q As ADODB.Recordset
         Dim S As String
         Set Q = New ADODB.Recordset
         If Not IsNull(Me.Concentration) Then
             S = "INSERT INTO DNA(InternalPatientID, DNANumber, GelQualityID, DNACheckRun, DNAComment, Concentration) VALUES(" + CStr(Me![InternalPatientID]) + "," + Me!DNANo + ",5,'-','NGS'," + Me!Concentration + ")"
-            Else
+        Else
             S = "INSERT INTO DNA(InternalPatientID, DNANumber, GelQualityID, DNACheckRun, DNAComment) VALUES(" + CStr(Me![InternalPatientID]) + "," + Me!DNANo + ",5,'-','NGS')"
             End If
         Q.Open S, CurrentProject.Connection
         Set Q = Nothing
         [Form_02 Patient Details].s02_DNA.Requery
+        
+        Dim d As String
+        d = Format(Now, "dd/mmm/yyyy Hh:Nn:ss")
+        Dim cn As String
+        Dim un As String
+        un = VBA.Environ("USERNAME")
+        cn = VBA.Environ("COMPUTERNAME")
+        Set Q = New ADODB.Recordset
+        S = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + ",'DNA: New DNA number [" + CStr(Me![DNANo]) + "] added',#" + d + "#,'" + un + "','" + cn + "')"
+        Q.Open S, CurrentProject.Connection
+        Set Q = Nothing
+       
         End If
     End If
     
