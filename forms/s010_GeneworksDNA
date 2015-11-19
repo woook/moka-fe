@@ -21,7 +21,7 @@ If Not IsNull(Me.DNANo) Then
             End If
         Q.Open S, CurrentProject.Connection
         Set Q = Nothing
-        [Form_02 Patient Details].s02_DNA.Requery
+        [Form_010 Add array request].s010_DNA.Requery
         
         Dim d As String
         d = Format(Now, "dd/mmm/yyyy Hh:Nn:ss")
