@@ -15,9 +15,9 @@ If Not IsNull(Me.DNANo) Then
         Dim S As String
         Set Q = New ADODB.Recordset
         If Not IsNull(Me.Concentration) Then
-            S = "INSERT INTO DNA(InternalPatientID, DNANumber, GelQualityID, DNACheckRun, DNAComment, Concentration) VALUES(" + CStr(Me![InternalPatientID]) + "," + Me!DNANo + ",5,'-','NGS'," + Me!Concentration + ")"
+            S = "INSERT INTO DNA(InternalPatientID, DNANumber, Concentration) VALUES(" + CStr(Me![InternalPatientID]) + "," + Me!DNANo + "," + Me!Concentration + ")"
         Else
-            S = "INSERT INTO DNA(InternalPatientID, DNANumber, GelQualityID, DNACheckRun, DNAComment) VALUES(" + CStr(Me![InternalPatientID]) + "," + Me!DNANo + ",5,'-','NGS')"
+            S = "INSERT INTO DNA(InternalPatientID, DNANumber) VALUES(" + CStr(Me![InternalPatientID]) + "," + Me!DNANo + ")"
             End If
         Q.Open S, CurrentProject.Connection
         Set Q = Nothing
