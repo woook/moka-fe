@@ -1,5 +1,5 @@
 Option Compare Database
-
+ 
 ''warnings and logging
 
 Private Sub Form_AfterInsert()
