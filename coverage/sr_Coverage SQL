@@ -1,0 +1,3 @@
+SELECT NGSTest.InternalPatientID, NGSPanelGenes.Symbol AS [Gene Symbol], Int([PercentBases20]) AS [Percent Bases At 20X*]
+FROM ((NGSPanel INNER JOIN NGSPanelGenes ON NGSPanel.NGSPanelID = NGSPanelGenes.NGSPanelID) INNER JOIN NGSTest ON NGSPanel.NGSPanelID = NGSTest.NGSPanelID) INNER JOIN NGS116406_AAAAAA_Pan77 ON NGSPanelGenes.Symbol = NGS116406_AAAAAA_Pan77.Target
+ORDER BY NGSPanelGenes.Symbol;
