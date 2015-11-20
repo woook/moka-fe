@@ -1,0 +1,3 @@
+SELECT DNA.DNANumber, dbo_PatientLinked.PatientTrustID AS PRU, dbo_PatientLinked.LastName & " " & dbo_PatientLinked.FirstName AS Name, dbo_PatientLinked.Gender, dbo_PatientLinked.DoB, Patients.InternalPatientID
+FROM dbo_PatientLinked INNER JOIN (DNA INNER JOIN Patients ON DNA.InternalPatientID = Patients.InternalPatientID) ON dbo_PatientLinked.PatientTrustID = Patients.PatientID
+WHERE (((DNA.DNANumber)=[DNA?]));
