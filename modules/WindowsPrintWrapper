@@ -1,0 +1,52 @@
+Option Compare Database
+Option Explicit
+
+Public Type DOCINFO
+    pDocName As String
+    pOutputFile As String
+    pDatatype As String
+End Type
+
+Private Declare Function ClosePrinter Lib "winspool.drv" (ByVal hPrinter As Long) As Long
+Private Declare Function EndDocPrinter Lib "winspool.drv" (ByVal hPrinter As Long) As Long
+Private Declare Function EndPagePrinter Lib "winspool.drv" (ByVal hPrinter As Long) As Long
+Private Declare Function OpenPrinter Lib "winspool.drv" Alias "OpenPrinterA" (ByVal pPrinterName As String, phPrinter As Long, ByVal pDefault As Long) As Long
+Private Declare Function StartDocPrinter Lib "winspool.drv" Alias "StartDocPrinterA" (ByVal hPrinter As Long, ByVal Level As Long, pDocInfo As DOCINFO) As Long
+Private Declare Function StartPagePrinter Lib "winspool.drv" (ByVal hPrinter As Long) As Long
+Private Declare Function WritePrinter Lib "winspool.drv" (ByVal hPrinter As Long, pBuf As Any, ByVal cdBuf As Long, pcWritten As Long) As Long
+
+Public Function SendStringToZebraPrinter(StringToPrint As String, PrinterName As String)
+    Dim lhPrinter As Long
+    Dim lReturn As Long
+    Dim lpcWritten As Long
+    Dim lDoc As Long
+    Dim MyDocInfo As DOCINFO
+    
+    lReturn = OpenPrinter(PrinterName, lhPrinter, 0)
+
+    MyDocInfo.pDocName = "Zebra Print Job"
+
+    MyDocInfo.pOutputFile = vbNullString
+
+    MyDocInfo.pDatatype = vbNullString
+
+    lDoc = StartDocPrinter(lhPrinter, 1, MyDocInfo)
+
+    Call StartPagePrinter(lhPrinter)
+
+    Dim bByteArrayToSend() As Byte
+
+    bByteArrayToSend = StrConv(StringToPrint, vbFromUnicode)
+
+    lReturn = WritePrinter(lhPrinter, bByteArrayToSend(0), UBound(bByteArrayToSend) + 1, lpcWritten)
+
+    lReturn = EndPagePrinter(lhPrinter)
+    
+    lReturn = EndDocPrinter(lhPrinter)
+    
+    lReturn = ClosePrinter(lhPrinter)
+End Function
+
+
+
+
