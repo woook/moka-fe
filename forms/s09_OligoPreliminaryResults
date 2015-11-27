@@ -1,0 +1,394 @@
+Option Compare Database
+
+''on open
+Private Sub Form_Current()
+    Me.DNALabellingID.Requery
+End Sub
+
+''hyb id check
+Private Sub Form_AfterUpdate()
+    If IsNull(Me![DNALabellingID]) Then
+        MsgBox "HybID?", , "Don't be a dummy"
+        End If
+End Sub
+
+''previous findings
+Private Sub ChrID19_DblClick(Cancel As Integer)
+    Dim stDocName As String
+    Dim stLinkCriteria As String
+    stDocName = "s09_Previous"
+    stLinkCriteria = "[ChrID19]=" & Me![ChrID19]
+    DoCmd.OpenForm stDocName, acFormDS, , stLinkCriteria
+End Sub
+
+''alt previous findings
+Private Sub Form_DblClick(Cancel As Integer)
+    Dim stDocName As String
+    Dim stLinkCriteria As String
+    stDocName = "s09_Previous"
+    stLinkCriteria = "[ChrID19]=" & Me![ChrID19]
+    DoCmd.OpenForm stDocName, acFormDS, , stLinkCriteria
+End Sub
+
+''dgv
+Private Sub Start19_DblClick(Cancel As Integer)
+    Dim url As String
+    'url = "http://projects.tcag.ca/cgi-bin/variation/gbrowse/hg19/?start=" + CStr(Me.Start19 - 500000) + ";stop=" + CStr(Me.Stop19 + 500000) + ";ref=chr" + Me![ChrID19].Column(1) + ";h_region=chr" + Me![ChrID19].Column(1) + ":" + CStr(Me.Start19) + ".." + CStr(Me.Stop19) + ""
+    url = "http://dgv.tcag.ca/gb2/gbrowse/dgv2_hg19/?start=" + CStr(Me.Start19 - 500000) + ";stop=" + CStr(Me.Stop19 + 500000) + ";ref=chr" + Me![ChrID19].Column(1) + ""
+    'chromeurlserv url
+    firefoxurl url
+End Sub
+
+Private Sub Start_DblClick(Cancel As Integer)
+    Dim url As String
+    url = "http://projects.tcag.ca/cgi-bin/variation/gbrowse/hg18/?start=" + CStr(Me.Start - 500000) + ";stop=" + CStr(Me.Stop + 500000) + ";ref=chr" + Me![ChrID].Column(1) + ";h_region=chr" + Me![ChrID].Column(1) + ":" + CStr(Me.Start) + ".." + CStr(Me.Stop) + ""
+    'chromeurlserv url
+    firefoxurl url
+End Sub
+
+''ucsc
+Private Sub Stop19_DblClick(Cancel As Integer)
+    Dim url As String
+    url = "http://genome.ucsc.edu/cgi-bin/hgTracks?hgS_doOtherUser=submit&hgS_otherUserName=Wook&hgS_otherUserSessionName=hg19cgh8&highlight=hg19.chr" + Me![ChrID19].Column(1) + "%3A" + CStr(Me.Start19) + "-" + CStr(Me.Stop19) + "&position=chr" + Me![ChrID19].Column(1) + "%3A" + CStr(Me.Start19 - 500000) + "-" + CStr(Me.Stop19 + 500000) + ""
+    'url = "http://genome.ucsc.edu/cgi-bin/hgTracks?hgS_doOtherUser=submit&hgS_otherUserName=Wook&hgS_otherUserSessionName=hg19cgh8&position=chr" + Me![ChrID19].Column(1) + "%3A" + CStr(Me.Start19 - 1000) + "-" + CStr(Me.Stop19 + 1000) + ""
+    'url = "http://genome.ucsc.edu/cgi-bin/hgTracks?hgS_doOtherUser=submit&hgS_otherUserName=Wook&hgS_otherUserSessionName=hg19cgh8&position=chr" + Me![ChrID19].Column(1) + "%3A" + CStr(Me.Start19 - 500000) + "-" + CStr(Me.Stop19 + 500000) + ""
+    'url = "http://genome.ucsc.edu/cgi-bin/hgTracks?hgS_doOtherUser=submit&hgS_otherUserName=Wook&hgS_otherUserSessionName=hg19CGH5&position=chr" + Me![ChrID19].Column(1) + "%3A" + CStr(Me.Start19) + "-" + CStr(Me.Stop19) + ""
+    'http://genome.ucsc.edu/cgi-bin/hgTracks?hgS_doOtherUser=submit&hgS_otherUserName=Wook&hgS_otherUserSessionName=hg19CGH5&org=Human&db=hg18&position=chr16%3A15%2C666%2C145-15%2C666%2C245
+    'chromeurlserv url
+    firefoxurl url
+End Sub
+
+Private Sub Stopend_DblClick(Cancel As Integer)
+    Dim url As String
+    url = "http://genome.ucsc.edu/cgi-bin/hgTracks?hgS_doOtherUser=submit&hgS_otherUserName=Wook&hgS_otherUserSessionName=hg18CGH5&highlight=hg18.chr" + Me![ChrID].Column(1) + "%3A" + CStr(Me.Start) + "-" + CStr(Me.Stop) + "&position=chr" + Me![ChrID].Column(1) + "%3A" + CStr(Me.Start - 500000) + "-" + CStr(Me.Stop + 500000) + ""
+    'url = "http://genome.ucsc.edu/cgi-bin/hgTracks?hgS_doOtherUser=submit&hgS_otherUserName=Wook&hgS_otherUserSessionName=hg18CGH5&position=chr" + Me![ChrID].Column(1) + "%3A" + CStr(Me.Start - 1000) + "-" + CStr(Me.Stop + 1000) + ""
+    'http://genome.ucsc.edu/cgi-bin/hgTracks?hgS_doOtherUser=submit&hgS_otherUserName=Wook&hgS_otherUserSessionName=hg19CGH5&org=Human&db=hg18&position=chr16%3A15%2C666%2C145-15%2C666%2C245
+    'chromeurlserv url
+    firefoxurl url
+End Sub
+
+''vanity link
+Private Sub Size19_DblClick(Cancel As Integer)
+    Dim url As String
+    url = "http://dgv.tcag.ca/gb2/gbrowse/dgv2_hg19/?start=" + CStr(Me.Start19 - 500000) + ";stop=" + CStr(Me.Stop19 + 500000) + ";ref=chr" + Me![ChrID19].Column(1) + ""
+    'url = "http://projects.tcag.ca/cgi-bin/variation/gbrowse/hg19/?start=" + CStr(Me.Start19 - 500000) + ";stop=" + CStr(Me.Stop19 + 500000) + ";ref=chr" + Me![ChrID19].Column(1) + ";h_region=chr" + Me![ChrID19].Column(1) + ":" + CStr(Me.Start19) + ".." + CStr(Me.Stop19) + ""
+    'url = "http://projects.tcag.ca/cgi-bin/variation/gbrowse/hg19/?start=" + CStr(Me.Start19 - 500000) + ";stop=" + CStr(Me.Stop19 + 500000) + ";ref=chr" + Me![ChrID19].Column(1) + ";h_region=chr" + Me![ChrID19].Column(1) + ":" + CStr(Me.Start19) + ".." + CStr(Me.Stop19) + "width=760;version=;label=chromosome%3Aoverview-cytoband-RefGene-disease_gene-Decipher_Syndromes-NON_BAC_Variation;grid=on"
+    chromeurl url
+End Sub
+
+Private Sub Size_DblClick(Cancel As Integer)
+    Dim url As String
+    url = "http://projects.tcag.ca/cgi-bin/variation/gbrowse/hg18/?start=" + CStr(Me.Start - 500000) + ";stop=" + CStr(Me.Stop + 500000) + ";ref=chr" + Me![ChrID].Column(1) + ";h_region=chr" + Me![ChrID].Column(1) + ":" + CStr(Me.Start) + ".." + CStr(Me.Stop) + ""
+    chromeurl url
+End Sub
+
+Private Sub Probes_DblClick(Cancel As Integer)
+    Dim url As String
+    'url = "http://genome.ucsc.edu/cgi-bin/hgTracks?hgS_doOtherUser=submit&hgS_otherUserName=Wook&hgS_otherUserSessionName=hg19cgh8&position=chr" + Me![ChrID19].Column(1) + "%3A" + CStr(Me.Start19 - 1000) + "-" + CStr(Me.Stop19 + 1000) + ""
+    url = "http://genome.ucsc.edu/cgi-bin/hgTracks?hgS_doOtherUser=submit&hgS_otherUserName=Wook&hgS_otherUserSessionName=hg19cgh8&highlight=hg19.chr" + Me![ChrID19].Column(1) + "%3A" + CStr(Me.Start19) + "-" + CStr(Me.Stop19) + "&position=chr" + Me![ChrID19].Column(1) + "%3A" + CStr(Me.Start19 - 500000) + "-" + CStr(Me.Stop19 + 500000) + ""
+    chromeurl url
+End Sub
+
+''auto karyotype
+Private Sub DNALabellingID_DblClick(Cancel As Integer)
+    Dim Q As ADODB.Recordset
+    Set Q = New ADODB.Recordset
+    'Dim e As ADODB.Recordset
+    'Set e = New ADODB.Recordset
+    Dim r As String
+    'Dim c As String
+    Dim S As String
+    'Dim b As String
+    Dim t As String
+    'Dim a As String
+    Dim Sta As String
+    Dim Sto As String
+    'Dim rou As String
+    'Dim Siz As String
+    Dim u As ADODB.Recordset
+    Set u = New ADODB.Recordset
+    Dim V As String
+    Dim d As String
+    Dim un As String
+    Dim cn As String
+    d = Format(Now, "dd/mmm/yyyy Hh:Nn:ss")
+    un = VBA.Environ("USERNAME")
+    cn = VBA.Environ("COMPUTERNAME")
+    Dim W As String
+    Dim X As String
+    'Dim F As String
+    'Dim G As String
+        
+    W = Me.Parent![s09_OligoPreliminaryResults]![DNALabellingID]
+    X = Me.Parent![InternalPatientID]
+    If Not IsNull(Me![Copies].Column(1)) Then
+        f = Me![Copies].Column(1)
+    Else: f = " "
+        End If
+    'G = CStr(Me!Probes)
+
+
+
+    If Me!CNVTypeID = 1190384919 Then
+        r = "SELECT ArrayResultComment FROM ArrayTest WHERE DNALabellingID = " + CStr(W) + " AND InternalPatientID = " + X + ""
+        Q.Open r, CurrentProject.Connection, adOpenKeyset, adLockOptimistic, adCmdText
+        If Not IsNull(Q!ArrayResultComment) Then
+            t = Q!ArrayResultComment
+            S = "" + t + " " + vbNewLine + "Imbalance confirmed in hyb partner"
+        Else
+            S = "Imbalance confirmed in hyb partner"
+            End If
+    
+        Q!ArrayResultComment = S
+        Q.Update
+        Set Q = Nothing
+    
+    Else
+        r = "SELECT ArrayResult FROM ArrayTest WHERE DNALabellingID = " + CStr(W) + " AND InternalPatientID = " + X + ""
+        Q.Open r, CurrentProject.Connection, adOpenKeyset, adLockOptimistic, adCmdText
+        Sta = FormatNumber(Me!Start19, 0, 0, 0, -1)
+        Sto = FormatNumber(Me!Stop19, 0, 0, 0, -1)
+        If Not IsNull(Q!ArrayResult) Then
+            t = Q!ArrayResult
+            S = "" + t + "," + Me![Band19] + "(" + Sta + "-" + Sto + ")" + f + ""
+        Else
+            S = "" + Me![Band19] + "(" + Sta + "-" + Sto + ")" + f + ""
+            End If
+    
+        Q!ArrayResult = S
+        Q.Update
+        Set Q = Nothing
+    
+        V = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + ",'Array test: Result changed to " + S + " from HybID " + Me![DNALabellingID].Column(1) + "',#" + d + "#,'" + un + "','" + cn + "')"
+        u.Open V, CurrentProject.Connection
+        Set u = Nothing
+        
+        End If
+        
+    Me.Parent![s09_ArrayTest].Form.Requery
+        
+'    c = "SELECT ArrayResultComment FROM ArrayTest WHERE DNALabellingID = " + CStr(W) + " AND InternalPatientID = " + X + ""
+'    e.Open c, CurrentProject.Connection, adOpenKeyset, adLockOptimistic, adCmdText
+'    rou = Me!Size19 / 1000000
+'    Siz = FormatNumber(rou, 3, 0, 0, -1)
+'    If Not IsNull(e!ArrayResultComment) Then
+'        a = e!ArrayResultComment
+'        b = "" + a + vbNewLine + Me![Band19] + F + " " + Siz + "Mb, " + G + " probes"
+'    Else: b = "" + Me![Band19] + F + " " + Siz + "Mb, " + G + " probes"
+'    End If
+'
+'    e!ArrayResultComment = b
+'    e.Update
+'    Set e = Nothing
+
+End Sub
+
+Private Sub Pathogenic_Change()
+    If Not IsNull(Me!Pathogenic) Then
+        Dim Q As ADODB.Recordset
+        Set Q = New ADODB.Recordset
+        Dim e As ADODB.Recordset
+        Set e = New ADODB.Recordset
+        'Dim r As String
+        Dim c As String
+        Dim S As String
+        Dim b As String
+        'Dim t As String
+        Dim a As String
+        'Dim Sta As String
+        'Dim Sto As String
+        Dim rou As String
+        Dim Siz As String
+        Dim u As ADODB.Recordset
+        Set u = New ADODB.Recordset
+        Dim V As String
+        Dim d As String
+        Dim dd As String
+        Dim un As String
+        Dim cn As String
+        d = Format(Now, "dd/mmm/yyyy Hh:Nn:ss")
+        dd = Format(Now, "dd/mm/yyyy")
+        un = VBA.Environ("USERNAME")
+        cn = VBA.Environ("COMPUTERNAME")
+        Dim W As String
+        Dim X As String
+        Dim f As String
+        Dim g As String
+            
+        W = Me.Parent![s09_OligoPreliminaryResults]![DNALabellingID]
+        X = Me.Parent![InternalPatientID]
+        If Not IsNull(Me![Copies].Column(1)) Then
+            f = Me![Copies].Column(1)
+            Else: f = " "
+            End If
+        g = CStr(Me!Probes)
+        If Not IsNull(Me![Pathogenic].Column(1)) Then
+            h = Me![Pathogenic].Column(1)
+            Else: h = " "
+            End If
+        
+    '    r = "SELECT ArrayResult FROM ArrayTest WHERE DNALabellingID = " + CStr(W) + " AND InternalPatientID = " + X + ""
+    '    q.Open r, CurrentProject.Connection, adOpenKeyset, adLockOptimistic, adCmdText
+    '    Sta = FormatNumber(Me!Start19, 0, 0, 0, -1)
+    '    Sto = FormatNumber(Me!Stop19, 0, 0, 0, -1)
+    '    If Not IsNull(q!ArrayResult) Then
+    '        t = q!ArrayResult
+    '        S = "" + t + "," + Me![Band19] + "(" + Sta + "-" + Sto + ")" + F + ""
+    '    Else: S = "" + Me![Band19] + "(" + Sta + "-" + Sto + ")" + F + ""
+    '    End If
+    '
+    '    q!ArrayResult = S
+    '    q.Update
+    '    Set q = Nothing
+        
+        c = "SELECT ArrayResultComment FROM ArrayTest WHERE DNALabellingID = " + CStr(W) + " AND InternalPatientID = " + X + ""
+        e.Open c, CurrentProject.Connection, adOpenKeyset, adLockOptimistic, adCmdText
+        rou = Me!Size19 / 1000000
+        Siz = FormatNumber(rou, 3, -1, 0, -1)
+        If Not IsNull(e!ArrayResultComment) Then
+            a = e!ArrayResultComment
+            b = "" + a + vbNewLine + un + " (" + dd + "): " + Me![Band19] + " " + f + " - " + Siz + "Mb, " + g + " probes, classified in Moka as " + h + ""
+        Else: b = "" + un + " (" + dd + "): " + Me![Band19] + " " + f + " - " + Siz + "Mb, " + g + " probes, classified in Moka as " + h + ""
+            End If
+        
+        e!ArrayResultComment = b
+        e.Update
+        Set e = Nothing
+    
+        V = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + ",'Array test: " + Me![Band19] + " " + f + " classified as " + h + " from HybID " + Me![DNALabellingID].Column(1) + "',#" + d + "#,'" + un + "','" + cn + "')"
+        u.Open V, CurrentProject.Connection
+        Set u = Nothing
+    
+        Me.Parent![s09_ArrayTest].Form.Requery
+    
+        If IsNull(Me.Parent![s09_ArrayTest]![ArrayResultComment]) Then
+            S = "INSERT INTO PatientLogMemo(InternalPatientID, ArrayTestID, LogMemoEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + "," + CStr(Me.Parent![s09_ArrayTest]![ArrayTestID]) + ",'Array test: Result comment deleted for test requested " + CStr(Me.Parent![s09_ArrayTest]![RequestedDate]) + "',#" + d + "#,'" + un + "','" + cn + "')"
+        Else
+            S = "INSERT INTO PatientLogMemo(InternalPatientID, ArrayTestID, LogMemoEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + "," + CStr(Me.Parent![s09_ArrayTest]![ArrayTestID]) + ",'Array test: Result comment updated for array test requested " + CStr(Me.Parent![s09_ArrayTest]![RequestedDate]) + " - " + Me.Parent![s09_ArrayTest]![ArrayResultComment] + "',#" + d + "#,'" + un + "','" + cn + "')"
+            End If
+        
+        Q.Open S, CurrentProject.Connection
+        Set Q = Nothing
+    
+        End If
+End Sub
+
+
+Private Sub Band19_DblClick(Cancel As Integer)
+    If Not IsNull(Me!Band19) Then
+        Dim e As ADODB.Recordset
+        Set e = New ADODB.Recordset
+        Dim c As String
+        Dim b As String
+        Dim a As String
+        Dim X As String
+        Dim f As String
+    
+        X = Me.Parent![InternalPatientID]
+        f = Me![Band19]
+        
+        c = "SELECT CandidateAbnormality FROM Patients WHERE InternalPatientID = " + X + ""
+        e.Open c, CurrentProject.Connection, adOpenKeyset, adLockOptimistic, adCmdText
+        If Not IsNull(e!CandidateAbnormality) Then
+            a = e!CandidateAbnormality
+            b = "" + a + ", " + f + ""
+            Else
+            b = f
+            End If
+        
+        e!CandidateAbnormality = b
+        e.Update
+        Set e = Nothing
+    
+        [Form_09 ArrayResultsByPostition].Requery
+        End If
+End Sub
+
+Private Sub Copies_DblClick(Cancel As Integer)
+    If Not IsNull(Me.Copies) Then
+        ''the output variable
+        Dim sentance As String
+        ''formating size as Mb
+        Dim rou As String
+        Dim Siz As String
+        rou = Me!Size19 / 1000000
+        Siz = FormatNumber(rou, 3, -1, 0, -1)
+        ''set band field to variable
+        Dim Band As String
+        Band = Me!Band19
+        ''how many bands
+        Dim bands As Integer
+        bands = Len(Band) - Len(Replace(Band, "p", "")) + Len(Band) - Len(Replace(Band, "q", ""))
+        ''is it short arm or long arm
+        Dim whicharm As String
+        Dim pbands As Integer
+        Dim qbands As Integer
+        pbands = Len(Band) - Len(Replace(Band, "p", ""))
+        qbands = Len(Band) - Len(Replace(Band, "q", ""))
+        If pbands <> 0 And qbands = 0 Then
+            whicharm = "the short arm of "
+        ElseIf pbands = 0 And qbands <> 0 Then
+            whicharm = "the long arm of "
+            End If
+        ''break out the bands
+        Dim chrlen As Integer
+        chrlen = Len(Me.ChrID19.Column(1))
+        Dim band1 As String
+        If bands = 1 Then
+            band1 = Mid(CStr(Me.Band19), chrlen + 1)
+        ElseIf bands = 2 Then
+            Dim choppedband As String
+            choppedband = Mid(Me.Band19, chrlen + 2)
+            Dim secondbandp As Integer
+            Dim secondbandq As Integer
+            secondbandp = Len(choppedband) - Len(Replace(choppedband, "p", ""))
+            secondbandq = Len(choppedband) - Len(Replace(choppedband, "q", ""))
+            Dim secondbandstarts As Integer
+            If secondbandp = 1 Then
+                secondbandstarts = InStr(choppedband, "p")
+            ElseIf secondbandq = 1 Then
+                secondbandstarts = InStr(choppedband, "q")
+                End If
+            Dim lesschoppedband As String
+            lesschoppedband = Mid(Me.Band19, chrlen + 1, 10)
+            band1 = Mid(CStr(lesschoppedband), 1, secondbandstarts)
+            Dim band2 As String
+            band2 = Mid(CStr(choppedband), secondbandstarts)
+            End If
+        ''which chromosome is it
+        Dim whichchr As String
+        If Me!ChrID19 = 47 Then
+            whichchr = "the X chromosome"
+        ElseIf Me!ChrID19 = 48 Then
+            whichchr = "the Y chromosome"
+        ElseIf Me!ChrID19 > 24 And Me!ChrID19 < 47 Then
+            whichchr = "chromosome " + Me!ChrID19.Column(1)
+            End If
+        ''format coordinates
+        Dim starting As String
+        starting = CStr(Format(Me.Start19, "###,###,###"))
+        Dim stopping As String
+        stopping = CStr(Format(Me.Stop19, "###,###,###"))
+        ''form sentance for dels and dups
+        If Me.Copies = 1190384936 Then
+            sentance = "This test identified a deletion of approximately " + Siz + "Mb from "
+            If bands = 1 Then
+                sentance = sentance + "band " + band1 + " in " + whicharm + whichchr + ", between base pair coordinates " + starting + " and " + stopping + "."
+            ElseIf bands = 2 Then
+                sentance = sentance + "bands " + band1 + " to " + band2 + " in " + whicharm + whichchr + ", between base pair coordinates " + starting + " and " + stopping + "."
+                End If
+        ElseIf Me.Copies = 1190384940 Then
+            sentance = "This test identified a duplication of approximately " + Siz + "Mb of material originating from " + whicharm + whichchr + ";"
+            If bands = 1 Then
+                sentance = sentance + " the duplicated region is from band " + band1 + ", between base pair coordinates " + starting + " and " + stopping + "."
+            ElseIf bands = 2 Then
+                sentance = sentance + " the duplicated region is from bands " + band1 + " to " + band2 + ", between base pair coordinates " + starting + " and " + stopping + "."
+                End If
+            End If
+        ''copy to clipboard
+        ClipBoard_SetData (sentance)
+        MsgBox "Following text copied, paste (CTRL + V) into report: " + sentance, , "Don't be a dummy"
+    
+        End If
+        
+End Sub
