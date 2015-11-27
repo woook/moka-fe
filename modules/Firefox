@@ -1,62 +1,77 @@
 Option Compare Database
-Declare Function GlobalUnlock Lib "kernel32" (ByVal hMem As Long) _
-   As Long
-Declare Function GlobalLock Lib "kernel32" (ByVal hMem As Long) _
-   As Long
-Declare Function GlobalAlloc Lib "kernel32" (ByVal wFlags As Long, _
-   ByVal dwBytes As Long) As Long
-Declare Function CloseClipboard Lib "User32" () As Long
-Declare Function OpenClipboard Lib "User32" (ByVal hwnd As Long) _
-   As Long
-Declare Function EmptyClipboard Lib "User32" () As Long
-Declare Function lstrcpy Lib "kernel32" (ByVal lpString1 As Any, _
-   ByVal lpString2 As Any) As Long
-Declare Function SetClipboardData Lib "User32" (ByVal wFormat _
-   As Long, ByVal hMem As Long) As Long
 
-Public Const GHND = &H42
-Public Const CF_TEXT = 1
-Public Const MAXSIZE = 4096
+Public Function firefoxurl(url As String)
+    Dim V As String
+    V = """C:\Program Files\Mozilla Firefox\firefox.exe"""
+    Set objShell = CreateObject("Wscript.Shell")
+    objShell.Run (V & " -new-tab " & url)
+End Function
+
+Public Function chromeurl(url As String)
+    Dim V As String
+    V = """C:\Array\Software\Chrome\GoogleChromePortable.exe"""
+    Set objShell = CreateObject("Wscript.Shell")
+    objShell.Run (V & " -url " & url)
+End Function
+
+Public Function chromeurlserv(url As String)
+    Dim V As String
+    V = """F:\Moka\Files\Chrome\GoogleChromePortable.exe"""
+    Set objShell = CreateObject("Wscript.Shell")
+    objShell.Run (V & " -url " & url)
+End Function
+
+''concatenate function to bring values relating to a single ID together to be a single field, e.g. contatenating a patient's phenotype
+''the function should be used in a TOTALS query, where output field 1 is the ID and grouped by, and output field 2 is an EXPRESSION and calls the function
+''note that the Value must be an integer
+Public Function Concater(Fieldx, Identity, Value, Source) As Variant
+  Dim cnn As ADODB.Connection
+  Dim rs As ADODB.Recordset
+  Dim SQL As String
+  Dim vFld As Variant
+  
+  Set cnn = CurrentProject.Connection
+  Set rs = New ADODB.Recordset
+  vFld = Null
+  
+  SQL = "SELECT [" & Fieldx & "] as Fld" & _
+        " FROM [" & Source & "]" & _
+        " WHERE [" & Identity & "]=" & Value
+  
+  ' open recordset.
+  rs.Open SQL, cnn, adOpenForwardOnly, adLockReadOnly
+  
+  ' concatenate the field.
+  Do While Not rs.EOF
+    If Not IsNull(rs!Fld) Then
+      vFld = vFld & ", " & rs!Fld
+    End If
+    rs.MoveNext
+  Loop
+  ' remove leading comma and space.
+  vFld = Mid(vFld, 3)
+  
+  Set cnn = Nothing
+  Set rs = Nothing
+  
+  ' return concatenated string.
+  Concater = vFld
+End Function
+
+Public Function Lastworkday(MyDay As Date) As String
+ 
+    Dim MyDate As Date
+     
+    If Weekday(MyDay) = 2 Then          'If MyDay is Monday
+        MyDate = MyDay - 3              'Subtract 3 days
+    ElseIf Weekday(MyDay) = 1 Then      'If MyDay is Sunday
+        MyDate = MyDay - 2              'Subtract 2 days
+    Else
+        MyDate = MyDay - 1              'If any other day subtract 1 day
+    End If
+     
+    Lastworkday = Format(MyDate, "dd/mm/yyyy")
+     
+End Function
 
 
-Function ClipBoard_SetData(MyString As String)
-   Dim hGlobalMemory As Long, lpGlobalMemory As Long
-   Dim hClipMemory As Long, X As Long
-
-   ' Allocate moveable global memory.
-   '-------------------------------------------
-   hGlobalMemory = GlobalAlloc(GHND, Len(MyString) + 1)
-
-   ' Lock the block to get a far pointer
-   ' to this memory.
-   lpGlobalMemory = GlobalLock(hGlobalMemory)
-
-   ' Copy the string to this global memory.
-   lpGlobalMemory = lstrcpy(lpGlobalMemory, MyString)
-
-   ' Unlock the memory.
-   If GlobalUnlock(hGlobalMemory) <> 0 Then
-      MsgBox "Could not unlock memory location. Copy aborted."
-      GoTo OutOfHere2
-   End If
-
-   ' Open the Clipboard to copy data to.
-   If OpenClipboard(0&) = 0 Then
-      MsgBox "Could not open the Clipboard. Copy aborted."
-      Exit Function
-   End If
-
-   ' Clear the Clipboard.
-   X = EmptyClipboard()
-
-   ' Copy the data to the Clipboard.
-   hClipMemory = SetClipboardData(CF_TEXT, hGlobalMemory)
-
-OutOfHere2:
-
-   If CloseClipboard() = 0 Then
-      MsgBox "Could not close Clipboard."
-   End If
-
-   End Function
-   
