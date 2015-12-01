@@ -1,0 +1,5 @@
+SELECT TOP 24 Format([ArrayResultDate],"yyyy") & "-" & Format(Format([ArrayResultDate],"mm"),"00") AS [Month], Count(ArrayTest.ArrayTestID) AS CountOfArrayTestID, Sum(IIf(DateDiff("d",[dbo_Specimen_Table].[DateReceived],[ArrayTest].[ArrayResultDate])<26,1,0)) AS Count28days, Sum(IIf(DateDiff("d",[dbo_Specimen_Table].[DateReceived],[ArrayTest].[ArrayResultDate])<26,1,0))/Count([arraytestid]) AS 28days, (Avg(DateDiff("d",[dbo_Specimen_Table].[DateReceived],[ArrayTest].[ArrayResultDate])))+2 AS TATMeanAll, StDev(DateDiff("d",[dbo_Specimen_Table].[DateReceived],[ArrayTest].[ArrayResultDate]))/Avg(DateDiff("d",[dbo_Specimen_Table].[DateReceived],[ArrayTest].[ArrayResultDate])) AS CV
+FROM ArrayTest INNER JOIN dbo_Specimen_Table ON ArrayTest.SpecimenNo = dbo_Specimen_Table.SpecimenTrustID
+WHERE (((ArrayTest.ReferralID)=1185356886 Or (ArrayTest.ReferralID)=1199901176))
+GROUP BY Format([ArrayResultDate],"yyyy") & "-" & Format(Format([ArrayResultDate],"mm"),"00")
+ORDER BY Format([ArrayResultDate],"yyyy") & "-" & Format(Format([ArrayResultDate],"mm"),"00") DESC;
