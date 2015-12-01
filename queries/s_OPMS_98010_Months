@@ -1,0 +1,4 @@
+SELECT TOP 24 Format([ArrayResultDate],"yyyy") & "-" & Format(Format([ArrayResultDate],"mm"),"00") AS [Month]
+FROM ArrayTest
+GROUP BY Format([ArrayResultDate],"yyyy") & "-" & Format(Format([ArrayResultDate],"mm"),"00")
+ORDER BY Format([ArrayResultDate],"yyyy") & "-" & Format(Format([ArrayResultDate],"mm"),"00") DESC;
