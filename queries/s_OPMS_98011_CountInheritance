@@ -1,0 +1,4 @@
+SELECT Format([ArrayResultDate],"yyyy") & "-" & Format(Format([ArrayResultDate],"mm"),"00") AS [Month], Count(ArrayTest.ArrayTestID) AS CountOfArrayTestID
+FROM ArrayTest
+WHERE (((ArrayTest.Service)=True) AND ((ArrayTest.StatusID)=4) AND ((ArrayTest.ReferralID)=1185356886 Or (ArrayTest.ReferralID)=1199901176 Or (ArrayTest.ReferralID)=1199901175))
+GROUP BY Format([ArrayResultDate],"yyyy") & "-" & Format(Format([ArrayResultDate],"mm"),"00");
