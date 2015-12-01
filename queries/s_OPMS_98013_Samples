@@ -1,0 +1,3 @@
+SELECT s_OPMS_98010_Months.Month, [s_OPMS_98011_CountInheritance].[CountOfArrayTestID]+[s_OPMS_98012_CountProbands].[CountOfArrayTestID] AS Samples
+FROM (s_OPMS_98010_Months INNER JOIN s_OPMS_98011_CountInheritance ON s_OPMS_98010_Months.Month = s_OPMS_98011_CountInheritance.Month) INNER JOIN s_OPMS_98012_CountProbands ON s_OPMS_98010_Months.Month = s_OPMS_98012_CountProbands.Month
+ORDER BY s_OPMS_98010_Months.Month DESC;
