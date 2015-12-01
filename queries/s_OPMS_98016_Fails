@@ -1,0 +1,5 @@
+SELECT Format([DateAuthorized],"yyyy") & "-" & Format(Format([DateAuthorized],"mm"),"00") AS [Month], Count(dbo_CytoFISHResult.ResultID) AS CountOfResultID
+FROM ArrayTest INNER JOIN ((dbo_CytoFISHResult INNER JOIN dbo_SpecimenLinked ON dbo_CytoFISHResult.SpecimenNo = dbo_SpecimenLinked.SpecimenTrustID) INNER JOIN dbo_SpecimenReportLinked ON dbo_SpecimenLinked.SpecimenID = dbo_SpecimenReportLinked.SpecimenID) ON ArrayTest.SpecimenNo = dbo_CytoFISHResult.SpecimenNo
+WHERE (((dbo_CytoFISHResult.Success)="F") AND ((dbo_SpecimenReportLinked.Description) Like "*aCGH*") AND ((ArrayTest.ReferralID)=2 Or (ArrayTest.ReferralID)=1185356886 Or (ArrayTest.ReferralID)=1199901176 Or (ArrayTest.ReferralID)=1199901175 Or (ArrayTest.ReferralID)=1199901192 Or (ArrayTest.ReferralID)=1199901183 Or (ArrayTest.ReferralID)=1199901169))
+GROUP BY Format([DateAuthorized],"yyyy") & "-" & Format(Format([DateAuthorized],"mm"),"00")
+ORDER BY Format([DateAuthorized],"yyyy") & "-" & Format(Format([DateAuthorized],"mm"),"00") DESC;
