@@ -1,0 +1,4 @@
+SELECT DISTINCT dbo_SpecimenLinked.SpecimenTrustID AS SpecNo, dbo_SpecimenReferralLinked.ReferralOrganisation, dbo_SpecimenLinked.DateReceived, dbo_PatientLinked.PatientTrustID AS PRU, dbo_PatientLinked.LastName, dbo_PatientLinked.FirstName, Status.Status AS [Status if in Moka]
+FROM ((dbo_PatientLinked INNER JOIN (dbo_SpecimenLinked INNER JOIN dbo_SpecimenReferralLinked ON dbo_SpecimenLinked.SpecimenID = dbo_SpecimenReferralLinked.SpecimenID) ON dbo_PatientLinked.PatientID = dbo_SpecimenLinked.PatientID) LEFT JOIN Patients ON dbo_PatientLinked.PatientTrustID = Patients.PatientID) LEFT JOIN Status ON Patients.s_StatusOverall = Status.StatusID
+WHERE (((dbo_SpecimenReferralLinked.ReferralOrganisation) Like "*belfast*") AND ((dbo_SpecimenLinked.DateReceived)>#11/1/2015#))
+ORDER BY dbo_SpecimenLinked.DateReceived DESC;
