@@ -63,7 +63,29 @@ If Not IsNull(Me!RunNumber) Then
     "AND ArrayIntervals.Import=1)"
     DoCmd.RunSQL S
     
-    ''transfer data that is for export to moka database
+    ''flag those that are ebCNVs, for auto classficiation as ebCNV
+    ''update import flag to 3 for ebCNVs
+    S = "UPDATE ArrayIntervals SET ArrayIntervals.Import = 3, ArrayIntervals.CNVTypeID = 1190384988 WHERE ArrayIntervals.Import = 1 " & _
+    "AND (" & _
+    "(ArrayIntervals.Chr19 = 25 AND ArrayIntervals.Start19 = 196746063 AND ArrayIntervals.Stop19 = 196797163) " & _
+    "OR (ArrayIntervals.Chr19 = 29 AND ArrayIntervals.Start19 = 69705561 AND ArrayIntervals.Stop19 = 70309855) OR (ArrayIntervals.Chr19 = 29 AND ArrayIntervals.Start19 = 69705561 AND ArrayIntervals.Stop19 = 70388844) " & _
+    "OR (ArrayIntervals.Chr19 = 30 AND ArrayIntervals.Start19 = 259527 AND ArrayIntervals.Stop19 = 350265) OR (ArrayIntervals.Chr19 = 32 AND ArrayIntervals.Start19 = 7268818 AND ArrayIntervals.Stop19 = 7371689) " & _
+    "OR (ArrayIntervals.Chr19 = 32 AND ArrayIntervals.Start19 = 7268818 AND ArrayIntervals.Stop19 = 7691960) OR (ArrayIntervals.Chr19 = 32 AND ArrayIntervals.Start19 = 7268818 AND ArrayIntervals.Stop19 = 7752586) " & _
+    "OR (ArrayIntervals.Chr19 = 32 AND ArrayIntervals.Start19 = 7268818 AND ArrayIntervals.Stop19 = 7691960) OR (ArrayIntervals.Chr19 = 32 AND ArrayIntervals.Start19 = 7268818 AND ArrayIntervals.Stop19 = 7752586) " & _
+    "OR (ArrayIntervals.Chr19 = 32 AND ArrayIntervals.Start19 = 7303186 AND ArrayIntervals.Stop19 = 7691960) OR (ArrayIntervals.Chr19 = 32 AND ArrayIntervals.Start19 = 7303186 AND ArrayIntervals.Stop19 = 7752586) " & _
+    "OR (ArrayIntervals.Chr19 = 32 AND ArrayIntervals.Start19 = 7303186 AND ArrayIntervals.Stop19 = 7752586) OR (ArrayIntervals.Chr19 = 32 AND ArrayIntervals.Start19 = 7371629 AND ArrayIntervals.Stop19 = 7752586) " & _
+    "OR (ArrayIntervals.Chr19 = 38 AND ArrayIntervals.Start19 = 19520706 AND ArrayIntervals.Stop19 = 20253798) OR (ArrayIntervals.Chr19 = 38 AND ArrayIntervals.Start19 = 19520706 AND ArrayIntervals.Stop19 = 20295270) " & _
+    "OR (ArrayIntervals.Chr19 = 38 AND ArrayIntervals.Start19 = 19695336 AND ArrayIntervals.Stop19 = 20295270) OR (ArrayIntervals.Chr19 = 39 AND ArrayIntervals.Start19 = 20849109 AND ArrayIntervals.Stop19 = 22509254) " & _
+    "OR (ArrayIntervals.Chr19 = 40 AND ArrayIntervals.Start19 = 32300741 AND ArrayIntervals.Stop19 = 33382166) OR (ArrayIntervals.Chr19 = 40 AND ArrayIntervals.Start19 = 32300741 AND ArrayIntervals.Stop19 = 33604468) " & _
+    "OR (ArrayIntervals.Chr19 = 40 AND ArrayIntervals.Start19 = 32840847 AND ArrayIntervals.Stop19 = 33604468) OR (ArrayIntervals.Chr19 = 41 AND ArrayIntervals.Start19 = 44210762 AND ArrayIntervals.Stop19 = 44268753) " & _
+    "OR (ArrayIntervals.Chr19 = 41 AND ArrayIntervals.Start19 = 44210762 AND ArrayIntervals.Stop19 = 44268753) OR (ArrayIntervals.Chr19 = 41 AND ArrayIntervals.Start19 = 44210762 AND ArrayIntervals.Stop19 = 44345038) " & _
+    "OR (ArrayIntervals.Chr19 = 41 AND ArrayIntervals.Start19 = 44210762 AND ArrayIntervals.Stop19 = 44351152) OR (ArrayIntervals.Chr19 = 41 AND ArrayIntervals.Start19 = 44231945 AND ArrayIntervals.Stop19 = 44345038) " & _
+    "OR (ArrayIntervals.Chr19 = 41 AND ArrayIntervals.Start19 = 44231945 AND ArrayIntervals.Stop19 = 44351152) OR (ArrayIntervals.Chr19 = 41 AND ArrayIntervals.Start19 = 44268693 AND ArrayIntervals.Stop19 = 44351152) " & _
+    "OR (ArrayIntervals.Chr19 = 46 AND ArrayIntervals.Start19 = 39359111 AND ArrayIntervals.Stop19 = 39385485) " & _
+    ")"
+    DoCmd.RunSQL S
+    
+    ''transfer data (non-ebCNVs) that is for export to moka database
     S = "INSERT INTO ArrayOligoPreliminaryResults (InternalPatientID, DNALabellingID, Ratio_1, ChrID19, Band19, Start19, Stop19, Probes, AutoImport)" & _
     "SELECT InternalPatientID, DNALabellingID, Ratio, Chr19, Band19, Start19, Stop19, Probes, Import " & _
     "FROM ArrayIntervals " & _
@@ -73,6 +95,18 @@ If Not IsNull(Me!RunNumber) Then
     ''update import flag in IntervalsToMoka Intervals table to show that the data was transferred
     ''intervals.import updated to 2 to signify that it has been exported
     S = "UPDATE ArrayIntervals SET ArrayIntervals.Import = 2, ArrayIntervals.ExportDate = #" & d & "# WHERE ArrayIntervals.Import = 1"
+    DoCmd.RunSQL S
+    
+    ''transfer ebCNVs that is for export to moka database
+    S = "INSERT INTO ArrayOligoPreliminaryResults (InternalPatientID, DNALabellingID, Ratio_1, ChrID19, Band19, Start19, Stop19, Probes, AutoImport, CNVTypeID)" & _
+    "SELECT InternalPatientID, DNALabellingID, Ratio, Chr19, Band19, Start19, Stop19, Probes, Import, CNVTypeID " & _
+    "FROM ArrayIntervals " & _
+    "WHERE ArrayIntervals.Import = 3"
+    DoCmd.RunSQL S
+    
+    ''update import flag for ebCNVs in IntervalsToMoka Intervals table to show that the data was transferred
+    ''intervals.import updated to 2 to signify that it has been exported
+    S = "UPDATE ArrayIntervals SET ArrayIntervals.Import = 2, ArrayIntervals.ExportDate = #" & d & "# WHERE ArrayIntervals.Import = 3"
     DoCmd.RunSQL S
     
     DoCmd.SetWarnings True
