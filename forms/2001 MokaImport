@@ -68,7 +68,8 @@ If Not IsNull(Me!RunNumber) Then
     S = "UPDATE ArrayIntervals SET ArrayIntervals.Import = 3, ArrayIntervals.CNVTypeID = 1190384988 WHERE ArrayIntervals.Import = 1 " & _
     "AND (" & _
     "(ArrayIntervals.Chr19 = 25 AND ArrayIntervals.Start19 = 196746063 AND ArrayIntervals.Stop19 = 196797163) " & _
-    "OR (ArrayIntervals.Chr19 = 29 AND ArrayIntervals.Start19 = 69705561 AND ArrayIntervals.Stop19 = 70309855) OR (ArrayIntervals.Chr19 = 29 AND ArrayIntervals.Start19 = 69705561 AND ArrayIntervals.Stop19 = 70388844) " & _
+    "OR (ArrayIntervals.Chr19 = 25 AND ArrayIntervals.Start19 = 196746063 AND ArrayIntervals.Stop19 = 196863095) OR (ArrayIntervals.Chr19 = 25 AND ArrayIntervals.Start19 = 196746063 AND ArrayIntervals.Stop19 = 196883398) " & _
+    "OR (ArrayIntervals.Chr19 = 25 AND ArrayIntervals.Start19 = 196788211 AND ArrayIntervals.Stop19 = 196863095) OR (ArrayIntervals.Chr19 = 25 AND ArrayIntervals.Start19 = 196788211 AND ArrayIntervals.Stop19 = 196883398) " & _
     "OR (ArrayIntervals.Chr19 = 30 AND ArrayIntervals.Start19 = 259527 AND ArrayIntervals.Stop19 = 350265) OR (ArrayIntervals.Chr19 = 32 AND ArrayIntervals.Start19 = 7268818 AND ArrayIntervals.Stop19 = 7371689) " & _
     "OR (ArrayIntervals.Chr19 = 32 AND ArrayIntervals.Start19 = 7268818 AND ArrayIntervals.Stop19 = 7691960) OR (ArrayIntervals.Chr19 = 32 AND ArrayIntervals.Start19 = 7268818 AND ArrayIntervals.Stop19 = 7752586) " & _
     "OR (ArrayIntervals.Chr19 = 32 AND ArrayIntervals.Start19 = 7268818 AND ArrayIntervals.Stop19 = 7691960) OR (ArrayIntervals.Chr19 = 32 AND ArrayIntervals.Start19 = 7268818 AND ArrayIntervals.Stop19 = 7752586) " & _
