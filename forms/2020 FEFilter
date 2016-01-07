@@ -1,0 +1,32 @@
+Private Sub Command30_Click()
+On Error GoTo Err_Command30_Click
+
+If Not IsNull(Me.fe) And Not IsNull(Me.c1) And Not IsNull(Me.c2) Then
+
+    Dim fes As String
+    Dim c1s As String
+    Dim c2s As String
+    Dim wsh As Object
+    Set wsh = VBA.CreateObject("WScript.Shell")
+    Dim waitOnReturn As Boolean: waitOnReturn = True
+    Dim windowStyle As Integer: windowStyle = 1
+    Dim errorCode As Integer
+    
+    ''get arguments for python script
+    fes = Me.fe
+    c1s = Me.c1
+    c2s = Me.c2
+    
+    ''run python script providing user entered arguments
+    wsh.Run "cmd.exe /S /C" & "F:\Moka\Files\Analysis\FEFilter\fefilter.py " & fes & " " & c1s & " " & c2s, windowStyle, waitOnReturn
+    
+    End If
+
+Exit_Command30_Click:
+    Exit Sub
+
+Err_Command30_Click:
+    MsgBox Err.Description
+    Resume Exit_Command30_Click
+    
+End Sub
