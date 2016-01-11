@@ -21,20 +21,20 @@ Private Sub HybID_DblClick(Cancel As Integer)
     runID = CStr(Me.ArrayRunNumber)
     ' set query - union query that captures the barcode, subarray and label, and the patients first and last names and creates the hyb ID by joining the required tables and filtering for the run ID
     ' removes any sureplex samples and selects for PGD referral IDs. The union is required to repeat for cy3 and cy5 DNAIDs
-    sql = " SELECT dbo_Arrays.ArrayBarCode, dbo_ArrayLabelling.Subarray, dbo_ArrayLabelling.ArrayRunNumber, dbo_ArrayLabel.EveLabel, dbo_Patients.BookinFirstName, " _
-    & " dbo_Patients.BookinLastName, right(dbo_Arrays.ArrayBarCode,3)&"".""&dbo_ArrayLabelling.Subarray&"" (""&dbo_ArrayLabelling.ArrayRunNumber&"")"" as HybID " _
-    & " FROM dbo_Patients INNER JOIN ((dbo_ArrayLabelledDNA INNER JOIN dbo_ArrayLabel ON dbo_ArrayLabelledDNA.ArrayLabelID = dbo_ArrayLabel.LabelID) INNER JOIN " _
-    & " ((dbo_ArrayLabelling INNER JOIN dbo_Arrays ON dbo_ArrayLabelling.ArrayID = dbo_Arrays.ArrayID) INNER JOIN ((dbo_ArrayTest INNER JOIN " _
-    & " dbo_Referral ON dbo_ArrayTest.ReferralID = dbo_Referral.ReferralID) INNER JOIN dbo_DNA ON dbo_ArrayTest.InternalPatientID = dbo_DNA.InternalPatientID) " _
-    & " ON dbo_ArrayLabelling.Cy5DNAID = dbo_DNA.DNAID) ON dbo_ArrayLabelledDNA.DNAID = dbo_DNA.DNAID) ON dbo_Patients.InternalPatientID = dbo_DNA.InternalPatientID " _
-    & " WHERE (((dbo_ArrayLabelling.ArrayRunNumber)='" & runID & "') AND ((dbo_Patients.BookinLastName)<>""SUREPLEX"") AND ((dbo_Referral.ReferralID) In " _
-    & " (1199901203,1199901190,1199901193,1199901206,1199901207))) UNION SELECT dbo_Arrays.ArrayBarCode, dbo_ArrayLabelling.Subarray, dbo_ArrayLabelling.ArrayRunNumber, dbo_ArrayLabel.EveLabel, " _
-    & " dbo_Patients.BookinFirstName, dbo_Patients.BookinLastName, right(dbo_Arrays.ArrayBarCode,3)&"".""&dbo_ArrayLabelling.Subarray&"" (""&dbo_ArrayLabelling.ArrayRunNumber&"")"" as HybID " _
-    & " FROM dbo_Patients INNER JOIN ((dbo_ArrayLabelledDNA INNER JOIN dbo_ArrayLabel ON dbo_ArrayLabelledDNA.ArrayLabelID = dbo_ArrayLabel.LabelID) INNER JOIN ((dbo_ArrayLabelling " _
-    & " INNER JOIN dbo_Arrays ON dbo_ArrayLabelling.ArrayID = dbo_Arrays.ArrayID)INNER JOIN ((dbo_ArrayTest INNER JOIN dbo_Referral ON dbo_ArrayTest.ReferralID = " _
-    & " dbo_Referral.ReferralID) INNER JOIN dbo_DNA ON dbo_ArrayTest.InternalPatientID = dbo_DNA.InternalPatientID) ON dbo_ArrayLabelling.Cy3DNAID = dbo_DNA.DNAID) " _
-    & " ON dbo_ArrayLabelledDNA.DNAID = dbo_DNA.DNAID) ON dbo_Patients.InternalPatientID = dbo_DNA.InternalPatientID " _
-    & " WHERE (((dbo_ArrayLabelling.ArrayRunNumber)= '" & runID & "') AND ((dbo_Patients.BookinLastName)<>""SUREPLEX"") AND ((dbo_Referral.ReferralID) In (1199901203,1199901190,1199901193,1199901206,1199901207))); "
+    sql = " SELECT Arrays.ArrayBarCode, ArrayLabelling.Subarray, ArrayLabelling.ArrayRunNumber, ArrayLabel.EveLabel, Patients.BookinFirstName, " _
+    & " Patients.BookinLastName, right(Arrays.ArrayBarCode,3)&"".""&ArrayLabelling.Subarray&"" (""&ArrayLabelling.ArrayRunNumber&"")"" as HybID " _
+    & " FROM Patients INNER JOIN ((ArrayLabelledDNA INNER JOIN ArrayLabel ON ArrayLabelledDNA.ArrayLabelID = ArrayLabel.LabelID) INNER JOIN " _
+    & " ((ArrayLabelling INNER JOIN Arrays ON ArrayLabelling.ArrayID = Arrays.ArrayID) INNER JOIN ((ArrayTest INNER JOIN " _
+    & " Referral ON ArrayTest.ReferralID = Referral.ReferralID) INNER JOIN DNA ON ArrayTest.InternalPatientID = DNA.InternalPatientID) " _
+    & " ON ArrayLabelling.Cy5DNAID = DNA.DNAID) ON ArrayLabelledDNA.DNAID = DNA.DNAID) ON Patients.InternalPatientID = DNA.InternalPatientID " _
+    & " WHERE (((ArrayLabelling.ArrayRunNumber)='" & runID & "') AND ((Patients.BookinLastName)<>""SUREPLEX"") AND ((Referral.ReferralID) In " _
+    & " (1199901203,1199901190,1199901193,1199901206,1199901207))) UNION SELECT Arrays.ArrayBarCode, ArrayLabelling.Subarray, ArrayLabelling.ArrayRunNumber, ArrayLabel.EveLabel, " _
+    & " Patients.BookinFirstName, Patients.BookinLastName, right(Arrays.ArrayBarCode,3)&"".""&ArrayLabelling.Subarray&"" (""&ArrayLabelling.ArrayRunNumber&"")"" as HybID " _
+    & " FROM Patients INNER JOIN ((ArrayLabelledDNA INNER JOIN ArrayLabel ON ArrayLabelledDNA.ArrayLabelID = ArrayLabel.LabelID) INNER JOIN ((ArrayLabelling " _
+    & " INNER JOIN Arrays ON ArrayLabelling.ArrayID = Arrays.ArrayID)INNER JOIN ((ArrayTest INNER JOIN Referral ON ArrayTest.ReferralID = " _
+    & " Referral.ReferralID) INNER JOIN DNA ON ArrayTest.InternalPatientID = DNA.InternalPatientID) ON ArrayLabelling.Cy3DNAID = DNA.DNAID) " _
+    & " ON ArrayLabelledDNA.DNAID = DNA.DNAID) ON Patients.InternalPatientID = DNA.InternalPatientID " _
+    & " WHERE (((ArrayLabelling.ArrayRunNumber)= '" & runID & "') AND ((Patients.BookinLastName)<>""SUREPLEX"") AND ((Referral.ReferralID) In (1199901203,1199901190,1199901193,1199901206,1199901207))); "
                     
     ' define variable used in the eve input file
     Dim magic_embryo As String
