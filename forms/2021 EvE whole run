@@ -28,13 +28,13 @@ Private Sub HybID_DblClick(Cancel As Integer)
     & " dbo_Referral ON dbo_ArrayTest.ReferralID = dbo_Referral.ReferralID) INNER JOIN dbo_DNA ON dbo_ArrayTest.InternalPatientID = dbo_DNA.InternalPatientID) " _
     & " ON dbo_ArrayLabelling.Cy5DNAID = dbo_DNA.DNAID) ON dbo_ArrayLabelledDNA.DNAID = dbo_DNA.DNAID) ON dbo_Patients.InternalPatientID = dbo_DNA.InternalPatientID " _
     & " WHERE (((dbo_ArrayLabelling.ArrayRunNumber)='" & runID & "') AND ((dbo_Patients.BookinLastName)<>""SUREPLEX"") AND ((dbo_Referral.ReferralID) In " _
-    & " (1199901203,1199901190,1199901193))) UNION SELECT dbo_Arrays.ArrayBarCode, dbo_ArrayLabelling.Subarray, dbo_ArrayLabelling.ArrayRunNumber, dbo_ArrayLabel.EveLabel, " _
+    & " (1199901203,1199901190,1199901193,1199901206,1199901207))) UNION SELECT dbo_Arrays.ArrayBarCode, dbo_ArrayLabelling.Subarray, dbo_ArrayLabelling.ArrayRunNumber, dbo_ArrayLabel.EveLabel, " _
     & " dbo_Patients.BookinFirstName, dbo_Patients.BookinLastName, right(dbo_Arrays.ArrayBarCode,3)&"".""&dbo_ArrayLabelling.Subarray&"" (""&dbo_ArrayLabelling.ArrayRunNumber&"")"" as HybID " _
     & " FROM dbo_Patients INNER JOIN ((dbo_ArrayLabelledDNA INNER JOIN dbo_ArrayLabel ON dbo_ArrayLabelledDNA.ArrayLabelID = dbo_ArrayLabel.LabelID) INNER JOIN ((dbo_ArrayLabelling " _
     & " INNER JOIN dbo_Arrays ON dbo_ArrayLabelling.ArrayID = dbo_Arrays.ArrayID)INNER JOIN ((dbo_ArrayTest INNER JOIN dbo_Referral ON dbo_ArrayTest.ReferralID = " _
     & " dbo_Referral.ReferralID) INNER JOIN dbo_DNA ON dbo_ArrayTest.InternalPatientID = dbo_DNA.InternalPatientID) ON dbo_ArrayLabelling.Cy3DNAID = dbo_DNA.DNAID) " _
     & " ON dbo_ArrayLabelledDNA.DNAID = dbo_DNA.DNAID) ON dbo_Patients.InternalPatientID = dbo_DNA.InternalPatientID " _
-    & " WHERE (((dbo_ArrayLabelling.ArrayRunNumber)= '" & runID & "') AND ((dbo_Patients.BookinLastName)<>""SUREPLEX"") AND ((dbo_Referral.ReferralID) In (1199901203,1199901190,1199901193))); "
+    & " WHERE (((dbo_ArrayLabelling.ArrayRunNumber)= '" & runID & "') AND ((dbo_Patients.BookinLastName)<>""SUREPLEX"") AND ((dbo_Referral.ReferralID) In (1199901203,1199901190,1199901193,1199901206,1199901207))); "
                     
     ' define variable used in the eve input file
     Dim magic_embryo As String
