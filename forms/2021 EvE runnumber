@@ -1,0 +1,96 @@
+Option Compare Database
+
+Private Sub HybID_DblClick(Cancel As Integer)
+''Given a run rumber find the PGD referrals on that run
+
+    'define variables for files
+    Dim EvEInputFile As String
+    Dim EvEinputFileFolder As String
+    Dim EvEInputFilePath As String
+        
+    'set file variables for EvE
+    EvEInputFile = Me.ArrayRunNumber & "EvE.txt"
+    EvEinputFileFolder = "S:\Genetics_Data2\Array\Audits and Projects\150702 PGD FEfiles\frontend\Test"
+    EvEInputFilePath = EvEinputFileFolder & "\" & EvEInputFile
+    
+    'define variables for sql query
+    Dim sql As String
+    Dim runID As String
+      
+    'define runID
+    runID = CStr(Me.ArrayRunNumber)
+    ' set query - union query that captures the barcode, subarray and label, and the patients first and last names and creates the hyb ID by joining the required tables and filtering for the run ID
+    ' removes any sureplex samples and selects for PGD referral IDs. The union is required to repeat for cy3 and cy5 DNAIDs
+    sql = " SELECT dbo_Arrays.ArrayBarCode, dbo_ArrayLabelling.Subarray, dbo_ArrayLabelling.ArrayRunNumber, dbo_ArrayLabel.EveLabel, dbo_Patients.BookinFirstName, " _
+    & " dbo_Patients.BookinLastName, right(dbo_Arrays.ArrayBarCode,3)&"".""&dbo_ArrayLabelling.Subarray&"" (""&dbo_ArrayLabelling.ArrayRunNumber&"")"" as HybID " _
+    & " FROM dbo_Patients INNER JOIN ((dbo_ArrayLabelledDNA INNER JOIN dbo_ArrayLabel ON dbo_ArrayLabelledDNA.ArrayLabelID = dbo_ArrayLabel.LabelID) INNER JOIN " _
+    & " ((dbo_ArrayLabelling INNER JOIN dbo_Arrays ON dbo_ArrayLabelling.ArrayID = dbo_Arrays.ArrayID) INNER JOIN ((dbo_ArrayTest INNER JOIN " _
+    & " dbo_Referral ON dbo_ArrayTest.ReferralID = dbo_Referral.ReferralID) INNER JOIN dbo_DNA ON dbo_ArrayTest.InternalPatientID = dbo_DNA.InternalPatientID) " _
+    & " ON dbo_ArrayLabelling.Cy5DNAID = dbo_DNA.DNAID) ON dbo_ArrayLabelledDNA.DNAID = dbo_DNA.DNAID) ON dbo_Patients.InternalPatientID = dbo_DNA.InternalPatientID " _
+    & " WHERE (((dbo_ArrayLabelling.ArrayRunNumber)='" & runID & "') AND ((dbo_Patients.BookinLastName)<>""SUREPLEX"") AND ((dbo_Referral.ReferralID) In " _
+    & " (1199901203,1199901190,1199901193))) UNION SELECT dbo_Arrays.ArrayBarCode, dbo_ArrayLabelling.Subarray, dbo_ArrayLabelling.ArrayRunNumber, dbo_ArrayLabel.EveLabel, " _
+    & " dbo_Patients.BookinFirstName, dbo_Patients.BookinLastName, right(dbo_Arrays.ArrayBarCode,3)&"".""&dbo_ArrayLabelling.Subarray&"" (""&dbo_ArrayLabelling.ArrayRunNumber&"")"" as HybID " _
+    & " FROM dbo_Patients INNER JOIN ((dbo_ArrayLabelledDNA INNER JOIN dbo_ArrayLabel ON dbo_ArrayLabelledDNA.ArrayLabelID = dbo_ArrayLabel.LabelID) INNER JOIN ((dbo_ArrayLabelling " _
+    & " INNER JOIN dbo_Arrays ON dbo_ArrayLabelling.ArrayID = dbo_Arrays.ArrayID)INNER JOIN ((dbo_ArrayTest INNER JOIN dbo_Referral ON dbo_ArrayTest.ReferralID = " _
+    & " dbo_Referral.ReferralID) INNER JOIN dbo_DNA ON dbo_ArrayTest.InternalPatientID = dbo_DNA.InternalPatientID) ON dbo_ArrayLabelling.Cy3DNAID = dbo_DNA.DNAID) " _
+    & " ON dbo_ArrayLabelledDNA.DNAID = dbo_DNA.DNAID) ON dbo_Patients.InternalPatientID = dbo_DNA.InternalPatientID " _
+    & " WHERE (((dbo_ArrayLabelling.ArrayRunNumber)= '" & runID & "') AND ((dbo_Patients.BookinLastName)<>""SUREPLEX"") AND ((dbo_Referral.ReferralID) In (1199901203,1199901190,1199901193))); "
+                    
+    ' define variable used in the eve input file
+    Dim magic_embryo As String
+    magic_embryo = "252846911966" & vbTab & "7" & vbTab & "Cy5" & vbTab
+    
+    'set the variables to write the file
+    Set fs = CreateObject("Scripting.FileSystemObject")
+    Set a = fs.CreateTextFile(EvEInputFilePath, False) 'False will error if the input file has already been created
+    
+    ' variable for the query
+    Dim rst As DAO.Recordset
+    
+    'run the query
+    Set rst = CurrentDb.OpenRecordset(sql, dbOpenSnapshot)
+    
+    'loop through query result and write each line using the magic embryo info for Cy3 and the query result as Cy5
+    Do While Not rst.EOF
+        a.WriteLine (magic_embryo & rst!ArrayBarCode & vbTab & rst!Subarray & vbTab & rst!EveLabel)
+        rst.MoveNext
+    Loop
+    rst.Close
+    Set rst = Nothing
+    
+    ''Call eve
+    'Create shell object
+    Dim wsh As Object
+    Set wsh = VBA.CreateObject("WScript.Shell")
+    
+    ' settings to have cmd box visible while running
+    Dim waitOnReturn As Boolean: waitOnReturn = True
+    Dim windowStyle As Integer: windowStyle = 1
+    
+    'allow capture of error code
+    Dim errorCode As Integer
+    
+    ' define the variables to feed to EvE
+    Dim eve_path As String
+    Dim output_dir As String
+    Dim total_cmd As String
+    
+    'set path to eve
+    eve_path = "S:\Genetics_Data2\Array\Audits and Projects\150702 PGD FEfiles\aled_DLRS\EvE.py"
+    
+    'set folder to put newly created FE files
+    output_dir = "S:\Genetics_Data2\Array\Audits and Projects\150702 PGD FEfiles\frontend\Test\eveoutput"
+    
+    'set the commands to run eve (eve.py, input file and output dir) taking into account the quotations etc needed due to spaces in file paths
+    total_cmd = """" & eve_path & """" & " " & """" & EvEInputFilePath & """" & " " & """" & output_dir & """"
+    
+    ' run command NB /K can be used for the cmd line window to remain after it has run - good for debugging
+    errorCode = wsh.Run("cmd.exe /S /C S:\Genetics_Data2\Array\Software\Python\python.exe " & total_cmd, windowStyle, waitOnReturn)
+    
+    'report error messages
+    If errorCode = 0 Then
+        MsgBox "EvE was run successfully. FE files can be found at " & output_dir
+    Else
+        MsgBox "Program exited with error code " & errorCode & "."
+    End If
+End Sub
