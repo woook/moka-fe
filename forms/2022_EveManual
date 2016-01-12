@@ -65,7 +65,7 @@ OutputDir = "S:\Genetics_Data2\Array\Audits and Projects\150702 PGD FEfiles\fron
 TotalCmd = """" & EvePath & """" & " " & """" & EvEInputFilePath & """" & " " & """" & OutputDir & """"
 
 ' run command NB /K can be used for the cmd line window to remain after it has run - good for debugging
-ErrorCode = wsh.Run("cmd.exe /S /C S:\Genetics_Data2\Array\Software\Python\python.exe " & TotalCmd, windowStyle, waitOnReturn)
+ErrorCode = wsh.Run("cmd.exe /S /K S:\Genetics_Data2\Array\Software\Python\python.exe " & TotalCmd, windowStyle, waitOnReturn)
 
 'report error messages
 If ErrorCode = 0 Then
