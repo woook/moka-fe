@@ -1,24 +1,25 @@
 Option Compare Database
-
 Private Sub Run_EvE_Click()
+
 'define the entry boxes
-Dim Cy3_barcode As String
-Dim Cy3_Subarray As Integer
-Dim Cy3_Dye As String
-Dim Cy5_barcode As String
-Dim Cy5_subarray As Integer
-Dim Cy5_Dye As String
+Dim Cy3Barcode As String
+Dim Cy3Subarray As Integer
+Dim Cy3Dye As String
+Dim Cy5Barcode As String
+Dim Cy5Subarray As Integer
+Dim Cy5Dye As String
+
 'set variables to entered values
-Cy3_barcode = Me.Cy3_barcode
-Cy3_Subarray = Me.Cy3_Subarray
-Cy3_Dye = LCase(Me.Cy3_Dye)
-Cy5_barcode = Me.Cy5_barcode
-Cy5_subarray = Me.Cy5_subarray
-Cy5_Dye = LCase(Me.Cy5_Dye)
+Cy3Barcode = Me.Cy3_barcode
+Cy3Subarray = Me.Cy3_Subarray
+Cy3Dye = LCase(Me.Cy3_Dye)
+Cy5Barcode = Me.Cy5_barcode
+Cy5Subarray = Me.Cy5_subarray
+Cy5Dye = LCase(Me.Cy5_Dye)
 
 'concatenate to write to line and create file name
-line_for_file = Cy3_barcode & vbTab & Cy3_Subarray & vbTab & Cy3_Dye & vbTab & Cy5_barcode & vbTab & Cy5_subarray & vbTab & Cy5_Dye
-input_filename = Cy3_barcode & "_" & Cy3_Subarray & "_" & Cy3_Dye & "_" & Cy5_barcode & "_" & Cy5_subarray & "_" & Cy5_Dye & "_input.txt"
+LineForFile = Cy3Barcode & vbTab & Cy3Subarray & vbTab & Cy3Dye & vbTab & Cy5Barcode & vbTab & Cy5Subarray & vbTab & Cy5Dye ' & vbTab & "Test"
+InputFilename = Cy3Barcode & "_" & Cy3Subarray & "_" & Cy3Dye & "_" & Cy5Barcode & "_" & Cy5Subarray & "_" & Cy5Dye & "_input.txt"
 
 'define variables for files
 Dim EvEInputFile As String
@@ -26,7 +27,7 @@ Dim EvEinputFileFolder As String
 Dim EvEInputFilePath As String
         
 'set file variables for EvE
-EvEInputFile = input_filename
+EvEInputFile = InputFilename
 EvEinputFileFolder = "S:\Genetics_Data2\Array\Audits and Projects\150702 PGD FEfiles\frontend\Test"
 EvEInputFilePath = EvEinputFileFolder & "\" & EvEInputFile
 
@@ -35,7 +36,7 @@ Set fs = CreateObject("Scripting.FileSystemObject")
 Set a = fs.CreateTextFile(EvEInputFilePath, False) 'False will error if the input file has already been created
 
 'write to file
-a.WriteLine (line_for_file)
+a.WriteLine (LineForFile)
     
 ''Call eve
 'Create shell object
@@ -47,31 +48,30 @@ Dim waitOnReturn As Boolean: waitOnReturn = True
 Dim windowStyle As Integer: windowStyle = 1
 
 'allow capture of error code
-Dim errorCode As Integer
+Dim ErrorCode As Integer
 
 ' define the variables to feed to EvE
-Dim eve_path As String
-Dim output_dir As String
-
-Dim total_cmd As String
+Dim EvePath As String
+Dim OutputDir As String
+Dim TotalCmd As String
 
 'set path to eve
-eve_path = "S:\Genetics_Data2\Array\Audits and Projects\150702 PGD FEfiles\aled_DLRS\EvE.py"
+EvePath = "S:\Genetics_Data2\Array\Audits and Projects\150702 PGD FEfiles\aled_DLRS\EvE.py"
 
 'set folder to put newly created FE files
-output_dir = "S:\Genetics_Data2\Array\Audits and Projects\150702 PGD FEfiles\frontend\Test\eveoutput"
+OutputDir = "S:\Genetics_Data2\Array\Audits and Projects\150702 PGD FEfiles\frontend\Test\eveoutput"
 
 'set the commands to run eve (eve.py, input file and output dir) taking into account the quotations etc needed due to spaces in file paths
-total_cmd = """" & eve_path & """" & " " & """" & EvEInputFilePath & """" & " " & """" & output_dir & """"
+TotalCmd = """" & EvePath & """" & " " & """" & EvEInputFilePath & """" & " " & """" & OutputDir & """"
 
 ' run command NB /K can be used for the cmd line window to remain after it has run - good for debugging
-errorCode = wsh.Run("cmd.exe /S /C S:\Genetics_Data2\Array\Software\Python\python.exe " & total_cmd, windowStyle, waitOnReturn)
+ErrorCode = wsh.Run("cmd.exe /S /C S:\Genetics_Data2\Array\Software\Python\python.exe " & TotalCmd, windowStyle, waitOnReturn)
 
 'report error messages
-If errorCode = 0 Then
-    MsgBox "EvE was run successfully. FE files can be found at " & output_dir
+If ErrorCode = 0 Then
+    MsgBox "EvE was run successfully. FE files can be found at " & OutputDir
 Else
-    MsgBox "Program exited with error code " & errorCode & "."
+    MsgBox "Program exited with error code " & ErrorCode & "."
 End If
 
 End Sub
