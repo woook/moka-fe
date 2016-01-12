@@ -14,49 +14,50 @@ Private Sub HybID_DblClick(Cancel As Integer)
     EvEInputFilePath = EvEinputFileFolder & "\" & EvEInputFile
     
     'define variables for sql query
-    Dim sql As String
-    Dim runID As String
+    Dim Sql As String
+    Dim RunID As String
       
     'define runID
-    runID = CStr(Me.ArrayRunNumber)
+    RunID = CStr(Me.ArrayRunNumber)
     ' set query - union query that captures the barcode, subarray and label, and the patients first and last names and creates the hyb ID by joining the required tables and filtering for the run ID
     ' removes any sureplex samples and selects for PGD referral IDs. The union is required to repeat for cy3 and cy5 DNAIDs
-    sql = " SELECT Arrays.ArrayBarCode, ArrayLabelling.Subarray, ArrayLabelling.ArrayRunNumber, ArrayLabel.EveLabel, Patients.BookinFirstName, " _
+    Sql = " SELECT Arrays.ArrayBarCode, ArrayLabelling.Subarray, ArrayLabelling.ArrayRunNumber, ArrayLabel.EveLabel, Patients.BookinFirstName, " _
     & " Patients.BookinLastName, right(Arrays.ArrayBarCode,3)&"".""&ArrayLabelling.Subarray&"" (""&ArrayLabelling.ArrayRunNumber&"")"" as HybID " _
     & " FROM Patients INNER JOIN ((ArrayLabelledDNA INNER JOIN ArrayLabel ON ArrayLabelledDNA.ArrayLabelID = ArrayLabel.LabelID) INNER JOIN " _
     & " ((ArrayLabelling INNER JOIN Arrays ON ArrayLabelling.ArrayID = Arrays.ArrayID) INNER JOIN ((ArrayTest INNER JOIN " _
     & " Referral ON ArrayTest.ReferralID = Referral.ReferralID) INNER JOIN DNA ON ArrayTest.InternalPatientID = DNA.InternalPatientID) " _
     & " ON ArrayLabelling.Cy5DNAID = DNA.DNAID) ON ArrayLabelledDNA.DNAID = DNA.DNAID) ON Patients.InternalPatientID = DNA.InternalPatientID " _
-    & " WHERE (((ArrayLabelling.ArrayRunNumber)='" & runID & "') AND ((Patients.BookinLastName)<>""SUREPLEX"") AND ((Referral.ReferralID) In " _
+    & " WHERE (((ArrayLabelling.ArrayRunNumber)='" & RunID & "') AND ((Patients.BookinLastName)<>""SUREPLEX"") AND ((Referral.ReferralID) In " _
     & " (1199901203,1199901190,1199901193,1199901206,1199901207))) UNION SELECT Arrays.ArrayBarCode, ArrayLabelling.Subarray, ArrayLabelling.ArrayRunNumber, ArrayLabel.EveLabel, " _
     & " Patients.BookinFirstName, Patients.BookinLastName, right(Arrays.ArrayBarCode,3)&"".""&ArrayLabelling.Subarray&"" (""&ArrayLabelling.ArrayRunNumber&"")"" as HybID " _
     & " FROM Patients INNER JOIN ((ArrayLabelledDNA INNER JOIN ArrayLabel ON ArrayLabelledDNA.ArrayLabelID = ArrayLabel.LabelID) INNER JOIN ((ArrayLabelling " _
     & " INNER JOIN Arrays ON ArrayLabelling.ArrayID = Arrays.ArrayID)INNER JOIN ((ArrayTest INNER JOIN Referral ON ArrayTest.ReferralID = " _
     & " Referral.ReferralID) INNER JOIN DNA ON ArrayTest.InternalPatientID = DNA.InternalPatientID) ON ArrayLabelling.Cy3DNAID = DNA.DNAID) " _
     & " ON ArrayLabelledDNA.DNAID = DNA.DNAID) ON Patients.InternalPatientID = DNA.InternalPatientID " _
-    & " WHERE (((ArrayLabelling.ArrayRunNumber)= '" & runID & "') AND ((Patients.BookinLastName)<>""SUREPLEX"") AND ((Referral.ReferralID) In (1199901203,1199901190,1199901193,1199901206,1199901207))); "
+    & " WHERE (((ArrayLabelling.ArrayRunNumber)= '" & RunID & "') AND ((Patients.BookinLastName)<>""SUREPLEX"") AND ((Referral.ReferralID) In (1199901203,1199901190,1199901193,1199901206,1199901207))); "
+             
                     
     ' define variable used in the eve input file
-    Dim magic_embryo As String
-    magic_embryo = "252846911966" & vbTab & "7" & vbTab & "Cy5" & vbTab
+    Dim MagicEmbryo As String
+    MagicEmbryo = "252846911966" & vbTab & "7" & vbTab & "Cy5" & vbTab
     
     'set the variables to write the file
     Set fs = CreateObject("Scripting.FileSystemObject")
     Set a = fs.CreateTextFile(EvEInputFilePath, False) 'False will error if the input file has already been created
     
     ' variable for the query
-    Dim rst As DAO.Recordset
+    Dim Rst As DAO.Recordset
     
     'run the query
-    Set rst = CurrentDb.OpenRecordset(sql, dbOpenSnapshot)
+    Set Rst = CurrentDb.OpenRecordset(Sql, dbOpenSnapshot)
     
     'loop through query result and write each line using the magic embryo info for Cy3 and the query result as Cy5
-    Do While Not rst.EOF
-        a.WriteLine (magic_embryo & rst!ArrayBarCode & vbTab & rst!Subarray & vbTab & rst!EveLabel)
-        rst.MoveNext
+    Do While Not Rst.EOF
+        a.WriteLine (MagicEmbryo & Rst!ArrayBarCode & vbTab & Rst!Subarray & vbTab & Rst!EveLabel)
+        Rst.MoveNext
     Loop
-    rst.Close
-    Set rst = Nothing
+    Rst.Close
+    Set Rst = Nothing
     
     ''Call eve
     'Create shell object
@@ -68,29 +69,29 @@ Private Sub HybID_DblClick(Cancel As Integer)
     Dim windowStyle As Integer: windowStyle = 1
     
     'allow capture of error code
-    Dim errorCode As Integer
+    Dim ErrorCode As Integer
     
     ' define the variables to feed to EvE
-    Dim eve_path As String
-    Dim output_dir As String
-    Dim total_cmd As String
+    Dim EvePath As String
+    Dim OutputDir As String
+    Dim TotalCmd As String
     
     'set path to eve
-    eve_path = "S:\Genetics_Data2\Array\Audits and Projects\150702 PGD FEfiles\aled_DLRS\EvE.py"
+    EvePath = "S:\Genetics_Data2\Array\Audits and Projects\150702 PGD FEfiles\aled_DLRS\EvE.py"
     
     'set folder to put newly created FE files
-    output_dir = "S:\Genetics_Data2\Array\Audits and Projects\150702 PGD FEfiles\frontend\Test\eveoutput"
+    OutputDir = "S:\Genetics_Data2\Array\Audits and Projects\150702 PGD FEfiles\frontend\Test\eveoutput"
     
     'set the commands to run eve (eve.py, input file and output dir) taking into account the quotations etc needed due to spaces in file paths
-    total_cmd = """" & eve_path & """" & " " & """" & EvEInputFilePath & """" & " " & """" & output_dir & """"
+    TotalCmd = """" & EvePath & """" & " " & """" & EvEInputFilePath & """" & " " & """" & OutputDir & """"
     
     ' run command NB /K can be used for the cmd line window to remain after it has run - good for debugging
-    errorCode = wsh.Run("cmd.exe /S /C S:\Genetics_Data2\Array\Software\Python\python.exe " & total_cmd, windowStyle, waitOnReturn)
+    ErrorCode = wsh.Run("cmd.exe /S /C S:\Genetics_Data2\Array\Software\Python\python.exe " & TotalCmd, windowStyle, waitOnReturn)
     
     'report error messages
-    If errorCode = 0 Then
-        MsgBox "EvE was run successfully. FE files can be found at " & output_dir
+    If ErrorCode = 0 Then
+        MsgBox "EvE was run successfully. FE files can be found at " & OutputDir
     Else
-        MsgBox "Program exited with error code " & errorCode & "."
+        MsgBox "Program exited with error code " & ErrorCode & "."
     End If
 End Sub
