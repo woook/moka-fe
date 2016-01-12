@@ -1,0 +1,3 @@
+Private Sub Form_Current()
+RunNumber = Forms!EveRunNumber!subformEveRunNumber.Form!ArrayRunNumber
+End Sub
