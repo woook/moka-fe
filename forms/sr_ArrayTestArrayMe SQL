@@ -1,0 +1,3 @@
+SELECT ArrayTest.ArrayTestID, "Array DesignID " & [s_HybIDs_DesignID].[DesignID] AS DesignID, s_HybIDs_DesignID.HybID
+FROM ArrayTest INNER JOIN s_HybIDs_DesignID ON (ArrayTest.DNALabellingID = s_HybIDs_DesignID.DNALabellingID) AND (ArrayTest.InternalPatientID = s_HybIDs_DesignID.InternalPatientID)
+WHERE (((ArrayTest.ArrayTestID)=[Reports]![ArrayTestSheet]![ArrayTestID]));
