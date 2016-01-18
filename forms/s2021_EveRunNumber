@@ -21,6 +21,7 @@ Private Sub HybID_DblClick(Cancel As Integer)
     RunID = CStr(Me.ArrayRunNumber)
     ' set query - union query that captures the barcode, subarray and label, and the patients first and last names and creates the hyb ID by joining the required tables and filtering for the run ID
     ' removes any sureplex samples and selects for PGD referral IDs. The union is required to repeat for cy3 and cy5 DNAIDs
+	' Note the double " around any strings in the query and changing [run number?] to  " & RunID & " (not changed this here - will be changed later or in master)
     Sql = " SELECT Arrays.ArrayBarCode, ArrayLabelling.Subarray, ArrayLabelling.ArrayRunNumber, Patients.BookinFirstName, Patients.BookinLastName, " _
     & " Right(Arrays.ArrayBarCode,3) & ""."" & ArrayLabelling.Subarray & "" ("" & ArrayLabelling.ArrayRunNumber & "")"" AS HybID, ""Cy5"" AS EvELabel " _
     & " FROM Patients INNER JOIN ((ArrayLabelling INNER JOIN Arrays ON ArrayLabelling.ArrayID = Arrays.ArrayID) INNER JOIN ((ArrayTest INNER JOIN Referral ON ArrayTest.ReferralID = Referral.ReferralID)  " _
