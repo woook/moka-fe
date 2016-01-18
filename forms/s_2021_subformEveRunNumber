@@ -21,20 +21,18 @@ Private Sub HybID_DblClick(Cancel As Integer)
     RunID = CStr(Me.ArrayRunNumber)
     ' set query - union query that captures the barcode, subarray and label, and the patients first and last names and creates the hyb ID by joining the required tables and filtering for the run ID
     ' removes any sureplex samples and selects for PGD referral IDs. The union is required to repeat for cy3 and cy5 DNAIDs
-    Sql = " SELECT Arrays.ArrayBarCode, ArrayLabelling.Subarray, ArrayLabelling.ArrayRunNumber, ArrayLabel.EveLabel, Patients.BookinFirstName, " _
-    & " Patients.BookinLastName, right(Arrays.ArrayBarCode,3)&"".""&ArrayLabelling.Subarray&"" (""&ArrayLabelling.ArrayRunNumber&"")"" as HybID " _
-    & " FROM Patients INNER JOIN ((ArrayLabelledDNA INNER JOIN ArrayLabel ON ArrayLabelledDNA.ArrayLabelID = ArrayLabel.LabelID) INNER JOIN " _
-    & " ((ArrayLabelling INNER JOIN Arrays ON ArrayLabelling.ArrayID = Arrays.ArrayID) INNER JOIN ((ArrayTest INNER JOIN " _
-    & " Referral ON ArrayTest.ReferralID = Referral.ReferralID) INNER JOIN DNA ON ArrayTest.InternalPatientID = DNA.InternalPatientID) " _
+    Sql = " SELECT Arrays.ArrayBarCode, ArrayLabelling.Subarray, ArrayLabelling.ArrayRunNumber, Patients.BookinFirstName, Patients.BookinLastName, " _
+    & " Right(Arrays.ArrayBarCode,3) & ""."" & ArrayLabelling.Subarray & "" ("" & ArrayLabelling.ArrayRunNumber & "")"" AS HybID, ""Cy5"" AS EvELabel " _
+    & " FROM Patients INNER JOIN ((ArrayLabelling INNER JOIN Arrays ON ArrayLabelling.ArrayID = Arrays.ArrayID) INNER JOIN ((ArrayTest INNER JOIN Referral ON ArrayTest.ReferralID = Referral.ReferralID)  " _
+    & " INNER JOIN DNA ON ArrayTest.InternalPatientID = DNA.InternalPatientID) ON ArrayLabelling.Cy5DNAID = DNA.DNAID) ON Patients.InternalPatientID = DNA.InternalPatientID WHERE  " _
+    & " (((ArrayLabelling.ArrayRunNumber)=[Run Number?]) AND ((Patients.BookinLastName)<>""SUREPLEX"") AND ((Referral.ReferralID) In (1199901203,1199901190,1199901193,1199901206,1199901207))) " _
     & " ON ArrayLabelling.Cy5DNAID = DNA.DNAID) ON ArrayLabelledDNA.DNAID = DNA.DNAID) ON Patients.InternalPatientID = DNA.InternalPatientID " _
-    & " WHERE (((ArrayLabelling.ArrayRunNumber)='" & RunID & "') AND ((Patients.BookinLastName)<>""SUREPLEX"") AND ((Referral.ReferralID) In " _
-    & " (1199901203,1199901190,1199901193,1199901206,1199901207))) UNION SELECT Arrays.ArrayBarCode, ArrayLabelling.Subarray, ArrayLabelling.ArrayRunNumber, ArrayLabel.EveLabel, " _
-    & " Patients.BookinFirstName, Patients.BookinLastName, right(Arrays.ArrayBarCode,3)&"".""&ArrayLabelling.Subarray&"" (""&ArrayLabelling.ArrayRunNumber&"")"" as HybID " _
-    & " FROM Patients INNER JOIN ((ArrayLabelledDNA INNER JOIN ArrayLabel ON ArrayLabelledDNA.ArrayLabelID = ArrayLabel.LabelID) INNER JOIN ((ArrayLabelling " _
-    & " INNER JOIN Arrays ON ArrayLabelling.ArrayID = Arrays.ArrayID)INNER JOIN ((ArrayTest INNER JOIN Referral ON ArrayTest.ReferralID = " _
-    & " Referral.ReferralID) INNER JOIN DNA ON ArrayTest.InternalPatientID = DNA.InternalPatientID) ON ArrayLabelling.Cy3DNAID = DNA.DNAID) " _
-    & " ON ArrayLabelledDNA.DNAID = DNA.DNAID) ON Patients.InternalPatientID = DNA.InternalPatientID " _
-    & " WHERE (((ArrayLabelling.ArrayRunNumber)= '" & RunID & "') AND ((Patients.BookinLastName)<>""SUREPLEX"") AND ((Referral.ReferralID) In (1199901203,1199901190,1199901193,1199901206,1199901207))); "
+    & " UNION SELECT Arrays.ArrayBarCode, ArrayLabelling.Subarray, ArrayLabelling.ArrayRunNumber, Patients.BookinFirstName, Patients.BookinLastName, " _
+    & " Right(Arrays.ArrayBarCode,3) & ""."" & ArrayLabelling.Subarray & "" ("" & ArrayLabelling.ArrayRunNumber & "")"" AS HybID, ""Cy3"" AS EvELabel FROM Patients INNER JOIN ((ArrayLabelling INNER JOIN Arrays ON ArrayLabelling.ArrayID = Arrays.ArrayID) " _
+    & " INNER JOIN ((ArrayTest INNER JOIN Referral ON ArrayTest.ReferralID = Referral.ReferralID) INNER JOIN " _
+    & " DNA ON ArrayTest.InternalPatientID = DNA.InternalPatientID) ON ArrayLabelling.Cy3DNAID = DNA.DNAID) ON Patients.InternalPatientID = DNA.InternalPatientID WHERE (((ArrayLabelling.ArrayRunNumber)=[Run Number?]) AND ((Patients.BookinLastName)<>""SUREPLEX"" " _
+    & " AND ((Referral.ReferralID) In (1199901203,1199901190,1199901193,1199901206,1199901207))); "
+    
              
                     
     ' define variable used in the eve input file
@@ -60,10 +58,6 @@ Private Sub HybID_DblClick(Cancel As Integer)
     Set Rst = Nothing
     
     ''Call eve
-    'Create shell object
-    Dim wsh As Object
-    Set wsh = VBA.CreateObject("WScript.Shell")
-    
     ' settings to have cmd box visible while running
     Dim waitOnReturn As Boolean: waitOnReturn = True
     Dim windowStyle As Integer: windowStyle = 1
@@ -77,21 +71,34 @@ Private Sub HybID_DblClick(Cancel As Integer)
     Dim TotalCmd As String
     
     'set path to eve
-    EvePath = "S:\Genetics_Data2\Array\Audits and Projects\150702 PGD FEfiles\aled_DLRS\EvE.py"
+    EvePath = """S:\Genetics_Data2\Array\Audits and Projects\150702 PGD FEfiles\frontend\EvE.py"""
     
     'set folder to put newly created FE files
     OutputDir = "S:\Genetics_Data2\Array\Audits and Projects\150702 PGD FEfiles\frontend\Test\eveoutput"
     
     'set the commands to run eve (eve.py, input file and output dir) taking into account the quotations etc needed due to spaces in file paths
-    TotalCmd = """" & EvePath & """" & " " & """" & EvEInputFilePath & """" & " " & """" & OutputDir & """"
+    EvECmd = EvePath & " " & """" & EvEInputFilePath & """" & " " & """" & OutputDir & """"
     
-    ' run command NB /K can be used for the cmd line window to remain after it has run - good for debugging
-    ErrorCode = wsh.Run("cmd.exe /S /K S:\Genetics_Data2\Array\Software\Python\python.exe " & TotalCmd, windowStyle, waitOnReturn)
+    'combine all to make totalCmd NB /K can be used for the cmd line window to remain after it has run - good for debugging - but may cause it to hang
+    ' note 2>&1 which combines stderr and stdout
+    TotalCmd = "cmd.exe /S /C S:\Genetics_Data2\Array\Software\Python\python.exe " & EvECmd & " 2>&1"
     
-    'report error messages
-    If ErrorCode = 0 Then
-        MsgBox "EvE was run successfully. FE files can be found at " & OutputDir
-    Else
-        MsgBox "Program exited with error code " & ErrorCode & "."
-    End If
+    'Create shell object
+    Dim wsh As Object
+    Set wsh = CreateObject("WScript.Shell")
+    ' use .Exec not .Run so can access the stdout
+    Set wshexec = wsh.Exec(TotalCmd)
+    'DoEvents pauses VB script until EvE has finished running. wshexec.status is 0 while running 1 when finished
+    ' and 2 when errored so could use a if statement but have combined stderr and stdout above so no need.
+    Do While wshexec.Status = 0
+    DoEvents
+    Loop
+    
+    'report captures stdout
+    Dim report As String
+    report = wshexec.StdOut.ReadAll()
+    
+    'display in MsgBox
+    MsgBox report
 End Sub
+
