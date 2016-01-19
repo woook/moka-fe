@@ -18,18 +18,20 @@ Cy5Subarray = Me.Cy5_subarray
 Cy5Dye = LCase(Me.Cy5_Dye)
 
 'concatenate to write to line and create file name
+Dim LineForFile As String
+Dim InputFilename As String
 LineForFile = Cy3Barcode & vbTab & Cy3Subarray & vbTab & Cy3Dye & vbTab & Cy5Barcode & vbTab & Cy5Subarray & vbTab & Cy5Dye ' & vbTab & "Test"
 InputFilename = Cy3Barcode & "_" & Cy3Subarray & "_" & Cy3Dye & "_" & Cy5Barcode & "_" & Cy5Subarray & "_" & Cy5Dye & "_input.txt"
 
 'define variables for files
-Dim EvEInputFile As String
+'Dim EvEInputFile As String
 Dim EvEinputFileFolder As String
 Dim EvEInputFilePath As String
-        
+
 'set file variables for EvE
-EvEInputFile = InputFilename
-EvEinputFileFolder = "S:\Genetics_Data2\Array\Audits and Projects\150702 PGD FEfiles\frontend\Test"
-EvEInputFilePath = EvEinputFileFolder & "\" & EvEInputFile
+'EvEInputFile = InputFilename
+EvEinputFileFolder = "\\SV-PR-FS13\Genetics_Data2\Array\FeatureExtraction\eve\input"
+EvEInputFilePath = EvEinputFileFolder & "\" & InputFilename
 
 'set the variables to write the file
 Set fs = CreateObject("Scripting.FileSystemObject")
@@ -37,7 +39,7 @@ Set a = fs.CreateTextFile(EvEInputFilePath, False) 'False will error if the inpu
 
 'write to file
 a.WriteLine (LineForFile)
-    
+
 ''Call eve
 ' define the variables to feed to EvE
 Dim EvePath As String
@@ -45,17 +47,17 @@ Dim OutputDir As String
 Dim TotalCmd As String
 
 'set path to eve
-EvePath = """S:\Genetics_Data2\Array\Audits and Projects\150702 PGD FEfiles\frontend\EvE.py"""
+EvePath = """F:\Moka\Files\Software\eve\EvE.py"""
 
 'set folder to put newly created FE files
-OutputDir = "S:\Genetics_Data2\Array\Audits and Projects\150702 PGD FEfiles\frontend\Test\eveoutput"
+OutputDir = "\\SV-PR-FS13\Genetics_Data2\Array\FeatureExtraction\eve\output"
 
 'set the commands to run eve (eve.py, input file and output dir) taking into account the quotations etc needed due to spaces in file paths
 EvECmd = EvePath & " " & """" & EvEInputFilePath & """" & " " & """" & OutputDir & """"
 
 'combine all to make totalCmd NB /K can be used for the cmd line window to remain after it has run - good for debugging - but may cause it to hang
 ' note 2>&1 which combines stderr and stdout
-TotalCmd = "cmd.exe /S /C S:\Genetics_Data2\Array\Software\Python\python.exe " & EvECmd & " 2>&1"
+TotalCmd = "cmd.exe /S /C \\SV-PR-FS13\Genetics_Data2\Array\Software\Python\python.exe " & EvECmd & " 2>&1"
 
 'Create shell object
 Dim wsh As Object
@@ -70,14 +72,13 @@ Set wshexec = wsh.Exec(TotalCmd)
 'DoEvents pauses VB script until EvE has finished running. wshexec.status is 0 while running 1 when finished
 ' and 2 when errored so could use a if statement but have combined stderr and stdout above so no need.
 Do While wshexec.Status = 0
-DoEvents
+    DoEvents
 Loop
 
 'report captures stdout
-Dim report As String
-report = wshexec.StdOut.ReadAll()
+Dim Report As String
+Report = wshexec.StdOut.ReadAll()
 
 'display in MsgBox
-MsgBox report
+MsgBox Report
 End Sub
-
