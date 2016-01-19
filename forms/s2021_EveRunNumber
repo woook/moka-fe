@@ -10,7 +10,7 @@ Private Sub HybID_DblClick(Cancel As Integer)
         
     'set file variables for EvE
     EvEInputFile = Me.ArrayRunNumber & "EvE.txt"
-    EvEinputFileFolder = "S:\Genetics_Data2\Array\Audits and Projects\150702 PGD FEfiles\frontend\Test"
+    EvEinputFileFolder = "\\SV-PR-FS13\Genetics_Data2\Array\FeatureExtraction\eve\input"
     EvEInputFilePath = EvEinputFileFolder & "\" & EvEInputFile
     
     'define variables for sql query
@@ -75,17 +75,17 @@ Private Sub HybID_DblClick(Cancel As Integer)
     Dim TotalCmd As String
     
     'set path to eve
-    EvePath = """S:\Genetics_Data2\Array\Audits and Projects\150702 PGD FEfiles\frontend\EvE.py"""
+    EvePath = """F:\Moka\Files\Software\eve\EvE.py"""
     
     'set folder to put newly created FE files
-    OutputDir = "S:\Genetics_Data2\Array\Audits and Projects\150702 PGD FEfiles\frontend\Test\eveoutput"
+    OutputDir = "\\SV-PR-FS13\Genetics_Data2\Array\FeatureExtraction\eve\output"
     
     'set the commands to run eve (eve.py, input file and output dir) taking into account the quotations etc needed due to spaces in file paths
     EvECmd = EvePath & " " & """" & EvEInputFilePath & """" & " " & """" & OutputDir & """"
     
     'combine all to make totalCmd NB /K can be used for the cmd line window to remain after it has run - good for debugging - but may cause it to hang
     ' note 2>&1 which combines stderr and stdout
-    TotalCmd = "cmd.exe /S /C S:\Genetics_Data2\Array\Software\Python\python.exe " & EvECmd & " 2>&1"
+    TotalCmd = "cmd.exe /S /C \\SV-PR-FS13\Genetics_Data2\Array\Software\Python\python.exe " & EvECmd & " 2>&1"
     
     'Create shell object
     Dim wsh As Object
