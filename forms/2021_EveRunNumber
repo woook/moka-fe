@@ -1,3 +1,6 @@
+Option Compare Database
+
 Private Sub Form_Current()
-RunNumber = Forms!EveRunNumber!subformEveRunNumber.Form!ArrayRunNumber
+    ' capture run number from subform to display at the top of the page
+    RunNumber = Forms![2021 EveRunNumber]![s2021_EveRunNumber]!ArrayRunNumber
 End Sub
