@@ -31,7 +31,7 @@ Private Sub Run_EvE_Click()
     
     'set file variables for EvE
     'EvEInputFile = InputFilename
-    EvEinputFileFolder = "\\SV-PR-FS13\Genetics_Data2\Array\FeatureExtraction\eve\input"
+    EvEinputFileFolder = "\\gstt.local\shared\Genetics_Data2\Array\FeatureExtraction\eve\input"
     EvEInputFilePath = EvEinputFileFolder & "\" & InputFilename
     
     'set the variables to write the file
@@ -51,14 +51,14 @@ Private Sub Run_EvE_Click()
     EvePath = """F:\Moka\Files\Software\eve\EvE.py"""
     
     'set folder to put newly created FE files
-    OutputDir = "\\SV-PR-FS13\Genetics_Data2\Array\FeatureExtraction\eve\output"
+    OutputDir = "\\gstt.local\shared\Genetics_Data2\Array\FeatureExtraction\eve\output"
     
     'set the commands to run eve (eve.py, input file and output dir) taking into account the quotations etc needed due to spaces in file paths
     EvECmd = EvePath & " " & """" & EvEInputFilePath & """" & " " & """" & OutputDir & """"
     
     'combine all to make totalCmd NB /K can be used for the cmd line window to remain after it has run - good for debugging - but may cause it to hang
     ' note 2>&1 which combines stderr and stdout
-    TotalCmd = "cmd.exe /S /C \\SV-PR-FS13\Genetics_Data2\Array\Software\Python\python.exe " & EvECmd & " 2>&1"
+    TotalCmd = "cmd.exe /S /C \\gstt.local\shared\Genetics_Data2\Array\Software\Python\python.exe " & EvECmd & " 2>&1"
     
     'Create shell object
     Dim wsh As Object
