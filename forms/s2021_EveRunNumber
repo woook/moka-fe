@@ -55,7 +55,7 @@ Private Sub HybID_DblClick(Cancel As Integer)
     
     'loop through query result and write each line using the magic embryo info for Cy3 and the query result as Cy5
     Do While Not Rst.EOF
-        a.WriteLine (MagicEmbryo & Rst!ArrayBarCode & vbTab & Rst!Subarray & vbTab & Rst!EveLabel)
+        a.WriteLine (MagicEmbryo & Rst!ArrayBarCode & vbTab & Rst!Subarray & vbTab & Rst!EveLabel & vbTab & Rst!BookinFirstName)
         Rst.MoveNext
     Loop
     Rst.Close
