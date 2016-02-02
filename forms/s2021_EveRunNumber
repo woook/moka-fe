@@ -1,47 +1,74 @@
 Option Compare Database
 
-Private Sub Run_EvE_Click()
+Private Sub HybID_DblClick(Cancel As Integer)
+''Given a run rumber find the PGD referrals on that run
 
-    'define the entry boxes
-    Dim Cy3Barcode As String
-    Dim Cy3Subarray As Integer
-    Dim Cy3Dye As String
-    Dim Cy5Barcode As String
-    Dim Cy5Subarray As Integer
-    Dim Cy5Dye As String
-    
-    'set variables to entered values
-    Cy3Barcode = Me.Cy3_barcode
-    Cy3Subarray = Me.Cy3_Subarray
-    Cy3Dye = LCase(Me.Cy3_Dye)
-    Cy5Barcode = Me.Cy5_barcode
-    Cy5Subarray = Me.Cy5_subarray
-    Cy5Dye = LCase(Me.Cy5_Dye)
-    
-    'concatenate to write to line and create file name
-    Dim LineForFile As String
-    Dim InputFilename As String
-    LineForFile = Cy3Barcode & vbTab & Cy3Subarray & vbTab & Cy3Dye & vbTab & Cy5Barcode & vbTab & Cy5Subarray & vbTab & Cy5Dye ' & vbTab & "Test"
-    InputFilename = Cy3Barcode & "_" & Cy3Subarray & "_" & Cy3Dye & "_" & Cy5Barcode & "_" & Cy5Subarray & "_" & Cy5Dye & "_input.txt"
-    
     'define variables for files
-    'Dim EvEInputFile As String
+    Dim EvEInputFile As String
     Dim EvEinputFileFolder As String
     Dim EvEInputFilePath As String
-    
+        
     'set file variables for EvE
-    'EvEInputFile = InputFilename
+    EvEInputFile = Me.ArrayRunNumber & "EvE.txt"
     EvEinputFileFolder = "\\gstt.local\shared\Genetics_Data2\Array\FeatureExtraction\eve\input"
-    EvEInputFilePath = EvEinputFileFolder & "\" & InputFilename
+    EvEInputFilePath = EvEinputFileFolder & "\" & EvEInputFile
+    
+    'define variables for sql query
+    Dim Sql As String
+    Dim RunID As String
+      
+    'define runID
+    RunID = CStr(Me.ArrayRunNumber)
+    ' set query - union query that captures the barcode, subarray and label, and the patients first and last names and creates the hyb ID by joining the required tables and filtering for the run ID
+    ' removes any sureplex samples and selects for PGD referral IDs. The union is required to repeat for cy3 and cy5 DNAIDs
+    Sql = "SELECT Arrays.ArrayBarCode, ArrayLabelling.Subarray, ArrayLabelling.ArrayRunNumber, Patients.BookinFirstName, Patients.BookinLastName, " & _
+    "RIGHT(Arrays.ArrayBarCode,3) & ""."" & ArrayLabelling.Subarray & "" ("" & ArrayLabelling.ArrayRunNumber & "")"" AS HybID, ""Cy5"" AS EvELabel " & _
+    "FROM Patients INNER JOIN ((ArrayLabelling INNER JOIN Arrays ON ArrayLabelling.ArrayID = Arrays.ArrayID) " & _
+    "INNER JOIN ((ArrayTest INNER JOIN Referral ON ArrayTest.ReferralID = Referral.ReferralID) " & _
+    "INNER JOIN DNA ON ArrayTest.InternalPatientID = DNA.InternalPatientID) ON ArrayLabelling.Cy5DNAID = DNA.DNAID) ON Patients.InternalPatientID = DNA.InternalPatientID " & _
+    "WHERE (((ArrayLabelling.ArrayRunNumber)= '" & RunID & "') AND ((Patients.BookinLastName)<>""SUREPLEX"") " & _
+    "AND ((Referral.ReferralID) In (1199901203,1199901190,1199901193,1199901206,1199901207))) " & _
+    "UNION SELECT Arrays.ArrayBarCode, ArrayLabelling.Subarray, ArrayLabelling.ArrayRunNumber, Patients.BookinFirstName, Patients.BookinLastName, " & _
+    "RIGHT(Arrays.ArrayBarCode,3) & ""."" & ArrayLabelling.Subarray & "" ("" & ArrayLabelling.ArrayRunNumber & "")"" AS HybID, ""Cy3"" AS EvELabel " & _
+    "FROM Patients INNER JOIN ((ArrayLabelling INNER JOIN Arrays ON ArrayLabelling.ArrayID = Arrays.ArrayID) " & _
+    "INNER JOIN ((ArrayTest INNER JOIN Referral ON ArrayTest.ReferralID = Referral.ReferralID) " & _
+    "INNER JOIN DNA ON ArrayTest.InternalPatientID = DNA.InternalPatientID) ON ArrayLabelling.Cy3DNAID = DNA.DNAID) ON Patients.InternalPatientID = DNA.InternalPatientID " & _
+    "WHERE (((ArrayLabelling.ArrayRunNumber)= '" & RunID & "') AND ((Patients.BookinLastName)<>""SUREPLEX"") " & _
+    "AND ((Referral.ReferralID) In (1199901203,1199901190,1199901193,1199901206,1199901207)));"
+
+
+   ' Sql = "SELECT ""123"" AS ArrayBarCode, ""4"" AS Subarray, ""Cy5"" AS EvELabel;"
+
+    ' define variable used in the eve input file
+    Dim MagicEmbryo As String
+    MagicEmbryo = "252846911966" & vbTab & "7" & vbTab & "Cy5" & vbTab
     
     'set the variables to write the file
     Set fs = CreateObject("Scripting.FileSystemObject")
     Set a = fs.CreateTextFile(EvEInputFilePath, False) 'False will error if the input file has already been created
     
-    'write to file
-    a.WriteLine (LineForFile)
+    ' variable for the query
+    Dim Rst As DAO.Recordset
+    
+    'run the query
+    Set Rst = CurrentDb.OpenRecordset(Sql, dbOpenSnapshot)
+    
+    'loop through query result and write each line using the magic embryo info for Cy3 and the query result as Cy5
+    Do While Not Rst.EOF
+        a.WriteLine (MagicEmbryo & Rst!ArrayBarCode & vbTab & Rst!Subarray & vbTab & Rst!EveLabel)
+        Rst.MoveNext
+    Loop
+    Rst.Close
+    Set Rst = Nothing
     
     ''Call eve
+    ' settings to have cmd box visible while running
+    Dim waitOnReturn As Boolean: waitOnReturn = True
+    Dim windowStyle As Integer: windowStyle = 1
+    
+    'allow capture of error code
+    Dim ErrorCode As Integer
+    
     ' define the variables to feed to EvE
     Dim EvePath As String
     Dim OutputDir As String
@@ -63,11 +90,6 @@ Private Sub Run_EvE_Click()
     'Create shell object
     Dim wsh As Object
     Set wsh = CreateObject("WScript.Shell")
-    
-    ' settings to have cmd box visible while running
-    'Dim waitOnReturn As Boolean: waitOnReturn = True
-    'Dim windowStyle As Integer: windowStyle = 1
-    
     ' use .Exec not .Run so can access the stdout
     Set wshexec = wsh.Exec(TotalCmd)
     'DoEvents pauses VB script until EvE has finished running. wshexec.status is 0 while running 1 when finished
@@ -82,5 +104,5 @@ Private Sub Run_EvE_Click()
     
     'display in MsgBox
     MsgBox Report
-    
 End Sub
+
