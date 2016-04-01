@@ -1,0 +1,9 @@
+Option Compare Database
+
+Private Sub Form_Open(Cancel As Integer)
+    Dim url As String
+    url = "http://genome-euro.ucsc.edu/cgi-bin/hgLiftOver"
+    'chromeurlserv url
+    firefoxurl url
+    DoCmd.Close
+End Sub
