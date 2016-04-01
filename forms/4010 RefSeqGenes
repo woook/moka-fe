@@ -1,0 +1,43 @@
+Option Compare Database
+
+''patients with overlapping
+
+Private Sub Chr_DblClick(Cancel As Integer)
+    Dim stDocName As String
+    stDocName = "s09_PreviousByChrLookup"
+    DoCmd.OpenForm stDocName, acFormDS
+End Sub
+
+''NCBI gene page
+
+Private Sub GeneID_DblClick(Cancel As Integer)
+    Dim url As String
+    url = "http://www.ncbi.nlm.nih.gov/gene/" + CStr(GeneID) + ""
+    firefoxurl url
+End Sub
+
+''DGV
+
+Private Sub Start19_DblClick(Cancel As Integer)
+    Dim url As String
+    'url = "http://projects.tcag.ca/cgi-bin/variation/gbrowse/hg19/?start=" + CStr(Me.Start19 - 500000) + ";stop=" + CStr(Me.Stop19 + 500000) + ";ref=chr" + Me![Chr] + ";h_region=chr" + Me![Chr] + ":" + CStr(Me.Start19) + ".." + CStr(Me.Stop19) + ""
+    url = "http://dgv.tcag.ca/gb2/gbrowse/dgv2_hg19/?start=" + CStr(Me.Start19 - 500000) + ";stop=" + CStr(Me.Stop19 + 500000) + ";ref=chr" + Me![ChrID19].Column(1) + ""
+    'chromeurlserv url
+    firefoxurl url
+End Sub
+
+''UCSC
+
+Private Sub Stop19_DblClick(Cancel As Integer)
+    Dim url As String
+    url = "http://genome-euro.ucsc.edu/cgi-bin/hgTracks?hgS_doOtherUser=submit&hgS_otherUserName=wook&hgS_otherUserSessionName=hg19cgh9&db=hg19&position=chr" + Me![Chr] + "%3A" + CStr(Me.Start19 - 500000) + "-" + CStr(Me.Stop19 + 500000) + ""
+    'chromeurlserv url
+    firefoxurl url
+End Sub
+
+''Vanity
+Private Sub Band_DblClick(Cancel As Integer)
+    Dim url As String
+    url = "http://genome-euro.ucsc.edu/cgi-bin/hgTracks?hgS_doOtherUser=submit&hgS_otherUserName=wook&hgS_otherUserSessionName=hg19cgh9&db=hg19&position=chr" + Me![Chr] + "%3A" + CStr(Me.Start19 - 500000) + "-" + CStr(Me.Stop19 + 500000) + ""
+    chromeurl url
+End Sub
