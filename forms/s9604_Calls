@@ -1,0 +1,23 @@
+Option Compare Database
+
+''refresh hyb id
+'Private Sub DNALabellingID_DblClick(Cancel As Integer)
+'    Me.DNALabellingID.Requery
+'End Sub
+Private Sub DNALabellingID_GotFocus()
+    Me.DNALabellingID.Requery
+End Sub
+
+''hyb id check
+Private Sub Form_AfterUpdate()
+    If IsNull(Me![DNALabellingID]) Then
+        MsgBox "HybID?", , "Don't be a dummy"
+    End If
+End Sub
+
+
+Private Sub Probes_DblClick(Cancel As Integer)
+    Dim url As String
+    url = "http://genome-euro.ucsc.edu/cgi-bin/hgTracks?hgS_doOtherUser=submit&hgS_otherUserName=wook&hgS_otherUserSessionName=hg19cgh9&db=hg19&position=chr" + Me![ChrID19].Column(1) + "%3A" + CStr(Me.Start19 - 1000) + "-" + CStr(Me.Stop19 + 1000) + ""
+    chromeurl url
+End Sub
