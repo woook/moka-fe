@@ -1,0 +1,9 @@
+Option Compare Database
+
+Private Sub Form_Open(Cancel As Integer)
+    Dim url As String
+    url = "http://genome-euro.ucsc.edu/cgi-bin/hgTracks?hgS_doOtherUser=submit&hgS_otherUserName=wook&hgS_otherUserSessionName=hg19cgh9&db=hg19&position=chr1%3A1-2"
+    'chromeurlserv url
+    firefoxurl url
+    DoCmd.Close
+End Sub
