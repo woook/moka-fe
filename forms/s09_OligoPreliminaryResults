@@ -49,7 +49,8 @@ End Sub
 ''ucsc
 Private Sub Stop19_DblClick(Cancel As Integer)
     Dim url As String
-    url = "http://genome.ucsc.edu/cgi-bin/hgTracks?hgS_doOtherUser=submit&hgS_otherUserName=Wook&hgS_otherUserSessionName=hg19cgh8&highlight=hg19.chr" + Me![ChrID19].Column(1) + "%3A" + CStr(Me.Start19) + "-" + CStr(Me.Stop19) + "&position=chr" + Me![ChrID19].Column(1) + "%3A" + CStr(Me.Start19 - 500000) + "-" + CStr(Me.Stop19 + 500000) + ""
+    url = "http://genome-euro.ucsc.edu/cgi-bin/hgTracks?hgS_doOtherUser=submit&hgS_otherUserName=wook&hgS_otherUserSessionName=hg19cgh9&db=hg19&highlight=hg19.chr" + Me![ChrID19].Column(1) + "%3A" + CStr(Me.Start19) + "-" + CStr(Me.Stop19) + "&position=chr" + Me![ChrID19].Column(1) + "%3A" + CStr(Me.Start19 - 500000) + "-" + CStr(Me.Stop19 + 500000) + ""
+    'url = "http://genome.ucsc.edu/cgi-bin/hgTracks?hgS_doOtherUser=submit&hgS_otherUserName=Wook&hgS_otherUserSessionName=hg19cgh8&highlight=hg19.chr" + Me![ChrID19].Column(1) + "%3A" + CStr(Me.Start19) + "-" + CStr(Me.Stop19) + "&position=chr" + Me![ChrID19].Column(1) + "%3A" + CStr(Me.Start19 - 500000) + "-" + CStr(Me.Stop19 + 500000) + ""
     'url = "http://genome.ucsc.edu/cgi-bin/hgTracks?hgS_doOtherUser=submit&hgS_otherUserName=Wook&hgS_otherUserSessionName=hg19cgh8&position=chr" + Me![ChrID19].Column(1) + "%3A" + CStr(Me.Start19 - 1000) + "-" + CStr(Me.Stop19 + 1000) + ""
     'url = "http://genome.ucsc.edu/cgi-bin/hgTracks?hgS_doOtherUser=submit&hgS_otherUserName=Wook&hgS_otherUserSessionName=hg19cgh8&position=chr" + Me![ChrID19].Column(1) + "%3A" + CStr(Me.Start19 - 500000) + "-" + CStr(Me.Stop19 + 500000) + ""
     'url = "http://genome.ucsc.edu/cgi-bin/hgTracks?hgS_doOtherUser=submit&hgS_otherUserName=Wook&hgS_otherUserSessionName=hg19CGH5&position=chr" + Me![ChrID19].Column(1) + "%3A" + CStr(Me.Start19) + "-" + CStr(Me.Stop19) + ""
@@ -60,7 +61,8 @@ End Sub
 
 Private Sub Stopend_DblClick(Cancel As Integer)
     Dim url As String
-    url = "http://genome.ucsc.edu/cgi-bin/hgTracks?hgS_doOtherUser=submit&hgS_otherUserName=Wook&hgS_otherUserSessionName=hg18CGH5&highlight=hg18.chr" + Me![ChrID].Column(1) + "%3A" + CStr(Me.Start) + "-" + CStr(Me.Stop) + "&position=chr" + Me![ChrID].Column(1) + "%3A" + CStr(Me.Start - 500000) + "-" + CStr(Me.Stop + 500000) + ""
+    url = "http://genome-euro.ucsc.edu/cgi-bin/hgTracks?db=hg18&highlight=hg18.chr" + Me![ChrID].Column(1) + "%3A" + CStr(Me.Start) + "-" + CStr(Me.Stop) + "&position=chr" + Me![ChrID].Column(1) + "%3A" + CStr(Me.Start - 500000) + "-" + CStr(Me.Stop + 500000) + ""
+    'url = "http://genome.ucsc.edu/cgi-bin/hgTracks?hgS_doOtherUser=submit&hgS_otherUserName=Wook&hgS_otherUserSessionName=hg18CGH5&highlight=hg18.chr" + Me![ChrID].Column(1) + "%3A" + CStr(Me.Start) + "-" + CStr(Me.Stop) + "&position=chr" + Me![ChrID].Column(1) + "%3A" + CStr(Me.Start - 500000) + "-" + CStr(Me.Stop + 500000) + ""
     'url = "http://genome.ucsc.edu/cgi-bin/hgTracks?hgS_doOtherUser=submit&hgS_otherUserName=Wook&hgS_otherUserSessionName=hg18CGH5&position=chr" + Me![ChrID].Column(1) + "%3A" + CStr(Me.Start - 1000) + "-" + CStr(Me.Stop + 1000) + ""
     'http://genome.ucsc.edu/cgi-bin/hgTracks?hgS_doOtherUser=submit&hgS_otherUserName=Wook&hgS_otherUserSessionName=hg19CGH5&org=Human&db=hg18&position=chr16%3A15%2C666%2C145-15%2C666%2C245
     'chromeurlserv url
@@ -84,8 +86,9 @@ End Sub
 
 Private Sub Probes_DblClick(Cancel As Integer)
     Dim url As String
+    url = "http://genome-euro.ucsc.edu/cgi-bin/hgTracks?hgS_doOtherUser=submit&hgS_otherUserName=wook&hgS_otherUserSessionName=hg19cgh9&db=hg19&highlight=hg19.chr" + Me![ChrID19].Column(1) + "%3A" + CStr(Me.Start19) + "-" + CStr(Me.Stop19) + "&position=chr" + Me![ChrID19].Column(1) + "%3A" + CStr(Me.Start19 - 500000) + "-" + CStr(Me.Stop19 + 500000) + ""
+    'url = "http://genome.ucsc.edu/cgi-bin/hgTracks?hgS_doOtherUser=submit&hgS_otherUserName=Wook&hgS_otherUserSessionName=hg19cgh8&highlight=hg19.chr" + Me![ChrID19].Column(1) + "%3A" + CStr(Me.Start19) + "-" + CStr(Me.Stop19) + "&position=chr" + Me![ChrID19].Column(1) + "%3A" + CStr(Me.Start19 - 500000) + "-" + CStr(Me.Stop19 + 500000) + ""
     'url = "http://genome.ucsc.edu/cgi-bin/hgTracks?hgS_doOtherUser=submit&hgS_otherUserName=Wook&hgS_otherUserSessionName=hg19cgh8&position=chr" + Me![ChrID19].Column(1) + "%3A" + CStr(Me.Start19 - 1000) + "-" + CStr(Me.Stop19 + 1000) + ""
-    url = "http://genome.ucsc.edu/cgi-bin/hgTracks?hgS_doOtherUser=submit&hgS_otherUserName=Wook&hgS_otherUserSessionName=hg19cgh8&highlight=hg19.chr" + Me![ChrID19].Column(1) + "%3A" + CStr(Me.Start19) + "-" + CStr(Me.Stop19) + "&position=chr" + Me![ChrID19].Column(1) + "%3A" + CStr(Me.Start19 - 500000) + "-" + CStr(Me.Stop19 + 500000) + ""
     chromeurl url
 End Sub
 
@@ -392,3 +395,4 @@ Private Sub Copies_DblClick(Cancel As Integer)
         End If
         
 End Sub
+
