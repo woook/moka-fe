@@ -1,0 +1,7 @@
+Option Compare Database
+
+Private Sub Original_DblClick(Cancel As Integer)
+    Dim url As String
+    url = "http://genome-euro.ucsc.edu/cgi-bin/hgLiftOver"
+    firefoxurl url
+End Sub
