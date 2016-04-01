@@ -1,0 +1,43 @@
+Option Compare Database
+
+''patient details
+Private Sub PatientID_DblClick(Cancel As Integer)
+    Dim stDocName As String
+    Dim stLinkCriteria As String
+    stDocName = "02 Patient Details"
+    stLinkCriteria = "[InternalPatientID]=" & Me![InternalPatientID]
+    DoCmd.OpenForm stDocName, , , stLinkCriteria
+End Sub
+
+''alt patient details
+Private Sub Form_DblClick(Cancel As Integer)
+On Error GoTo Err_Form_DblClick
+
+    Dim stDocName As String
+    Dim stLinkCriteria As String
+    stDocName = "02 Patient Details"
+    stLinkCriteria = "[InternalPatientID]=" & Me![InternalPatientID]
+    DoCmd.OpenForm stDocName, , , stLinkCriteria
+
+Exit_Form_DblClick:
+    Exit Sub
+
+Err_Form_DblClick:
+    MsgBox Err.Description
+    Resume Exit_Form_DblClick
+End Sub
+
+''dgv
+Private Sub Start_19__DblClick(Cancel As Integer)
+    Dim url As String
+    'url = "http://projects.tcag.ca/cgi-bin/variation/gbrowse/hg19/?start=" + CStr(Me.[Start(19)] - 500000) + ";stop=" + CStr(Me.[Stop(19)] + 500000) + ";ref=chr" + Me![Chr(19)] + ";h_region=chr" + CStr(Me![Chr(19)]) + ":" + CStr(Me.[Start(19)]) + ".." + CStr(Me.[Stop(19)]) + ""
+    url = "http://dgv.tcag.ca/gb2/gbrowse/dgv2_hg19/?start=" + CStr(Me.[Start(19)] - 500000) + ";stop=" + CStr(Me.[Stop(19)] + 500000) + ";ref=chr" + Me![ChrID19].Column(1) + ""
+    firefoxurl url
+End Sub
+
+Private Sub Stop_19__DblClick(Cancel As Integer)
+    Dim url As String
+    url = "http://genome-euro.ucsc.edu/cgi-bin/hgTracks?hgS_doOtherUser=submit&hgS_otherUserName=wook&hgS_otherUserSessionName=hg19cgh9&db=hg19&position=chr" + Me![Chr(19)] + "%3A" + CStr(Me.[Start(19)]) + "-" + CStr(Me.[Stop(19)]) + ""
+    'http://genome.ucsc.edu/cgi-bin/hgTracks?hgS_doOtherUser=submit&hgS_otherUserName=Wook&hgS_otherUserSessionName=hg19CGH5&org=Human&db=hg18&position=chr16%3A15%2C666%2C145-15%2C666%2C245
+    firefoxurl url
+End Sub
