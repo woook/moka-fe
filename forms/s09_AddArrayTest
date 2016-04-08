@@ -1,0 +1,114 @@
+Option Compare Database
+
+''date
+
+Private Sub RequestedDate_DblClick(Cancel As Integer)
+    [RequestedDate] = Now()
+End Sub
+
+''spec no
+Private Sub SpecimenNo_Enter()
+    Me.SpecimenNo.Requery
+End Sub
+
+
+''warnings and logging
+
+Private Sub Form_AfterInsert()
+    Dim Q As ADODB.Recordset
+    Dim S As String
+    Dim d As String
+    Dim cn As String
+    Dim un As String
+    un = VBA.Environ("USERNAME")
+    cn = VBA.Environ("COMPUTERNAME")
+    d = Format(Now, "dd/mmm/yyyy Hh:Nn:ss")
+    Set Q = New ADODB.Recordset
+        S = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + ",'Array test: " + Me![ReferralID].Column(1) + " request added " + CStr(Me![RequestedDate]) + "',#" + d + "#,'" + un + "','" + cn + "')"
+    Q.Open S, CurrentProject.Connection
+    Set Q = Nothing
+    
+    If [Form_09 ArrayResultsByPostition]![s_StatusOverall] <> 15 Then
+        MsgBox "Updated patient status?", , "Don't be a dummy"
+        End If
+    
+    If (Me![ReferralID] = 1185356884 Or Me![ReferralID] = 1185356886) And IsNull(Me.Parent!Followup) Then
+        MsgBox "Followup region?", , "Don't be a dummy"
+        End If
+    
+    If IsNull(Me!SpecimenNo) Then
+        MsgBox "Specimen number? This is required unless it's an inheritance test", , "Don't be a dummy"
+        End If
+    
+    Dim db As String
+    Dim dr As String
+    Dim dd As String
+    db = FormatDateTime([Form_09 ArrayResultsByPostition]![DOB], vbShortDate)
+    dr = FormatDateTime(Me![RequestedDate], vbShortDate)
+    dd = DateDiff("m", db, dr)
+    If dd < 2 And Me.Priority <> -1 Then
+        MsgBox "Priority? <28 days old (if in doubt, ask a scientist)", , "Don't be a dummy"
+        End If
+
+End Sub
+
+Private Sub StatusID_AfterUpdate()
+    Dim Q As ADODB.Recordset
+    Dim S As String
+    Dim d As String
+    Dim cn As String
+    Dim un As String
+    un = VBA.Environ("USERNAME")
+    cn = VBA.Environ("COMPUTERNAME")
+    d = Format(Now, "dd/mmm/yyyy Hh:Nn:ss")
+    Set Q = New ADODB.Recordset
+    If (Not IsNull([RequestedDate])) Then
+        S = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + ",'Array test: Status changed to " + Me![StatusID].Column(1) + " for test requested " + CStr(Me![RequestedDate]) + "',#" + d + "#,'" + un + "','" + cn + "')"
+        Q.Open S, CurrentProject.Connection
+    End If
+    Set Q = Nothing
+End Sub
+
+Private Sub ReferralID_AfterUpdate()
+    If Me![ReferralID] = 1185356886 Then
+        MsgBox "Activated DNA?", , "Don't be a dummy"
+    End If
+End Sub
+
+Private Sub Form_Delete(Cancel As Integer)
+    Dim Q As ADODB.Recordset
+    Dim S As String
+    Dim d As String
+    Dim cn As String
+    Dim un As String
+    un = VBA.Environ("USERNAME")
+    cn = VBA.Environ("COMPUTERNAME")
+    d = Format(Now, "dd/mmm/yyyy Hh:Nn:ss")
+    Set Q = New ADODB.Recordset
+    S = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + ",'Array test: " + Me![ReferralID].Column(1) + " request deleted (status " + Me![StatusID].Column(1) + ", requested " + CStr(Me![RequestedDate]) + ")',#" + d + "#,'" + un + "','" + cn + "')"
+    Q.Open S, CurrentProject.Connection
+    Set Q = Nothing
+    If [Form_09 ArrayResultsByPostition]![s_StatusOverall] = 15 Then
+        MsgBox "Updated patient status?", , "Don't be a dummy"
+    End If
+End Sub
+
+
+''open forms
+
+Private Sub Form_DblClick(Cancel As Integer)
+    Dim stDocName As String
+    Dim stLinkCriteria As String
+    stDocName = "09 ArrayResultsByPostition"
+    stLinkCriteria = "[ArrayTestID]=" & Me![ArrayTestID]
+    DoCmd.OpenForm stDocName, , , stLinkCriteria
+End Sub
+
+Private Sub StatusID_DblClick(Cancel As Integer)
+    Dim stDocName As String
+    Dim stLinkCriteria As String
+    stDocName = "09 ArrayResultsByPostition"
+    stLinkCriteria = "[ArrayTestID]=" & Me![ArrayTestID]
+    DoCmd.OpenForm stDocName, , , stLinkCriteria
+End Sub
+
