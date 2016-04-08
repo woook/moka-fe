@@ -1,0 +1,111 @@
+Option Compare Database
+
+''spec number
+Private Sub Form_Current()
+    Me!SpecimenNo.Requery
+End Sub
+
+''date
+Private Sub RequestedDate_DblClick(Cancel As Integer)
+    [RequestedDate] = Now()
+End Sub
+
+
+''warnings and logging
+
+Private Sub Form_AfterInsert()
+    Dim Q As ADODB.Recordset
+    Dim S As String
+    Dim d As String
+    Dim cn As String
+    Dim un As String
+    un = VBA.Environ("USERNAME")
+    cn = VBA.Environ("COMPUTERNAME")
+    d = Format(Now, "dd/mmm/yyyy Hh:Nn:ss")
+    Set Q = New ADODB.Recordset
+        S = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + ",'Array test: " + Me![ReferralID].Column(1) + " request added " + CStr(Me![RequestedDate]) + "',#" + d + "#,'" + un + "','" + cn + "')"
+    Q.Open S, CurrentProject.Connection
+    Set Q = Nothing
+    
+    If [Form_010 Add array request]![s_StatusOverall] <> 15 Then
+        MsgBox "Updated patient status?", , "Don't be a dummy"
+        End If
+    
+    If IsNull(Me!SpecimenNo) Then
+        MsgBox "Specimen number? This is required unless it's an inheritance test", , "Don't be a dummy"
+        End If
+    
+    
+    If Not IsNull([Form_010 Add array request]![DOB]) Then
+        Dim db As String
+        Dim dr As String
+        Dim dd As String
+        db = FormatDateTime([Form_010 Add array request]![DOB], vbShortDate)
+        dr = FormatDateTime(Me![RequestedDate], vbShortDate)
+        dd = DateDiff("m", db, dr)
+        If dd < 2 And Me.Priority <> -1 Then
+            MsgBox "Priority? <28 days old (if in doubt, ask a scientist)", , "Don't be a dummy"
+            End If
+        End If
+        
+    If IsNull([Form_010 Add array request]![Sex]) And IsNull([Form_010 Add array request]![Sexed]) Then
+        MsgBox "No sex entered!", , "Don't be a dummy"
+        End If
+        
+End Sub
+
+Private Sub StatusID_AfterUpdate()
+    Dim Q As ADODB.Recordset
+    Dim S As String
+    Dim d As String
+    Dim cn As String
+    Dim un As String
+    un = VBA.Environ("USERNAME")
+    cn = VBA.Environ("COMPUTERNAME")
+    d = Format(Now, "dd/mmm/yyyy Hh:Nn:ss")
+    Set Q = New ADODB.Recordset
+    If Not IsNull([BookedByID]) Then
+        S = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + ",'Array test: Status changed to " + Me![StatusID].Column(1) + " for test requested " + CStr(Me![RequestedDate]) + "',#" + d + "#,'" + un + "','" + cn + "')"
+        Q.Open S, CurrentProject.Connection
+    End If
+    Set Q = Nothing
+End Sub
+
+Private Sub Form_Delete(Cancel As Integer)
+    Dim Q As ADODB.Recordset
+    Dim S As String
+    Dim d As String
+    Dim cn As String
+    Dim un As String
+    un = VBA.Environ("USERNAME")
+    cn = VBA.Environ("COMPUTERNAME")
+    d = Format(Now, "dd/mmm/yyyy Hh:Nn:ss")
+    Set Q = New ADODB.Recordset
+    S = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + ",'Array test: " + Me![ReferralID].Column(1) + " request deleted (status " + Me![StatusID].Column(1) + ", requested " + CStr(Me![RequestedDate]) + ")',#" + d + "#,'" + un + "','" + cn + "')"
+    Q.Open S, CurrentProject.Connection
+    Set Q = Nothing
+    If [Form_010 Add array request]![s_StatusOverall] = 15 Then
+        MsgBox "Updated patient status?", , "Don't be a dummy"
+    End If
+End Sub
+
+Private Sub BookingCheckedByID_AfterUpdate()
+    Dim Q As ADODB.Recordset
+    Dim S As String
+    Dim d As String
+    Dim cn As String
+    Dim un As String
+    cn = VBA.Environ("COMPUTERNAME")
+    un = VBA.Environ("USERNAME")
+    d = Format(Now, "dd/mmm/yyyy Hh:Nn:ss")
+    Set Q = New ADODB.Recordset
+    If Not IsNull([BookingCheckedByID]) Then
+        S = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + ",'Array test: Booking in checked by " + Me![BookingCheckedByID].Column(1) + " for test requested " + CStr(Me![RequestedDate]) + "',#" + d + "#,'" + un + "','" + cn + "')"
+    ElseIf (IsNull([BookingCheckedByID]) And Not IsNull([RequestedDate])) Then
+        S = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + ",'Array test: Booking in check deleted for test requested " + CStr(Me![RequestedDate]) + "',#" + d + "#,'" + un + "','" + cn + "')"
+    End If
+    Q.Open S, CurrentProject.Connection
+    Set Q = Nothing
+End Sub
+
+
