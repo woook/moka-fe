@@ -1,0 +1,4 @@
+SELECT Left([Patients].[PatientID],6) AS FamilyNo, [Status].[Status] & " - " & [Patients].[PatientID] & " " & [dbo_Patient_Table].[Lastname] & " " & [dbo_Patient_Table].[Firstname] & " (" & [dbo_Patient_Table].[DoB] & ") - " & [patients].[OverallResultComments] & " " & [Group].[Group] AS Patients, Patients.PatientID
+FROM ([Group] RIGHT JOIN (ArrayLabelling LEFT JOIN Arrays ON ArrayLabelling.ArrayID = Arrays.ArrayID) ON Group.GroupID = Arrays.GroupID) RIGHT JOIN ((dbo_Patient_Table LEFT JOIN (Patients LEFT JOIN Status ON Patients.s_StatusOverall = Status.StatusID) ON dbo_Patient_Table.PatientTrustID = Patients.PatientID) LEFT JOIN ArrayTest ON Patients.InternalPatientID = ArrayTest.InternalPatientID) ON ArrayLabelling.DNALabellingID = ArrayTest.DNALabellingID
+WHERE (((ArrayTest.StatusID)=4))
+ORDER BY Patients.PatientID;
