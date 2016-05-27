@@ -1,0 +1,4 @@
+SELECT GenesRefSeq_hg19.GeneID, GenesHGNC_150205.ApprovedSymbol AS Gene, GenesHGNC_150205.ApprovedName, [PreviousSymbols] & " " & [Synonyms] & " " & [PreviousNames] AS AKA, Chromosome.Chr, GenesHGNC_150205.Chromosome AS [Band], GenesRefSeq_hg19.Start AS Start19, GenesRefSeq_hg19.Stop AS Stop19, [approvedsymbol] & " " & [approvedname] & " " & [PreviousSymbols] & " " & [synonyms] & " " & [PreviousNames] AS Search, GenesRefSeq_hg19.ChrID AS ChrID19
+FROM (GenesRefSeq_hg19 INNER JOIN Chromosome ON GenesRefSeq_hg19.ChrID = Chromosome.ChrID) INNER JOIN GenesHGNC_150205 ON GenesRefSeq_hg19.GeneID = GenesHGNC_150205.EntrezGeneIDmapped
+WHERE ((([approvedsymbol] & " " & [approvedname] & " " & [PreviousSymbols] & " " & [synonyms] & " " & [PreviousNames]) Like "*" & [Gene?] & "*"))
+ORDER BY GenesHGNC_150205.ApprovedSymbol;
