@@ -1,0 +1,3 @@
+SELECT NGSPanelGenes.NGSPanelGenesID, NGSPanelGenes.HGNCID, NGSPanelGenes.NGSPanelID, NGSPanelGenes.Symbol, GenesHGNC_150205.ApprovedSymbol, NGSPanelGenes.GuysAccession, NGSPanelGenes.GuysAccessionVersion
+FROM NGSPanelGenes INNER JOIN GenesHGNC_150205 ON NGSPanelGenes.HGNCID = GenesHGNC_150205.HGNCID
+ORDER BY GenesHGNC_150205.ApprovedSymbol;
