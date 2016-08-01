@@ -1,0 +1,31 @@
+USE [mokadata]
+GO
+/****** Object:  Table [dbo].[NGSTest]    Script Date: 08/01/2016 15:02:23 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[NGSTest](
+	[NGSTestID] [int] IDENTITY(1,1) NOT NULL,
+	[InternalPatientID] [int] NOT NULL,
+	[DNA] [nvarchar](50) NOT NULL,
+	[ReferralID] [int] NOT NULL,
+	[NGSPanelID] [int] NOT NULL,
+	[NGSPanelID_B] [int] NULL,
+	[StatusID] [int] NOT NULL,
+	[DateRequested] [datetime] NOT NULL,
+	[BookBy] [int] NOT NULL,
+	[ResultBuild] [int] NULL,
+	[Result] [nvarchar](max) NULL,
+	[Check1ID] [int] NULL,
+	[Check1Date] [datetime] NULL,
+	[Check2ID] [int] NULL,
+	[Check2Date] [datetime] NULL,
+	[BookingAuthorisedDate] [datetime] NULL,
+	[BookingAuthorisedByID] [int] NULL,
+	[Service] [bit] NOT NULL CONSTRAINT [DF_NGSTest_Service]  DEFAULT ((-1)),
+ CONSTRAINT [PK_NGSTest] PRIMARY KEY CLUSTERED 
+(
+	[NGSTestID] ASC
+)WITH (PAD_INDEX  = OFF, STATISTICS_NORECOMPUTE  = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS  = ON, ALLOW_PAGE_LOCKS  = ON) ON [PRIMARY]
+) ON [PRIMARY]
