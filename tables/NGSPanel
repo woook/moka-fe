@@ -1,0 +1,23 @@
+USE [mokadata]
+GO
+/****** Object:  Table [dbo].[NGSPanel]    Script Date: 08/15/2016 15:18:25 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[NGSPanel](
+	[NGSPanelID] [int] IDENTITY(1,1) NOT NULL,
+	[Category] [int] NOT NULL,
+	[SubCategory] [int] NOT NULL,
+	[Panel] [nvarchar](255) NULL,
+	[PanelCode] [nvarchar](50) NULL,
+	[Checker1] [int] NULL,
+	[Checker2] [int] NULL,
+	[CheckDate] [datetime] NULL,
+	[Active] [int] NOT NULL CONSTRAINT [DF_NGSPanel_Active]  DEFAULT ((1)),
+	[PanelType] [int] NULL,
+ CONSTRAINT [PK_NGSPanel] PRIMARY KEY CLUSTERED 
+(
+	[NGSPanelID] DESC
+)WITH (PAD_INDEX  = OFF, STATISTICS_NORECOMPUTE  = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS  = ON, ALLOW_PAGE_LOCKS  = ON) ON [PRIMARY]
+) ON [PRIMARY]
