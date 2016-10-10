@@ -21,19 +21,7 @@ Private Sub Clinician_NotInList(NewData As String, Response As Integer)
 End Sub
 
 Private Sub PhenotipsLaunch_Click()
-    Dim url As String
-    Dim pathFireFox As String
-    'Launch Phenotips in firefox
-    url = "http://10.188.197.57:8080/phenotips/bin/"
-    pathFireFox = "C:\Program Files (x86)\Mozilla Firefox\firefox.exe"
-    If Dir(pathFireFox) = "" Then
-        pathFireFox = "C:\Program Files\Mozilla Firefox\firefox.exe"
-    End If
-    If Dir(pathFireFox) = "" Then
-        MsgBox "FireFox path not found," & vbNewLine & "FireFox required to launch Phenotips.", vbCritical, "ERROR"
-        Exit Sub
-    End If
-    Shell """" & pathFireFox & """" & " -new-tab " & url, vbHide
+    Call firefoxurl("http://10.188.197.57:8080/phenotips/bin/")
 End Sub
 
 Private Sub NextButton_Click()
@@ -64,9 +52,8 @@ Private Sub NextButton_Click()
         Me![InternalPatientID] = rs!InternalPatientID
         Set rs = Nothing
         'Set default values
-        Me![RequestedDate] = Format(Now(), "dd/mmm/yyyy Hh:Nn:ss")
+        Me![DateRequested] = Format(Now(), "dd/mmm/yyyy Hh:Nn:ss")
         Me![StatusID] = 2 'pending
-        Me![Service] = -1
 
         'Check Referral type and Phenotype info entered
         If IsNull(Me![ReferralID]) Then
@@ -76,8 +63,10 @@ Private Sub NextButton_Click()
         ElseIf IsNull(Me![Clinician]) Then
             MsgBox "Please select referring clinician name before continuing.", vbExclamation, "Select Name"
         Else
-            'Close ExomeTest form. Open ExomeGenePanel form, pass PatientID_PRU and ExomeTestID as opening arguments.
-            exmTestID = Me![ExomeTestID]
+            'Save record
+            DoCmd.DoMenuItem acFormBar, acRecordsMenu, 5, , acMenuVer70
+            'Close ExomeTest form. Open ExomeGenePanel form, pass PatientID_PRU and NGSTestID as opening arguments.
+            exmTestID = Me![NGSTestID]
             refID = Me![ReferralID]
             Referral = Me![ReferralID].Column(1)
             internalPatID = Me![InternalPatientID]
@@ -86,7 +75,7 @@ Private Sub NextButton_Click()
             referrerInitials = Split(referrerInitialsFull, " ")(0) 'Strips "(clinic)" from end of initials
             save = True 'So that record is saved
             DoCmd.Close acForm, Me.Name
-            DoCmd.OpenForm "ExomeGenePanel", , , , acFormAdd, , internalPatID & ", " & patientID_PRU & ", " & exmTestID & ", " & refID & ", " & Referral & ", " & referrerID & ", " & referrerInitials
+            DoCmd.OpenForm "87014 ExomeGenePanel", , , , acFormAdd, , internalPatID & ", " & patientID_PRU & ", " & exmTestID & ", " & refID & ", " & Referral & ", " & referrerID & ", " & referrerInitials
         End If
     End If
 End Sub
@@ -107,9 +96,9 @@ Private Sub Form_Unload(Cancel As Integer)
         If MsgBox("Are you sure you want to exit before submitting exome test request?" & vbNewLine & vbNewLine & "All changes will be lost", vbYesNo + vbExclamation, "Confirm Exit") = vbNo Then
             Cancel = True
         Else 'If user selects Yes to exit
-            'Delete ExomeTest record if already created
-            sqlDelTest = "DELETE FROM ExomeTest WHERE ExomeTestID = " & Me![ExomeTestID]
-            If Not IsNull(Me![ExomeTestID]) Then
+            'Delete NGSTest record if already created
+            sqlDelTest = "DELETE FROM NGSTest WHERE NGSTestID = " & Me![NGSTestID]
+            If Not IsNull(Me![NGSTestID]) Then
                 DoCmd.SetWarnings False
                 DoCmd.RunSQL sqlDelTest
                 DoCmd.SetWarnings True
