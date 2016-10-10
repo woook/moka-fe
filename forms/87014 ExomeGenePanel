@@ -3,13 +3,15 @@ Private internalPatID As String
 Private ExomeTestID As String
 Private ReferralID As String
 Private Referral As String
+
 Private Sub Form_Load()
     Dim openArgs() As String
     Dim patientID_PRU As String
     Dim username As String
     Dim todayDate As String
     Dim panelName As String
-    Dim sql1 As String
+    Dim subpanelCode As String
+    Dim extPanelRowSource As String
 
     'Assign default values
     Me![Category] = 692 'Clinician
@@ -34,26 +36,43 @@ Private Sub Form_Load()
     'Set panel code
     Me![PanelCode] = "Pan" & Me![NGSPanelID]
 
-    'Add NGSPanelID to ExomeTest record
-    sql1 = "UPDATE ExomeTest SET NGSPanelID = " & Me![NGSPanelID] & " WHERE ExomeTestID = " & ExomeTestID
-    DoCmd.SetWarnings False
-    DoCmd.RunSQL sql1
-    DoCmd.SetWarnings True
+    'Set extended panel options based on referral type
+    If ReferralID = 1199901211 Then 'Renal
+        subpanelCode = "68"
+    ElseIf ReferralID = 1199901212 Then 'Skeletal
+        subpanelCode = "68" '///////UPDATE TO CORRECT CODE WHEN SUBPANELS CREATED///////
+    Else 'DevDel
+        subpanelCode = "68" '///////UPDATE TO CORRECT CODE WHEN SUBPANELS CREATED///////
+    End If
+    extPanelRowSource = "SELECT NGSPanel.NGSPanelID AS Expr1, NGSPanel.PanelCode AS Expr2, NGSPanel.Panel AS Expr3 FROM NGSPanel WHERE NGSPanel.Subpanel = " & subpanelCode & " ORDER BY NGSPanel.[NGSPanelID];"
+    ExtendedPanelCombo.RowSource = extPanelRowSource
+
 End Sub
 
 Private Sub addGene_Click()
-    Dim sql2 As String
+    Dim sqlPanel As String
+    Dim sqlGeneIns As String
+    Dim rs As ADODB.Recordset
 
-    'Add selected gene to gene panel
     If Not IsNull(Me![GeneSymbol]) Then
-        sql2 = "INSERT INTO NGSPanelGenes ( NGSPanelID, symbol, HGNCID) VALUES (" & Me![NGSPanelID] & ", '" & Me![GeneSymbol] & "', '" & Me![GeneSymbol].Column(1) & "')"
-        DoCmd.SetWarnings False
-        DoCmd.RunSQL sql2
-        DoCmd.SetWarnings True
-        Me![GenePanelListBox].Value = Null
-        Me![GenePanelListBox].Requery
-        Me![GeneSymbol] = Null
+        'Check that gene hasn't already been added to panel
+        sqlPanel = "SELECT * FROM NGSPanelGenes WHERE HGNCID = '" & Me![GeneSymbol].Column(1) & "' AND NGSPanelID = " & Me![NGSPanelID]
+        Set rs = New ADODB.Recordset
+        rs.Open sqlPanel, CurrentProject.Connection, adOpenKeyset
+        If rs.EOF Then
+            'Add selected gene to gene panel
+            sqlGeneIns = "INSERT INTO NGSPanelGenes ( NGSPanelID, symbol, HGNCID) VALUES (" & Me![NGSPanelID] & ", '" & Me![GeneSymbol] & "', '" & Me![GeneSymbol].Column(1) & "')"
+            DoCmd.SetWarnings False
+            DoCmd.RunSQL sqlGeneIns
+            DoCmd.SetWarnings True
+            Me![GenePanelListBox].Value = Null
+            Me![GenePanelListBox].Requery
+            Me![GeneSymbol] = Null
+        Else
+            MsgBox "Gene has already been added to panel", vbInformation, "Gene Already Added"
+        End If
     End If
+    Me![GeneSymbol].SetFocus
 End Sub
 
 Private Sub GeneSymbol_NotInList(NewData As String, Response As Integer)
@@ -80,19 +99,32 @@ Private Sub HGNCLaunch_Click()
 End Sub
 
 Private Sub removeGene_Click()
-    Dim sql3 As String
+    Dim sqlDelGene As String
     'If no gene is selected, display error message
     If IsNull(Me![GenePanelListBox].Value) Then
         MsgBox "No gene selected.", vbExclamation, "No Gene Selected"
     'Delete gene from panel and update list box
     Else
-        sql3 = "DELETE FROM NGSPanelGenes WHERE NGSPanelGenesID = " & Me![GenePanelListBox].Value
+        sqlDelGene = "DELETE FROM NGSPanelGenes WHERE NGSPanelGenesID = " & Me![GenePanelListBox].Value
         DoCmd.SetWarnings False
-        DoCmd.RunSQL sql3
+        DoCmd.RunSQL sqlDelGene
         DoCmd.SetWarnings True
         Me![GenePanelListBox].Value = Null
         Me![GenePanelListBox].Requery
     End If
+    Me![GeneSymbol].SetFocus
+End Sub
+
+Private Sub Clear_Click()
+    Dim sqlDelAll As String
+    'Delete all genes from panel and update list box
+    sqlDelAll = "DELETE FROM NGSPanelGenes WHERE NGSPanelID = " & Me![NGSPanelID]
+    DoCmd.SetWarnings False
+    DoCmd.RunSQL sqlDelAll
+    DoCmd.SetWarnings True
+    Me![GenePanelListBox].Value = Null
+    Me![GenePanelListBox].Requery
+    Me![GeneSymbol].SetFocus
 End Sub
 
 Private Sub ExtendedPanelCombo_NotInList(NewData As String, Response As Integer)
@@ -112,30 +144,44 @@ Private Sub ExtendedPanelCombo_AfterUpdate()
 End Sub
 
 Private Sub SubmitButton_Click()
-    Dim sql4 As String
-    Dim sql5 As String
+    Dim sqlUpdatePan As String
+    Dim sqlUpdateExt As String
+    Dim sqlPatLog As String
     Dim d As String
     Dim un As String
     Dim cn As String
 
-    'Add Extended NGSPanelID to ExomeTest record
-    If Not IsNull(Me![ExtendedPanelCombo]) Then
-        sql4 = "UPDATE ExomeTest SET ExtendedPanelID = " & Me![ExtendedPanelCombo] & " WHERE ExomeTestID = " & ExomeTestID
+    'Check genes have been selected for analysis
+    If Me![GenePanelListBox].ListCount = 0 And IsNull(Me![ExtendedPanelCombo]) Then
+        MsgBox "No genes selected for analysis." & vbNewLine & "Please create a primary gene panel and/or select an extended panel before submitting.", vbExclamation, "No Genes Selected"
+    Else
+        'Add Primary NGSPanelID to ExomeTest record
+        If Me![GenePanelListBox].ListCount <> 0 Then
+            sqlUpdatePan = "UPDATE ExomeTest SET NGSPanelID = " & Me![NGSPanelID] & " WHERE ExomeTestID = " & ExomeTestID
+            DoCmd.SetWarnings False
+            DoCmd.RunSQL sqlUpdatePan
+            DoCmd.SetWarnings True
+        End If
+
+        'Add Extended NGSPanelID to ExomeTest record
+        If Not IsNull(Me![ExtendedPanelCombo]) Then
+            sqlUpdateExt = "UPDATE ExomeTest SET ExtendedPanelID = " & Me![ExtendedPanelCombo] & " WHERE ExomeTestID = " & ExomeTestID
+            DoCmd.SetWarnings False
+            DoCmd.RunSQL sqlUpdateExt
+            DoCmd.SetWarnings True
+        End If
+
+        'Insert record of Exome test request into patient log
+        d = Format(Now(), "dd/mmm/yyyy Hh:Nn:ss")
+        un = VBA.Environ("USERNAME")
+        cn = VBA.Environ("COMPUTERNAME")
+        sqlPatLog = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" & internalPatID & ", 'NGS: " & Referral & " test request added. Main panel: " & Me![PanelCode] & ". Extended panel: " & Me![ExtendedPanelCode] & "',#" + d + "#,'" + un + "','" + cn + "')"
         DoCmd.SetWarnings False
-        DoCmd.RunSQL sql4
+        DoCmd.RunSQL sqlPatLog
         DoCmd.SetWarnings True
+
+        'Display message and close form
+        MsgBox "Exome test request submitted." & vbNewLine & vbNewLine & "Pending authorisation.", vbInformation, "Test Request Submitted"
+        DoCmd.Close
     End If
-
-    'Insert record of Exome test request into patient log
-    d = Format(Now(), "dd/mmm/yyyy Hh:Nn:ss")
-    un = VBA.Environ("USERNAME")
-    cn = VBA.Environ("COMPUTERNAME")
-    sql5 = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" & internalPatID & ", 'NGS: " & Referral & " test request added. Main panel: " & Me![PanelCode] & ". Extended panel: " & Me![ExtendedPanelCode] & "',#" + d + "#,'" + un + "','" + cn + "')"
-    DoCmd.SetWarnings False
-    DoCmd.RunSQL sql5
-    DoCmd.SetWarnings True
-
-    'Display message and close form
-    MsgBox "Exome test request submitted." & vbNewLine & vbNewLine & "Pending authorisation.", vbInformation, "Test Request Submitted"
-    DoCmd.Close
 End Sub

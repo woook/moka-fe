@@ -36,7 +36,7 @@ Private Sub NextButton_Click()
     Dim internalPatID As String
     Dim patientID_PRU As String
     Dim rs As ADODB.Recordset
-    Dim sql1 As String
+    Dim sqlPatID As String
 
     'Check Referral type and Phenotype info entered
     If Me![PhenotipsTick] = 0 Then
@@ -52,8 +52,8 @@ Private Sub NextButton_Click()
 
         'Retrieve InternalPatientID from Moka patients table
         Set rs = New ADODB.Recordset
-        sql1 = "SELECT InternalPatientID FROM Patients WHERE PatientID = '" & patientID_PRU & "'"
-        rs.Open sql1, CurrentProject.Connection, adOpenKeyset
+        sqlPatID = "SELECT InternalPatientID FROM Patients WHERE PatientID = '" & patientID_PRU & "'"
+        rs.Open sqlPatID, CurrentProject.Connection, adOpenKeyset
         If Not rs.EOF Then
             Me![InternalPatientID] = rs!InternalPatientID
             Set rs = Nothing
