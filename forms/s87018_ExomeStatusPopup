@@ -19,8 +19,12 @@ Private Sub Form_Load()
     Me![PRUNum] = openArgs(1)
     Me![Surname] = openArgs(2)
     Me![Forename] = openArgs(3)
-    Me![DoB] = openArgs(4)
-    Me![Gender] = openArgs(5)
+    Me![DOB] = openArgs(4)
+    If openArgs(5) <> "" Then
+        Me![Gender] = openArgs(5)
+    Else
+        Me![Gender] = "Unknown"
+    End If
     Me![Referral] = openArgs(6)
     Me![Date] = Format(openArgs(7), "dd/mm/yyyy")
     Me![Initials] = openArgs(8)

@@ -3,7 +3,7 @@ Option Compare Database
 Function showPopup()
     'Show detailed test info in popup window
     If Not IsNull(Me![NGSTestID]) Then
-        DoCmd.OpenForm "s87018_ExomeStatusPopup", , , , acFormAdd, , Me.NGSTestID & ", " & Me.PatientID & ", " & Me.BookinLastName & ", " & Me.BookinFirstName & ", " & Me.BookinDOB & ", " & Me.BookinSex & ", " & Me.Referral & ", " & Me.DateRequested & ", " & Me.RefName & ", " & Me.Status
+        DoCmd.OpenForm "s87018_ExomeStatusPopup", , , , acFormAdd, , Me.NGSTestID & ", " & Me.PatientTrustID & ", " & Me.LastName & ", " & Me.FirstName & ", " & Me.DOB & ", " & Me.Gender & ", " & Me.Referral & ", " & Me.DateRequested & ", " & Me.RefName & ", " & Me.Status
     End If
 End Function
 
