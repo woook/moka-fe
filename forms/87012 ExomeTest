@@ -12,7 +12,8 @@ Private Sub PhenotipsLaunch_Click()
     'Launch Phenotips in firefox
     url = "http://10.188.197.57:8080/phenotips/bin/"
     pathFireFox = "C:\Program Files (x86)\Mozilla Firefox\firefox.exe"
-    If Dir(pathFireFox) = "" Then pathFireFox = "C:\Program Files\Mozilla Firefox\firefox.exe"
+    If Dir(pathFireFox) = "" Then
+        pathFireFox = "C:\Program Files\Mozilla Firefox\firefox.exe"
     If Dir(pathFireFox) = "" Then
         MsgBox "FireFox path not found," & vbNewLine & "FireFox required to launch Phenotips.", vbCritical, "ERROR"
         Exit Sub
@@ -24,6 +25,7 @@ Private Sub ReferralID_NotInList(NewData As String, Response As Integer)
     'Replaces default error message if referal type not in list
     MsgBox "Invalid referral type. Please select from the dropdown list", vbExclamation, "Select Referral Type"
     Response = acDataErrContinue
+    Me![ReferralID] = Null
 End Sub
 
 Private Sub NextButton_Click()
@@ -43,6 +45,7 @@ Private Sub NextButton_Click()
     Else
         'Change to save to True so exome test record is created
         save = True
+
         'PRU will be passed from Amy's form.
         patientID_PRU = Me.openArgs
 

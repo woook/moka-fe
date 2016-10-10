@@ -44,41 +44,34 @@ End Sub
 Private Sub addGene_Click()
     Dim rs As ADODB.Recordset
     Dim sql2 As String
-    Dim sql3 As String
 
-    'Retrieve HGNCID for gene symbol entered
-    Set rs = New ADODB.Recordset
-    sql2 = "SELECT HGNCID FROM GenesHGNC_150205 WHERE ApprovedSymbol = '" & Me![GeneSymbol] & "'"
-    rs.Open sql2, CurrentProject.Connection, adOpenKeyset
+    'Add selected gene to gene panel
+    sql2 = "INSERT INTO NGSPanelGenes ( NGSPanelID, symbol, HGNCID) VALUES (" & Me![NGSPanelID] & ", '" & Me![GeneSymbol] & "', '" & Me![GeneSymbol].Column(1) & "')"
+    DoCmd.SetWarnings False
+    DoCmd.RunSQL sql2
+    DoCmd.SetWarnings True
+    Me![GenePanelListBox].Value = Null
+    Me![GenePanelListBox].Requery
+    Me![GeneSymbol] = Null
+End Sub
 
-    'If gene symbol not found in approved HGNC list, display error message
-    If rs.EOF Then
-        MsgBox "Gene symbol not found in approved list. Could not add to panel.", vbExclamation, "Gene Not Found"
-    'If gene symbol found in approved list, add gene to panel and display in list box.
-    ElseIf rs.RecordCount = 1 Then
-        sql3 = "INSERT INTO NGSPanelGenes ( NGSPanelID, symbol, HGNCID) VALUES (" & Me![NGSPanelID] & ", '" & Me![GeneSymbol] & "', '" & rs!HGNCID & "')"
-        DoCmd.SetWarnings False
-        DoCmd.RunSQL sql3
-        DoCmd.SetWarnings True
-        Me![GenePanelListBox].Value = Null
-        Me![GenePanelListBox].Requery
-        Me![GeneSymbol] = Null
-    Else
-        MsgBox "More than one gene found with that symbol. Could not add to panel", vbCritical, "ERROR"
-    End If
-    Set rs = Nothing
+Private Sub GeneSymbol_NotInList(NewData As String, Response As Integer)
+    'Replaces default error message if gene not in list
+    MsgBox "Gene symbol not recognised. Please enter approved gene symbol from dropdown list.", vbExclamation, "Gene Not Found"
+    Response = acDataErrContinue
+    Me![GeneSymbol] = Null
 End Sub
 
 Private Sub removeGene_Click()
-    Dim sql4 As String
+    Dim sql3 As String
     'If no gene is selected, display error message
     If IsNull(Me![GenePanelListBox].Value) Then
         MsgBox "No gene selected.", vbExclamation, "No Gene Selected"
     'Delete gene from panel and update list box
     Else
-        sql4 = "DELETE FROM NGSPanelGenes WHERE NGSPanelGenesID = " & Me![GenePanelListBox].Value
+        sql3 = "DELETE FROM NGSPanelGenes WHERE NGSPanelGenesID = " & Me![GenePanelListBox].Value
         DoCmd.SetWarnings False
-        DoCmd.RunSQL sql4
+        DoCmd.RunSQL sql3
         DoCmd.SetWarnings True
         Me![GenePanelListBox].Value = Null
         Me![GenePanelListBox].Requery
@@ -89,6 +82,7 @@ Private Sub ExtendedPanelCombo_NotInList(NewData As String, Response As Integer)
     'Replaces default error message if referal type not in list
     MsgBox "Gene panel not recognised. Please select from the dropdown list", vbExclamation, "Select Extended Gene Panel"
     Response = acDataErrContinue
+    Me!ExtendedPanelCombo = Null
 End Sub
 
 Private Sub ExtendedPanelCombo_AfterUpdate()
