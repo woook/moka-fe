@@ -11,37 +11,34 @@ End Sub
 
 Private Sub Form_Load()
     Dim openArgs() As String
-    Dim testID As String
+    Dim TestID As String
     Dim listboxNum As Integer
 
     openArgs = Split(Me.openArgs, ", ")
-    testID = openArgs(0)
+    TestID = openArgs(0)
     Me![PRUNum] = openArgs(1)
     Me![Surname] = openArgs(2)
     Me![Forename] = openArgs(3)
-    Me![DOB] = openArgs(4)
+    Me![DoB] = openArgs(4)
     Me![Gender] = openArgs(5)
     Me![Referral] = openArgs(6)
-    Me![Date] = openArgs(7)
+    Me![Date] = Format(openArgs(7), "dd/mm/yyyy")
     Me![Initials] = openArgs(8)
     Me![Status] = openArgs(9)
 
-    'Me![PanelA].RowSource = "SELECT GenesHGNC_current.ApprovedSymbol AS Symbol, GenesHGNC_current.ApprovedName AS Name FROM GenesHGNC_current INNER JOIN ((NGSTest INNER JOIN NGSPanelGenes ON NGSTest.NGSPanelID = NGSPanelGenes.NGSPanelID) INNER JOIN NGSPanel ON NGSTest.NGSPanelID = NGSPanel.NGSPanelID) ON GenesHGNC_current.HGNCID = NGSPanelGenes.HGNCID WHERE (((NGSTest.NGSTestID) = " & testID & "))ORDER BY NGSPanelGenes.Symbol;"
-    'Me![PanelB].RowSource = "SELECT GenesHGNC_current.ApprovedSymbol AS Symbol, GenesHGNC_current.ApprovedName AS Name FROM GenesHGNC_current INNER JOIN ((NGSTest INNER JOIN NGSPanelGenes ON NGSTest.NGSPanelID_B = NGSPanelGenes.NGSPanelID) INNER JOIN NGSPanel ON NGSTest.NGSPanelID_B = NGSPanel.NGSPanelID) ON GenesHGNC_current.HGNCID = NGSPanelGenes.HGNCID WHERE (((NGSTest.NGSTestID) = " & testID & ")) ORDER BY NGSPanelGenes.Symbol;"
-
     sqlRowSourceA = "SELECT NGSTestPanelSelection.NGSTestPanelSelectionID, 'Panel' As Type, NGSPanel.PanelCode AS Code, NGSPanel.Panel AS Name " _
                  & "FROM NGSPanel INNER JOIN NGSTestPanelSelection ON NGSPanel.NGSPanelID = cInt(NGSTestPanelSelection.SelectionID) " _
-                 & "WHERE NGSTestPanelSelection.SelectionType = 1 AND NGSTestPanelSelection.NGSTestID = " & testID & " AND NGSTestPanelSelection.AnalysisAB = 1 " _
+                 & "WHERE NGSTestPanelSelection.SelectionType = 1 AND NGSTestPanelSelection.NGSTestID = " & TestID & " AND NGSTestPanelSelection.AnalysisAB = 1 " _
                  & "UNION SELECT NGSTestPanelSelection.NGSTestPanelSelectionID, 'Gene' As Type, GenesHGNC_current.ApprovedSymbol AS Code, GenesHGNC_current.ApprovedName AS Name " _
                  & "FROM GenesHGNC_current INNER JOIN NGSTestPanelSelection ON GenesHGNC_current.HGNCID = NGSTestPanelSelection.SelectionID " _
-                 & "WHERE NGSTestPanelSelection.SelectionType = 2 AND NGSTestPanelSelection.NGSTestID = " & testID & " And NGSTestPanelSelection.AnalysisAB = 1 ORDER BY Type DESC"
+                 & "WHERE NGSTestPanelSelection.SelectionType = 2 AND NGSTestPanelSelection.NGSTestID = " & TestID & " And NGSTestPanelSelection.AnalysisAB = 1 ORDER BY Type DESC"
 
     sqlRowSourceB = "SELECT NGSTestPanelSelection.NGSTestPanelSelectionID, 'Panel' As Type, NGSPanel.PanelCode AS Code, NGSPanel.Panel AS Name " _
                  & "FROM NGSPanel INNER JOIN NGSTestPanelSelection ON NGSPanel.NGSPanelID = cInt(NGSTestPanelSelection.SelectionID) " _
-                 & "WHERE NGSTestPanelSelection.SelectionType = 1 AND NGSTestPanelSelection.NGSTestID = " & testID & " AND NGSTestPanelSelection.AnalysisAB = 2 " _
+                 & "WHERE NGSTestPanelSelection.SelectionType = 1 AND NGSTestPanelSelection.NGSTestID = " & TestID & " AND NGSTestPanelSelection.AnalysisAB = 2 " _
                  & "UNION SELECT NGSTestPanelSelection.NGSTestPanelSelectionID, 'Gene' As Type, GenesHGNC_current.ApprovedSymbol AS Code, GenesHGNC_current.ApprovedName AS Name " _
                  & "FROM GenesHGNC_current INNER JOIN NGSTestPanelSelection ON GenesHGNC_current.HGNCID = NGSTestPanelSelection.SelectionID " _
-                 & "WHERE NGSTestPanelSelection.SelectionType = 2 AND NGSTestPanelSelection.NGSTestID = " & testID & " And NGSTestPanelSelection.AnalysisAB = 2 ORDER BY Type DESC"
+                 & "WHERE NGSTestPanelSelection.SelectionType = 2 AND NGSTestPanelSelection.NGSTestID = " & TestID & " And NGSTestPanelSelection.AnalysisAB = 2 ORDER BY Type DESC"
 
     Me![PanelA].RowSource = sqlRowSourceA
     Me![PanelB].RowSource = sqlRowSourceB
