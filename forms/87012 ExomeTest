@@ -102,14 +102,11 @@ End Sub
 
 Private Sub Form_Unload(Cancel As Integer)
     Dim sqlDelTest As String
-    Dim d As String
-    Dim un As String
-    Dim cn As String
     'Display warning message and delete created records if user chooses to exit without submitting
     If Not save Then
         If MsgBox("Are you sure you want to exit before submitting exome test request?" & vbNewLine & vbNewLine & "All changes will be lost", vbYesNo + vbExclamation, "Confirm Exit") = vbNo Then
             Cancel = True
-        Else
+        Else 'If user selects Yes to exit
             'Delete ExomeTest record if already created
             sqlDelTest = "DELETE FROM ExomeTest WHERE ExomeTestID = " & Me![ExomeTestID]
             If Not IsNull(Me![ExomeTestID]) Then

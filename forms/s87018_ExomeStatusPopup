@@ -1,0 +1,9 @@
+Option Compare Database
+
+Private Sub Close_Click()
+    DoCmd.Close
+End Sub
+
+Private Sub Email_Click()
+    Application.FollowHyperlink "mailto:dnadutyscientist@viapath.co.uk?subject=WES enquiry for " & Me![PRUNum]
+End Sub

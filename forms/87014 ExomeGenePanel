@@ -80,6 +80,14 @@ Private Function refreshListBox(panel As String)
     Me.Controls(listbox).Requery
 End Function
 
+Private Sub OrderAZ_A_Click()
+    Call refreshListBox("A")
+End Sub
+
+Private Sub OrderAZ_B_Click()
+    Call refreshListBox("B")
+End Sub
+
 Private Function newGenePanel(panel As String, Optional omitGeneID As Variant = Null)
     'Takes "A" or "B" as argument to determine which panel to update
     'Optionally takes ID of a gene to omit when copying genes from existing panel to new panel (used when remove gene clicked)
@@ -96,6 +104,7 @@ Private Function newGenePanel(panel As String, Optional omitGeneID As Variant = 
     Dim newPanelID As Integer
     Dim newPanelCode As String
 
+    'Create new panel name
     todayDate = Format(Now(), "yymmdd")
     todayLongDate = Format(Now(), "dd/mmm/yyyy Hh:Nn:ss")
     newPanelName = referrerInitials & "_" & patientID_PRU & "_" & todayDate & "_" & panel
@@ -115,7 +124,7 @@ Private Function newGenePanel(panel As String, Optional omitGeneID As Variant = 
     DoCmd.SetWarnings True
     If panel = "A" Then
         If PanelID_A Then
-            'Copy genes from the previously selected panel into the new panel
+            'If there's already a panelID copy genes from the previously selected panel into the new panel
             sqlAddPanel = "INSERT INTO NGSPanelGenes ( NGSPanelID, symbol, HGNCID) SELECT " & newPanelID & ", symbol, HGNCID FROM NGSPanelGenes WHERE NGSPanelID = " & PanelID_A
             If omitGeneID Then
                 sqlAddPanel = sqlAddPanel & " AND NGSPanelGenesID <> " & omitGeneID
@@ -160,7 +169,7 @@ Private Sub AddPanelA_Click()
             PanelID_A = Me![SubpanelA]
             Me![PanelCodeA] = Me![SubpanelA].Column(1)
             Me![PanelA] = Me![SubpanelA].Column(2)
-        'If there are already genes in the panel, add the new panel to it
+        'Else if there are already genes in the panel, add the new panel to it
         ElseIf Me![SubpanelA] <> PanelID_A Then
             'If the panel is not already a custom panel, create a custom panel and add the existing genes to it
             If Not customPanelID_A Then
@@ -189,7 +198,7 @@ Private Sub AddPanelB_Click()
             PanelID_B = Me![SubpanelB]
             Me![PanelCodeB] = Me![SubpanelB].Column(1)
             Me![PanelB] = Me![SubpanelB].Column(2)
-        'If there are already genes in the panel, add the new panel to it
+        'Else if there are already genes in the panel, add the new panel to it
         ElseIf Me![SubpanelB] <> PanelID_B Then
             'If the panel is not already a custom panel, create a custom panel and add the existing genes to it
             If Not customPanelID_B Then
@@ -214,6 +223,7 @@ Private Sub addGeneA_Click()
     Dim rs As ADODB.Recordset
 
     If Not IsNull(Me![GeneSymbolA]) Then
+        'If a custom panel has not already been created, create one
         If Not customPanelID_A Then
             Call newGenePanel("A")
         End If
@@ -243,6 +253,7 @@ Private Sub addGeneB_Click()
     Dim rs As ADODB.Recordset
 
     If Not IsNull(Me![GeneSymbolB]) Then
+        'If a custom panel has not already been created, create one
         If Not customPanelID_B Then
             Call newGenePanel("B")
         End If
@@ -280,23 +291,18 @@ Private Sub GeneSymbolB_NotInList(NewData As String, Response As Integer)
     Me![GeneSymbolB] = Null
 End Sub
 
-Private Sub OrderAZ_A_Click()
-    Call refreshListBox("A")
-End Sub
-
-Private Sub OrderAZ_B_Click()
-    Call refreshListBox("B")
-End Sub
 
 Private Sub RemoveGeneA_Click()
     Dim sqlDelGene As String
     'If no gene is selected, display error message
     If IsNull(Me![GenePanelListBoxA].Value) Then
         MsgBox "No gene selected.", vbExclamation, "No Gene Selected"
-    'Delete gene from panel and update list box
+    'Else delete selected gene from panel and update list box
     Else
+        'If the current panel is not a custom panel, copy all the genes from current panel except the selected gene into new custom gene panel
         If Not customPanelID_A Then
-            Call newGenePanel("A", Me![GenePanelListBoxA].Value) 'Set to custom panel if not already
+            Call newGenePanel("A", Me![GenePanelListBoxA].Value)
+        'Else delete the selected gene from the custom panel
         Else
             sqlDelGene = "DELETE FROM NGSPanelGenes WHERE NGSPanelGenesID = " & Me![GenePanelListBoxA].Value
             DoCmd.SetWarnings False
@@ -304,6 +310,7 @@ Private Sub RemoveGeneA_Click()
             DoCmd.SetWarnings True
         End If
         Call refreshListBox("A")
+        'If the removed gene was the only gene in the panel, reset to an empty panel
         If Me![GenePanelListBoxA].ListCount = 0 Then
             PanelID_A = Null
             Me![PanelCodeA] = Null
@@ -319,10 +326,12 @@ Private Sub RemoveGeneB_Click()
     'If no gene is selected, display error message
     If IsNull(Me![GenePanelListBoxB].Value) Then
         MsgBox "No gene selected.", vbExclamation, "No Gene Selected"
-    'Delete gene from panel and update list box
+    'Else delete selected gene from panel and update list box
     Else
+        'If the current panel is not a custom panel, copy all the genes from current panel except the selected gene into new custom gene panel
         If Not customPanelID_B Then
-            Call newGenePanel("B", Me![GenePanelListBoxB].Value) 'Set to custom panel if not already
+            Call newGenePanel("B", Me![GenePanelListBoxB].Value)
+        'Else delete the selected gene from the custom panel
         Else
             sqlDelGene = "DELETE FROM NGSPanelGenes WHERE NGSPanelGenesID = " & Me![GenePanelListBoxB].Value
             DoCmd.SetWarnings False
@@ -330,6 +339,7 @@ Private Sub RemoveGeneB_Click()
             DoCmd.SetWarnings True
         End If
         Call refreshListBox("B")
+        'If the removed gene was the only gene in the panel, reset form to an empty panel
         If Me![GenePanelListBoxB].ListCount = 0 Then
             PanelID_B = Null
             Me![PanelCodeB] = Null
@@ -343,8 +353,8 @@ End Sub
 Private Sub RemoveAllA_Click()
     Dim sqlDelAll As String
     Dim sqlDelPanel As String
+    'If a custom panel has been created, delete panel and panel genes and update list box
     If customPanelID_A Then
-        'Delete all genes from panel and update list box
         sqlDelAll = "DELETE FROM NGSPanelGenes WHERE NGSPanelID = " & PanelID_A
         sqlDelPanel = "DELETE FROM NGSPanel WHERE NGSPanelID = " & PanelID_A
         DoCmd.SetWarnings False
@@ -352,6 +362,7 @@ Private Sub RemoveAllA_Click()
         DoCmd.RunSQL sqlDelPanel
         DoCmd.SetWarnings True
     End If
+    'Reset form to empty panel
     PanelID_A = Null
     Me![PanelCodeA] = Null
     Me![PanelA] = Null
@@ -363,8 +374,8 @@ End Sub
 Private Sub RemoveAllB_Click()
     Dim sqlDelAll As String
     Dim sqlDelPanel As String
+    'If a custom panel has been created, delete panel and panel genes and update list box
     If customPanelID_B Then
-        'Delete all genes from panel and update list box
         sqlDelAll = "DELETE FROM NGSPanelGenes WHERE NGSPanelID = " & PanelID_B
         sqlDelPanel = "DELETE FROM NGSPanel WHERE NGSPanelID = " & PanelID_B
         DoCmd.SetWarnings False
@@ -372,6 +383,7 @@ Private Sub RemoveAllB_Click()
         DoCmd.RunSQL sqlDelPanel
         DoCmd.SetWarnings True
     End If
+    'Reset form to empty panel
     PanelID_B = Null
     Me![PanelCodeB] = Null
     Me![PanelB] = Null
@@ -383,7 +395,7 @@ End Sub
 Private Sub HGNCLaunch_Click()
     Dim url As String
     Dim pathFireFox As String
-    'Launch Phenotips in firefox
+    'Launch HGNC website in firefox
     url = "http://www.genenames.org/"
     pathFireFox = "C:\Program Files (x86)\Mozilla Firefox\firefox.exe"
     If Dir(pathFireFox) = "" Then
@@ -397,14 +409,14 @@ Private Sub HGNCLaunch_Click()
 End Sub
 
 Private Sub SubpanelA_NotInList(NewData As String, Response As Integer)
-    'Replaces default error message if referal type not in list
+    'Replaces default error message if gene panel not in list
     MsgBox "Gene panel not recognised. Please select from the dropdown list", vbExclamation, "Select Gene Panel"
     Response = acDataErrContinue
     Me!SubpanelA = Null
 End Sub
 
 Private Sub SubpanelB_NotInList(NewData As String, Response As Integer)
-    'Replaces default error message if referal type not in list
+    'Replaces default error message if gene panel not in list
     MsgBox "Gene panel not recognised. Please select from the dropdown list", vbExclamation, "Select Gene Panel"
     Response = acDataErrContinue
     Me!SubpanelB = Null
@@ -419,8 +431,8 @@ Private Sub SubmitButton_Click()
     Dim un As String
     Dim cn As String
 
-    'Check there are genes in the primary panel (header row included in listcount so check value is greater than 1)
-    If Me![GenePanelListBoxA].ListCount <= 1 Then
+    'Check there are genes in the primary panel
+    If Me![GenePanelListBoxA].ListCount <= 1 Then '(header row included in listcount so row count must be greater than 1)
         MsgBox "No genes selected for the primary gene panel." & vbNewLine & "Please create a primary gene panel before submitting.", vbExclamation, "No Primary Gene Panel Selected"
     Else
         'Add Primary NGSPanelID to ExomeTest record
@@ -429,8 +441,8 @@ Private Sub SubmitButton_Click()
         DoCmd.RunSQL sqlUpdatePanA
         DoCmd.SetWarnings True
 
-        'Add Secondary NGSPanelID to ExomeTest record if genes added (header row included in listcount so check value is greater than 1)
-        If Me![GenePanelListBoxB].ListCount > 1 Then
+        'Check if secondary panel selected and add NGSPanelID to ExomeTest record
+        If Me![GenePanelListBoxB].ListCount > 1 Then '(header row included in listcount so check value is greater than 1)
             sqlUpdatePanB = "UPDATE ExomeTest SET NGSPanelID_B = " & PanelID_B & " WHERE ExomeTestID = " & ExomeTestID
             DoCmd.SetWarnings False
             DoCmd.RunSQL sqlUpdatePanB
@@ -486,7 +498,7 @@ Private Sub Form_Unload(Cancel As Integer)
     If Not save Then
         If MsgBox("Are you sure you want to exit before submitting exome test request?" & vbNewLine & vbNewLine & "All changes will be lost", vbYesNo + vbExclamation, "Confirm Exit") = vbNo Then
             Cancel = True
-        Else
+        Else 'If user selects Yes to exit
             'Delete ExomeTest record
             sqlDelTest = "DELETE FROM ExomeTest WHERE ExomeTestID = " & ExomeTestID
             'Delete created gene panel + genes

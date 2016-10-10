@@ -1,0 +1,37 @@
+Option Compare Database
+
+Function showPopup()
+    'Show detailed test info in popup window
+    If Not IsNull(Me![ExomeTestID]) Then
+        DoCmd.OpenForm "ExomeStatusPopup"
+    End If
+End Function
+
+Private Sub BookinFirstName_DblClick(Cancel As Integer)
+    Call showPopup
+End Sub
+
+Private Sub BookinLastName_DblClick(Cancel As Integer)
+    Call showPopup
+End Sub
+
+Private Sub Form_DblClick(Cancel As Integer)
+    Call showPopup
+End Sub
+
+Private Sub Initials_DblClick(Cancel As Integer)
+    Call showPopup
+End Sub
+
+Private Sub PatientID_DblClick(Cancel As Integer)
+    Call showPopup
+End Sub
+
+
+Private Sub RequestedDate_DblClick(Cancel As Integer)
+    Call showPopup
+End Sub
+
+Private Sub Status_DblClick(Cancel As Integer)
+    Call showPopup
+End Sub
