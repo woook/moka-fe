@@ -118,13 +118,13 @@ Private Function newGenePanel(panelSuffix As String) As Integer
     Dim sqlAddCategory As String
     Dim itemCat As Integer
     Dim sqlAddSubCategory As String
-    Dim category As String
-    Dim subcategory As String
+    Dim Category As String
+    Dim SubCategory As String
     Dim categoryID As Integer
     Dim subcategoryID As Integer
     Dim newPanelName As String
     Dim todayDate As String
-    Dim todayLongDate As Date
+    Dim todayLongDate As String
     Dim sqlCreatePanel As String
     Dim sqlUpdateCode As String
     Dim newPanelCode As String
@@ -132,19 +132,19 @@ Private Function newGenePanel(panelSuffix As String) As Integer
     'Determine new panel categories/name
     todayDate = Format(Now(), "yymmdd")
     todayLongDate = Format(Now(), "dd/mmm/yyyy Hh:Nn:ss")
-    category = referrerInitials
-    subcategory = patientID_PRU & "_" & todayDate & "_" & panelSuffix
-    newPanelName = category & " - " & subcategory
+    Category = referrerInitials
+    SubCategory = patientID_PRU & "_" & todayDate & "_" & panelSuffix
+    newPanelName = Category & " - " & SubCategory
 
     'Check if referring clinician Initials already in Item table. If not, add them. Get catgeory ID.
     Set rsCheckCat = New ADODB.Recordset
-    sqlCheckCategory = "SELECT ItemID FROM Item WHERE Item = '" & category & "'"
+    sqlCheckCategory = "SELECT ItemID FROM Item WHERE Item = '" & Category & "'"
     rsCheckCat.Open sqlCheckCategory, CurrentProject.Connection, adOpenKeyset
     If rsCheckCat.RecordCount > 0 Then
         categoryID = rsCheckCat.Fields("ItemID")
     Else
         Set rsAddCat = New ADODB.Recordset
-        sqlAddCategory = "INSERT INTO Item (Item, ItemCategoryIndex1ID) VALUES ('" & category & "', 48)"
+        sqlAddCategory = "INSERT INTO Item (Item, ItemCategoryIndex1ID) VALUES ('" & Category & "', 48)"
         rsAddCat.Open sqlAddCategory, CurrentProject.Connection, adOpenKeyset
         rsAddCat.Open "SELECT @@identity", CurrentProject.Connection, adOpenKeyset 'Get ID of new entry
         categoryID = rsAddCat.Fields(0).Value
@@ -154,7 +154,7 @@ Private Function newGenePanel(panelSuffix As String) As Integer
 
     'Check if subcategory already in Item table. If not, add it in. Get catgeory ID.
     Set rsCheckSubCat = New ADODB.Recordset
-    sqlCheckSubCat = "SELECT ItemID FROM Item WHERE Item = '" & subcategory & "'"
+    sqlCheckSubCat = "SELECT ItemID FROM Item WHERE Item = '" & SubCategory & "'"
     rsCheckSubCat.Open sqlCheckSubCat, CurrentProject.Connection, adOpenKeyset
     If rsCheckSubCat.RecordCount > 0 Then
         subcategoryID = rsCheckSubCat.Fields("ItemID")
@@ -165,7 +165,7 @@ Private Function newGenePanel(panelSuffix As String) As Integer
         Else
             itemCat = 49
         End If
-        sqlAddSubCategory = "INSERT INTO Item (Item, ItemCategoryIndex1ID) VALUES ('" & subcategory & "', " & itemCat & ")"
+        sqlAddSubCategory = "INSERT INTO Item (Item, ItemCategoryIndex1ID) VALUES ('" & SubCategory & "', " & itemCat & ")"
         rsAddSubCat.Open sqlAddSubCategory, CurrentProject.Connection, adOpenKeyset
         rsAddSubCat.Open "SELECT @@identity", CurrentProject.Connection, adOpenKeyset
         subcategoryID = rsAddSubCat.Fields(0).Value
@@ -398,7 +398,7 @@ Private Sub SubmitButton_Click()
     Dim sqlChangeStatus As String
     Dim sqlPatLogTest As String
     Dim sqlPatLogStatus As String
-    Dim d As String
+    Dim D As String
     Dim un As String
     Dim cn As String
     Dim rsInfo As ADODB.Recordset
@@ -514,11 +514,11 @@ Private Sub SubmitButton_Click()
             DoCmd.SetWarnings True
 
             'Insert record of Exome test request and status change into patient log
-            d = Format(Now(), "dd/mmm/yyyy Hh:Nn:ss")
+            D = Format(Now(), "dd/mmm/yyyy Hh:Nn:ss")
             un = VBA.Environ("USERNAME")
             cn = VBA.Environ("COMPUTERNAME")
-            sqlPatLogTest = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" & internalPatID & ", 'NGS: " & Referral & " test request added. Primary panel: " & panelID_A & ". Secondary panel: " & panelID_B & "',#" + d + "#,'" + un + "','" + cn + "')"
-            sqlPatLogStatus = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" & internalPatID & ", 'Patients: Status changed to NGS Pending ',#" + d + "#,'" + un + "','" + cn + "')"
+            sqlPatLogTest = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" & internalPatID & ", 'NGS: " & Referral & " test request added. Primary panel: " & panelID_A & ". Secondary panel: " & panelID_B & "',#" + D + "#,'" + un + "','" + cn + "')"
+            sqlPatLogStatus = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" & internalPatID & ", 'Patients: Status changed to NGS Pending ',#" + D + "#,'" + un + "','" + cn + "')"
             DoCmd.SetWarnings False
             DoCmd.RunSQL sqlPatLogTest
             DoCmd.RunSQL sqlPatLogStatus
@@ -529,56 +529,57 @@ Private Sub SubmitButton_Click()
             save = True
             DoCmd.Close
 
-            'Send email alert to each authorising clinician
-            'Retrieve patient and referrer info for inclusion in email
-            Set rsInfo = New ADODB.Recordset
-            sqlInfo = "SELECT Patients.BookinLastName, Patients.BookinFirstName, Patients.BookinDOB, Checker.Name " & _
-            "FROM (NGSTest INNER JOIN Patients ON NGSTest.InternalPatientID = Patients.InternalPatientID) INNER JOIN Checker ON NGSTest.BookBy = Checker.Check1ID " & _
-            "WHERE NGSTest.NGSTestID = " & NGSTestID
-            rsInfo.Open sqlInfo, CurrentProject.Connection, adOpenKeyset
-            'Retrieve email addresses for authorising clinicians
-            Set rsEmail = New ADODB.Recordset
-            sqlEmail = "SELECT Email FROM Checker WHERE Active = 2 AND Authoriser = 1 And Email IS NOT NULL"
-            rsEmail.Open sqlEmail, CurrentProject.Connection, adOpenKeyset
-            'Send email to each authoriser
-            With rsEmail
-                While (Not .EOF)
-                    Set iCfg = New CDO.Configuration
-                        With iCfg
-                            .Fields(cdoSMTPServer) = "relay.gstt.local"        '<---new smtp
-                            .Fields(cdoSMTPServerPort) = 25 ' typically
-                            .Fields(cdoSendUsingMethod) = cdoSendUsingPort
-                            .Fields(cdoSMTPConnectionTimeout) = 200
-                            .Fields.Update
-                        End With
-
-                        emailto = rsEmail("Email")
-                        'emailto = "andrew.bond5@nhs.net"
-                        subjectline = "APPROVAL REQUIRED - WES test order for patient " & patientID_PRU
-                        emailbody = "<font face='arial' size='3'><br />" _
-                                    & "New WES test request REQUIRES APPROVAL. <br /><br />" _
-                                    & "PRU: <b>" & patientID_PRU & "</b><br />" _
-                                    & "Patient Name: <b>" & rsInfo.Fields("BookinLastName") & ", " & rsInfo.Fields("BookinFirstName") & "</b><br />" _
-                                    & "Patient DOB: <b>" & rsInfo.Fields("BookinDOB") & "</b><br /><br />" _
-                                    & "WES test ordered by " & rsInfo.Fields("Name") & "<br /><br />" _
-                                    & "This is an automated alert from MOKA.<br />" _
-                                    & "Please do not reply to this email.</font>"
-                        Set iMsg = New CDO.Message
-                            With iMsg
-                                Set .Configuration = iCfg
-                                    .From = """Moka Alerts"" <moka.alerts@gstt.nhs.uk>"
-                                    .Sender = "moka.alerts@gstt.nhs.uk"
-                                    .ReplyTo = "DO NOT REPLY TO THIS MESSAGE"
-                                    .Subject = subjectline
-                                    .HTMLBody = emailbody
-                                    .to = emailto
-                                    .Send 'Send the email
+            If referrerID <> "1201865486" Then 'If it's not an external referral
+                'Send email alert to each authorising clinician
+                'Retrieve patient and referrer info for inclusion in email
+                Set rsInfo = New ADODB.Recordset
+                sqlInfo = "SELECT Patients.BookinLastName, Patients.BookinFirstName, Patients.BookinDOB, Checker.Name " & _
+                "FROM (NGSTest INNER JOIN Patients ON NGSTest.InternalPatientID = Patients.InternalPatientID) INNER JOIN Checker ON NGSTest.BookBy = Checker.Check1ID " & _
+                "WHERE NGSTest.NGSTestID = " & NGSTestID
+                rsInfo.Open sqlInfo, CurrentProject.Connection, adOpenKeyset
+                'Retrieve email addresses for authorising clinicians
+                Set rsEmail = New ADODB.Recordset
+                sqlEmail = "SELECT Email FROM Checker WHERE Authoriser = 2 And Email IS NOT NULL"
+                rsEmail.Open sqlEmail, CurrentProject.Connection, adOpenKeyset
+                'Send email to each authoriser
+                With rsEmail
+                    While (Not .EOF)
+                        Set iCfg = New CDO.Configuration
+                            With iCfg
+                                .Fields(cdoSMTPServer) = "relay.gstt.local"        '<---new smtp
+                                .Fields(cdoSMTPServerPort) = 25 ' typically
+                                .Fields(cdoSendUsingMethod) = cdoSendUsingPort
+                                .Fields(cdoSMTPConnectionTimeout) = 200
+                                .Fields.Update
                             End With
-                    .MoveNext
-                Wend
-            End With
-            Set rsEmail = Nothing
-            Set rsInfo = Nothing
+
+                            emailto = rsEmail("Email")
+                            subjectline = "APPROVAL REQUIRED - WES test order for patient " & patientID_PRU
+                            emailbody = "<font face='arial' size='3'><br />" _
+                                        & "New WES test request REQUIRES APPROVAL. <br /><br />" _
+                                        & "PRU: <b>" & patientID_PRU & "</b><br />" _
+                                        & "Patient Name: <b>" & rsInfo.Fields("BookinLastName") & ", " & rsInfo.Fields("BookinFirstName") & "</b><br />" _
+                                        & "Patient DOB: <b>" & rsInfo.Fields("BookinDOB") & "</b><br /><br />" _
+                                        & "WES test ordered by " & rsInfo.Fields("Name") & "<br /><br />" _
+                                        & "This is an automated alert from MOKA.<br />" _
+                                        & "Please do not reply to this email.</font>"
+                            Set iMsg = New CDO.Message
+                                With iMsg
+                                    Set .Configuration = iCfg
+                                        .From = """Moka Alerts"" <moka.alerts@gstt.nhs.uk>"
+                                        .Sender = "moka.alerts@gstt.nhs.uk"
+                                        .ReplyTo = "DO NOT REPLY TO THIS MESSAGE"
+                                        .Subject = subjectline
+                                        .HTMLBody = emailbody
+                                        .to = emailto
+                                        .Send 'Send the email
+                                End With
+                        .MoveNext
+                    Wend
+                End With
+                Set rsEmail = Nothing
+                Set rsInfo = Nothing
+            End If
         End If
         Set rs = Nothing
     End If
