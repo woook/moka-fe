@@ -53,7 +53,7 @@ Private Sub addGene_Click()
 
     'If gene symbol not found in approved HGNC list, display error message
     If rs.EOF Then
-        MsgBox "Gene symbol not found in approved list. Could not add to panel.", , ""
+        MsgBox "Gene symbol not found in approved list. Could not add to panel.", vbExclamation, "Gene Not Found"
     'If gene symbol found in approved list, add gene to panel and display in list box.
     ElseIf rs.RecordCount = 1 Then
         sql3 = "INSERT INTO NGSPanelGenes ( NGSPanelID, symbol, HGNCID) VALUES (" & Me![NGSPanelID] & ", '" & Me![GeneSymbol] & "', '" & rs!HGNCID & "')"
@@ -64,7 +64,7 @@ Private Sub addGene_Click()
         Me![GenePanelListBox].Requery
         Me![GeneSymbol] = Null
     Else
-        MsgBox "More than one gene found with that symbol. Could not add to panel", , "ERROR"
+        MsgBox "More than one gene found with that symbol. Could not add to panel", vbCritical, "ERROR"
     End If
     Set rs = Nothing
 End Sub
@@ -73,7 +73,7 @@ Private Sub removeGene_Click()
     Dim sql4 As String
     'If no gene is selected, display error message
     If IsNull(Me![GenePanelListBox].Value) Then
-        MsgBox "No gene selected", , ""
+        MsgBox "No gene selected.", vbExclamation, "No Gene Selected"
     'Delete gene from panel and update list box
     Else
         sql4 = "DELETE FROM NGSPanelGenes WHERE NGSPanelGenesID = " & Me![GenePanelListBox].Value
@@ -83,6 +83,12 @@ Private Sub removeGene_Click()
         Me![GenePanelListBox].Value = Null
         Me![GenePanelListBox].Requery
     End If
+End Sub
+
+Private Sub ExtendedPanelCombo_NotInList(NewData As String, Response As Integer)
+    'Replaces default error message if referal type not in list
+    MsgBox "Gene panel not recognised. Please select from the dropdown list", vbExclamation, "Select Extended Gene Panel"
+    Response = acDataErrContinue
 End Sub
 
 Private Sub ExtendedPanelCombo_AfterUpdate()
@@ -119,6 +125,6 @@ Private Sub SubmitButton_Click()
     DoCmd.SetWarnings True
 
     'Display message and close form
-    MsgBox "Exome test request submitted" & vbNewLine & vbNewLine & "Pending authorisation.", , ""
+    MsgBox "Exome test request submitted." & vbNewLine & vbNewLine & "Pending authorisation.", vbInformation, "Test Request Submitted"
     DoCmd.Close
 End Sub

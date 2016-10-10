@@ -20,6 +20,12 @@ Private Sub PhenotipsLaunch_Click()
     Shell """" & pathFireFox & """" & " -new-tab " & url, vbHide
 End Sub
 
+Private Sub ReferralID_NotInList(NewData As String, Response As Integer)
+    'Replaces default error message if referal type not in list
+    MsgBox "Invalid referral type. Please select from the dropdown list", vbExclamation, "Select Referral Type"
+    Response = acDataErrContinue
+End Sub
+
 Private Sub NextButton_Click()
     Dim exmTestID As String
     Dim refID As String
@@ -31,9 +37,9 @@ Private Sub NextButton_Click()
 
     'Check Referral type and Phenotype info entered
     If Me![PhenotipsTick] = 0 Then
-        MsgBox "Please tick to confirm phenotype information has been entered (using Phenotips) before continuing.", , ""
+        MsgBox "Please tick to confirm phenotype information has been entered (using Phenotips) before continuing.", vbExclamation, "Confirm Phenotype Entry"
     ElseIf IsNull(Me![ReferralID]) Then
-        MsgBox "Please select a referral type before continuing.", , ""
+        MsgBox "Please select a referral type before continuing.", vbExclamation, "Select Referral Type"
     Else
         'Change to save to True so exome test record is created
         save = True
