@@ -3,6 +3,11 @@ Private internalPatID As String
 Private ExomeTestID As String
 Private ReferralID As String
 Private Referral As String
+Private save As Boolean
+
+Private Sub Form_Open(Cancel As Integer)
+    save = False
+End Sub
 
 Private Sub Form_Load()
     Dim openArgs() As String
@@ -171,17 +176,68 @@ Private Sub SubmitButton_Click()
             DoCmd.SetWarnings True
         End If
 
-        'Insert record of Exome test request into patient log
+        'Change patient status from NGS Pending to NGS Pending
+        sqlChangeStatus = "UPDATE Patients SET s_StatusOverall = 1202218799 WHERE InternalPatientID = " & internalPatID
+        DoCmd.SetWarnings False
+        DoCmd.RunSQL sqlChangeStatus
+        DoCmd.SetWarnings True
+
+        'Insert record of Exome test request and status change into patient log
         d = Format(Now(), "dd/mmm/yyyy Hh:Nn:ss")
         un = VBA.Environ("USERNAME")
         cn = VBA.Environ("COMPUTERNAME")
-        sqlPatLog = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" & internalPatID & ", 'NGS: " & Referral & " test request added. Main panel: " & Me![PanelCode] & ". Extended panel: " & Me![ExtendedPanelCode] & "',#" + d + "#,'" + un + "','" + cn + "')"
+        sqlPatLogTest = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" & internalPatID & ", 'NGS: " & Referral & " test request added. Main panel: " & Me![PanelCode] & ". Extended panel: " & Me![ExtendedPanelCode] & "',#" + d + "#,'" + un + "','" + cn + "')"
+        sqlPatLogStatus = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" & internalPatID & ", 'Patients: Status changed to NGS Pending ',#" + d + "#,'" + un + "','" + cn + "')"
         DoCmd.SetWarnings False
-        DoCmd.RunSQL sqlPatLog
+        DoCmd.RunSQL sqlPatLogTest
+        DoCmd.RunSQL sqlPatLogStatus
         DoCmd.SetWarnings True
 
         'Display message and close form
         MsgBox "Exome test request submitted." & vbNewLine & vbNewLine & "Pending authorisation.", vbInformation, "Test Request Submitted"
+        save = True
         DoCmd.Close
+    End If
+End Sub
+
+Private Sub Cancel_Click()
+    'Triggers Form_Unload procedure
+    On Error GoTo ErrHandler
+    DoCmd.Close
+ErrHandler:
+    If Err.Number = 2501 Then
+        'Do nothing. Error indicates close was cancelled by user.
+    End If
+End Sub
+
+Private Sub Form_Unload(Cancel As Integer)
+    Dim sqlDelTest As String
+    Dim sqlDelGenes As String
+    Dim sqlDelPanel As String
+    Dim sqlChangeStatus As String
+    Dim sqlPatLogStatus As String
+    Dim d As String
+    Dim un As String
+    Dim cn As String
+    'Display warning message and delete created records if user chooses to exit without submitting
+    If Not save Then
+        If MsgBox("Are you sure you want to exit before submitting exome test request?" & vbNewLine & vbNewLine & "All changes will be lost", vbYesNo + vbExclamation, "Confirm Exit") = vbNo Then
+            Cancel = True
+        Else
+            'Delete ExomeTest record
+            sqlDelTest = "DELETE FROM ExomeTest WHERE ExomeTestID = " & ExomeTestID
+            'Delete created gene panel + genes
+            sqlDelGenes = "DELETE FROM NGSPanelGenes WHERE NGSPanelID = " & Me![NGSPanelID]
+            sqlDelPanel = "DELETE FROM NGSPanel WHERE NGSPanelID = " & Me![NGSPanelID]
+            DoCmd.SetWarnings False
+            If Not IsNull(ExomeTestID) Then
+                DoCmd.RunSQL sqlDelTest
+            End If
+            If Not IsNull(Me![NGSPanelID]) Then
+                DoCmd.RunSQL sqlDelGenes
+                DoCmd.RunSQL sqlDelPanel
+            End If
+            DoCmd.SetWarnings True
+        End If
     End If
 End Sub

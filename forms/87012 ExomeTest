@@ -2,6 +2,7 @@ Option Compare Database
 'save boolean used to determine whether exome test record is created when form closes
 'Save will only be set to True when user clicks 'Next' button, record won't be created if user exits window.
 Private save As Boolean
+
 Private Sub Form_Open(Cancel As Integer)
     save = False
 End Sub
@@ -30,13 +31,37 @@ Private Sub ReferralID_NotInList(NewData As String, Response As Integer)
 End Sub
 
 Private Sub NextButton_Click()
+    Dim patientID_PRU As String
     Dim exmTestID As String
     Dim refID As String
     Dim Referral As String
     Dim internalPatID As String
-    Dim patientID_PRU As String
     Dim rs As ADODB.Recordset
     Dim sqlPatID As String
+
+    'PRU will be passed from Amy's form.
+    patientID_PRU = Me.openArgs
+
+    'Retrieve InternalPatientID from Moka patients table
+    Set rs = New ADODB.Recordset
+    sqlPatID = "SELECT InternalPatientID FROM Patients WHERE PatientID = '" & patientID_PRU & "'"
+    rs.Open sqlPatID, CurrentProject.Connection, adOpenKeyset
+    If Not rs.EOF Then
+        Me![InternalPatientID] = rs!InternalPatientID
+        Set rs = Nothing
+    Else
+        MsgBox "Unable to proceed, cannot locate patient ID.", vbCritical, "ERROR"
+        Set rs = Nothing
+        DoCmd.Close acForm, Me.Name
+        Exit Sub
+    End If
+
+    'Set default values
+    Me![RequestedDate] = Format(Now(), "dd/mmm/yyyy Hh:Nn:ss")
+    Me![BookedByID] = 1201865468 'clinician code
+    Me![BookedBy] = VBA.Environ("USERNAME")
+    Me![StatusID] = 2 'pending
+    Me![Service] = -1
 
     'Check Referral type and Phenotype info entered
     If Me![PhenotipsTick] = 0 Then
@@ -44,46 +69,44 @@ Private Sub NextButton_Click()
     ElseIf IsNull(Me![ReferralID]) Then
         MsgBox "Please select a referral type before continuing.", vbExclamation, "Select Referral Type"
     Else
-        'Change to save to True so exome test record is created
-        save = True
-
-        'PRU will be passed from Amy's form.
-        patientID_PRU = Me.openArgs
-
-        'Retrieve InternalPatientID from Moka patients table
-        Set rs = New ADODB.Recordset
-        sqlPatID = "SELECT InternalPatientID FROM Patients WHERE PatientID = '" & patientID_PRU & "'"
-        rs.Open sqlPatID, CurrentProject.Connection, adOpenKeyset
-        If Not rs.EOF Then
-            Me![InternalPatientID] = rs!InternalPatientID
-            Set rs = Nothing
-        Else
-            MsgBox "Unable to proceed, cannot locate patient ID.", vbCritical, "ERROR"
-            Set rs = Nothing
-            DoCmd.Close acForm, Me.Name
-            Exit Sub
-        End If
-
-        'Set default values
-        Me![RequestedDate] = Format(Now(), "dd/mmm/yyyy Hh:Nn:ss")
-        Me![BookedByID] = 1201865468 'clinician code
-        Me![BookedBy] = VBA.Environ("USERNAME")
-        Me![StatusID] = 2 'pending
-        Me![Service] = -1
-
         'Close ExomeTest form. Open ExomeGenePanel form, pass PatientID_PRU and ExomeTestID as opening arguments.
         exmTestID = Me![ExomeTestID]
         refID = Me![ReferralID]
         Referral = Me![ReferralID].Column(1)
         internalPatID = Me![InternalPatientID]
+        save = True
         DoCmd.Close acForm, Me.Name
         DoCmd.OpenForm "ExomeGenePanel", , , , acFormAdd, , internalPatID & ", " & patientID_PRU & ", " & exmTestID & ", " & refID & ", " & Referral
     End If
 End Sub
 
-Private Sub Form_BeforeUpdate(Cancel As Integer)
-    'Prevents exome test record being created if user exits window rather than clicking 'Next'
+Private Sub Cancel_Click()
+    'Triggers Form_Unload procedure
+    On Error GoTo ErrHandler
+    DoCmd.Close
+ErrHandler:
+    If Err.Number = 2501 Then
+        'Do nothing. Error indicates close was cancelled by user.
+    End If
+End Sub
+
+Private Sub Form_Unload(Cancel As Integer)
+    Dim sqlDelTest As String
+    Dim d As String
+    Dim un As String
+    Dim cn As String
+    'Display warning message and delete created records if user chooses to exit without submitting
     If Not save Then
-        Me.Undo
+        If MsgBox("Are you sure you want to exit before submitting exome test request?" & vbNewLine & vbNewLine & "All changes will be lost", vbYesNo + vbExclamation, "Confirm Exit") = vbNo Then
+            Cancel = True
+        Else
+            'Delete ExomeTest record
+            sqlDelTest = "DELETE FROM ExomeTest WHERE ExomeTestID = " & Me![ExomeTestID]
+            If Not IsNull(Me![ExomeTestID]) Then
+                DoCmd.SetWarnings False
+                DoCmd.RunSQL sqlDelTest
+                DoCmd.SetWarnings True
+            End If
+        End If
     End If
 End Sub
