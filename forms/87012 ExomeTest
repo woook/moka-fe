@@ -1,40 +1,79 @@
-Private patientID_PRU As String
-
 Option Compare Database
-
-Private Sub Command6_Click()
-On Error GoTo Err_Command6_Click
-
-
-    Screen.PreviousControl.SetFocus
-    DoCmd.FindNext
-
-Exit_Command6_Click:
-    Exit Sub
-
-Err_Command6_Click:
-    MsgBox Err.Description
-    Resume Exit_Command6_Click
-
+'save boolean used to determine whether exome test record is created when form closes
+'Save will only be set to True when user clicks 'Next' button, record won't be created if user exits window.
+Private save As Boolean
+Private Sub Form_Open(Cancel As Integer)
+    save = False
 End Sub
 
-
-Private Sub Form_Load()
-    'patient ID and PRU will be passed from Amy's form
-    Me.InternalPatientID = 2136234956
-    patientID_PRU = "397327:02"
-    'Set default values
-    Me.RequestedDate = Now()
-    Me.BookedByID = 1201865468 'clinician code
-    Me.StatusID = 2 'pending
+Private Sub PhenotipsLaunch_Click()
+    Dim url As String
+    Dim pathFireFox As String
+    'Launch Phenotips in firefox
+    url = "http://10.188.197.57:8080/phenotips/bin/"
+    pathFireFox = "C:\Program Files (x86)\Mozilla Firefox\firefox.exe"
+    If Dir(pathFireFox) = "" Then pathFireFox = "C:\Program Files\Mozilla Firefox\firefox.exe"
+    If Dir(pathFireFox) = "" Then
+        MsgBox "FireFox path not found," & vbNewLine & "FireFox required to launch Phenotips.", vbCritical, "ERROR"
+        Exit Sub
+    End If
+    Shell """" & pathFireFox & """" & " -new-tab " & url, vbHide
 End Sub
 
 Private Sub NextButton_Click()
-    Dim ExomeTestID As String
-    ExomeTestID = Me.ExomeTestID
+    Dim exmTestID As String
+    Dim refID As String
+    Dim Referral As String
+    Dim internalPatID As String
+    Dim patientID_PRU As String
+    Dim rs As ADODB.Recordset
+    Dim sql1 As String
 
-    'Close ExomeTest form. Open ExomeGenePanel form, pass PatientID_PRU and ExomeTestID as opening arguments.
-    DoCmd.Close
-    DoCmd.OpenForm "ExomeGenePanel", , , , acFormAdd, , patientID_PRU & ", " & ExomeTestID
+    'Check Referral type and Phenotype info entered
+    If Me![PhenotipsTick] = 0 Then
+        MsgBox "Please tick to confirm phenotype information has been entered (using Phenotips) before continuing.", , ""
+    ElseIf IsNull(Me![ReferralID]) Then
+        MsgBox "Please select a referral type before continuing.", , ""
+    Else
+        'Change to save to True so exome test record is created
+        save = True
+        'PRU will be passed from Amy's form.
+        patientID_PRU = Me.openArgs
 
+        'Retrieve InternalPatientID from Moka patients table
+        Set rs = New ADODB.Recordset
+        sql1 = "SELECT InternalPatientID FROM Patients WHERE PatientID = '" & patientID_PRU & "'"
+        rs.Open sql1, CurrentProject.Connection, adOpenKeyset
+        If Not rs.EOF Then
+            Me![InternalPatientID] = rs!InternalPatientID
+            Set rs = Nothing
+        Else
+            MsgBox "Unable to proceed, cannot locate patient ID.", vbCritical, "ERROR"
+            Set rs = Nothing
+            DoCmd.Close acForm, Me.Name
+            Exit Sub
+        End If
+
+        'Set default values
+        Me![RequestedDate] = Format(Now(), "dd/mmm/yyyy Hh:Nn:ss")
+        Me![BookedByID] = 1201865468 'clinician code
+        Me![BookedBy] = VBA.Environ("USERNAME")
+        Me![StatusID] = 2 'pending
+        Me![Service] = -1
+
+        'Close ExomeTest form. Open ExomeGenePanel form, pass PatientID_PRU and ExomeTestID as opening arguments.
+        exmTestID = Me![ExomeTestID]
+        refID = Me![ReferralID]
+        Referral = Me![ReferralID].Column(1)
+        internalPatID = Me![InternalPatientID]
+        DoCmd.Close acForm, Me.Name
+        DoCmd.OpenForm "ExomeGenePanel", , , , acFormAdd, , internalPatID & ", " & patientID_PRU & ", " & exmTestID & ", " & refID & ", " & Referral
+    End If
+End Sub
+
+Private Sub Form_BeforeUpdate(Cancel As Integer)
+    'Prevents exome test record being created if user exits window rather than clicking 'Next'
+    If Not save Then
+        Me.Undo
+    End If
 End Sub
