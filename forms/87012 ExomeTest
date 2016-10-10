@@ -14,6 +14,7 @@ Private Sub PhenotipsLaunch_Click()
     pathFireFox = "C:\Program Files (x86)\Mozilla Firefox\firefox.exe"
     If Dir(pathFireFox) = "" Then
         pathFireFox = "C:\Program Files\Mozilla Firefox\firefox.exe"
+    End If
     If Dir(pathFireFox) = "" Then
         MsgBox "FireFox path not found," & vbNewLine & "FireFox required to launch Phenotips.", vbCritical, "ERROR"
         Exit Sub

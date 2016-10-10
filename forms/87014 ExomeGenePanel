@@ -42,17 +42,18 @@ Private Sub Form_Load()
 End Sub
 
 Private Sub addGene_Click()
-    Dim rs As ADODB.Recordset
     Dim sql2 As String
 
     'Add selected gene to gene panel
-    sql2 = "INSERT INTO NGSPanelGenes ( NGSPanelID, symbol, HGNCID) VALUES (" & Me![NGSPanelID] & ", '" & Me![GeneSymbol] & "', '" & Me![GeneSymbol].Column(1) & "')"
-    DoCmd.SetWarnings False
-    DoCmd.RunSQL sql2
-    DoCmd.SetWarnings True
-    Me![GenePanelListBox].Value = Null
-    Me![GenePanelListBox].Requery
-    Me![GeneSymbol] = Null
+    If Not IsNull(Me![GeneSymbol]) Then
+        sql2 = "INSERT INTO NGSPanelGenes ( NGSPanelID, symbol, HGNCID) VALUES (" & Me![NGSPanelID] & ", '" & Me![GeneSymbol] & "', '" & Me![GeneSymbol].Column(1) & "')"
+        DoCmd.SetWarnings False
+        DoCmd.RunSQL sql2
+        DoCmd.SetWarnings True
+        Me![GenePanelListBox].Value = Null
+        Me![GenePanelListBox].Requery
+        Me![GeneSymbol] = Null
+    End If
 End Sub
 
 Private Sub GeneSymbol_NotInList(NewData As String, Response As Integer)
@@ -60,6 +61,22 @@ Private Sub GeneSymbol_NotInList(NewData As String, Response As Integer)
     MsgBox "Gene symbol not recognised. Please enter approved gene symbol from dropdown list.", vbExclamation, "Gene Not Found"
     Response = acDataErrContinue
     Me![GeneSymbol] = Null
+End Sub
+
+Private Sub HGNCLaunch_Click()
+    Dim url As String
+    Dim pathFireFox As String
+    'Launch Phenotips in firefox
+    url = "http://www.genenames.org/"
+    pathFireFox = "C:\Program Files (x86)\Mozilla Firefox\firefox.exe"
+    If Dir(pathFireFox) = "" Then
+        pathFireFox = "C:\Program Files\Mozilla Firefox\firefox.exe"
+    End If
+    If Dir(pathFireFox) = "" Then
+        MsgBox "FireFox path not found," & vbNewLine & "FireFox required to launch HGNC.", vbCritical, "ERROR"
+        Exit Sub
+    End If
+    Shell """" & pathFireFox & """" & " -new-tab " & url, vbHide
 End Sub
 
 Private Sub removeGene_Click()
