@@ -1,0 +1,106 @@
+Option Compare Database
+
+Private Sub Command6_Click()
+On Error GoTo Err_Command6_Click
+
+
+    Screen.PreviousControl.SetFocus
+    DoCmd.FindNext
+
+Exit_Command6_Click:
+    Exit Sub
+
+Err_Command6_Click:
+    MsgBox Err.Description
+    Resume Exit_Command6_Click
+
+End Sub
+
+
+
+
+Private Sub Form_Load()
+    Dim openArgs() As String
+    Dim patientID_PRU As String
+    Dim ExomeTestID As String
+    Dim username As String
+    Dim todayDate As String
+    Dim panelName As String
+    Dim strSQL1 As String
+
+    'Assign default values
+    Me.Category = 692 'Clinician
+    Me.SubCategory = 693 'Candidate gene
+    Me.Checker1 = 1201865468 'Clinician
+    Me.CheckDate = Now()
+
+    'Retrieve PatientID_PRU and ExomeTestID passed from ExomeTest form
+    openArgs = Split(Me.openArgs, ", ")
+    patientID_PRU = openArgs(0)
+    ExomeTestID = openArgs(1)
+    'Set panel name
+    username = VBA.Environ("USERNAME")
+    todayDate = Format(Now(), "yymmdd")
+    panelName = username & "_" & patientID_PRU & "_" & todayDate
+    Me![Panel] = panelName
+
+    'Set panel code
+    Me![PanelCode] = "Pan" & Me.NGSPanelID
+
+    'Add NGSPanelID to ExomeTest record
+    strSQL1 = "UPDATE ExomeTest SET NGSPanelID = " & Me.NGSPanelID & " WHERE ExomeTestID = " & ExomeTestID
+    DoCmd.SetWarnings False
+    DoCmd.RunSQL strSQL1
+    DoCmd.SetWarnings True
+
+
+End Sub
+
+Private Sub addGene_Click()
+
+    Dim rs As DAO.Recordset
+    Dim db As Database
+    Dim GeneSymbol As String
+    Dim strSQL2 As String
+    Dim strSQL3 As String
+
+    'Retrieve HGNCID for gene symbol entered
+    Set db = CurrentDb
+    strSQL2 = "SELECT HGNCID FROM dbo_GenesHGNC_150205 WHERE ApprovedSymbol = '" & Me!GeneSymbol & "'"
+    Set rs = db.OpenRecordset(strSQL2)
+
+    'If gene symbol not found in approved HGNC list, display error message
+    If rs.EOF Then
+        MsgBox "Gene symbol not found in approved list", , ""
+    'If gene symbol found in approved list, add gene to panel and display in list box.
+    ElseIf rs.RecordCount = 1 Then
+        strSQL3 = "INSERT INTO dbo_NGSPanelGenes ( NGSPanelID, symbol, HGNCID) VALUES (Forms!ExomeGenePanel.NGSPanelID, Forms!ExomeGenePanel.GeneSymbol, '" & rs!HGNCID & "')"
+        DoCmd.SetWarnings False
+        DoCmd.RunSQL strSQL3
+        DoCmd.SetWarnings True
+
+        Me![GenePanelListBox].Value = Null
+        Me![GenePanelListBox].Requery
+        Me![GeneSymbol] = Null
+    Else
+        MsgBox "More than one gene found with that symbol. Could not add to panel", , ""
+    End If
+End Sub
+
+
+
+Private Sub removeGene_Click()
+    Dim strSQL4 As String
+    'If no gene is selected, display error message
+    If IsNull(Me![GenePanelListBox].Value) Then
+        MsgBox "No gene selected", , ""
+    'Delete gene from panel and update list box
+    Else
+        strSQL4 = "DELETE FROM dbo_NGSPanelGenes WHERE NGSPanelGenesID = " & Me![GenePanelListBox].Value
+        DoCmd.SetWarnings False
+        DoCmd.RunSQL strSQL4
+        DoCmd.SetWarnings True
+        Me![GenePanelListBox].Value = Null
+        Me![GenePanelListBox].Requery
+    End If
+End Sub

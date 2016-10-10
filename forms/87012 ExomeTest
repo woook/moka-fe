@@ -1,0 +1,40 @@
+Private patientID_PRU As String
+
+Option Compare Database
+
+Private Sub Command6_Click()
+On Error GoTo Err_Command6_Click
+
+
+    Screen.PreviousControl.SetFocus
+    DoCmd.FindNext
+
+Exit_Command6_Click:
+    Exit Sub
+
+Err_Command6_Click:
+    MsgBox Err.Description
+    Resume Exit_Command6_Click
+
+End Sub
+
+
+Private Sub Form_Load()
+    'patient ID and PRU will be passed from Amy's form
+    Me.InternalPatientID = 2136234956
+    patientID_PRU = "397327:02"
+    'Set default values
+    Me.RequestedDate = Now()
+    Me.BookedByID = 1201865468 'clinician code
+    Me.StatusID = 2 'pending
+End Sub
+
+Private Sub NextButton_Click()
+    Dim ExomeTestID As String
+    ExomeTestID = Me.ExomeTestID
+
+    'Close ExomeTest form. Open ExomeGenePanel form, pass PatientID_PRU and ExomeTestID as opening arguments.
+    DoCmd.Close
+    DoCmd.OpenForm "ExomeGenePanel", , , , acFormAdd, , patientID_PRU & ", " & ExomeTestID
+
+End Sub
