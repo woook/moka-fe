@@ -53,7 +53,7 @@ Private Sub NextButton_Click()
         Set rs = Nothing
         'Set default values
         Me![DateRequested] = Format(Now(), "dd/mmm/yyyy Hh:Nn:ss")
-        Me![StatusID] = 2 'pending
+        Me![StatusID] = 1202218801 'Approval pending
 
         'Check Referral type and Phenotype info entered
         If IsNull(Me![ReferralID]) Then
@@ -71,8 +71,7 @@ Private Sub NextButton_Click()
             Referral = Me![ReferralID].Column(1)
             internalPatID = Me![InternalPatientID]
             referrerID = Me![Clinician]
-            referrerInitialsFull = Me![Clinician].Column(2)
-            referrerInitials = Split(referrerInitialsFull, " ")(0) 'Strips "(clinic)" from end of initials
+            referrerInitials = Me![Clinician].Column(2)
             save = True 'So that record is saved
             DoCmd.Close acForm, Me.Name
             DoCmd.OpenForm "87014 ExomeGenePanel", , , , acFormAdd, , internalPatID & ", " & patientID_PRU & ", " & exmTestID & ", " & refID & ", " & Referral & ", " & referrerID & ", " & referrerInitials
