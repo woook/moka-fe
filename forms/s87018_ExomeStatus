@@ -1,0 +1,37 @@
+Option Compare Database
+
+Function showPopup()
+    'Show detailed test info in popup window
+    If Not IsNull(Me![NGSTestID]) Then
+        DoCmd.OpenForm "s87018_ExomeStatusPopup", , , , acFormAdd, , Me.NGSTestID & ", " & Me.PatientTrustID & ", " & Me.LastName & ", " & Me.FirstName & ", " & Me.DOB & ", " & Me.Gender & ", " & Me.Referral & ", " & Me.DateRequested & ", " & Me.RefName & ", " & Me.Status
+    End If
+End Function
+
+Private Sub BookinFirstName_DblClick(Cancel As Integer)
+    Call showPopup
+End Sub
+
+Private Sub BookinLastName_DblClick(Cancel As Integer)
+    Call showPopup
+End Sub
+
+Private Sub Form_DblClick(Cancel As Integer)
+    Call showPopup
+End Sub
+
+Private Sub Initials_DblClick(Cancel As Integer)
+    Call showPopup
+End Sub
+
+Private Sub PatientID_DblClick(Cancel As Integer)
+    Call showPopup
+End Sub
+
+
+Private Sub RequestedDate_DblClick(Cancel As Integer)
+    Call showPopup
+End Sub
+
+Private Sub Status_DblClick(Cancel As Integer)
+    Call showPopup
+End Sub
