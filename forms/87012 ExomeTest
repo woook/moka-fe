@@ -1,0 +1,107 @@
+Option Compare Database
+'save boolean will only be set to True when user clicks 'Next' button, record won't be created if user exits window any other way.
+Private save As Boolean
+
+Private Sub Form_Open(Cancel As Integer)
+    save = False
+End Sub
+
+Private Sub ReferralID_NotInList(NewData As String, Response As Integer)
+    'Replaces default error message if referal type not in list
+    MsgBox "Invalid referral type. Please select from the dropdown list.", vbExclamation, "Select Referral Type"
+    Response = acDataErrContinue
+    Me![ReferralID] = Null
+End Sub
+
+Private Sub Clinician_NotInList(NewData As String, Response As Integer)
+    'Replaces default error message if referal type not in list
+    MsgBox "Referring clinician name not recognised. Please select a name from the dropdown list.", vbExclamation, "Select Referring Clinician"
+    Response = acDataErrContinue
+    Me![ReferralID] = Null
+End Sub
+
+Private Sub PhenotipsLaunch_Click()
+    Call firefoxurl("http://10.188.197.57:8080/phenotips/bin/")
+End Sub
+
+Private Sub NextButton_Click()
+    Dim patientID_PRU As String
+    Dim exmTestID As String
+    Dim refID As String
+    Dim Referral As String
+    Dim internalPatID As String
+    Dim rs As ADODB.Recordset
+    Dim sqlPatID As String
+    Dim referrerID As String
+    Dim referrerInitials As String
+    Dim referrerInitialsFull As String
+
+    'PRU will be passed from Amy's form.
+    patientID_PRU = Me.openArgs
+
+    'Retrieve InternalPatientID from Moka patients table
+    Set rs = New ADODB.Recordset
+    sqlPatID = "SELECT InternalPatientID FROM Patients WHERE PatientID = '" & patientID_PRU & "'"
+    rs.Open sqlPatID, CurrentProject.Connection, adOpenKeyset
+
+    If rs.EOF Then
+        MsgBox "Unable to proceed, cannot locate patient ID.", vbCritical, "ERROR"
+        Set rs = Nothing
+        DoCmd.Close acForm, Me.Name
+    Else
+        Me![InternalPatientID] = rs!InternalPatientID
+        Set rs = Nothing
+        'Set default values
+        Me![DateRequested] = Format(Now(), "dd/mmm/yyyy Hh:Nn:ss")
+        Me![StatusID] = 1202218801 'Approval pending
+
+        'Check Referral type and Phenotype info entered
+        If IsNull(Me![ReferralID]) Then
+            MsgBox "Please select a referral type before continuing.", vbExclamation, "Select Referral Type"
+        ElseIf Me![PhenotipsTick] = 0 Then
+            MsgBox "Please tick to confirm phenotype information has been entered (using Phenotips) before continuing.", vbExclamation, "Confirm Phenotype Entry"
+        ElseIf IsNull(Me![Clinician]) Then
+            MsgBox "Please select referring clinician name before continuing.", vbExclamation, "Select Name"
+        Else
+            'Save record
+            DoCmd.DoMenuItem acFormBar, acRecordsMenu, 5, , acMenuVer70
+            'Close ExomeTest form. Open ExomeGenePanel form, pass PatientID_PRU and NGSTestID as opening arguments.
+            exmTestID = Me![NGSTestID]
+            refID = Me![ReferralID]
+            Referral = Me![ReferralID].Column(1)
+            internalPatID = Me![InternalPatientID]
+            referrerID = Me![Clinician]
+            referrerInitials = Me![Clinician].Column(2)
+            save = True 'So that record is saved
+            DoCmd.Close acForm, Me.Name
+            DoCmd.OpenForm "87014 ExomeGenePanel", , , , acFormAdd, , internalPatID & ", " & patientID_PRU & ", " & exmTestID & ", " & refID & ", " & Referral & ", " & referrerID & ", " & referrerInitials
+        End If
+    End If
+End Sub
+
+Private Sub Cancel_Click()
+    'Triggers Form_Unload procedure. Suppress error message that appears if close event cancelled by user.
+    On Error GoTo ErrHandler
+    DoCmd.Close
+ErrHandler:
+    If Err.Number = 2501 Then 'Do nothing. Error indicates close was cancelled by user.
+    End If
+End Sub
+
+Private Sub Form_Unload(Cancel As Integer)
+    Dim sqlDelTest As String
+    'Display warning message and delete created records if user chooses to exit without submitting
+    If Not save Then
+        If MsgBox("Are you sure you want to exit before submitting exome test request?" & vbNewLine & vbNewLine & "All changes will be lost", vbYesNo + vbExclamation, "Confirm Exit") = vbNo Then
+            Cancel = True
+        Else 'If user selects Yes to exit
+            'Delete NGSTest record if already created
+            sqlDelTest = "DELETE FROM NGSTest WHERE NGSTestID = " & Me![NGSTestID]
+            If Not IsNull(Me![NGSTestID]) Then
+                DoCmd.SetWarnings False
+                DoCmd.RunSQL sqlDelTest
+                DoCmd.SetWarnings True
+            End If
+        End If
+    End If
+End Sub

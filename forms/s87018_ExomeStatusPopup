@@ -1,0 +1,63 @@
+Option Compare Database
+
+Private Sub Close_Click()
+    DoCmd.Close
+End Sub
+
+Private Sub Email_Click()
+    Application.FollowHyperlink "mailto:dnadutyscientist@viapath.co.uk?subject=WES enquiry for " & Me![PRUNum]
+End Sub
+
+
+Private Sub Form_Load()
+    Dim openArgs() As String
+    Dim TestID As String
+    Dim listboxNum As Integer
+
+    openArgs = Split(Me.openArgs, ", ")
+    TestID = openArgs(0)
+    Me![PRUNum] = openArgs(1)
+    Me![Surname] = openArgs(2)
+    Me![Forename] = openArgs(3)
+    Me![DOB] = openArgs(4)
+    If openArgs(5) <> "" Then
+        Me![Gender] = openArgs(5)
+    Else
+        Me![Gender] = "Unknown"
+    End If
+    Me![Referral] = openArgs(6)
+    Me![Date] = Format(openArgs(7), "dd/mm/yyyy")
+    Me![Initials] = openArgs(8)
+    Me![Status] = openArgs(9)
+
+    sqlRowSourceA = "SELECT NGSTestPanelSelection.NGSTestPanelSelectionID, 'Panel' As Type, NGSPanel.PanelCode AS Code, NGSPanel.Panel AS Name " _
+                 & "FROM NGSPanel INNER JOIN NGSTestPanelSelection ON NGSPanel.NGSPanelID = cInt(NGSTestPanelSelection.SelectionID) " _
+                 & "WHERE NGSTestPanelSelection.SelectionType = 1 AND NGSTestPanelSelection.NGSTestID = " & TestID & " AND NGSTestPanelSelection.AnalysisAB = 1 " _
+                 & "UNION SELECT NGSTestPanelSelection.NGSTestPanelSelectionID, 'Gene' As Type, GenesHGNC_current.ApprovedSymbol AS Code, GenesHGNC_current.ApprovedName AS Name " _
+                 & "FROM GenesHGNC_current INNER JOIN NGSTestPanelSelection ON GenesHGNC_current.HGNCID = NGSTestPanelSelection.SelectionID " _
+                 & "WHERE NGSTestPanelSelection.SelectionType = 2 AND NGSTestPanelSelection.NGSTestID = " & TestID & " And NGSTestPanelSelection.AnalysisAB = 1 ORDER BY Type DESC"
+
+    sqlRowSourceB = "SELECT NGSTestPanelSelection.NGSTestPanelSelectionID, 'Panel' As Type, NGSPanel.PanelCode AS Code, NGSPanel.Panel AS Name " _
+                 & "FROM NGSPanel INNER JOIN NGSTestPanelSelection ON NGSPanel.NGSPanelID = cInt(NGSTestPanelSelection.SelectionID) " _
+                 & "WHERE NGSTestPanelSelection.SelectionType = 1 AND NGSTestPanelSelection.NGSTestID = " & TestID & " AND NGSTestPanelSelection.AnalysisAB = 2 " _
+                 & "UNION SELECT NGSTestPanelSelection.NGSTestPanelSelectionID, 'Gene' As Type, GenesHGNC_current.ApprovedSymbol AS Code, GenesHGNC_current.ApprovedName AS Name " _
+                 & "FROM GenesHGNC_current INNER JOIN NGSTestPanelSelection ON GenesHGNC_current.HGNCID = NGSTestPanelSelection.SelectionID " _
+                 & "WHERE NGSTestPanelSelection.SelectionType = 2 AND NGSTestPanelSelection.NGSTestID = " & TestID & " And NGSTestPanelSelection.AnalysisAB = 2 ORDER BY Type DESC"
+
+    Me![PanelA].RowSource = sqlRowSourceA
+    Me![PanelB].RowSource = sqlRowSourceB
+End Sub
+
+Private Sub PanelA_DblClick(Cancel As Integer)
+    'Displays popup with gene list for selected panel
+    If Me![PanelA].Column(1) = "Panel" Then
+        DoCmd.OpenForm "s87014_ExomeGenePanelPopup", , , , acFormAdd, , Me![PanelA].Column(2) & ", " & Me![PanelA].Column(3) & ", " & Me![PanelA].Column(0)
+    End If
+End Sub
+
+Private Sub PanelB_DblClick(Cancel As Integer)
+    'Displays popup with gene list for selected panel
+    If Me![PanelB].Column(1) = "Panel" Then
+        DoCmd.OpenForm "s87014_ExomeGenePanelPopup", , , , acFormAdd, , Me![PanelB].Column(2) & ", " & Me![PanelB].Column(3) & ", " & Me![PanelB].Column(0)
+    End If
+End Sub

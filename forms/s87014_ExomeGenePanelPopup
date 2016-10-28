@@ -1,0 +1,15 @@
+Option Compare Database
+
+Private Sub Form_Load()
+    Dim openArgs() As String
+    openArgs = Split(Me.openArgs, ", ")
+    Me![PanelCode] = openArgs(0)
+    Me![PanelName] = openArgs(1)
+    Me![PanelGenes].RowSource = "SELECT GenesHGNC_current.ApprovedSymbol As Symbol, GenesHGNC_current.ApprovedName As Name " _
+                              & "FROM (NGSTestPanelSelection INNER JOIN NGSPanelGenes ON cInt(NGSTestPanelSelection.SelectionID) = NGSPanelGenes.NGSPanelID) INNER JOIN GenesHGNC_current ON NGSPanelGenes.HGNCID = GenesHGNC_current.HGNCID " _
+                              & "WHERE NGSTestPanelSelection.NGSTestPanelSelectionID = " & openArgs(2) 'openArgs(2) = PanelID
+End Sub
+
+Private Sub Close_Click()
+    DoCmd.Close
+End Sub

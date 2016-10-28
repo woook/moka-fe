@@ -1,0 +1,42 @@
+Private Sub Form_Load()
+    'So doesnt show records on form open
+    Dim sqlNull As String
+    sqlNull = "SELECT Null AS NGSTestID, Null AS PatientTrustID, Null AS LastName, Null AS FirstName, Null AS DOB, Null AS Gender, Null AS Referral, Null AS DateRequested, Null AS StatusID, Null AS Status, Null AS RefName, Null AS PanelA, Null AS PanelB;"
+    [Form_s87018_ExomeStatus].RecordSource = sqlNull
+End Sub
+
+Private Sub Search_Click()
+    Dim sqlInProgress As String
+    'Set subform RecordSet to retrieve all WES tests that match PRU number
+    If Not IsNull(Me![PatPRU]) Then
+        sqlSearchPatient = "SELECT NGSTest.NGSTestID, dbo_PatientLinked.PatientTrustID, dbo_PatientLinked.LastName, dbo_PatientLinked.FirstName, dbo_PatientLinked.DOB, dbo_PatientLinked.Gender, Referral.Referral, NGSTest.DateRequested, Status.StatusID, Status.Status, Checker.Name As RefName, NGSPanel.Panel AS PanelA, NGSPanel_1.Panel AS PanelB " & _
+        "FROM ((((((NGSTest INNER JOIN Patients ON NGSTest.InternalPatientID = Patients.InternalPatientID) LEFT JOIN dbo_PatientLinked ON Patients.PatientID = dbo_PatientLinked.PatientTrustID) INNER JOIN Referral ON Referral.ReferralID = NGSTest.ReferralID) INNER JOIN Checker ON NGSTest.BookBy = Checker.Check1ID) INNER JOIN NGSPanel ON NGSTest.NGSPanelID = NGSPanel.NGSPanelID) LEFT JOIN NGSPanel AS NGSPanel_1 ON NGSTest.NGSPanelID_B = NGSPanel_1.NGSPanelID) INNER JOIN Status ON NGSTest.StatusID = Status.StatusID " & _
+        "WHERE (((Patients.PatientID) Like [Forms]![87018 ExomeStatus].[PatPRU] & '*')) " & _
+        "ORDER BY NGSTest.DateRequested;"
+        [Form_s87018_ExomeStatus].Form.RecordSource = sqlSearchPatient
+    End If
+End Sub
+
+Private Sub AllInProgress_Click()
+    Dim sqlInProgress As String
+    'Set subform RecordSet to retrieve all in progress WES tests
+    sqlInProgress = "SELECT NGSTest.NGSTestID, dbo_PatientLinked.PatientTrustID, dbo_PatientLinked.LastName, dbo_PatientLinked.FirstName, dbo_PatientLinked.DOB, dbo_PatientLinked.Gender, Referral.Referral, NGSTest.DateRequested, Status.StatusID, Status.Status, Checker.Name As RefName, NGSPanel.Panel AS PanelA, NGSPanel_1.Panel AS PanelB " & _
+    "FROM ((((((NGSTest INNER JOIN Patients ON NGSTest.InternalPatientID = Patients.InternalPatientID) LEFT JOIN dbo_PatientLinked ON Patients.PatientID = dbo_PatientLinked.PatientTrustID) INNER JOIN Referral ON Referral.ReferralID = NGSTest.ReferralID) INNER JOIN Checker ON NGSTest.BookBy = Checker.Check1ID) INNER JOIN NGSPanel ON NGSTest.NGSPanelID = NGSPanel.NGSPanelID) LEFT JOIN NGSPanel AS NGSPanel_1 ON NGSTest.NGSPanelID_B = NGSPanel_1.NGSPanelID) INNER JOIN Status ON NGSTest.StatusID = Status.StatusID " & _
+    "WHERE Status.StatusID <> 4 And Status.StatusID <> 5 And Status.StatusID <> 1202218787 " & _
+    "ORDER BY NGSTest.DateRequested;"
+    [Form_s87018_ExomeStatus].Form.RecordSource = sqlInProgress
+End Sub
+
+Private Sub AllApproval_Click()
+    Dim sqlApproval As String
+    'Set subform RecordSet to retrieve all in progress WES tests
+    sqlApproval = "SELECT NGSTest.NGSTestID, dbo_PatientLinked.PatientTrustID, dbo_PatientLinked.LastName, dbo_PatientLinked.FirstName, dbo_PatientLinked.DOB, dbo_PatientLinked.Gender, Referral.Referral, NGSTest.DateRequested, Status.StatusID, Status.Status, Checker.Name As RefName, NGSPanel.Panel AS PanelA, NGSPanel_1.Panel AS PanelB " & _
+    "FROM ((((((NGSTest INNER JOIN Patients ON NGSTest.InternalPatientID = Patients.InternalPatientID) LEFT JOIN dbo_PatientLinked ON Patients.PatientID = dbo_PatientLinked.PatientTrustID) INNER JOIN Referral ON Referral.ReferralID = NGSTest.ReferralID) INNER JOIN Checker ON NGSTest.BookBy = Checker.Check1ID) INNER JOIN NGSPanel ON NGSTest.NGSPanelID = NGSPanel.NGSPanelID) LEFT JOIN NGSPanel AS NGSPanel_1 ON NGSTest.NGSPanelID_B = NGSPanel_1.NGSPanelID) INNER JOIN Status ON NGSTest.StatusID = Status.StatusID " & _
+    "WHERE Status.StatusID = 1202218801 " & _
+    "ORDER BY NGSTest.DateRequested;"
+    [Form_s87018_ExomeStatus].Form.RecordSource = sqlApproval
+End Sub
+
+Private Sub Close_Click()
+    DoCmd.Close
+End Sub
