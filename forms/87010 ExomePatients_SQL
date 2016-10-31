@@ -1,12 +1,4 @@
-Query 87010_ExomePatient
-SELECT dbo_PatientLinked.PatientID, dbo_PatientLinked.PatientTrustID, dbo_PatientLinked.FamilyTrustID, dbo_PatientLinked.LastName, dbo_PatientLinked.FirstName,dbo_PatientLinked.gender, dbo_PatientLinked.DoB, 'YES' AS DNARecorded
-FROM (dbo_PatientLinked LEFT JOIN dbo_SpecimenLinked ON dbo_PatientLinked.PatientID = dbo_SpecimenLinked.PatientID) LEFT JOIN dbo_DNANumber ON dbo_SpecimenLinked.SpecimenID = dbo_DNANumber.SpecimenID
-WHERE dbo_DNANumber.DNANo IS NOT NULL
-UNION SELECT  dbo_PatientLinked.PatientID, dbo_PatientLinked.PatientTrustID, dbo_PatientLinked.FamilyTrustID, dbo_PatientLinked.LastName, dbo_PatientLinked.FirstName,dbo_PatientLinked.gender, dbo_PatientLinked.DoB, "NO" AS DNARecorded
-FROM (dbo_PatientLinked LEFT JOIN dbo_SpecimenLinked ON dbo_PatientLinked.PatientID = dbo_SpecimenLinked.PatientID) LEFT JOIN dbo_DNANumber ON dbo_SpecimenLinked.SpecimenID = dbo_DNANumber.SpecimenID
-WHERE dbo_DNANumber.SpecimenID IS NULL;
-
 87010_ExomePatient List box:
-SELECT ExomePatient_DNAExist_All.PatientID, ExomePatient_DNAExist_All.PatientTrustID AS [Patient PRU], ExomePatient_DNAExist_All.FamilyTrustID, ExomePatient_DNAExist_All.LastName, ExomePatient_DNAExist_All.FirstName, ExomePatient_DNAExist_All.DoB, ExomePatient_DNAExist_All.gender AS Gender, ExomePatient_DNAExist_All.DNARecorded AS [DNA Record]
-FROM ExomePatient_DNAExist_All
-WHERE (((ExomePatient_DNAExist_All.FamilyTrustID)=[Forms]![ExomePatients]![txFamilyTrustID]));
+SELECT DISTINCT dbo_PatientLinked.PatientID, dbo_PatientLinked.PatientTrustID, dbo_PatientLinked.FamilyTrustID, dbo_PatientLinked.LastName, dbo_PatientLinked.FirstName, dbo_PatientLinked.Gender, dbo_PatientLinked.DoB, 'YES' AS DNARecorded
+FROM (dbo_PatientLinked INNER JOIN dbo_SpecimenLinked ON dbo_PatientLinked.PatientID = dbo_SpecimenLinked.PatientID) INNER JOIN dbo_DNANumber2016 ON dbo_SpecimenLinked.SpecimenID = dbo_DNANumber2016.SpecimenID
+WHERE (((dbo_PatientLinked.FamilyTrustID)=[Forms]![87010 ExomePatients]![txFamilyTrustID]));
