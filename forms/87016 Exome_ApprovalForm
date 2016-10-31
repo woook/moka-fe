@@ -22,6 +22,7 @@ Set rsUSR = db.OpenRecordset(strUSRSQL, dbOpenDynaset, dbSeeChanges)
 If rsUSR!Authoriser = 1 Then
     ' Debug.Print "Step: 2A"
     Me![txtbxUsrName] = rsUSR!Name
+    Me![btnClose].SetFocus
 Else
     msga = MsgBox("You do not authorisation to approve WES tests.", vbOKOnly + vbExclamation, "ATTENTION")
     DoCmd.Close acForm, "87016 Exome_approvalform", acSaveNo
@@ -32,6 +33,7 @@ rsUSR.Close
 Set rsUSR = Nothing    'Deassign all objects.
 Set db = Nothing
 ' Debug.Print "Step END"
+
 End Sub
 
 Private Sub btnApprove_Click()
@@ -45,6 +47,15 @@ Dim usr As String
 Dim dt As String
 Dim comp As String
 
+' email settings
+Dim iCfg As Object 'As CDO.Configuration
+Dim iMsg As Object 'As CDO.Message
+Dim flds As Object
+Dim emailto As String
+Dim subjectline As String
+Dim emailbody As String
+
+
 dt = Format(Now, "dd/mmm/yyyy Hh:Nn:ss")
 cmp = VBA.Environ("COMPUTERNAME")
 usr = VBA.Environ("USERNAME")
@@ -53,11 +64,41 @@ strAprovSQL = "SELECT NGSTest.InternalPatientID, Patients.PatientID, Patients.s_
               " FROM ((((Status INNER JOIN (Patients INNER JOIN NGSTest ON Patients.InternalPatientID = NGSTest.InternalPatientID) ON Status.StatusID = Patients.s_StatusOverall) INNER JOIN Referral ON NGSTest.ReferralID = Referral.ReferralID) LEFT JOIN NGSPanel ON NGSTest.NGSPanelID = NGSPanel.NGSPanelID) LEFT JOIN NGSPanel AS NGSPanel_1 ON NGSTest.NGSPanelID_B = NGSPanel_1.NGSPanelID) INNER JOIN Checker ON NGSTest.BookBy = Checker.Check1ID" & _
               " WHERE ((Patients.s_StatusOverall) = 1202218799)"
 ' SQL to get MOKA user ID number
-strUSRSQL = "SELECT Checker.Check1ID, Checker.Authoriser FROM Checker WHERE Checker.Username = '" + usr + "'"
+strUSRSQL = "SELECT Checker.Check1ID, Checker.Name FROM Checker WHERE Checker.Username = '" + usr + "'"
     ' Debug.Print strUSRSQL
 Set db = CurrentDb
 Set WESAprov = db.OpenRecordset(strAprovSQL, dbOpenDynaset, dbSeeChanges)
 Set rsUSR = db.OpenRecordset(strUSRSQL, dbOpenDynaset, dbSeeChanges)
+
+' ////////////////////// EMAIL TEST ////////////////////////////////////
+
+Set iCfg = CreateObject("CDO.Configuration")
+
+With iCfg
+    .Fields(cdoSMTPServer) = "relay.gstt.local"        '<---new smtp
+    .Fields(cdoSMTPServerPort) = 25 ' typically
+    .Fields(cdoSendUsingMethod) = cdoSendUsingPort
+    .Fields(cdoSMTPConnectionTimeout) = 200
+    .Fields.Update
+End With
+                'send confirmation email to referring clinician
+
+                emailto = "amy.slater@gstt.nhs.uk"
+                subjectline = "WES test order has been approved for patient"
+                emailbody = "<font face='arial' size='3'><br /><br />" _
+                            & "ARRAY RESULT<br /><br /><br />"
+                Set iMsg = CreateObject("CDO.Message")
+                    With iMsg
+                        Set .Configuration = iCfg
+                            .From = "TEST"
+                            .Sender = "amy.slater4@nhs.net"
+                            .ReplyTo = "amy.slater4@nhs.net"
+                            .Subject = subjectline
+                            .HTMLBody = emailbody
+                            .TO = emailto
+                            .BCC = "amy.slater4@nhs.net"
+                            .Send
+                    End With
 
 ' Loop through record set to identify and count if WES test has been selected for authorising - count total which have been 'approved'
 With WESAprov
@@ -122,6 +163,8 @@ rsUSR.Close
 Set WESAprov = Nothing
 Set rsUSR = Nothing
 Set db = Nothing
+Set iMsg = Nothing
+Set iCfg = Nothing
 End Sub
 
 
