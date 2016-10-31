@@ -105,16 +105,26 @@ Private Sub ListPatientFound_DblClick(Cancel As Integer)
             ElseIf mc = vbNo Then Exit Sub
             End If
 
-    ' If NGS has already been previously ordered or approved for patient, display error message
+    ' If NGS has already been previouly ordered or approved for patient, display error message
     ElseIf moka.RecordCount > 0 And moka!s_StatusOverall = 1202218799 Then
-        'CUSTOM EMAIL OPTION using VBA user form
-            ATTENTION_WES.Show
+        'EMAIL OPTION - defult msg box
+             msgd = MsgBox("WES has already been ordered for " & vbNewLine & vbNewLine & moka!PatientID & " " & gwks!FirstName & " " & gwks!LastName & vbNewLine & vbNewLine & "Would you like to email the lab duty scientist regarding this patient?", VbMsgBoxStyle.vbYesNo Or VbMsgBoxStyle.vbExclamation, "ATTENTION!")
+             If msgd = vbYes Then
+                Application.FollowHyperlink "mailto:dnadutyscientist@viapath.co.uk?subject=WES enquiry for " & moka!PatientID
+             Else
+                Exit Sub
+            End If
 
 
-  ' If NGS has already been ordered and approved for patient, display error message
-  ElseIf moka.RecordCount > 0 And moka!s_StatusOverall = 1202218798 Then
-            'CUSTOM EMAIL OPTION using VBA user form
-                ATTENTION_WES.Show
+
+    ElseIf moka.RecordCount > 0 And moka!s_StatusOverall = 1202218798 Then
+        ' EMAIL OPTION - defult msg box
+             msgd = MsgBox("WES has already been ordered for " & vbNewLine & vbNewLine & moka!PatientID & " " & gwks!FirstName & " " & gwks!LastName & vbNewLine & vbNewLine & "Would you like to email the lab duty scientist regarding this patient?", VbMsgBoxStyle.vbYesNo Or VbMsgBoxStyle.vbExclamation, "ATTENTION!")
+             If msgd = vbYes Then
+                Application.FollowHyperlink "mailto:dnadutyscientist@viapath.co.uk?subject=WES enquiry for " & moka!PatientID
+            Else
+                Exit Sub
+            End If
 
     End If
     End If
