@@ -1,0 +1,4 @@
+SELECT NGSTest.InternalPatientID, Patients.PatientID, dbo_Patient_table.LastName, dbo_Patient_table.FirstName, dbo_Patient_table.DoB, Patients.BookinSex AS Gender, Referral.Referral, NGSTest.DateRequested, Checker.Name AS [Referring Clinician], NGSTest.BookingAuthorisedByID, NGSTest.BookingAuthorisedDate, Checker.UserName AS ReferrerLogin
+FROM dbo_Patient_table INNER JOIN (((Status INNER JOIN (Patients INNER JOIN NGSTest ON Patients.InternalPatientID = NGSTest.InternalPatientID) ON Status.StatusID = Patients.s_StatusOverall) INNER JOIN Referral ON NGSTest.ReferralID = Referral.ReferralID) INNER JOIN Checker ON NGSTest.BookBy = Checker.Check1ID) ON dbo_Patient_table.PatientTrustID = Patients.PatientID
+WHERE (((NGSTest.StatusID)=1202218801) AND ((Patients.s_StatusOverall)=1202218799) AND ((Checker.Active)=2))
+ORDER BY NGSTest.DateRequested;

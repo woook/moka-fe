@@ -19,13 +19,13 @@ Set rsUSR = db.OpenRecordset(strUSRSQL, dbOpenDynaset, dbSeeChanges)
 ' Debug.Print "Step: 1"
 
 ' Validate that user have approveral rights
-If rsUSR!Authoriser = 1 Then
+If rsUSR!Authoriser = 1 Or rsUSR!Authoriser = 3 Then
     ' Debug.Print "Step: 2A"
     Me![txtbxUsrName] = rsUSR!Name
     Me![btnClose].SetFocus
 Else
-    msga = MsgBox("You do not authorisation to approve WES tests.", vbOKOnly + vbExclamation, "ATTENTION")
-    DoCmd.Close acForm, "87016 Exome_approvalform", acSaveNo
+    msga = MsgBox("You do not have authorisation to approve external WES test requests.", vbOKOnly + vbExclamation, "ATTENTION")
+    DoCmd.Close acForm, "87016 Exome_External_approvalform", acSaveNo
     ' Debug.Print "Step: No approval"
 End If
 
@@ -41,16 +41,16 @@ Private Sub btnApprove_Click()
 ' Update Patients status in Patients table to NGS
 ' Update NGSTest status = DNA QC, set approver ID and date to MOKA ID number and current date
 ' Up date patientLog Audit with user ID number and approval info
+
 Dim WESAprov As DAO.Recordset
 Dim rsUSR As DAO.Recordset
 Dim usr As String
 Dim dt As String
 Dim comp As String
 
-' email settings
-Dim iCfg As Object 'As CDO.Configuration
-Dim iMsg As Object 'As CDO.Message
-Dim flds As Object
+'//// EMAIL ////
+Dim iCfg As CDO.Configuration
+Dim iMsg As CDO.Message
 Dim emailto As String
 Dim subjectline As String
 Dim emailbody As String
@@ -59,48 +59,19 @@ Dim emailbody As String
 dt = Format(Now, "dd/mmm/yyyy Hh:Nn:ss")
 cmp = VBA.Environ("COMPUTERNAME")
 usr = VBA.Environ("USERNAME")
-'Debug.Print usr, dt
-strAprovSQL = "SELECT NGSTest.InternalPatientID, Patients.PatientID, Patients.s_StatusOverall, Patients.BookinLastName AS LastName, Patients.BookinFirstName AS FirstName, Patients.BookinDOB AS DoB, Patients.BookinSex AS Gender, Referral.Referral, NGSPanel.Panel AS PrimaryPannel, NGSPanel_1.Panel AS SecondaryPannel, NGSTest.DateRequested, Checker.Check1ID AS BookedInBy, Checker.Name, NGSTest.BookingAuthorisedByID, NGSTest.BookingAuthorisedDate" & _
-              " FROM ((((Status INNER JOIN (Patients INNER JOIN NGSTest ON Patients.InternalPatientID = NGSTest.InternalPatientID) ON Status.StatusID = Patients.s_StatusOverall) INNER JOIN Referral ON NGSTest.ReferralID = Referral.ReferralID) LEFT JOIN NGSPanel ON NGSTest.NGSPanelID = NGSPanel.NGSPanelID) LEFT JOIN NGSPanel AS NGSPanel_1 ON NGSTest.NGSPanelID_B = NGSPanel_1.NGSPanelID) INNER JOIN Checker ON NGSTest.BookBy = Checker.Check1ID" & _
-              " WHERE ((Patients.s_StatusOverall) = 1202218799)"
+
+strAprovSQL = "SELECT NGSTest.InternalPatientID, Patients.PatientID, dbo_Patient_table.LastName, dbo_Patient_table.FirstName, dbo_Patient_table.DoB, Patients.BookinSex AS Gender, Referral.Referral, NGSTest.DateRequested, NGSTest.BookingAuthorisedByID, NGSTest.BookingAuthorisedDate, Checker.UserName AS ReferrerLogin " & _
+              "FROM dbo_Patient_table INNER JOIN (((Status INNER JOIN (Patients INNER JOIN NGSTest ON Patients.InternalPatientID = NGSTest.InternalPatientID) ON Status.StatusID = Patients.s_StatusOverall) INNER JOIN Referral ON NGSTest.ReferralID = Referral.ReferralID) INNER JOIN Checker ON NGSTest.BookBy = Checker.Check1ID) ON dbo_Patient_table.PatientTrustID = Patients.PatientID " & _
+              "WHERE (((NGSTest.StatusID)=1202218801) AND ((Patients.s_StatusOverall)=1202218799) AND ((Checker.Active)=3))"
+
 ' SQL to get MOKA user ID number
 strUSRSQL = "SELECT Checker.Check1ID, Checker.Name FROM Checker WHERE Checker.Username = '" + usr + "'"
-    ' Debug.Print strUSRSQL
+     'Debug.Print strUSRSQL
 Set db = CurrentDb
 Set WESAprov = db.OpenRecordset(strAprovSQL, dbOpenDynaset, dbSeeChanges)
 Set rsUSR = db.OpenRecordset(strUSRSQL, dbOpenDynaset, dbSeeChanges)
 
-' ////////////////////// EMAIL TEST ////////////////////////////////////
-
-Set iCfg = CreateObject("CDO.Configuration")
-
-With iCfg
-    .Fields(cdoSMTPServer) = "relay.gstt.local"        '<---new smtp
-    .Fields(cdoSMTPServerPort) = 25 ' typically
-    .Fields(cdoSendUsingMethod) = cdoSendUsingPort
-    .Fields(cdoSMTPConnectionTimeout) = 200
-    .Fields.Update
-End With
-                'send confirmation email to referring clinician
-
-                emailto = "amy.slater@gstt.nhs.uk"
-                subjectline = "WES test order has been approved for patient"
-                emailbody = "<font face='arial' size='3'><br /><br />" _
-                            & "ARRAY RESULT<br /><br /><br />"
-                Set iMsg = CreateObject("CDO.Message")
-                    With iMsg
-                        Set .Configuration = iCfg
-                            .From = "TEST"
-                            .Sender = "amy.slater4@nhs.net"
-                            .ReplyTo = "amy.slater4@nhs.net"
-                            .Subject = subjectline
-                            .HTMLBody = emailbody
-                            .TO = emailto
-                            .BCC = "amy.slater4@nhs.net"
-                            .Send
-                    End With
-
-' Loop through record set to identify and count if WES test has been selected for authorising - count total which have been 'approved'
+'Loop through record set to identify and count if WES test has been selected for authorising - count total which have been 'approved'
 With WESAprov
     num = 0
     If Not .BOF And Not .EOF Then
@@ -135,11 +106,48 @@ If num > 0 Then
                 DoCmd.RunSQL strUpd8Pat
                 DoCmd.RunSQL strUpd8Exn
 
-            'Update patient log with change
-                strLogSQL = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" & WESAprov!BookingAuthorisedByID & ", 'NGS test Approved. Patients: status updated to NGS. NGSTest: status updated to DNA QC. ',#" + dt + "#,'" + usr + "','" + cmp + "')"
+        'Update patient log with change
+                strLogSQL = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" & WESAprov!InternalPatientID & ", 'NGS: APPROVED WES order - External Referral. Patients: status updated to NGS. NGSTest: status updated to DNA QC. ',#" + dt + "#,'" + usr + "','" + cmp + "')"
                 'Debug.Print strLogSQL
                 DoCmd.RunSQL strLogSQL
                 DoCmd.SetWarnings True
+
+        'Send confirmation email to duty scientist
+                Set iCfg = New CDO.Configuration
+                    With iCfg
+                        .Fields(cdoSMTPServer) = "relay.gstt.local"        '<---new smtp
+                        .Fields(cdoSMTPServerPort) = 25 ' typically
+                        .Fields(cdoSendUsingMethod) = cdoSendUsingPort
+                        .Fields(cdoSMTPConnectionTimeout) = 200
+                        .Fields.Update
+                    End With
+
+'\\\\\\\ CHANGE EMAIL \\\\\\\\
+                    emailto = "amy.slater@gstt.nhs.uk" '\\\\\\\\"dnadutyscientist@viapath.co.uk"
+                    PRU = WESAprov!PatientID
+                    subjectline = "WES test order has been APPROVED for patient " & PRU & " - External Referral"
+                    emailbody = "<font face='arial' size='3'><br />" _
+                                & "WES TEST APPROVED <br /><br />" _
+                                & "PRU: <b>" & PRU & "</b><br />" _
+                                & "Patient Name: <b>" & WESAprov!LastName & ", " & WESAprov!FirstName & "</b><br />" _
+                                & "Patient DOB: <b>" & WESAprov!DOB & "</b><br /><br />" _
+                                & "External referral WES test order has been approved by " & rsUSR!Name & "<br /><br />" _
+                                & "This is an automated alert from MOKA.<br />" _
+                                & "Please do not reply to this email.</font>"
+
+                    Set iMsg = New CDO.Message
+                        With iMsg
+                            Set .Configuration = iCfg
+                                .From = """Moka Alerts"" <moka.alerts@gstt.nhs.uk>"
+                                .Sender = "moka.alerts@gstt.nhs.uk"
+                                .ReplyTo = "DO NOT REPLY TO THIS MESSAGE"
+                                .Subject = subjectline
+                                .HTMLBody = emailbody
+                                .to = emailto
+
+                                .Send
+                        End With
+
 
                 'Move to next record
                 WESAprov.MoveNext
@@ -151,7 +159,7 @@ If num > 0 Then
     End If
 ElseIf num = 0 Then
     'If no tests have been selected display error message
-    msga = MsgBox("No WES tests have been selected." & vbNewLine & "Please ensure an Approver ID is selected from the dropdown list.", 0 + vbExclamation, "PRU not found")
+    msga = MsgBox("No WES tests have been selected.", 0 + vbExclamation, "PRU not found")
     'Debug.Print num; "No record selected"
 End If
 Me.Refresh
@@ -183,12 +191,13 @@ Dim comp As String
 dt = Format(Now, "dd/mmm/yyyy Hh:Nn:ss")
 cmp = VBA.Environ("COMPUTERNAME")
 usr = VBA.Environ("USERNAME")
-'Debug.Print usr, dt
-strAprovSQL = "SELECT NGSTest.InternalPatientID, Patients.PatientID, Patients.s_StatusOverall, Patients.BookinLastName AS LastName, Patients.BookinFirstName AS FirstName, Patients.BookinDOB AS DoB, Patients.BookinSex AS Gender, Referral.Referral, NGSPanel.Panel AS PrimaryPannel, NGSPanel_1.Panel AS SecondaryPannel, NGSTest.DateRequested, Checker.Check1ID AS BookedInBy, Checker.Name, NGSTest.BookingAuthorisedByID, NGSTest.BookingAuthorisedDate" & _
-              " FROM ((((Status INNER JOIN (Patients INNER JOIN NGSTest ON Patients.InternalPatientID = NGSTest.InternalPatientID) ON Status.StatusID = Patients.s_StatusOverall) INNER JOIN Referral ON NGSTest.ReferralID = Referral.ReferralID) LEFT JOIN NGSPanel ON NGSTest.NGSPanelID = NGSPanel.NGSPanelID) LEFT JOIN NGSPanel AS NGSPanel_1 ON NGSTest.NGSPanelID_B = NGSPanel_1.NGSPanelID) INNER JOIN Checker ON NGSTest.BookBy = Checker.Check1ID" & _
-              " WHERE ((Patients.s_StatusOverall) = 1202218799)"
+
+strAprovSQL = "SELECT NGSTest.InternalPatientID, Patients.PatientID, dbo_Patient_table.LastName, dbo_Patient_table.FirstName, dbo_Patient_table.DoB, Patients.BookinSex AS Gender, Referral.Referral, NGSTest.DateRequested, NGSTest.BookingAuthorisedByID, NGSTest.BookingAuthorisedDate, Checker.UserName AS ReferrerLogin " & _
+              "FROM dbo_Patient_table INNER JOIN (((Status INNER JOIN (Patients INNER JOIN NGSTest ON Patients.InternalPatientID = NGSTest.InternalPatientID) ON Status.StatusID = Patients.s_StatusOverall) INNER JOIN Referral ON NGSTest.ReferralID = Referral.ReferralID) INNER JOIN Checker ON NGSTest.BookBy = Checker.Check1ID) ON dbo_Patient_table.PatientTrustID = Patients.PatientID " & _
+              "WHERE (((NGSTest.StatusID)=1202218801) AND ((Patients.s_StatusOverall)=1202218799) AND ((Checker.Active)=3))"
+
 ' SQL to get MOKA user ID number
-strUSRSQL = "SELECT Checker.Check1ID, Checker.Authoriser FROM Checker WHERE Checker.Username = '" + usr + "'"
+strUSRSQL = "SELECT Checker.Check1ID, checker.name FROM Checker WHERE Checker.Username = '" + usr + "'"
 'Debug.Print strUSRSQL
 Set db = CurrentDb
 Set WESAprov = db.OpenRecordset(strAprovSQL, dbOpenDynaset, dbSeeChanges)
@@ -229,10 +238,11 @@ If num > 0 Then
                 DoCmd.RunSQL strUpd8Exn
 
             'Update patient log with change
-                strLogSQL = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" & WESAprov!BookingAuthorisedByID & ", 'NGS test Rejected. Patients and NGSTest tables: status updated to Not required. ',#" + dt + "#,'" + usr + "','" + cmp + "')"
+                strLogSQL = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" & WESAprov!InternalPatientID & ", 'NGS: REJECTED WES order - External referal. Patients and NGSTest tables: status updated to Not required. ',#" + dt + "#,'" + usr + "','" + cmp + "')"
                 'Debug.Print strLogSQL
                 DoCmd.RunSQL strLogSQL
                 DoCmd.SetWarnings True
+
                 'Move to next record
                 WESAprov.MoveNext
             Else
@@ -271,9 +281,9 @@ Private Sub Form_Unload(Cancel As Integer)
         ' If user choses to exit without submitting, code removes approval ID and dates from the exome Test table for all un-authorised exomes tests
         Else
         Set db = CurrentDb
-        strAprovSQL = "SELECT NGSTest.InternalPatientID, Patients.PatientID, Patients.s_StatusOverall, Patients.BookinLastName AS LastName, Patients.BookinFirstName AS FirstName, Patients.BookinDOB AS DoB, Patients.BookinSex AS Gender, Referral.Referral, NGSPanel.Panel AS PrimaryPannel, NGSPanel_1.Panel AS SecondaryPannel, NGSTest.DateRequested, Checker.Check1ID, Checker.Name, NGSTest.BookingAuthorisedByID, NGSTest.BookingAuthorisedDate" & _
-                     " FROM ((((Status INNER JOIN (Patients INNER JOIN NGSTest ON Patients.InternalPatientID = NGSTest.InternalPatientID) ON Status.StatusID = Patients.s_StatusOverall) INNER JOIN Referral ON NGSTest.ReferralID = Referral.ReferralID) LEFT JOIN NGSPanel ON NGSTest.NGSPanelID = NGSPanel.NGSPanelID) LEFT JOIN NGSPanel AS NGSPanel_1 ON NGSTest.NGSPanelID_B = NGSPanel_1.NGSPanelID) INNER JOIN Checker ON NGSTest.BookBy = Checker.Check1ID" & _
-                     " WHERE ((Patients.s_StatusOverall) = 1202218799)"
+        strAprovSQL = "SELECT NGSTest.InternalPatientID, Patients.PatientID, dbo_Patient_table.LastName, dbo_Patient_table.FirstName, dbo_Patient_table.DoB, Patients.BookinSex AS Gender, Referral.Referral, NGSTest.DateRequested, NGSTest.BookingAuthorisedByID, NGSTest.BookingAuthorisedDate, Checker.UserName AS ReferrerLogin " & _
+              "FROM dbo_Patient_table INNER JOIN (((Status INNER JOIN (Patients INNER JOIN NGSTest ON Patients.InternalPatientID = NGSTest.InternalPatientID) ON Status.StatusID = Patients.s_StatusOverall) INNER JOIN Referral ON NGSTest.ReferralID = Referral.ReferralID) INNER JOIN Checker ON NGSTest.BookBy = Checker.Check1ID) ON dbo_Patient_table.PatientTrustID = Patients.PatientID " & _
+              "WHERE (((NGSTest.StatusID)=1202218801) AND ((Patients.s_StatusOverall)=1202218799) AND ((Checker.Active)=3))"
 
         Set WESAprov = db.OpenRecordset(strAprovSQL, dbOpenDynaset, dbSeeChanges)
         With WESAprov
