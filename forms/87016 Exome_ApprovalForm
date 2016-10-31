@@ -1,0 +1,204 @@
+Option Compare Database
+Private save As Boolean
+
+Private WESAprov As DAO.Recordset
+Private db As Database
+Private strAprovSQL As String
+
+
+Private Sub Form_Open(Cancel As Integer)
+    save = False
+End Sub
+
+Private Sub btnApprove_Click()
+'for wes_approve with date and Approval ID change patient status in Patients table to NGS
+'Up date patientLog Audit with user ID number and approval info
+strAprovSQL = "SELECT NGSTest.InternalPatientID, Patients.PatientID, Patients.s_StatusOverall, Patients.BookinLastName AS LastName, Patients.BookinFirstName AS FirstName, Patients.BookinDOB AS DoB, Patients.BookinSex AS Gender, Referral.Referral, NGSPanel.Panel AS PrimaryPannel, NGSPanel_1.Panel AS SecondaryPannel, NGSTest.DateRequested, Checker.Check1ID, Checker.Name, NGSTest.BookingAuthorisedByID, NGSTest.BookingAuthorisedDate" & _
+              " FROM ((((Status INNER JOIN (Patients INNER JOIN NGSTest ON Patients.InternalPatientID = NGSTest.InternalPatientID) ON Status.StatusID = Patients.s_StatusOverall) INNER JOIN Referral ON NGSTest.ReferralID = Referral.ReferralID) LEFT JOIN NGSPanel ON NGSTest.NGSPanelID = NGSPanel.NGSPanelID) LEFT JOIN NGSPanel AS NGSPanel_1 ON NGSTest.NGSPanelID_B = NGSPanel_1.NGSPanelID) INNER JOIN Checker ON NGSTest.BookBy = Checker.Check1ID" & _
+              " WHERE ((Patients.s_StatusOverall) = 1202218799)"
+Set db = CurrentDb
+Set WESAprov = db.OpenRecordset(strAprovSQL)
+
+' Loop through record set to identify and count if WES test have authorising signiture - count total which have been 'approved'
+With WESAprov
+    num = 0
+    If Not .BOF And Not .EOF Then
+        While (Not .EOF)
+            If Not IsNull(WESAprov!BookingAuthorisedByID) Then
+                ' Debug.Print WESAprov!BookingAuthorisedByID
+                num = num + 1
+                .MoveNext
+                ' Debug.Print num
+            Else
+                .MoveNext
+            End If
+        Wend
+End If
+
+'Checks at least one WES test has authorising signiture, prompts user to confirm approval option.
+If num > 0 Then
+    If MsgBox("Do you wish to APPROVE " & num & " exome tests?", vbYesNo + vbQuestion, "Confirm WES Approval") = vbNo Then
+            Cancel = True
+    Else
+        'set to the start of the recordset, then update patient status and exome status for tests with approval signiture.
+        WESAprov.MoveFirst
+        While (Not .EOF)
+            If Not IsNull(WESAprov!BookingAuthorisedByID) Then
+'////////////////////  CLARRIFY!!!!!! Set stauts patients to NGS and excome test to Test in progress //////////////////////////////////////
+                strUpd8Pat = "UPDATE Patients SET s_StatusOverall = 1202218798 WHERE Patients.InternalPatientID = " & WESAprov!InternalPatientID
+                strUpd8Exn = "UPDATE NGSTest SET StatusID = 3 WHERE NGSTest.InternalPatientID = " & WESAprov!InternalPatientID
+                'Debug.Print strUpd8Pat
+                'Debug.Print strUpd8Exn
+                DoCmd.SetWarnings False
+                DoCmd.RunSQL strUpd8Pat
+                DoCmd.RunSQL strUpd8Exn
+
+                'Update patient log with changes
+                dt = Format(WESAprov!BookingAuthorisedDate, "dd/mmm/yyyy Hh:Nn:ss")
+                cmp = VBA.Environ("COMPUTERNAME")
+                'usr = approver clinicican ID
+                usr = CStr(WESAprov!BookingAuthorisedByID)
+                'Debug.Print usr, dt
+
+                strLogSQL = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" & WESAprov!BookingAuthorisedByID & ", 'NGS test Approved. Patients: status updated to NGS. NGSTest: status updated to Test in progress. ',#" + dt + "#,'" + usr + "','" + cmp + "')"
+                'Debug.Print strLogSQL
+                DoCmd.RunSQL strLogSQL
+                DoCmd.SetWarnings True
+
+                'Move to next record
+                WESAprov.MoveNext
+            Else
+                .MoveNext
+            End If
+
+        Wend
+    End If
+ElseIf num = 0 Then
+    'If no tests possess authorising signiture display error message
+    msga = MsgBox("No WES tests have been selected." & vbNewLine & "Please ensure an Approver ID is selected from the dropdown list.", 0 + vbExclamation, "PRU not found")
+    'Debug.Print num; "No record selected"
+End If
+Me.Refresh
+End With
+End Sub
+
+Private Sub btnReject_Click()
+'for wes_approve with date and Approval ID change patient status in Patients table to Not required and exome table status to not required
+'Up date patientLog Audit with user ID number and approval info
+strAprovSQL = "SELECT NGSTest.InternalPatientID, Patients.PatientID, Patients.s_StatusOverall, Patients.BookinLastName AS LastName, Patients.BookinFirstName AS FirstName, Patients.BookinDOB AS DoB, Patients.BookinSex AS Gender, Referral.Referral, NGSPanel.Panel AS PrimaryPannel, NGSPanel_1.Panel AS SecondaryPannel, NGSTest.DateRequested, Checker.Check1ID, Checker.Name, NGSTest.BookingAuthorisedByID, NGSTest.BookingAuthorisedDate" & _
+              " FROM ((((Status INNER JOIN (Patients INNER JOIN NGSTest ON Patients.InternalPatientID = NGSTest.InternalPatientID) ON Status.StatusID = Patients.s_StatusOverall) INNER JOIN Referral ON NGSTest.ReferralID = Referral.ReferralID) LEFT JOIN NGSPanel ON NGSTest.NGSPanelID = NGSPanel.NGSPanelID) LEFT JOIN NGSPanel AS NGSPanel_1 ON NGSTest.NGSPanelID_B = NGSPanel_1.NGSPanelID) INNER JOIN Checker ON NGSTest.BookBy = Checker.Check1ID" & _
+              " WHERE ((Patients.s_StatusOverall) = 1202218799)"
+Set db = CurrentDb
+Set WESAprov = db.OpenRecordset(strAprovSQL)
+
+' Loop through record set to identify and count if WES test have authorising signiture - count total which have been 'approved'
+With WESAprov
+    num = 0
+    If Not .BOF And Not .EOF Then
+        While (Not .EOF)
+            If Not IsNull(WESAprov!BookingAuthorisedByID) Then
+                ' Debug.Print WESAprov!BookingAuthorisedByID
+                num = num + 1
+                .MoveNext
+                ' Debug.Print num
+            Else
+                .MoveNext
+            End If
+        Wend
+End If
+
+'Checks at least one WES test has authorising signiture, prompts user to confirm rejection option
+If num > 0 Then
+    If MsgBox("Do you wish to REJECT " & num & " exome tests?", vbYesNo + vbQuestion, "Reject WES Approval") = vbNo Then
+            Cancel = True
+    Else
+        'set to the start of the recordset, then update patient status and exome status for tests with approval signiture.
+        WESAprov.MoveFirst
+        While (Not .EOF)
+            If Not IsNull(WESAprov!BookingAuthorisedByID) Then
+'////////////////////  CLARRIFY!!!!!! Set stauts patients to NGS and excome test to Test in progress //////////////////////////////////////
+                strUpd8Pat = "UPDATE Patients SET s_StatusOverall = 1202218787 WHERE Patients.InternalPatientID = " & WESAprov!InternalPatientID
+                strUpd8Exn = "UPDATE NGSTest SET StatusID = 1202218787 WHERE NGSTest.InternalPatientID = " & WESAprov!InternalPatientID
+                'Debug.Print strUpd8Pat
+                'Debug.Print strUpd8Exn
+                DoCmd.SetWarnings False
+                DoCmd.RunSQL strUpd8Pat
+                DoCmd.RunSQL strUpd8Exn
+
+'/////////////  CLARRIFY!!!!!! Set stauts patients to NGS and excome test to Test rejected //////////////////////////////////////
+                'Update patient log with changes
+                dt = Format(WESAprov!BookingAuthorisedDate, "dd/mmm/yyyy Hh:Nn:ss")
+                cmp = VBA.Environ("COMPUTERNAME")
+                'usr = approver clinicican ID
+                usr = CStr(WESAprov!BookingAuthorisedByID)
+                'Debug.Print usr, dt
+
+                strLogSQL = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" & WESAprov!BookingAuthorisedByID & ", 'NGS test Rejected. Patients and NGSTest tables: status updated to Not required ',#" + dt + "#,'" + usr + "','" + cmp + "')"
+                'Debug.Print strLogSQL
+                DoCmd.RunSQL strLogSQL
+                DoCmd.SetWarnings True
+
+                'Move to next record
+                WESAprov.MoveNext
+            Else
+                .MoveNext
+            End If
+        Wend
+    End If
+ElseIf num = 0 Then
+    'If no tests possess authorising signiture display error message
+    msga = MsgBox("No WES tests have been selected." & vbNewLine & "Please ensure an Approver ID is selected from the dropdown list.", 0 + vbExclamation, "PRU not found")
+    'Debug.Print num; "No record selected"
+End If
+Me.Refresh
+End With
+End Sub
+Private Sub Form_Unload(Cancel As Integer)
+'
+'Dim WESAprov As DAO.Recordset
+'Dim db As Database
+'Dim strAprovSQL As String
+
+    'Display warning message and deletes approval ID if user chooses to exit without submitting
+    If Not save Then
+        If MsgBox("Are you sure you want to exit? " & vbNewLine & vbNewLine & "(Any unsaved changes will be lost)", vbYesNo + vbExclamation, "Confirm Exit") = vbNo Then
+            Cancel = True
+        ' If user choses to exit without submitting, code removes approval ID and dates from the exome Test table for all un-authorised exomes tests
+        Else
+        Set db = CurrentDb
+        strAprovSQL = "SELECT NGSTest.InternalPatientID, Patients.PatientID, Patients.s_StatusOverall, Patients.BookinLastName AS LastName, Patients.BookinFirstName AS FirstName, Patients.BookinDOB AS DoB, Patients.BookinSex AS Gender, Referral.Referral, NGSPanel.Panel AS PrimaryPannel, NGSPanel_1.Panel AS SecondaryPannel, NGSTest.DateRequested, Checker.Check1ID, Checker.Name, NGSTest.BookingAuthorisedByID, NGSTest.BookingAuthorisedDate" & _
+                     " FROM ((((Status INNER JOIN (Patients INNER JOIN NGSTest ON Patients.InternalPatientID = NGSTest.InternalPatientID) ON Status.StatusID = Patients.s_StatusOverall) INNER JOIN Referral ON NGSTest.ReferralID = Referral.ReferralID) LEFT JOIN NGSPanel ON NGSTest.NGSPanelID = NGSPanel.NGSPanelID) LEFT JOIN NGSPanel AS NGSPanel_1 ON NGSTest.NGSPanelID_B = NGSPanel_1.NGSPanelID) INNER JOIN Checker ON NGSTest.BookBy = Checker.Check1ID" & _
+                     " WHERE ((Patients.s_StatusOverall) = 1202218799)"
+
+        Set WESAprov = db.OpenRecordset(strAprovSQL)
+        With WESAprov
+         If Not .BOF And Not .EOF Then
+            While (Not .EOF)
+                'Debug.Print WESAprov!InternalPatientID
+                If Not IsNull(WESAprov!BookingAuthorisedByID) Or Not IsNull(WESAprov!BookingAuthorisedDate) Then
+                    strRmvAprSQL = "UPDATE NGSTest SET BookingAuthorisedByID = NULL, BookingAuthorisedDate = NULL WHERE NGSTest.InternalPatientID =" & WESAprov!InternalPatientID
+                    'Debug.Print strRmvAprSQL
+                    DoCmd.SetWarnings False
+                    DoCmd.RunSQL strRmvAprSQL
+                    DoCmd.SetWarnings True
+                    'Debug.Print WESAprov!LastName, "Cleaned"
+                    .MoveNext
+                Else
+                    .MoveNext
+                End If
+            Wend
+          End If
+          End With
+    End If
+    End If
+Set WESAprov = Nothing
+End Sub
+
+Private Sub btnClose_Click()
+    'Triggers Form_Unload procedure. Suppress error message that appears if close event cancelled by user.
+    On Error GoTo ErrHandler
+    DoCmd.Close
+ErrHandler:
+    If Err.Number = 2501 Then 'Do nothing. Error indicates close was cancelled by user.
+    End If
+End Sub
