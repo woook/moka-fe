@@ -1,0 +1,138 @@
+Option Compare Database
+
+Private Sub btnClose_Click()
+  DoCmd.Close
+End Sub
+
+Private Sub btnFindPatient_Click()
+    Me![ListPatientFound].Requery
+    If Me![ListPatientFound].ListCount = 0 Then
+    msga = MsgBox("PRU not found." & vbNewLine & "Please search for another patient.", 0, "PRU not found")
+    End If
+    Me![txFamilyTrustID].SetFocus
+
+End Sub
+
+Private Sub Form_Open(Cancel As Integer)
+    Me![txFamilyTrustID].SetFocus
+End Sub
+
+Private Sub ListPatientFound_DblClick(Cancel As Integer)
+'Declare the variable type
+    Dim gwks As DAO.Recordset
+    Dim moka As DAO.Recordset
+    Dim log As DAO.Recordset
+    Dim db As Database
+    Dim usr As String
+    Dim dt As String
+    Dim comp As String
+
+    dt = Format(Now, "dd/mmm/yyyy Hh:Nn:ss")
+    usr = VBA.Environ("USERNAME")
+    cmp = VBA.Environ("COMPUTERNAME")
+
+    ' Test for geneworks DNA Number if Null then 'Send sample msg'
+    ' Set the database to current database ready to runSQL query
+    Set db = CurrentDb
+
+    ' Query if patient PRU is associated with a DNA number
+    strDNASQL = "SELECT dbo_DNANumber2016.DNANo, dbo_PatientLinked.LastName, dbo_PatientLinked.FirstName, dbo_PatientLinked.DoB, dbo_PatientLinked.CreatedByID, dbo_PatientLinked.CreatedDate, dbo_PatientLinked.NHSNo, gw_GenderTable.GenderShort " & _
+                "FROM ((dbo_DNANumber2016 INNER JOIN dbo_SpecimenLinked ON dbo_DNANumber2016.SpecimenID = dbo_SpecimenLinked.SpecimenID) INNER JOIN dbo_PatientLinked ON dbo_SpecimenLinked.PatientID = dbo_PatientLinked.PatientID) LEFT JOIN gw_GenderTable ON dbo_PatientLinked.GenderID = gw_GenderTable.GenderID " & _
+                "WHERE (((dbo_PatientLinked.PatientTrustID)='" & Me.ListPatientFound.Value & "') AND ((dbo_PatientLinked.GenderID) Is Not Null)) " & _
+                "UNION SELECT dbo_DNANumber2016.DNANo, dbo_PatientLinked.LastName, dbo_PatientLinked.FirstName, dbo_PatientLinked.DoB, dbo_PatientLinked.CreatedByID, dbo_PatientLinked.CreatedDate, dbo_PatientLinked.NHSNo, 'unknown' AS GenderShort " & _
+                "FROM ((dbo_DNANumber2016 INNER JOIN dbo_SpecimenLinked ON dbo_DNANumber2016.SpecimenID = dbo_SpecimenLinked.SpecimenID) INNER JOIN dbo_PatientLinked ON dbo_SpecimenLinked.PatientID = dbo_PatientLinked.PatientID) LEFT JOIN gw_GenderTable ON dbo_PatientLinked.GenderID = gw_GenderTable.GenderID " & _
+                "WHERE (((dbo_PatientLinked.PatientTrustID)='" & Me.ListPatientFound.Value & "') AND ((dbo_PatientLinked.GenderID) Is Null));"
+
+
+    ' Query if patient is in MOKA and pull out associated status
+    ' Extra SQL-not sure why the join is there "SELECT patients.PatientID, patients.InternalPatientID, patients.s_StatusOverall, status.status  FROM (patients RIGHT JOIN status ON patients.s_StatusOverall = status.statusID)WHERE patients.PatientID ='" & Me.ListPatientFound.Value & "'"
+    strMokaCheckSQL = "SELECT patients.PatientID, patients.InternalPatientID, patients.s_StatusOverall FROM patients WHERE patients.PatientID ='" & Me.ListPatientFound.Value & "'"
+
+    ' Set genewks recordset to show DNASQL query results and moka recordset to show MokacheckSQL
+    Set gwks = db.OpenRecordset(strDNASQL, dbOpenDynaset, dbSeeChanges)
+    Set moka = db.OpenRecordset(strMokaCheckSQL, dbOpenDynaset, dbSeeChanges)
+
+    ' Test that a patient has been selected
+    If Not IsNull(Me.ListPatientFound.Value) Then
+
+    ' Test is there is geneworks DNA record for selected patient, NO DNA record displays a pop up box with instructuions
+    If IsNull(gwks!DNANo) Then
+        msga = MsgBox("There is insufficient DNA to perform this test." & vbNewLine & "Please send a blood sample (EDTA) to the lab.", VbMsgBoxStyle.vbOKOnly Or VbMsgBoxStyle.vbExclamation, "No DNA recorded")
+
+    ' Check if the MOKA SQL query has returned any results. A recored = patient in moka
+
+    ' If patient is not in Moka, add into Moka then progess to ordering of exome
+    ElseIf moka.RecordCount = 0 Then
+        msgb = MsgBox("You are about to order WES for:" & vbNewLine & vbNewLine & Me.ListPatientFound.Value & " " & gwks!FirstName & " " & gwks!LastName & vbNewLine & vbNewLine & "Do you wish to continue?", VbMsgBoxStyle.vbYesNo Or VbMsgBoxStyle.vbInformation, "Do you wish to proceed?")
+        If msgb = vbYes Then
+            strAddPatientSQL = "INSERT INTO patients (PatientID, s_StatusOverall, MokaCreated, MokaCreatedBy, MokaCreatedPC, NHSNumber, BookinLastname, BookinFirstName, BookinDoB, BookinCreatedBy, BookinCreatedDate, BookinSex)" & _
+                               "VALUES ('" & Me.ListPatientFound.Value & "', 1202218787,'" & dt & "','" & usr & "','" & cmp & "','" & gwks!NHSno & "','" & gwks!LastName & "','" & gwks!FirstName & "','" & gwks!DOB & "','" & gwks!CreatedbyID & "','" & gwks!CreatedDate & "','" & gwks!GenderShort & "')"
+             DoCmd.SetWarnings False
+             DoCmd.RunSQL strAddPatientSQL
+             DoCmd.SetWarnings True
+
+             'Insert record of Patient added nto patient log
+             FindPIDSQL = "Select patients.InternalPatientID From Patients WHERE patients.PatientID ='" & Me.ListPatientFound.Value & "'"
+             Set log = db.OpenRecordset(FindPIDSQL, dbOpenDynaset, dbSeeChanges)
+             sql5 = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" & log!InternalPatientID & ", 'Patients: Patient added to Moka. ',#" + dt + "#,'" + usr + "','" + cmp + "')"
+             DoCmd.SetWarnings False
+             DoCmd.RunSQL sql5
+             DoCmd.SetWarnings True
+
+             'PASS Paitent PRU to Form_exomeTest and close active form
+             PatientPRU = Me.ListPatientFound.Value
+             DoCmd.Close acForm, Me.Name
+             DoCmd.OpenForm "87012 ExomeTest", , , , acFormAdd, , PatientPRU
+
+        ElseIf mc = vbNo Then Exit Sub
+        End If
+
+    ' If patient is in Moka check to see if NGS has already been ordered pending 1202218799 or approved status number 1202218798
+    ' If NGS has not been previously requested, pass patient PRU to exome test form
+    ElseIf moka.RecordCount > 0 And moka!s_StatusOverall <> 1202218798 And moka!s_StatusOverall <> 1202218799 Then
+            msgc = MsgBox("You are about to order WES for:" & vbNewLine & vbNewLine & moka!PatientID & " " & gwks!FirstName & " " & gwks!LastName & vbNewLine & vbNewLine & "Do you wish to continue?", VbMsgBoxStyle.vbYesNo Or VbMsgBoxStyle.vbInformation, "Do you wish to proceed?")
+            If msgc = vbYes Then
+'                  strStatSQL = "UPDATE patients SET s_StatusOverall = 1202218799 WHERE patients.patientID ='" & Me.ListPatientFound.Value & "'"
+'                  ''" & Me.ListPatientFound.Value & "'"
+'                  DoCmd.SetWarnings False
+'                  DoCmd.RunSQL strStatSQL
+'                  DoCmd.SetWarnings True
+'
+'                  'Insert record of Patient status updated into patient log
+'                  sql5 = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" & moka!InternalPatientID & ", 'Patients: Status changed to NGS Pending ',#" + dt + "#,'" + usr + "','" + cmp + "')"
+'                  DoCmd.SetWarnings False
+'                  DoCmd.RunSQL sql5
+'                  DoCmd.SetWarnings True
+
+                  'PASS Paitent PRU to Form_exomeTest and close active form
+                  PatientPRU = Me.ListPatientFound.Value
+                  DoCmd.Close acForm, Me.Name
+                  DoCmd.OpenForm "87012 ExomeTest", , , , acFormAdd, , PatientPRU
+
+            ElseIf mc = vbNo Then Exit Sub
+            End If
+
+    ' If NGS has already been previouly ordered or approved for patient, display error message
+    ElseIf moka.RecordCount > 0 And moka!s_StatusOverall = 1202218799 Then
+            msgd = MsgBox("WES has already been ordered for " & vbNewLine & vbNewLine & moka!PatientID & " " & gwks!FirstName & " " & gwks!LastName & vbNewLine & vbNewLine & "Would you like to email the lab duty scientist regarding this patient?", VbMsgBoxStyle.vbYesNo Or VbMsgBoxStyle.vbExclamation, "ATTENTION!")
+             If msgd = vbYes Then
+                Application.FollowHyperlink "mailto:dnadutyscientist@viapath.co.uk?subject=WES enquiry for " & moka!PatientID
+             Else
+                Exit Sub
+            End If
+
+    ElseIf moka.RecordCount > 0 And moka!s_StatusOverall = 1202218798 Then
+            ' msgd = MsgBox("ATTENTION!" & vbNewLine & "WES has already been ordered for this patient." & vbNewLine & "Please contact the lab for more information.", VbMsgBoxStyle.vbOKOnly Or VbMsgBoxStyle.vbExclamation, "ATTENTION")
+            ' Exit Sub
+            msgd = MsgBox("WES has already been ordered for " & vbNewLine & vbNewLine & moka!PatientID & " " & gwks!FirstName & " " & gwks!LastName & vbNewLine & vbNewLine & "Would you like to email the lab duty scientist regarding this patient?", VbMsgBoxStyle.vbYesNo Or VbMsgBoxStyle.vbExclamation, "ATTENTION!")
+             If msgd = vbYes Then
+                Application.FollowHyperlink "mailto:dnadutyscientist@viapath.co.uk?subject=WES enquiry for " & moka!PatientID
+             Else
+                Exit Sub
+            End If
+
+    End If
+    End If
+Set moka = Nothing
+Set gwks = Nothing
+End Sub

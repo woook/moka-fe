@@ -1,0 +1,14 @@
+SELECT NGSTest.InternalPatientID, 'Primary' As [Analysis], 'Gene Panel' As [Selection Type], NGSPanel.PanelCode AS Symbol, NGSPanel.Panel As Name, NGSTestPanelSelection.NGSTestPanelSelectionID
+FROM (NGSTestPanelSelection INNER JOIN NGSTest ON NGSTestPanelSelection.NGSTestID = NGSTest.NGSTestID) INNER JOIN NGSPanel ON cInt(NGSTestPanelSelection.SelectionID) = NGSPanel.NGSPanelID
+WHERE  NGSTestPanelSelection.SelectionType = 1 AND NGSTestPanelSelection.AnalysisAB = 1 AND NGSTest.StatusID = 1202218801
+UNION
+SELECT NGSTest.InternalPatientID, 'Primary' As [Analysis],  'Individual Gene' AS [Selection Type],  GenesHGNC_current.ApprovedSymbol  AS [Symbol], GenesHGNC_current.ApprovedName As [Name]  ,NGSTestPanelSelection.NGSTestPanelSelectionID
+FROM (NGSTestPanelSelection INNER JOIN NGSTest ON NGSTestPanelSelection.NGSTestID = NGSTest.NGSTestID) INNER JOIN GenesHGNC_current ON NGSTestPanelSelection.SelectionID = GenesHGNC_current.HGNCID
+WHERE NGSTestPanelSelection.SelectionType =2  AND NGSTestPanelSelection.AnalysisAB = 1 AND NGSTest.StatusID=1202218801
+UNION
+SELECT NGSTest.InternalPatientID, 'Secondary' As [Analysis], 'Gene Panel' As [Selection Type], NGSPanel.PanelCode AS Symbol, NGSPanel.Panel As Name, NGSTestPanelSelection.NGSTestPanelSelectionID
+FROM (NGSTestPanelSelection INNER JOIN NGSTest ON NGSTestPanelSelection.NGSTestID = NGSTest.NGSTestID) INNER JOIN NGSPanel ON cInt(NGSTestPanelSelection.SelectionID) = NGSPanel.NGSPanelID
+WHERE  NGSTestPanelSelection.SelectionType = 1 AND NGSTestPanelSelection.AnalysisAB = 2 AND NGSTest.StatusID = 1202218801
+UNION SELECT NGSTest.InternalPatientID, 'Secondary' As [Analysis],  'Individual Gene' AS [Selection Type],  GenesHGNC_current.ApprovedSymbol  AS [Symbol], GenesHGNC_current.ApprovedName As [Name]  , NGSTestPanelSelection.NGSTestPanelSelectionID
+FROM (NGSTestPanelSelection INNER JOIN NGSTest ON NGSTestPanelSelection.NGSTestID = NGSTest.NGSTestID) INNER JOIN GenesHGNC_current ON NGSTestPanelSelection.SelectionID = GenesHGNC_current.HGNCID
+WHERE NGSTestPanelSelection.SelectionType =2  AND NGSTestPanelSelection.AnalysisAB = 2 AND NGSTest.StatusID = 1202218801;
