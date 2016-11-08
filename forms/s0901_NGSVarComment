@@ -24,7 +24,6 @@ Private Sub Comments_AfterUpdate()
         DoCmd.SetWarnings False
         DoCmd.RunSQL sqlUpdate
         DoCmd.SetWarnings True
-        Forms![0901 ExomeNGSResults].Refresh
     End If
     If IsNull(Me.Comment) Then 'Record that comment has been deleted in NGSLogMemo and PatientLog tables
         sqlMemo = "INSERT INTO NGSLogMemo(InternalPatientID, Type, LinkID, LogMemoEntry, [Date], Login, PCName) VALUES(" + patID + ", 2, " + ngsVarID + ",'Variant comment deleted.',#" + D + "#,'" + un + "','" + cn + "')"
@@ -40,5 +39,8 @@ Private Sub Comments_AfterUpdate()
         DoCmd.RunSQL sqlPatLog
         DoCmd.SetWarnings True
     End If
+    
+    ''Refresh s0901_NGSVariants so that the comment field is refreshed
+    Form_s0901_NGSVariants.Requery
     
 End Sub
