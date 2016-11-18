@@ -123,7 +123,7 @@ If num > 0 Then
                     End With
 
 '\\\\\\\ CHANGE EMAIL \\\\\\\\
-                    emailto = "amy.slater@gstt.nhs.uk" '\\\\\\\\"dnadutyscientist@viapath.co.uk"
+                    emailto = "dnadutyscientist@viapath.co.uk"
                     PRU = WESAprov!PatientID
                     subjectline = "WES test order has been APPROVED for patient " & PRU & " - External Referral"
                     emailbody = "<font face='arial' size='3'><br />" _
