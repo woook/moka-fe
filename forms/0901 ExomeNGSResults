@@ -6,9 +6,7 @@ Private Sub btn_FamilyDNAs_Click()
     Dim stLinkCriteria As String
     stDocName = "s0901_WESFamily"
     stLinkCriteria = "[txt_FamID]=" & "'" & Me![txt_FamilyNoID] & "'"
-    'stDocName = "s0901_WESFamilytable"
-    DoCmd.OpenForm stDocName ', , , stLinkCriteria
-    [Forms]![s0901_WESFamily]![Txt_FamID] = Me![txt_FamilyNoID]
+    DoCmd.OpenForm stDocName
 
 Exit_btn_FamilyDNAs:
     Exit Sub
@@ -42,4 +40,76 @@ End Sub
 Private Sub btnSafetyOnOff_Click()
 SafetyCheck.Value = Not SafetyCheck.Value
 'Form_Current
+End Sub
+
+Private Sub Patient_Status_AfterUpdate()
+    Dim r As ADODB.Recordset
+    Dim S As String
+    Dim dt As String
+    
+    Dim cn As String
+    Dim usr As String
+    usr = VBA.Environ("USERNAME")
+    cn = VBA.Environ("COMPUTERNAME")
+    
+    dt = Format(Now, "dd/mmm/yyyy Hh:Nn:ss")
+    Set r = New ADODB.Recordset
+    S = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + ",'Patient: Status changed to " & Me![s_StatusOverall] & "',#" + dt + "#,'" + usr + "','" + cn + "')"
+    r.Open S, CurrentProject.Connection
+    Set r = Nothing
+End Sub
+
+Private Sub txt_PatientResult_AfterUpdate()
+    Me.Dirty = False
+    
+    Dim r As ADODB.Recordset
+    Dim S As String
+    Dim dt As String
+    Dim t As String
+    Dim cn As String
+    Dim usr As String
+    usr = VBA.Environ("USERNAME")
+    cn = VBA.Environ("COMPUTERNAME")
+    dt = Format(Now, "dd/mmm/yyyy Hh:Nn:ss")
+    
+    Set r = New ADODB.Recordset
+    If IsNull(txt_PatientResult) Then
+        S = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + ",'Patient: Result deleted',#" + dt + "#,'" + usr + "','" + cn + "')"
+        t = "INSERT INTO PrevOverallResult(InternalPatientID, OverallResult, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + ",'Patient result deleted',#" + dt + "#,'" + usr + "','" + cn + "')"
+    Else
+        S = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + ",'Patient: Result changed to [" + Me![txt_PatientResult] + "]',#" + dt + "#,'" + usr + "','" + cn + "')"
+        t = "INSERT INTO PrevOverallResult(InternalPatientID, OverallResult, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + ",'" & Me![txt_PatientResult] & "',#" + dt + "#,'" + usr + "','" + cn + "')"
+    End If
+    r.Open S, CurrentProject.Connection
+    r.Open t, CurrentProject.Connection
+    Set r = Nothing
+End Sub
+
+
+Private Sub Form_Unload(Cancel As Integer)
+Dim Y As String
+Dim x As Long
+
+x = Form![s0901_WESTestResults]![StatusID]
+If Not IsNull(Form![s0901_WESTestResults]![Checker1]) Then
+    Y = Form![s0901_WESTestResults]![Checker1]
+Else: Y = "Absent"
+End If
+
+    If x = 4 And Y = "Absent" Then
+        Cancel = True
+        Debug.Print "got to if function"
+        mega = MsgBox("Checker 1 ID empty." + vbNewLine + "Unable to assign test status to complete until Checker 1 in entered", vbOKOnly Or vbExclamation, "No Checker 1 ID")
+        Form![s0901_WESTestResults]![Checker1].SetFocus
+    Else
+        Cancel = False
+  End If
+End Sub
+
+Private Sub txt_PatientResult_DblClick(Cancel As Integer)
+    Dim stDocName As String
+    Dim stLinkCriteria As String
+    stDocName = "s02_PrevOverallResults"
+    stLinkCriteria = "[InternalPatientID]=" & Me![InternalPatientID]
+    DoCmd.OpenForm stDocName, acFormDS, , stLinkCriteria
 End Sub
