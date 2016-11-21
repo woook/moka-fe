@@ -1,0 +1,45 @@
+Option Compare Database
+
+Private Sub btn_FamilyDNAs_Click()
+
+    Dim stDocName As String
+    Dim stLinkCriteria As String
+    stDocName = "s0901_WESFamily"
+    stLinkCriteria = "[txt_FamID]=" & "'" & Me![txt_FamilyNoID] & "'"
+    'stDocName = "s0901_WESFamilytable"
+    DoCmd.OpenForm stDocName ', , , stLinkCriteria
+    [Forms]![s0901_WESFamily]![Txt_FamID] = Me![txt_FamilyNoID]
+
+Exit_btn_FamilyDNAs:
+    Exit Sub
+
+
+End Sub
+
+Private Sub btn_OpenPatientDetails_Click()
+On Error GoTo Err_btn_OpenPatientDetails_Click
+
+    DoCmd.DoMenuItem acFormBar, acRecordsMenu, 5, , acMenuVer70
+    
+    Dim stDocName As String
+    Dim stLinkCriteria As String
+
+    stDocName = "02 Patient Details"
+    
+    stLinkCriteria = "[PatientID]=" & "'" & Me![PatientID] & "'"
+    DoCmd.OpenForm stDocName, , , stLinkCriteria
+
+Exit_btn_OpenPatientDetails_Click:
+    Exit Sub
+
+Err_OpenPatientDetails_Click:
+    MsgBox Err.Description
+    Resume Exit_btn_OpenPatientDetails_Click
+    
+End Sub
+End Sub
+
+Private Sub btnSafetyOnOff_Click()
+SafetyCheck.Value = Not SafetyCheck.Value
+'Form_Current
+End Sub

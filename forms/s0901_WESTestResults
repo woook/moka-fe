@@ -1,0 +1,120 @@
+Option Compare Database
+
+'Private Sub Command10_Click()
+'On Error GoTo Err_Command10_Click
+'
+'
+'    Screen.PreviousControl.SetFocus
+'    DoCmd.FindNext
+'
+'Exit_Command10_Click:
+'    Exit Sub
+'
+'Err_Command10_Click:
+'    MsgBox Err.Description
+'    Resume Exit_Command10_Click
+'
+'End Sub
+
+Private Sub btn_Phenotips_Click()
+    Call firefoxurl("http://10.188.197.57:8080/phenotips/bin/")
+    'TO DO ||||||||||||||||||||||||||| look up API to search for PRU
+End Sub
+
+
+Private Sub btn_ResultSheeet_Click()
+        Dim D As String
+        Dim un As String
+        Dim cn As String
+        Dim S As String
+        D = Format(Now, "dd/mmm/yyyy Hh:Nn:ss")
+        un = VBA.Environ("USERNAME")
+        cn = VBA.Environ("COMPUTERNAME")
+        S = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + ",'Moka result sheet generated for specimen " + Me!txt_DNA + "',#" + D + "#,'" + un + "','" + cn + "')"
+        DoCmd.SetWarnings False
+        DoCmd.RunSQL S
+        Debug.Print S
+        DoCmd.SetWarnings True
+        
+        DoCmd.DoMenuItem acFormBar, acRecordsMenu, 5, , acMenuVer70
+
+        Dim stDocName As String
+        Dim stLinkCriteria As String
+'\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\ NEED TO Optimise for NGS \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
+        stDocName = "FamilyResults_Auto_R"
+        stLinkCriteria = CStr(Me![txt_DNA])
+        DoCmd.OpenReport stDocName, acViewPreview, , stLinkCriteria
+End Sub
+
+Private Sub Checker1_AfterUpdate()
+    Dim rs As ADODB.Recordset
+    Dim plSQL As String
+    Dim dt As String
+    Dim usr As String
+    Dim cmp As String
+    
+    Set rs = New ADODB.Recordset
+    dt = Format(Now, "dd/mmm/yyyy Hh:Nn:ss")
+    usr = VBA.Environ("USERNAME")
+    cmp = VBA.Environ("COMPUTERNAME")
+    
+    If IsNull([Checker1]) Then
+        plSQL = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + ",'NGS WES test: Initials for analysis removed for NGS test " + CStr(Me![NGSTestID]) + " requested " + CStr(Me![DateRequested]) + "',#" + dt + "#,'" + usr + "','" + cmp + "')"
+        Me![txt_Check1Date] = Null
+        Me![txt_Check1Date].Requery
+        If Not IsNull([Checker2]) Then
+            pl2SQL = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + ",'NGS WES test: Initials (ID:" + CStr(Me![Checker2]) + ")  for checking result page removed for NGS test " + CStr(Me![NGSTestID]) + " requested " + CStr(Me![DateRequested]) + "',#" + dt + "#,'" + usr + "','" + cmp + "')"
+            Me![Checker2] = Null
+            Me![txt_Check2Date] = Null
+            Me![Checker2].Requery
+            Me![txt_Check2Date].Requery
+        rs.Open pl2SQL, CurrentProject.Connection
+        End If
+    Else
+        plSQL = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + ",'NGS WES test: Analysis entered by " + Me![Checker1].Column(1) + " for test " + CStr(Me![NGSTestID]) + " requested " + CStr(Me![DateRequested]) + "',#" + dt + "#,'" + usr + "','" + cmp + "')"
+        Me![txt_Check1Date] = Now()
+        Me.[txt_Check1Date].Requery
+    End If
+    rs.Open plSQL, CurrentProject.Connection
+    'rs.Open pl2SQL, CurrentProject.Connection
+    Set rs = Nothing
+    
+End Sub
+'checks checker 1 ID has been entered before permitting approval (checker 2). Updates patient log accordingly, sets overall form safty check to true
+Private Sub Checker2_AfterUpdate()
+    Dim rs As ADODB.Recordset
+    Dim plSQL As String
+    Dim dt As String
+    Dim usr As String
+    Dim cmp As String
+    
+    Set rs = New ADODB.Recordset
+    dt = Format(Now, "dd/mmm/yyyy Hh:Nn:ss")
+    usr = VBA.Environ("USERNAME")
+    cmp = VBA.Environ("COMPUTERNAME")
+    
+    If IsNull(Me![Checker1]) Then
+        MsgBox "Unable to comfirm analysis check until checker1 intials are entered ", , "No Record For Checker1 Entered"
+    Else
+        If IsNull([Checker2]) Then
+            plSQL = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + ",'NGS WES test: Initials for checking result page removed for NGS test " + CStr(Me![NGSTestID]) + " requested " + CStr(Me![DateRequested]) + "',#" + dt + "#,'" + usr + "','" + cmp + "')"
+            Me![txt_Check2Date] = Null
+            Me![txt_Check2Date].Requery
+        Else
+            plSQL = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + ",'NGS WES test: Result page checked by  " + Me![Checker2].Column(1) + " for test " + CStr(Me![NGSTestID]) + " requested " + CStr(Me![DateRequested]) + "',#" + dt + "#,'" + usr + "','" + cmp + "')"
+            Me![txt_Check2Date] = Now()
+            Me.[txt_Check2Date].Requery
+            Me.Parent.[SafetyCheck].Value = True
+            
+        End If
+        rs.Open plSQL, CurrentProject.Connection
+    End If
+    Set rs = Nothing
+End Sub
+
+Private Sub Form_Load()
+' If genome build has not been set, set to defult 109 = HG19
+If IsNull(Me![comb_WESResultBuild]) Then
+    Me!comb_WESResultBuild = 109
+End If
+End Sub

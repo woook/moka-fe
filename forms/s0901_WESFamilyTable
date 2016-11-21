@@ -1,0 +1,19 @@
+Option Compare Database
+
+Private Sub FamilyNoID_DblClick(Cancel As Integer)
+    Dim stDocName As String
+    Dim stLinkCriteria As String
+
+    stDocName = "87010 ExomePatients"
+    Debug.Print Me![FamilyNoID]
+        
+    stLinkCriteria = "[Forms]![87010 ExomePatients]![txFamilyTrustID].Value = " & Me![FamilyNoID]
+    
+    Debug.Print stLinkCriteria
+    DoCmd.OpenForm stDocName, , , , acFormAdd
+    [Forms]![87010 ExomePatients]![txFamilyTrustID].Value = Me![FamilyNoID]
+    
+    'DoCmd.OpenForm stDocName, , , stLinkCriteria
+    DoCmd.Close acForm, "s0901_WESFamily"
+
+End Sub
