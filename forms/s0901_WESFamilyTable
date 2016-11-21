@@ -17,4 +17,3 @@ Private Sub FamilyNoID_DblClick(Cancel As Integer)
     DoCmd.Close acForm, "s0901_WESFamily"
 
 End Sub
-

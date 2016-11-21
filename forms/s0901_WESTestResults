@@ -1,9 +1,17 @@
 Option Compare Database
+Private Sub Form_Load()
+' If genome build has not been set, set to defult 109 = HG19
+If IsNull(Me![comb_WESResultBuild]) Then
+    Me!comb_WESResultBuild = 109
+End If
 
-Private Sub Form_Current()
+'lock down result feld if test statusID = complete (4)
 If Me.StatusID = 4 Then
         Me.ResultCode.Locked = True
         Me.txt_result.Locked = True
+Else
+        Me.ResultCode.Locked = False
+        Me.txt_result.Locked = False
 End If
 
 End Sub
@@ -28,12 +36,7 @@ Private Sub comb_WESResultBuild_AfterUpdate()
 End Sub
 
 
-Private Sub Form_Load()
-' If genome build has not been set, set to defult 109 = HG19
-If IsNull(Me![comb_WESResultBuild]) Then
-    Me!comb_WESResultBuild = 109
-End If
-End Sub
+
 
 
 Private Sub btn_Phenotips_Click()
@@ -263,7 +266,7 @@ Else
         P!OverallResultComments = S
         P.Update
         
-        If Not IsNull(Me.ResultCode) Then
+        If Not IsNull(Me.[ResultCode].Column(1)) Then
             Dim Pa As ADODB.Recordset
             Dim Ua As ADODB.Recordset
             Set Pa = New ADODB.Recordset
@@ -360,7 +363,7 @@ Me.Dirty = flase
         Dim rc As String
         'Debug.Print " test"
         rc = Replace(Me![txt_Resultcmt], "'", "''")
-        S = "INSERT INTO PatientLogMemo(InternalPatientID, ArrayTestID, LogMemoEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + "," + CStr(Me![NGSTestID]) + ",'NGGS WES test: Result comment updated for WES test requested " + CStr(Me![DateRequested]) + " - " + rc + "',#" + dt + "#,'" + usr + "','" + cn + "')"
+        S = "INSERT INTO PatientLogMemo(InternalPatientID, ArrayTestID, LogMemoEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + "," + CStr(Me![NGSTestID]) + ",'NGS WES test: Result comment updated for WES test requested " + CStr(Me![DateRequested]) + " - " + rc + "',#" + dt + "#,'" + usr + "','" + cn + "')"
         'Debug.Print S
     End If
     Q.Open S, CurrentProject.Connection

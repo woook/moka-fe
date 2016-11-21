@@ -1,5 +1,39 @@
 Option Compare Database
 
+Private Sub Form_Current()
+   If (Not IsNull(Form_s0901_WESTestResults.Checker1) And Not IsNull(Form_s0901_WESTestResults.Checker2) And [Form_0901 ExomeNGSResults].SafetyCheck.Value = False) Then
+        Form_s0901_WESTestResults.AllowEdits = False
+'        Form_s09_OligoPreliminaryResults.AllowEdits = False
+'        Form_s09_OligoPreliminaryResults.AllowDeletions = False
+'        Form_s09_OligoPreliminaryResults.AllowAdditions = False
+        Form_s09_referpheno.AllowEdits = False
+        Form_s09_referpheno.AllowDeletions = False
+        Form_s09_referpheno.AllowAdditions = False
+        Form_s0901_NGSTestFile.AllowEdits = False
+        Form_s0901_NGSTestFile.AllowDeletions = False
+        Form_s0901_NGSTestFile.AllowAdditions = False
+
+    Else
+        Form_s0901_WESTestResults.AllowEdits = True
+'        Form_s09_OligoPreliminaryResults.AllowEdits = True
+'        Form_s09_OligoPreliminaryResults.AllowDeletions = True
+'        Form_s09_OligoPreliminaryResults.AllowAdditions = True
+        Form_s09_referpheno.AllowEdits = True
+        Form_s09_referpheno.AllowDeletions = True
+        Form_s09_referpheno.AllowAdditions = True
+        Form_s0901_NGSTestFile.AllowEdits = True
+        Form_s0901_NGSTestFile.AllowDeletions = True
+        Form_s0901_NGSTestFile.AllowAdditions = True
+        '[Form_09 ArrayResultsByPostition].AllowEdits = True
+    End If
+End Sub
+
+Private Sub btnSafetyOnOff_Click()
+SafetyCheck.Value = Not SafetyCheck.Value
+Form_Current
+End Sub
+
+
 Private Sub btn_FamilyDNAs_Click()
 
     Dim stDocName As String
@@ -37,10 +71,7 @@ Err_OpenPatientDetails_Click:
 End Sub
 End Sub
 
-Private Sub btnSafetyOnOff_Click()
-SafetyCheck.Value = Not SafetyCheck.Value
-'Form_Current
-End Sub
+
 
 Private Sub Patient_Status_AfterUpdate()
     Dim r As ADODB.Recordset
@@ -90,7 +121,11 @@ Private Sub Form_Unload(Cancel As Integer)
 Dim Y As String
 Dim x As Long
 
-x = Form![s0901_WESTestResults]![StatusID]
+If Not IsNull(Form![s0901_WESTestResults]![StatusID]) Then
+    x = Form![s0901_WESTestResults]![StatusID]
+Else: x = 3
+End If
+
 If Not IsNull(Form![s0901_WESTestResults]![Checker1]) Then
     Y = Form![s0901_WESTestResults]![Checker1]
 Else: Y = "Absent"
