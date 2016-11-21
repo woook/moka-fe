@@ -1,0 +1,40 @@
+Option Compare Database
+
+
+
+Private Sub NGSTestID_DblClick(Cancel As Integer)
+stDocName = "0901 ExomeNGSResults"
+    If Not IsNull(Me.[NGSTestID]) Then
+        stLinkCriteria = "[NGSTestID]=" & Me![NGSTestID]
+        'Debug.Print Me.[NGSTestID] & " load result form"
+        DoCmd.Close
+        DoCmd.OpenForm stDocName, , , stLinkCriteria
+    End If
+End Sub
+
+Private Sub Referral_DblClick(Cancel As Integer)
+    'Show detailed test info in popup window
+    If Not IsNull(Me.[NGSTestID]) Then
+        ' Debug.Print Me.[NGSTestID] & " load status form"
+        DoCmd.OpenForm "s87018_ExomeStatusPopup", , , , acFormAdd, , Me.[NGSTestID] & ", " & Me.PRU & ", " & Me.LastName & ", " & Me.FirstName & ", " & Me.DoB & ", " & Me.Gender & ", " & Me.Referral & ", " & Me.DateRequested & ", " & Me.RefName & ", " & Me.Status
+    End If
+End Sub
+
+Private Sub ResultComment_DblClick(Cancel As Integer)
+MsgBox "display popup detailing past result comments"
+End Sub
+
+Private Sub Selection_Click()
+Me.Dirty = False
+' displays a count of the number of records selected.
+Dim LTotal As Long
+LTotal = DCount("[Selection]", "s87020_ListWESSamples", "[Selection] = -1")
+Me.Parent.txt_SelectionCount = LTotal
+' set the select all tick box to empty
+Me.Parent.Check_selectAll.Value = 0
+
+End Sub
+
+Private Sub status_DblClick(Cancel As Integer)
+MsgBox "display popup detailing past status updates"
+End Sub
