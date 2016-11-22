@@ -1,0 +1,3 @@
+SELECT Patients.PatientID, Referral.Referral, NGSTest.DateRequested, PatientLogMemo.LogMemoEntry, PatientLogMemo.Date, PatientLogMemo.Login, PatientLogMemo.ArrayTestID, PatientLogMemo.InternalPatientID
+FROM Referral INNER JOIN ((PatientLogMemo INNER JOIN Patients ON PatientLogMemo.InternalPatientID = Patients.InternalPatientID) INNER JOIN NGSTest ON Patients.InternalPatientID = NGSTest.InternalPatientID) ON Referral.ReferralID = NGSTest.ReferralID
+ORDER BY PatientLogMemo.Date DESC;

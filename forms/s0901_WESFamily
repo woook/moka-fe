@@ -1,0 +1,7 @@
+Option Compare Database
+
+Private Sub Form_Load()
+Me![Txt_FamID] = [Forms]![0901 ExomeNGSResults]![txt_FamilyNoID]
+[Form]![s0901_WESFamilytable].Requery
+
+End Sub
