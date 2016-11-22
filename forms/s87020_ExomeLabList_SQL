@@ -1,2 +1,2 @@
-SELECT s87020_ListWESSamples_InProgress.*
+cSELECT s87020_ListWESSamples_InProgress.*
 FROM s87020_ListWESSamples_InProgress;
