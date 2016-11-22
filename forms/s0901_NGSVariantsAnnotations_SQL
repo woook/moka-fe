@@ -1,0 +1,2 @@
+SELECT NGSVariantAnnotations.*, "rs" & [NGSVariantAnnotations].[DBSNP] AS rsDBSNP
+FROM NGSVariantAnnotations;
