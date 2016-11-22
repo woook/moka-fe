@@ -776,7 +776,7 @@ ElseIf IsNull(Me.cmb_BatchAssign) And Not IsNull(Me.txt_NEWBatch) Then
     Exit Sub
 End If
 End If
-Me.cmb_BatchView.Refresh
+Me.cmb_BatchView.Requery
 End Sub
 
 Private Sub btn_Clear4_Click()
