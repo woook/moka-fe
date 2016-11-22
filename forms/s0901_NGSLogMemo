@@ -1,0 +1,5 @@
+Option Compare Database
+
+Private Sub Form_Load()
+PatientID.SelLength = 0
+End Sub
