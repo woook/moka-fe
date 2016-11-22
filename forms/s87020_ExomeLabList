@@ -28,7 +28,7 @@ Private Sub Referral_DblClick(Cancel As Integer)
     'Show detailed test info in popup window
     If Not IsNull(Me.[NGSTestID]) Then
         ' Debug.Print Me.[NGSTestID] & " load status form"
-        DoCmd.OpenForm "s87018_ExomeStatusPopup", , , , acFormAdd, , Me.[NGSTestID] & ", " & Me.PRU & ", " & Me.LastName & ", " & Me.FirstName & ", " & Me.DoB & ", " & Me.Gender & ", " & Me.Referral & ", " & Me.DateRequested & ", " & Me.RefName & ", " & Me.Status
+        DoCmd.OpenForm "s87018_ExomeStatusPopup", , , , acFormAdd, , Me.[NGSTestID] & ", " & Me.PRU & ", " & Me.LastName & ", " & Me.FirstName & ", " & Me.DoB & ", " & Me.Gender & ", " & Me.Referral & ", " & Me.DateRequested & ", " & Me.RefName & ", " & Me.status
     End If
 End Sub
 
@@ -43,7 +43,7 @@ Private Sub Selection_Click()
 Me.Dirty = False
 ' displays a count of the number of records selected.
 Dim LTotal As Long
-LTotal = DCount("[Selection]", "s87020_ListWESSamples", "[Selection] = -1")
+LTotal = DCount("[Selection]", "s87020_ListWESSamples", "[Selection] = true")
 Me.Parent.txt_SelectionCount = LTotal
 ' set the select all tick box to empty
 Me.Parent.Check_selectAll.Value = 0
