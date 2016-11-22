@@ -1,0 +1,4 @@
+87010_ExomePatient List box:
+SELECT DISTINCT dbo_PatientLinked.PatientID, dbo_PatientLinked.PatientTrustID, dbo_PatientLinked.FamilyTrustID, dbo_PatientLinked.LastName, dbo_PatientLinked.FirstName, dbo_PatientLinked.Gender, dbo_PatientLinked.DoB, 'YES' AS DNARecorded
+FROM (dbo_PatientLinked INNER JOIN dbo_SpecimenLinked ON dbo_PatientLinked.PatientID = dbo_SpecimenLinked.PatientID) INNER JOIN dbo_DNANumber2016 ON dbo_SpecimenLinked.SpecimenID = dbo_DNANumber2016.SpecimenID
+WHERE (((dbo_PatientLinked.FamilyTrustID)=[Forms]![87010 ExomePatients]![txFamilyTrustID]));

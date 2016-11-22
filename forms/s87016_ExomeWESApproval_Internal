@@ -1,0 +1,13 @@
+Option Compare Database
+' Check the approver is not the same as the referrer
+Private Sub CkboxAprov_Click()
+Dim usr As String
+usr = VBA.Environ("USERNAME")
+'Debug.Print Me![txtReferrerLogin].Value
+'Debug.Print Me![Referring Clinician].Value
+'Debug.Print usr
+If Me![txtReferrerLogin].Value = usr Then
+    msga = MsgBox("The WES approver may not have the same ID as the referring clinician.", vbOKOnly Or vbInformation, "INFORMATION")
+    Me![CkboxAprov].Value = 0
+End If
+End Sub

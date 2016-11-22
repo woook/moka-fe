@@ -1,0 +1,2 @@
+SELECT Checker.Name
+FROM Checker;

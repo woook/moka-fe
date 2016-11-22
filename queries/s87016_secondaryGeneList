@@ -1,0 +1,6 @@
+SELECT NGSTest.InternalPatientID, "Primary" AS Type, GenesHGNC_current.ApprovedSymbol, GenesHGNC_current.ApprovedName
+FROM NGSTest INNER JOIN (NGSPanelGenes INNER JOIN GenesHGNC_current ON NGSPanelGenes.HGNCID = GenesHGNC_current.HGNCID) ON NGSTest.NGSPanelID = NGSPanelGenes.NGSPanelID
+
+UNION SELECT NGSTest.InternalPatientID, "Secondary" AS Type, GenesHGNC_current.ApprovedSymbol, GenesHGNC_current.ApprovedName
+FROM NGSTest INNER JOIN (NGSPanelGenes INNER JOIN GenesHGNC_current ON NGSPanelGenes.HGNCID = GenesHGNC_current.HGNCID) ON NGSTest.NGSPanelID_B = NGSPanelGenes.NGSPanelID
+ORDER BY Type, ApprovedSymbol;
