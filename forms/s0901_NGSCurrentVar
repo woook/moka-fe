@@ -1,0 +1,41 @@
+
+Private Sub Classification_AfterUpdate()
+    Dim D As String
+    Dim un As String
+    Dim cn As String
+    Dim Classification As String
+    D = Format(Now(), "dd/mmm/yyyy Hh:Nn:ss")
+    un = VBA.Environ("USERNAME")
+    cn = VBA.Environ("COMPUTERNAME")
+    patID = Me.InternalPatientID
+    Classification = Me.Classification.Column(1)
+    sqlMemo = "INSERT INTO NGSLogMemo(InternalPatientID, Type, LinkID, LogMemoEntry, [Date], Login, PCName) VALUES(" + CStr(patID) + ", 2, " + CStr(Me.NGSVariantID) + ",'Variant classification updated to: " + Classification + "',#" + D + "#,'" + un + "','" + cn + "')"
+    sqlPatLogVar = "INSERT INTO PatientLog (InternalPatientID, LogEntry, [Date], Login, PCName) VALUES (" & patID & ", 'NGS: Variant classification for NGSVariantID " & Me.NGSVariantID & " updated to: " & Classification & "', #" + D + "#,'" + un + "','" + cn + "')"
+    DoCmd.SetWarnings False
+    DoCmd.RunSQL sqlMemo
+    DoCmd.RunSQL sqlPatLogVar
+    DoCmd.SetWarnings True
+End Sub
+
+
+Private Sub commentShort_DblClick(Cancel As Integer)
+    Dim stDocName As String
+    stDocName = "s0901_NGSVarComment"
+    If Not IsNull(Me.NGSVariantCommentID) Then
+        stLinkCriteria = "[NGSVariantCommentID] = " & Me.NGSVariantCommentID
+        DoCmd.OpenForm stDocName, , , stLinkCriteria, acFormEdit, , Me.NGSVariantID & "," & Me.InternalPatientID
+    Else
+        DoCmd.OpenForm stDocName, , , , acFormAdd, , Me.NGSVariantID & "," & Me.InternalPatientID
+    End If
+End Sub
+
+Private Sub CommentShort_MouseDown(Button As Integer, Shift As Integer, x As Single, Y As Single)
+    If Shift = acCtrlMask Then
+        ' Ctrl + click will view log history for Variant
+        Me.Dirty = False 'Forces any changes to be saved
+        Dim stDocName As String
+        stDocName = "s0901_NGSLogMemo"
+        stLinkCriteria = "[Type] = 2 AND [LinkID] = " & Me.NGSVariantID
+        DoCmd.OpenForm stDocName, acFormDS, , stLinkCriteria
+    End If
+End Sub
