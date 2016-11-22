@@ -1,6 +1,5 @@
 Option Compare Database
 
-
 Private Sub Form_Load()
 txt_SelectionCount.Value = 0
 Me.Check_selectAll.Value = 0
@@ -16,9 +15,11 @@ End Sub
 Function Unselect()
 ' Use to unselect a test. Sets selection to 0 for all
 Dim unsel As String
+
     unsel = "UPDATE NGSTest SET NGSTest.Selection = 0 WHERE NGSTest.StatusID <> 1202218787"
     DoCmd.SetWarnings False
     DoCmd.RunSQL unsel
+    Me.Check_selectAll.Value = 0
     Form![s87020_ExomeLabList].Requery
     DoCmd.SetWarnings True
 End Function
@@ -39,6 +40,19 @@ Me.txt_TotalTally = AllTotal
 selTotal = DCount("[Selection]", "s87020_ListWESSamples", "[Selection] = -1")
 Me.txt_SelectionCount = selTotal
 
+End Sub
+
+Private Sub btn_SelDNA_Click()
+' open form to select DNA of NGS patients
+    DoCmd.Close
+    DoCmd.OpenForm "87022 WESDNAPatients"
+End Sub
+
+
+Private Sub btn_DNAWorksheet_Click()
+' open form to viw DNA QC worksheet for NGS patients
+    DoCmd.Close
+    DoCmd.OpenForm "87024 WESDNAQC"
 End Sub
 
 
@@ -151,11 +165,7 @@ Else
         DoCmd.SetWarnings True
     Else
         Call Unselect
-'        unsel = "UPDATE NGSTest SET NGSTest.Selection = 0 WHERE NGSTest.StatusID <> 1202218787"
-'        DoCmd.SetWarnings False
-'        DoCmd.RunSQL unsel
-'        Form![s87020_ExomeLabList].Requery
-'        DoCmd.SetWarnings True
+
     End If
 End If
 
@@ -177,8 +187,9 @@ Call Unselect
     
 ' reload subform calling querey to view all
            
-subfrmSQL = "SELECT NGSTest.Selection, Patients.PatientID AS PRU, NGSTest.NGSTestID, dbo_Patient_table.LastName, dbo_Patient_table.FirstName, dbo_Patient_table.DoB, gw_GenderTable.GenderShort, Referral.Referral, NGSTest.DateRequested, Checker.Name AS RefName, Checker.Initials AS Referrer, NGSPanel.Panel AS PanelA, NGSPanel_1.Panel AS PanelB, Status_1.StatusID AS PatientStatus, WESBatch.BatchName AS WESBatch, Status.StatusID, Status.Status AS TestStatus, NGSTest.ResultComment, Patients.InternalPatientID, Checker_1.Initials AS Checker1, NGSTest.Check1Date, Checker_2.Initials AS Checker2, NGSTest.Check2Date, Checker_3.Initials AS ReportApproved, NGSTest.Check3Date, Patients.s_StatusOverall, NGSPanel.PanelCode AS [Primary], NGSPanel_1.PanelCode AS Secondary " & _
-            "FROM (((((((((((((NGSTest INNER JOIN Patients ON NGSTest.InternalPatientID = Patients.InternalPatientID) INNER JOIN Referral ON NGSTest.ReferralID = Referral.ReferralID) INNER JOIN Checker ON NGSTest.BookBy = Checker.Check1ID) INNER JOIN NGSPanel ON NGSTest.NGSPanelID = NGSPanel.NGSPanelID) LEFT JOIN NGSPanel AS NGSPanel_1 ON NGSTest.NGSPanelID_B = NGSPanel_1.NGSPanelID) INNER JOIN Status ON NGSTest.StatusID = Status.StatusID) INNER JOIN dbo_Patient_table ON Patients.PatientID = dbo_Patient_table.PatientTrustID) LEFT JOIN DNA ON NGSTest.DNA = DNA.DNANumber) INNER JOIN Status AS Status_1 ON Patients.s_StatusOverall = Status_1.StatusID) LEFT JOIN gw_GenderTable ON dbo_Patient_table.GenderID = gw_GenderTable.GenderID) LEFT JOIN WESBatch ON NGSTest.WESBatch = WESBatch.ID) LEFT JOIN Checker AS Checker_1 ON NGSTest.Check1ID = Checker_1.Check1ID) LEFT JOIN Checker AS Checker_2 ON NGSTest.Check2ID = Checker_2.Check1ID) LEFT JOIN Checker AS Checker_3 ON NGSTest.Check3ID = Checker_3.Check1ID " & _
+subfrmSQL = "SELECT NGSTest.Selection, Patients.PatientID AS PRU, NGSTest.NGSTestID, dbo_Patient_table.LastName, dbo_Patient_table.FirstName, dbo_Patient_table.DoB, gw_GenderTable.GenderShort, Referral.Referral, NGSTest.DateRequested, Checker.Name AS RefName, Checker.Initials AS Referrer, NGSPanel.Panel AS PanelA, NGSPanel_1.Panel AS PanelB, Status_1.StatusID AS PatientStatus, NGSWESBatch.BatchName AS WESBatch, Status.StatusID, Status.Status AS TestStatus, NGSTest.ResultComment, Patients.InternalPatientID, Checker_1.Initials AS Checker1, NGSTest.Check1Date, Checker_2.Initials AS Checker2, NGSTest.Check2Date, Checker_3.Initials AS ReportApproved, NGSTest.Check3Date, Patients.s_StatusOverall, NGSPanel.PanelCode AS [Primary], NGSPanel_1.PanelCode AS Secondary " & _
+            "FROM (((((((((((((NGSTest INNER JOIN Patients ON NGSTest.InternalPatientID = Patients.InternalPatientID) INNER JOIN Referral ON NGSTest.ReferralID = Referral.ReferralID) INNER JOIN Checker ON NGSTest.BookBy = Checker.Check1ID) INNER JOIN NGSPanel ON NGSTest.NGSPanelID = NGSPanel.NGSPanelID) LEFT JOIN NGSPanel AS NGSPanel_1 ON NGSTest.NGSPanelID_B = NGSPanel_1.NGSPanelID) INNER JOIN Status ON NGSTest.StatusID = Status.StatusID) INNER JOIN dbo_Patient_table ON Patients.PatientID = dbo_Patient_table.PatientTrustID) LEFT JOIN DNA ON NGSTest.DNA = DNA.DNANumber) INNER JOIN Status AS Status_1 ON Patients.s_StatusOverall = Status_1.StatusID) LEFT JOIN gw_GenderTable ON dbo_Patient_table.GenderID = gw_GenderTable.GenderID) " & _
+            "LEFT JOIN NGSWESBatch ON NGSTest.WESBatch = NGSWESBatch.NGSWESBatchID) LEFT JOIN Checker AS Checker_1 ON NGSTest.Check1ID = Checker_1.Check1ID) LEFT JOIN Checker AS Checker_2 ON NGSTest.Check2ID = Checker_2.Check1ID) LEFT JOIN Checker AS Checker_3 ON NGSTest.Check3ID = Checker_3.Check1ID " & _
             "WHERE (((Status.StatusID)<>1202218787 And (Status.StatusID)<>4 And (Status.StatusID)<>1202218816)) " & _
             "ORDER BY NGSTest.DateRequested;"
             
@@ -219,14 +230,15 @@ Me.cmb_BatchView.Value = Null
 Me.Cmb_StatusView.Value = Null
     
 ' reload subform calling querey to view samples not assigned to a WES batch
-subfrmSQL = "SELECT NGSTest.Selection, Patients.PatientID AS PRU, NGSTest.NGSTestID, dbo_Patient_table.LastName, dbo_Patient_table.FirstName, dbo_Patient_table.DoB, gw_GenderTable.GenderShort, Referral.Referral, NGSTest.DateRequested, Checker.Name AS RefName, Checker.Initials AS Referrer, NGSPanel.Panel AS PanelA, NGSPanel_1.Panel AS PanelB, Status_1.StatusID AS PatientStatus, WESBatch.BatchName AS WESBatch, Status.StatusID, Status.Status AS TestStatus, NGSTest.ResultComment, Patients.InternalPatientID, Checker_1.Initials AS Checker1, NGSTest.Check1Date, Checker_2.Initials AS Checker2, NGSTest.Check2Date, Checker_3.Initials AS ReportApproved, NGSTest.Check3Date, Patients.s_StatusOverall, NGSPanel.PanelCode AS [Primary], NGSPanel_1.PanelCode AS Secondary " & _
-            "FROM (((((((((((((NGSTest INNER JOIN Patients ON NGSTest.InternalPatientID = Patients.InternalPatientID) INNER JOIN Referral ON NGSTest.ReferralID = Referral.ReferralID) INNER JOIN Checker ON NGSTest.BookBy = Checker.Check1ID) INNER JOIN NGSPanel ON NGSTest.NGSPanelID = NGSPanel.NGSPanelID) LEFT JOIN NGSPanel AS NGSPanel_1 ON NGSTest.NGSPanelID_B = NGSPanel_1.NGSPanelID) INNER JOIN Status ON NGSTest.StatusID = Status.StatusID) INNER JOIN dbo_Patient_table ON Patients.PatientID = dbo_Patient_table.PatientTrustID) LEFT JOIN DNA ON NGSTest.DNA = DNA.DNANumber) INNER JOIN Status AS Status_1 ON Patients.s_StatusOverall = Status_1.StatusID) LEFT JOIN gw_GenderTable ON dbo_Patient_table.GenderID = gw_GenderTable.GenderID) LEFT JOIN WESBatch ON NGSTest.WESBatch = WESBatch.ID) LEFT JOIN Checker AS Checker_1 ON NGSTest.Check1ID = Checker_1.Check1ID) LEFT JOIN Checker AS Checker_2 ON NGSTest.Check2ID = Checker_2.Check1ID) LEFT JOIN Checker AS Checker_3 ON NGSTest.Check3ID = Checker_3.Check1ID " & _
-            "WHERE (((Status_1.StatusID) = 1202218798) And ((Status.StatusID) = 1202218803)) " & _
+subfrmSQL = "SELECT NGSTest.Selection, Patients.PatientID AS PRU, NGSTest.NGSTestID, dbo_Patient_table.LastName, dbo_Patient_table.FirstName, dbo_Patient_table.DoB, gw_GenderTable.GenderShort, Referral.Referral, NGSTest.DateRequested, Checker.Name AS RefName, Checker.Initials AS Referrer, NGSPanel.Panel AS PanelA, NGSPanel_1.Panel AS PanelB, Status_1.StatusID AS PatientStatus, NGSWESBatch.BatchName AS WESBatch, Status.StatusID, Status.Status AS TestStatus, NGSTest.ResultComment, Patients.InternalPatientID, Checker_1.Initials AS Checker1, NGSTest.Check1Date, Checker_2.Initials AS Checker2, NGSTest.Check2Date, Checker_3.Initials AS ReportApproved, NGSTest.Check3Date, Patients.s_StatusOverall, NGSPanel.PanelCode AS [Primary], NGSPanel_1.PanelCode AS Secondary " & _
+            "FROM (((((((((((((NGSTest INNER JOIN Patients ON NGSTest.InternalPatientID = Patients.InternalPatientID) INNER JOIN Referral ON NGSTest.ReferralID = Referral.ReferralID) INNER JOIN Checker ON NGSTest.BookBy = Checker.Check1ID) INNER JOIN NGSPanel ON NGSTest.NGSPanelID = NGSPanel.NGSPanelID) LEFT JOIN NGSPanel AS NGSPanel_1 ON NGSTest.NGSPanelID_B = NGSPanel_1.NGSPanelID) INNER JOIN Status ON NGSTest.StatusID = Status.StatusID) INNER JOIN dbo_Patient_table ON Patients.PatientID = dbo_Patient_table.PatientTrustID) LEFT JOIN DNA ON NGSTest.DNA = DNA.DNANumber) INNER JOIN Status AS Status_1 ON Patients.s_StatusOverall = Status_1.StatusID) LEFT JOIN gw_GenderTable ON dbo_Patient_table.GenderID = gw_GenderTable.GenderID) " & _
+            "LEFT JOIN NGSWESBatch ON NGSTest.WESBatch = NGSWESBatch.NGSWESBatchID) LEFT JOIN Checker AS Checker_1 ON NGSTest.Check1ID = Checker_1.Check1ID) LEFT JOIN Checker AS Checker_2 ON NGSTest.Check2ID = Checker_2.Check1ID) LEFT JOIN Checker AS Checker_3 ON NGSTest.Check3ID = Checker_3.Check1ID " & _
+            "WHERE (((Status_1.StatusID)=1202218798) AND ((Status.StatusID)<>1202218787) AND ((NGSTest.WESBatch) Is Null))" & _
             "ORDER BY NGSTest.DateRequested;"
 [Form_s87020_ExomeLabList].Form.RecordSource = subfrmSQL
 
 'refresh selection count
-strCriteria = "statusID = 1202218803"
+strCriteria = "statusID <> 1202218787 AND WESBatch Is Null"
 AllTotal = DCount("NGSTestID", "s87020_ListWESSamples", strCriteria)
 'Debug.Print AllTotal
 Me.txt_TotalTally = AllTotal
@@ -257,8 +269,9 @@ Dim AllTotal As Long
 Call Unselect
     
 ' reload subform calling querey to view all test pending second check
-subfrmSQL = "SELECT NGSTest.Selection, Patients.PatientID AS PRU, NGSTest.NGSTestID, dbo_Patient_table.LastName, dbo_Patient_table.FirstName, dbo_Patient_table.DoB, gw_GenderTable.GenderShort, Referral.Referral, NGSTest.DateRequested, Checker.Name AS RefName, Checker.Initials AS Referrer, NGSPanel.Panel AS PanelA, NGSPanel_1.Panel AS PanelB, Status_1.StatusID AS PatientStatus, WESBatch.BatchName AS WESBatch, Status.StatusID, Status.Status AS TestStatus, NGSTest.ResultComment, Patients.InternalPatientID, Checker_1.Initials AS Checker1, NGSTest.Check1Date, Checker_2.Initials AS Checker2, NGSTest.Check2Date, Checker_3.Initials AS ReportApproved, NGSTest.Check3Date, Patients.s_StatusOverall, NGSPanel.PanelCode AS [Primary], NGSPanel_1.PanelCode AS Secondary " & _
-            "FROM (((((((((((((NGSTest INNER JOIN Patients ON NGSTest.InternalPatientID = Patients.InternalPatientID) INNER JOIN Referral ON NGSTest.ReferralID = Referral.ReferralID) INNER JOIN Checker ON NGSTest.BookBy = Checker.Check1ID) INNER JOIN NGSPanel ON NGSTest.NGSPanelID = NGSPanel.NGSPanelID) LEFT JOIN NGSPanel AS NGSPanel_1 ON NGSTest.NGSPanelID_B = NGSPanel_1.NGSPanelID) INNER JOIN Status ON NGSTest.StatusID = Status.StatusID) INNER JOIN dbo_Patient_table ON Patients.PatientID = dbo_Patient_table.PatientTrustID) LEFT JOIN DNA ON NGSTest.DNA = DNA.DNANumber) INNER JOIN Status AS Status_1 ON Patients.s_StatusOverall = Status_1.StatusID) LEFT JOIN gw_GenderTable ON dbo_Patient_table.GenderID = gw_GenderTable.GenderID) LEFT JOIN WESBatch ON NGSTest.WESBatch = WESBatch.ID) LEFT JOIN Checker AS Checker_1 ON NGSTest.Check1ID = Checker_1.Check1ID) LEFT JOIN Checker AS Checker_2 ON NGSTest.Check2ID = Checker_2.Check1ID) LEFT JOIN Checker AS Checker_3 ON NGSTest.Check3ID = Checker_3.Check1ID " & _
+subfrmSQL = "SELECT NGSTest.Selection, Patients.PatientID AS PRU, NGSTest.NGSTestID, dbo_Patient_table.LastName, dbo_Patient_table.FirstName, dbo_Patient_table.DoB, gw_GenderTable.GenderShort, Referral.Referral, NGSTest.DateRequested, Checker.Name AS RefName, Checker.Initials AS Referrer, NGSPanel.Panel AS PanelA, NGSPanel_1.Panel AS PanelB, Status_1.StatusID AS PatientStatus, NGSWESBatch.BatchName AS WESBatch, Status.StatusID, Status.Status AS TestStatus, NGSTest.ResultComment, Patients.InternalPatientID, Checker_1.Initials AS Checker1, NGSTest.Check1Date, Checker_2.Initials AS Checker2, NGSTest.Check2Date, Checker_3.Initials AS ReportApproved, NGSTest.Check3Date, Patients.s_StatusOverall, NGSPanel.PanelCode AS [Primary], NGSPanel_1.PanelCode AS Secondary " & _
+            "FROM (((((((((((((NGSTest INNER JOIN Patients ON NGSTest.InternalPatientID = Patients.InternalPatientID) INNER JOIN Referral ON NGSTest.ReferralID = Referral.ReferralID) INNER JOIN Checker ON NGSTest.BookBy = Checker.Check1ID) INNER JOIN NGSPanel ON NGSTest.NGSPanelID = NGSPanel.NGSPanelID) LEFT JOIN NGSPanel AS NGSPanel_1 ON NGSTest.NGSPanelID_B = NGSPanel_1.NGSPanelID) INNER JOIN Status ON NGSTest.StatusID = Status.StatusID) INNER JOIN dbo_Patient_table ON Patients.PatientID = dbo_Patient_table.PatientTrustID) LEFT JOIN DNA ON NGSTest.DNA = DNA.DNANumber) INNER JOIN Status AS Status_1 ON Patients.s_StatusOverall = Status_1.StatusID) LEFT JOIN gw_GenderTable ON dbo_Patient_table.GenderID = gw_GenderTable.GenderID) " & _
+            "LEFT JOIN NGSWESBatch ON NGSTest.WESBatch = NGSWESBatch.NGSWESBatchID) LEFT JOIN Checker AS Checker_1 ON NGSTest.Check1ID = Checker_1.Check1ID) LEFT JOIN Checker AS Checker_2 ON NGSTest.Check2ID = Checker_2.Check1ID) LEFT JOIN Checker AS Checker_3 ON NGSTest.Check3ID = Checker_3.Check1ID " & _
             "WHERE Status.StatusID = 1202218807 And checker_1.Initials Is Null " & _
             "ORDER BY NGSTest.DateRequested;"
 
@@ -295,8 +308,9 @@ Dim AllTotal As Long
 Call Unselect
     
 ' reload subform calling querey to view all test pending second check
-subfrmSQL = "SELECT NGSTest.Selection, Patients.PatientID AS PRU, NGSTest.NGSTestID, dbo_Patient_table.LastName, dbo_Patient_table.FirstName, dbo_Patient_table.DoB, gw_GenderTable.GenderShort, Referral.Referral, NGSTest.DateRequested, Checker.Name AS RefName, Checker.Initials AS Referrer, NGSPanel.Panel AS PanelA, NGSPanel_1.Panel AS PanelB, Status_1.StatusID AS PatientStatus, WESBatch.BatchName AS WESBatch, Status.StatusID, Status.Status AS TestStatus, NGSTest.ResultComment, Patients.InternalPatientID, Checker_1.Initials AS Checker1, NGSTest.Check1Date, Checker_2.Initials AS Checker2, NGSTest.Check2Date, Checker_3.Initials AS ReportApproved, NGSTest.Check3Date, Patients.s_StatusOverall, NGSPanel.PanelCode AS [Primary], NGSPanel_1.PanelCode AS Secondary " & _
-            "FROM (((((((((((((NGSTest INNER JOIN Patients ON NGSTest.InternalPatientID = Patients.InternalPatientID) INNER JOIN Referral ON NGSTest.ReferralID = Referral.ReferralID) INNER JOIN Checker ON NGSTest.BookBy = Checker.Check1ID) INNER JOIN NGSPanel ON NGSTest.NGSPanelID = NGSPanel.NGSPanelID) LEFT JOIN NGSPanel AS NGSPanel_1 ON NGSTest.NGSPanelID_B = NGSPanel_1.NGSPanelID) INNER JOIN Status ON NGSTest.StatusID = Status.StatusID) INNER JOIN dbo_Patient_table ON Patients.PatientID = dbo_Patient_table.PatientTrustID) LEFT JOIN DNA ON NGSTest.DNA = DNA.DNANumber) INNER JOIN Status AS Status_1 ON Patients.s_StatusOverall = Status_1.StatusID) LEFT JOIN gw_GenderTable ON dbo_Patient_table.GenderID = gw_GenderTable.GenderID) LEFT JOIN WESBatch ON NGSTest.WESBatch = WESBatch.ID) LEFT JOIN Checker AS Checker_1 ON NGSTest.Check1ID = Checker_1.Check1ID) LEFT JOIN Checker AS Checker_2 ON NGSTest.Check2ID = Checker_2.Check1ID) LEFT JOIN Checker AS Checker_3 ON NGSTest.Check3ID = Checker_3.Check1ID " & _
+subfrmSQL = "SELECT NGSTest.Selection, Patients.PatientID AS PRU, NGSTest.NGSTestID, dbo_Patient_table.LastName, dbo_Patient_table.FirstName, dbo_Patient_table.DoB, gw_GenderTable.GenderShort, Referral.Referral, NGSTest.DateRequested, Checker.Name AS RefName, Checker.Initials AS Referrer, NGSPanel.Panel AS PanelA, NGSPanel_1.Panel AS PanelB, Status_1.StatusID AS PatientStatus, NGSWESBatch.BatchName AS WESBatch, Status.StatusID, Status.Status AS TestStatus, NGSTest.ResultComment, Patients.InternalPatientID, Checker_1.Initials AS Checker1, NGSTest.Check1Date, Checker_2.Initials AS Checker2, NGSTest.Check2Date, Checker_3.Initials AS ReportApproved, NGSTest.Check3Date, Patients.s_StatusOverall, NGSPanel.PanelCode AS [Primary], NGSPanel_1.PanelCode AS Secondary " & _
+            "FROM (((((((((((((NGSTest INNER JOIN Patients ON NGSTest.InternalPatientID = Patients.InternalPatientID) INNER JOIN Referral ON NGSTest.ReferralID = Referral.ReferralID) INNER JOIN Checker ON NGSTest.BookBy = Checker.Check1ID) INNER JOIN NGSPanel ON NGSTest.NGSPanelID = NGSPanel.NGSPanelID) LEFT JOIN NGSPanel AS NGSPanel_1 ON NGSTest.NGSPanelID_B = NGSPanel_1.NGSPanelID) INNER JOIN Status ON NGSTest.StatusID = Status.StatusID) INNER JOIN dbo_Patient_table ON Patients.PatientID = dbo_Patient_table.PatientTrustID) LEFT JOIN DNA ON NGSTest.DNA = DNA.DNANumber) INNER JOIN Status AS Status_1 ON Patients.s_StatusOverall = Status_1.StatusID) LEFT JOIN gw_GenderTable ON dbo_Patient_table.GenderID = gw_GenderTable.GenderID) " & _
+            "LEFT JOIN NGSWESBatch ON NGSTest.WESBatch = NGSWESBatch.NGSWESBatchID) LEFT JOIN Checker AS Checker_1 ON NGSTest.Check1ID = Checker_1.Check1ID) LEFT JOIN Checker AS Checker_2 ON NGSTest.Check2ID = Checker_2.Check1ID) LEFT JOIN Checker AS Checker_3 ON NGSTest.Check3ID = Checker_3.Check1ID " & _
             "WHERE (((Status_1.StatusID) = 1202218798) And ((Status.StatusID) <> 1202218787)) AND (((Checker_1.Initials) Is Not Null) And ((Checker_2.Initials) Is Null)) " & _
             "ORDER BY NGSTest.DateRequested;"
 [Form_s87020_ExomeLabList].Form.RecordSource = subfrmSQL
@@ -333,8 +347,10 @@ Call Unselect
 ' if status selection  = null do normal SQL
 If Not IsNull(Me!cmb_BatchView) Then
     If IsNull(Cmb_StatusView) Then
-        subfrmSQL = "SELECT NGSTest.Selection, Patients.PatientID AS PRU, NGSTest.NGSTestID, dbo_Patient_table.LastName, dbo_Patient_table.FirstName, dbo_Patient_table.DoB, gw_GenderTable.GenderShort, Referral.Referral, NGSTest.DateRequested, Checker.Name AS RefName, Checker.Initials AS Referrer, NGSPanel.Panel AS PanelA, NGSPanel_1.Panel AS PanelB, Status_1.StatusID AS PatientStatus, WESBatch.BatchName AS WESBatch, Status.StatusID, Status.Status AS TestStatus, NGSTest.ResultComment, Patients.InternalPatientID, Checker_1.Initials AS Checker1, NGSTest.Check1Date, Checker_2.Initials AS Checker2, NGSTest.Check2Date, Checker_3.Initials AS ReportApproved, NGSTest.Check3Date, Patients.s_StatusOverall, NGSPanel.PanelCode AS [Primary], NGSPanel_1.PanelCode AS Secondary " & _
-                    "FROM (((((((((((((NGSTest INNER JOIN Patients ON NGSTest.InternalPatientID = Patients.InternalPatientID) INNER JOIN Referral ON NGSTest.ReferralID = Referral.ReferralID) INNER JOIN Checker ON NGSTest.BookBy = Checker.Check1ID) INNER JOIN NGSPanel ON NGSTest.NGSPanelID = NGSPanel.NGSPanelID) LEFT JOIN NGSPanel AS NGSPanel_1 ON NGSTest.NGSPanelID_B = NGSPanel_1.NGSPanelID) INNER JOIN Status ON NGSTest.StatusID = Status.StatusID) INNER JOIN dbo_Patient_table ON Patients.PatientID = dbo_Patient_table.PatientTrustID) LEFT JOIN DNA ON NGSTest.DNA = DNA.DNANumber) INNER JOIN Status AS Status_1 ON Patients.s_StatusOverall = Status_1.StatusID) LEFT JOIN gw_GenderTable ON dbo_Patient_table.GenderID = gw_GenderTable.GenderID) LEFT JOIN WESBatch ON NGSTest.WESBatch = WESBatch.ID) LEFT JOIN Checker AS Checker_1 ON NGSTest.Check1ID = Checker_1.Check1ID) LEFT JOIN Checker AS Checker_2 ON NGSTest.Check2ID = Checker_2.Check1ID) LEFT JOIN Checker AS Checker_3 ON NGSTest.Check3ID = Checker_3.Check1ID " & _
+        subfrmSQL = "SELECT NGSTest.Selection, Patients.PatientID AS PRU, NGSTest.NGSTestID, dbo_Patient_table.LastName, dbo_Patient_table.FirstName, dbo_Patient_table.DoB, gw_GenderTable.GenderShort, Referral.Referral, NGSTest.DateRequested, Checker.Name AS RefName, Checker.Initials AS Referrer, NGSPanel.Panel AS PanelA, NGSPanel_1.Panel AS PanelB, Status_1.StatusID AS PatientStatus, NGSWESBatch.BatchName AS WESBatch, Status.StatusID, Status.Status AS TestStatus, NGSTest.ResultComment, Patients.InternalPatientID, Checker_1.Initials AS Checker1, NGSTest.Check1Date, Checker_2.Initials AS Checker2, NGSTest.Check2Date, Checker_3.Initials AS ReportApproved, NGSTest.Check3Date, Patients.s_StatusOverall, NGSPanel.PanelCode AS [Primary], NGSPanel_1.PanelCode AS Secondary " & _
+                    "FROM (((((((((((((NGSTest INNER JOIN Patients ON NGSTest.InternalPatientID = Patients.InternalPatientID) INNER JOIN Referral ON NGSTest.ReferralID = Referral.ReferralID) INNER JOIN Checker ON NGSTest.BookBy = Checker.Check1ID) INNER JOIN NGSPanel ON NGSTest.NGSPanelID = NGSPanel.NGSPanelID) LEFT JOIN NGSPanel AS NGSPanel_1 ON NGSTest.NGSPanelID_B = NGSPanel_1.NGSPanelID) INNER JOIN Status ON NGSTest.StatusID = Status.StatusID) INNER JOIN dbo_Patient_table ON Patients.PatientID = dbo_Patient_table.PatientTrustID) LEFT JOIN DNA ON NGSTest.DNA = DNA.DNANumber) INNER JOIN Status AS Status_1 ON Patients.s_StatusOverall = Status_1.StatusID)" & _
+                    "LEFT JOIN gw_GenderTable ON dbo_Patient_table.GenderID = gw_GenderTable.GenderID)" & _
+                    "LEFT JOIN NGSWESBatch ON NGSTest.WESBatch = NGSWESBatch.NGSWESBatchID) LEFT JOIN Checker AS Checker_1 ON NGSTest.Check1ID = Checker_1.Check1ID) LEFT JOIN Checker AS Checker_2 ON NGSTest.Check2ID = Checker_2.Check1ID) LEFT JOIN Checker AS Checker_3 ON NGSTest.Check3ID = Checker_3.Check1ID " & _
                     "WHERE ((Status_1.StatusID) = 1202218798) And ((Status.StatusID) <> 1202218787) And NGSTest.WESBatch = " & CStr(Me![cmb_BatchView]) & " " & _
                     "ORDER BY NGSTest.DateRequested;"
                     
@@ -351,8 +367,9 @@ If Not IsNull(Me!cmb_BatchView) Then
         
     ' else display the subform filtered on batch and status option if a status has aready been selected
     Else
-        subfrmSQL = "SELECT NGSTest.Selection, Patients.PatientID AS PRU, NGSTest.NGSTestID, dbo_Patient_table.LastName, dbo_Patient_table.FirstName, dbo_Patient_table.DoB, gw_GenderTable.GenderShort, Referral.Referral, NGSTest.DateRequested, Checker.Name AS RefName, Checker.Initials AS Referrer, NGSPanel.Panel AS PanelA, NGSPanel_1.Panel AS PanelB, Status_1.StatusID AS PatientStatus, WESBatch.BatchName AS WESBatch, Status.StatusID, Status.Status AS TestStatus, NGSTest.ResultComment, Patients.InternalPatientID, Checker_1.Initials AS Checker1, NGSTest.Check1Date, Checker_2.Initials AS Checker2, NGSTest.Check2Date, Checker_3.Initials AS ReportApproved, NGSTest.Check3Date, Patients.s_StatusOverall, NGSPanel.PanelCode AS [Primary], NGSPanel_1.PanelCode AS Secondary " & _
-                    "FROM (((((((((((((NGSTest INNER JOIN Patients ON NGSTest.InternalPatientID = Patients.InternalPatientID) INNER JOIN Referral ON NGSTest.ReferralID = Referral.ReferralID) INNER JOIN Checker ON NGSTest.BookBy = Checker.Check1ID) INNER JOIN NGSPanel ON NGSTest.NGSPanelID = NGSPanel.NGSPanelID) LEFT JOIN NGSPanel AS NGSPanel_1 ON NGSTest.NGSPanelID_B = NGSPanel_1.NGSPanelID) INNER JOIN Status ON NGSTest.StatusID = Status.StatusID) INNER JOIN dbo_Patient_table ON Patients.PatientID = dbo_Patient_table.PatientTrustID) LEFT JOIN DNA ON NGSTest.DNA = DNA.DNANumber) INNER JOIN Status AS Status_1 ON Patients.s_StatusOverall = Status_1.StatusID) LEFT JOIN gw_GenderTable ON dbo_Patient_table.GenderID = gw_GenderTable.GenderID) LEFT JOIN WESBatch ON NGSTest.WESBatch = WESBatch.ID) LEFT JOIN Checker AS Checker_1 ON NGSTest.Check1ID = Checker_1.Check1ID) LEFT JOIN Checker AS Checker_2 ON NGSTest.Check2ID = Checker_2.Check1ID) LEFT JOIN Checker AS Checker_3 ON NGSTest.Check3ID = Checker_3.Check1ID " & _
+        subfrmSQL = "SELECT NGSTest.Selection, Patients.PatientID AS PRU, NGSTest.NGSTestID, dbo_Patient_table.LastName, dbo_Patient_table.FirstName, dbo_Patient_table.DoB, gw_GenderTable.GenderShort, Referral.Referral, NGSTest.DateRequested, Checker.Name AS RefName, Checker.Initials AS Referrer, NGSPanel.Panel AS PanelA, NGSPanel_1.Panel AS PanelB, Status_1.StatusID AS PatientStatus, NGSWESBatch.BatchName AS WESBatch, Status.StatusID, Status.Status AS TestStatus, NGSTest.ResultComment, Patients.InternalPatientID, Checker_1.Initials AS Checker1, NGSTest.Check1Date, Checker_2.Initials AS Checker2, NGSTest.Check2Date, Checker_3.Initials AS ReportApproved, NGSTest.Check3Date, Patients.s_StatusOverall, NGSPanel.PanelCode AS [Primary], NGSPanel_1.PanelCode AS Secondary " & _
+                    "FROM (((((((((((((NGSTest INNER JOIN Patients ON NGSTest.InternalPatientID = Patients.InternalPatientID) INNER JOIN Referral ON NGSTest.ReferralID = Referral.ReferralID) INNER JOIN Checker ON NGSTest.BookBy = Checker.Check1ID) INNER JOIN NGSPanel ON NGSTest.NGSPanelID = NGSPanel.NGSPanelID) LEFT JOIN NGSPanel AS NGSPanel_1 ON NGSTest.NGSPanelID_B = NGSPanel_1.NGSPanelID) INNER JOIN Status ON NGSTest.StatusID = Status.StatusID) INNER JOIN dbo_Patient_table ON Patients.PatientID = dbo_Patient_table.PatientTrustID) LEFT JOIN DNA ON NGSTest.DNA = DNA.DNANumber) INNER JOIN Status AS Status_1 ON Patients.s_StatusOverall = Status_1.StatusID) LEFT JOIN gw_GenderTable ON dbo_Patient_table.GenderID = gw_GenderTable.GenderID) " & _
+                    "LEFT JOIN NGSWESBatch ON NGSTest.WESBatch = NGSWESBatch.NGSWESBatchID) LEFT JOIN Checker AS Checker_1 ON NGSTest.Check1ID = Checker_1.Check1ID) LEFT JOIN Checker AS Checker_2 ON NGSTest.Check2ID = Checker_2.Check1ID) LEFT JOIN Checker AS Checker_3 ON NGSTest.Check3ID = Checker_3.Check1ID " & _
                     "WHERE ((Status_1.StatusID) = 1202218798) And NGSTest.WESBatch = " & CStr(Me![cmb_BatchView]) & " AND Status.StatusID = " & CStr(Cmb_StatusView) & " " & _
                     "ORDER BY NGSTest.DateRequested;"
                     
@@ -420,8 +437,9 @@ Call Unselect
 ' if WES batch filter = null do normal SQL
 If Not IsNull(Cmb_StatusView) Then
     If IsNull(cmb_BatchView) Then
-        subfrmSQL = "SELECT NGSTest.Selection, Patients.PatientID AS PRU, NGSTest.NGSTestID, dbo_Patient_table.LastName, dbo_Patient_table.FirstName, dbo_Patient_table.DoB, gw_GenderTable.GenderShort, Referral.Referral, NGSTest.DateRequested, Checker.Name AS RefName, Checker.Initials AS Referrer, NGSPanel.Panel AS PanelA, NGSPanel_1.Panel AS PanelB, Status_1.StatusID AS PatientStatus, WESBatch.BatchName AS WESBatch, Status.StatusID, Status.Status AS TestStatus, NGSTest.ResultComment, Patients.InternalPatientID, Checker_1.Initials AS Checker1, NGSTest.Check1Date, Checker_2.Initials AS Checker2, NGSTest.Check2Date, Checker_3.Initials AS ReportApproved, NGSTest.Check3Date, Patients.s_StatusOverall, NGSPanel.PanelCode AS [Primary], NGSPanel_1.PanelCode AS Secondary " & _
-                    "FROM (((((((((((((NGSTest INNER JOIN Patients ON NGSTest.InternalPatientID = Patients.InternalPatientID) INNER JOIN Referral ON NGSTest.ReferralID = Referral.ReferralID) INNER JOIN Checker ON NGSTest.BookBy = Checker.Check1ID) INNER JOIN NGSPanel ON NGSTest.NGSPanelID = NGSPanel.NGSPanelID) LEFT JOIN NGSPanel AS NGSPanel_1 ON NGSTest.NGSPanelID_B = NGSPanel_1.NGSPanelID) INNER JOIN Status ON NGSTest.StatusID = Status.StatusID) INNER JOIN dbo_Patient_table ON Patients.PatientID = dbo_Patient_table.PatientTrustID) LEFT JOIN DNA ON NGSTest.DNA = DNA.DNANumber) INNER JOIN Status AS Status_1 ON Patients.s_StatusOverall = Status_1.StatusID) LEFT JOIN gw_GenderTable ON dbo_Patient_table.GenderID = gw_GenderTable.GenderID) LEFT JOIN WESBatch ON NGSTest.WESBatch = WESBatch.ID) LEFT JOIN Checker AS Checker_1 ON NGSTest.Check1ID = Checker_1.Check1ID) LEFT JOIN Checker AS Checker_2 ON NGSTest.Check2ID = Checker_2.Check1ID) LEFT JOIN Checker AS Checker_3 ON NGSTest.Check3ID = Checker_3.Check1ID " & _
+        subfrmSQL = "SELECT NGSTest.Selection, Patients.PatientID AS PRU, NGSTest.NGSTestID, dbo_Patient_table.LastName, dbo_Patient_table.FirstName, dbo_Patient_table.DoB, gw_GenderTable.GenderShort, Referral.Referral, NGSTest.DateRequested, Checker.Name AS RefName, Checker.Initials AS Referrer, NGSPanel.Panel AS PanelA, NGSPanel_1.Panel AS PanelB, Status_1.StatusID AS PatientStatus, NGSWESBatch.BatchName AS WESBatch, Status.StatusID, Status.Status AS TestStatus, NGSTest.ResultComment, Patients.InternalPatientID, Checker_1.Initials AS Checker1, NGSTest.Check1Date, Checker_2.Initials AS Checker2, NGSTest.Check2Date, Checker_3.Initials AS ReportApproved, NGSTest.Check3Date, Patients.s_StatusOverall, NGSPanel.PanelCode AS [Primary], NGSPanel_1.PanelCode AS Secondary " & _
+                    "FROM (((((((((((((NGSTest INNER JOIN Patients ON NGSTest.InternalPatientID = Patients.InternalPatientID) INNER JOIN Referral ON NGSTest.ReferralID = Referral.ReferralID) INNER JOIN Checker ON NGSTest.BookBy = Checker.Check1ID) INNER JOIN NGSPanel ON NGSTest.NGSPanelID = NGSPanel.NGSPanelID) LEFT JOIN NGSPanel AS NGSPanel_1 ON NGSTest.NGSPanelID_B = NGSPanel_1.NGSPanelID) INNER JOIN Status ON NGSTest.StatusID = Status.StatusID) INNER JOIN dbo_Patient_table ON Patients.PatientID = dbo_Patient_table.PatientTrustID) LEFT JOIN DNA ON NGSTest.DNA = DNA.DNANumber) INNER JOIN Status AS Status_1 ON Patients.s_StatusOverall = Status_1.StatusID) LEFT JOIN gw_GenderTable ON dbo_Patient_table.GenderID = gw_GenderTable.GenderID) " & _
+                    "LEFT JOIN NGSWESBatch ON NGSTest.WESBatch = NGSWESBatch.NGSWESBatchID) LEFT JOIN Checker AS Checker_1 ON NGSTest.Check1ID = Checker_1.Check1ID) LEFT JOIN Checker AS Checker_2 ON NGSTest.Check2ID = Checker_2.Check1ID) LEFT JOIN Checker AS Checker_3 ON NGSTest.Check3ID = Checker_3.Check1ID " & _
                     "WHERE Status.StatusID = " & CStr(Me![Cmb_StatusView]) & " " & _
                     "ORDER BY NGSTest.DateRequested;"
                     
@@ -436,8 +454,9 @@ If Not IsNull(Cmb_StatusView) Then
 
     ' else display the subform filtered on batch and status option if a status has aready been selected
     Else
-        subfrmSQL = "SELECT NGSTest.Selection, Patients.PatientID AS PRU, NGSTest.NGSTestID, dbo_Patient_table.LastName, dbo_Patient_table.FirstName, dbo_Patient_table.DoB, gw_GenderTable.GenderShort, Referral.Referral, NGSTest.DateRequested, Checker.Name AS RefName, Checker.Initials AS Referrer, NGSPanel.Panel AS PanelA, NGSPanel_1.Panel AS PanelB, Status_1.StatusID AS PatientStatus, WESBatch.BatchName AS WESBatch, Status.StatusID, Status.Status AS TestStatus, NGSTest.ResultComment, Patients.InternalPatientID, Checker_1.Initials AS Checker1, NGSTest.Check1Date, Checker_2.Initials AS Checker2, NGSTest.Check2Date, Checker_3.Initials AS ReportApproved, NGSTest.Check3Date, Patients.s_StatusOverall, NGSPanel.PanelCode AS [Primary], NGSPanel_1.PanelCode AS Secondary " & _
-                    "FROM (((((((((((((NGSTest INNER JOIN Patients ON NGSTest.InternalPatientID = Patients.InternalPatientID) INNER JOIN Referral ON NGSTest.ReferralID = Referral.ReferralID) INNER JOIN Checker ON NGSTest.BookBy = Checker.Check1ID) INNER JOIN NGSPanel ON NGSTest.NGSPanelID = NGSPanel.NGSPanelID) LEFT JOIN NGSPanel AS NGSPanel_1 ON NGSTest.NGSPanelID_B = NGSPanel_1.NGSPanelID) INNER JOIN Status ON NGSTest.StatusID = Status.StatusID) INNER JOIN dbo_Patient_table ON Patients.PatientID = dbo_Patient_table.PatientTrustID) LEFT JOIN DNA ON NGSTest.DNA = DNA.DNANumber) INNER JOIN Status AS Status_1 ON Patients.s_StatusOverall = Status_1.StatusID) LEFT JOIN gw_GenderTable ON dbo_Patient_table.GenderID = gw_GenderTable.GenderID) LEFT JOIN WESBatch ON NGSTest.WESBatch = WESBatch.ID) LEFT JOIN Checker AS Checker_1 ON NGSTest.Check1ID = Checker_1.Check1ID) LEFT JOIN Checker AS Checker_2 ON NGSTest.Check2ID = Checker_2.Check1ID) LEFT JOIN Checker AS Checker_3 ON NGSTest.Check3ID = Checker_3.Check1ID " & _
+        subfrmSQL = "SELECT NGSTest.Selection, Patients.PatientID AS PRU, NGSTest.NGSTestID, dbo_Patient_table.LastName, dbo_Patient_table.FirstName, dbo_Patient_table.DoB, gw_GenderTable.GenderShort, Referral.Referral, NGSTest.DateRequested, Checker.Name AS RefName, Checker.Initials AS Referrer, NGSPanel.Panel AS PanelA, NGSPanel_1.Panel AS PanelB, Status_1.StatusID AS PatientStatus, NGSWESBatch.BatchName AS WESBatch, Status.StatusID, Status.Status AS TestStatus, NGSTest.ResultComment, Patients.InternalPatientID, Checker_1.Initials AS Checker1, NGSTest.Check1Date, Checker_2.Initials AS Checker2, NGSTest.Check2Date, Checker_3.Initials AS ReportApproved, NGSTest.Check3Date, Patients.s_StatusOverall, NGSPanel.PanelCode AS [Primary], NGSPanel_1.PanelCode AS Secondary " & _
+                    "FROM (((((((((((((NGSTest INNER JOIN Patients ON NGSTest.InternalPatientID = Patients.InternalPatientID) INNER JOIN Referral ON NGSTest.ReferralID = Referral.ReferralID) INNER JOIN Checker ON NGSTest.BookBy = Checker.Check1ID) INNER JOIN NGSPanel ON NGSTest.NGSPanelID = NGSPanel.NGSPanelID) LEFT JOIN NGSPanel AS NGSPanel_1 ON NGSTest.NGSPanelID_B = NGSPanel_1.NGSPanelID) INNER JOIN Status ON NGSTest.StatusID = Status.StatusID) INNER JOIN dbo_Patient_table ON Patients.PatientID = dbo_Patient_table.PatientTrustID) LEFT JOIN DNA ON NGSTest.DNA = DNA.DNANumber) INNER JOIN Status AS Status_1 ON Patients.s_StatusOverall = Status_1.StatusID) LEFT JOIN gw_GenderTable ON dbo_Patient_table.GenderID = gw_GenderTable.GenderID) " & _
+                    "LEFT JOIN NGSWESBatch ON NGSTest.WESBatch = NGSWESBatch.NGSWESBatchID) LEFT JOIN Checker AS Checker_1 ON NGSTest.Check1ID = Checker_1.Check1ID) LEFT JOIN Checker AS Checker_2 ON NGSTest.Check2ID = Checker_2.Check1ID) LEFT JOIN Checker AS Checker_3 ON NGSTest.Check3ID = Checker_3.Check1ID " & _
                     "WHERE ((Status_1.StatusID) = 1202218798) And NGSTest.WESBatch = " & CStr(Me![cmb_BatchView]) & " AND Status.StatusID = " & CStr(Cmb_StatusView) & " " & _
                     "ORDER BY NGSTest.DateRequested;"
                     
@@ -495,8 +514,9 @@ Call Unselect
     
 ' reload subform calling querey to view samples are assigned to selected status
 ' if WES batch filter = null do normal SQL
-subfrmSQL = "SELECT NGSTest.Selection, Patients.PatientID AS PRU, NGSTest.NGSTestID, dbo_Patient_table.LastName, dbo_Patient_table.FirstName, dbo_Patient_table.DoB, gw_GenderTable.GenderShort, Referral.Referral, NGSTest.DateRequested, Checker.Name AS RefName, Checker.Initials AS Referrer, NGSPanel.Panel AS PanelA, NGSPanel_1.Panel AS PanelB, Status_1.StatusID AS PatientStatus, WESBatch.BatchName AS WESBatch, Status.StatusID, Status.Status AS TestStatus, NGSTest.ResultComment, Patients.InternalPatientID, Checker_1.Initials AS Checker1, NGSTest.Check1Date, Checker_2.Initials AS Checker2, NGSTest.Check2Date, Checker_3.Initials AS ReportApproved, NGSTest.Check3Date, Patients.s_StatusOverall, NGSPanel.PanelCode AS [Primary], NGSPanel_1.PanelCode AS Secondary " & _
-            "FROM (((((((((((((NGSTest INNER JOIN Patients ON NGSTest.InternalPatientID = Patients.InternalPatientID) INNER JOIN Referral ON NGSTest.ReferralID = Referral.ReferralID) INNER JOIN Checker ON NGSTest.BookBy = Checker.Check1ID) INNER JOIN NGSPanel ON NGSTest.NGSPanelID = NGSPanel.NGSPanelID) LEFT JOIN NGSPanel AS NGSPanel_1 ON NGSTest.NGSPanelID_B = NGSPanel_1.NGSPanelID) INNER JOIN Status ON NGSTest.StatusID = Status.StatusID) INNER JOIN dbo_Patient_table ON Patients.PatientID = dbo_Patient_table.PatientTrustID) LEFT JOIN DNA ON NGSTest.DNA = DNA.DNANumber) INNER JOIN Status AS Status_1 ON Patients.s_StatusOverall = Status_1.StatusID) LEFT JOIN gw_GenderTable ON dbo_Patient_table.GenderID = gw_GenderTable.GenderID) LEFT JOIN WESBatch ON NGSTest.WESBatch = WESBatch.ID) LEFT JOIN Checker AS Checker_1 ON NGSTest.Check1ID = Checker_1.Check1ID) LEFT JOIN Checker AS Checker_2 ON NGSTest.Check2ID = Checker_2.Check1ID) LEFT JOIN Checker AS Checker_3 ON NGSTest.Check3ID = Checker_3.Check1ID " & _
+subfrmSQL = "SELECT NGSTest.Selection, Patients.PatientID AS PRU, NGSTest.NGSTestID, dbo_Patient_table.LastName, dbo_Patient_table.FirstName, dbo_Patient_table.DoB, gw_GenderTable.GenderShort, Referral.Referral, NGSTest.DateRequested, Checker.Name AS RefName, Checker.Initials AS Referrer, NGSPanel.Panel AS PanelA, NGSPanel_1.Panel AS PanelB, Status_1.StatusID AS PatientStatus, NGSWESBatch.BatchName AS WESBatch, Status.StatusID, Status.Status AS TestStatus, NGSTest.ResultComment, Patients.InternalPatientID, Checker_1.Initials AS Checker1, NGSTest.Check1Date, Checker_2.Initials AS Checker2, NGSTest.Check2Date, Checker_3.Initials AS ReportApproved, NGSTest.Check3Date, Patients.s_StatusOverall, NGSPanel.PanelCode AS [Primary], NGSPanel_1.PanelCode AS Secondary " & _
+            "FROM (((((((((((((NGSTest INNER JOIN Patients ON NGSTest.InternalPatientID = Patients.InternalPatientID) INNER JOIN Referral ON NGSTest.ReferralID = Referral.ReferralID) INNER JOIN Checker ON NGSTest.BookBy = Checker.Check1ID) INNER JOIN NGSPanel ON NGSTest.NGSPanelID = NGSPanel.NGSPanelID) LEFT JOIN NGSPanel AS NGSPanel_1 ON NGSTest.NGSPanelID_B = NGSPanel_1.NGSPanelID) INNER JOIN Status ON NGSTest.StatusID = Status.StatusID) INNER JOIN dbo_Patient_table ON Patients.PatientID = dbo_Patient_table.PatientTrustID) LEFT JOIN DNA ON NGSTest.DNA = DNA.DNANumber) INNER JOIN Status AS Status_1 ON Patients.s_StatusOverall = Status_1.StatusID) LEFT JOIN gw_GenderTable ON dbo_Patient_table.GenderID = gw_GenderTable.GenderID) " & _
+            "LEFT JOIN NGSWESBatch ON NGSTest.WESBatch = NGSWESBatch.NGSWESBatchID) LEFT JOIN Checker AS Checker_1 ON NGSTest.Check1ID = Checker_1.Check1ID) LEFT JOIN Checker AS Checker_2 ON NGSTest.Check2ID = Checker_2.Check1ID) LEFT JOIN Checker AS Checker_3 ON NGSTest.Check3ID = Checker_3.Check1ID " & _
             "WHERE Status.StatusID = 1202218814 or Status.StatusID = 1202218815 " & _
             "ORDER BY NGSTest.DateRequested;"
             
@@ -515,6 +535,7 @@ End Sub
 
 
 Private Sub btn_BatchAssign_Click()
+' Assign a/multile WES tests to a Batch
 Dim rsWES As dao.Recordset
 Dim rsAssign As dao.Recordset
 Dim rsBatch As dao.Recordset
@@ -555,8 +576,9 @@ ElseIf Not IsNull(Me.cmb_BatchAssign) And Not IsNull(Me.txt_NEWBatch) Then
      
 ' Assigning samples to a batch via drop down menu
 ElseIf Not IsNull(Me.cmb_BatchAssign) And IsNull(Me.txt_NEWBatch) Then
-    ' unselect any tests which are already associated with a WES batch and not in batching step of the pipeline--> will only assign tests which are not yet assigned to a batch
+    ' unselect any tests which are already associated with a WES batch and not in batching step of the pipeline--> will only assign tests which are not yet assigned to a batch and are in the batching stage
     unsel = "UPDATE NGSTest INNER JOIN Patients ON NGSTest.InternalPatientID = Patients.InternalPatientID SET NGSTest.Selection = 0 WHERE NGSTest.Selection = -1 AND (NGSTest.WESBatch is Not Null or NGSTest.statusID <> 1202218803)"
+    Me.Check_selectAll.Value = 0
     DoCmd.SetWarnings False
     DoCmd.RunSQL unsel
     Form![s87020_ExomeLabList].Requery
@@ -570,7 +592,7 @@ ElseIf Not IsNull(Me.cmb_BatchAssign) And IsNull(Me.txt_NEWBatch) Then
     
     ' check that at least one unassigned batching NGS test has been selected.
     If IsNull(selTotal) Or selTotal = 0 Then
-        msgc = MsgBox("No unassigned tests requiring batching are selected", vbExclamation, "Attention")
+        msgc = MsgBox("No unassigned tests which are in the batching stage have been selected", vbExclamation, "Attention")
     Else
         ' Count the number of samples already in the selected WES batch
         strCriteria = " WESBatch = '" & Me.cmb_BatchAssign.Column(1) & "'"
@@ -628,7 +650,7 @@ ElseIf Not IsNull(Me.cmb_BatchAssign) And IsNull(Me.txt_NEWBatch) Then
     Exit Sub
     End If
         
-                '///////////////////////////////////////////
+'///////////////////////////////////////////
 
 ' Create a new batch and assign samples (text box option)
 ElseIf IsNull(Me.cmb_BatchAssign) And Not IsNull(Me.txt_NEWBatch) Then
@@ -641,21 +663,22 @@ ElseIf IsNull(Me.cmb_BatchAssign) And Not IsNull(Me.txt_NEWBatch) Then
     '2) Add WES prefix then test if batch name has already been defined
     newbatch = "WES" + CStr(Me.txt_NEWBatch)
     'Debug.Print newbatch
-    strSQL = "SELECT * FROM WESBatch WHERE BatchName = '" + newbatch + "'"
+    strSQL = "SELECT * FROM NGSWESBatch WHERE BatchName = '" + newbatch + "'"
     'Debug.Print strSQL
     Set db = CurrentDb
     Set rsWES = db.OpenRecordset(strSQL, dbOpenDynaset, dbSeeChanges)
         If rsWES.EOF Then 'checks entry is a unique name
-            strNewBatch = "INSERT INTO WESBatch(BatchName) VALUES ('" + newbatch + "')"
+            strNewBatch = "INSERT INTO NGSWESBatch(BatchName) VALUES ('" + newbatch + "')"
             
             ' Debug.Print strNewBatch
-            ' Add batch name into WESBatch table
+            ' Add batch name into NGSWESBatch table
             
             ' unselect any tests/ samples which are already associated with a WES batch and not in batching stage --> will only assign tests which are not yet assigned to a batch
             unsel = "UPDATE NGSTest INNER JOIN Patients ON NGSTest.InternalPatientID = Patients.InternalPatientID SET NGSTest.Selection = 0 WHERE NGSTest.Selection = -1 AND (NGSTest.WESBatch is Not Null or NGSTest.statusID <> 1202218803)"
             DoCmd.SetWarnings False
             DoCmd.RunSQL unsel
             'DoCmd.RunSQL strNewBatch
+            Me.Check_selectAll.Value = 0
             Form![s87020_ExomeLabList].Requery
             DoCmd.SetWarnings True
                 
@@ -665,7 +688,7 @@ ElseIf IsNull(Me.cmb_BatchAssign) And Not IsNull(Me.txt_NEWBatch) Then
             
             ' Check at least 1 sample remains selected
             If IsNull(selTotal) Or selTotal = 0 Then
-                 msgc = MsgBox("No unassigned tests requiring batching are selected", vbExclamation, "Attention")
+                 msgc = MsgBox("No unassigned tests which are in the batching stage have been selected", vbExclamation, "Attention")
                  txt_NEWBatch.SetFocus
                  Exit Sub
             Else
@@ -675,7 +698,7 @@ ElseIf IsNull(Me.cmb_BatchAssign) And Not IsNull(Me.txt_NEWBatch) Then
                     Cancel = True
                     
                 Else
-                    ' Add batch name into WESBatch table
+                    ' Add batch name into NGSWESBatch table
                     DoCmd.SetWarnings False
                     DoCmd.RunSQL strNewBatch
                     DoCmd.SetWarnings True
@@ -683,7 +706,7 @@ ElseIf IsNull(Me.cmb_BatchAssign) And Not IsNull(Me.txt_NEWBatch) Then
                     strAssign = "SELECT Patients.InternalPatientID, NGSTest.NGSTestID, NGSTest.Selection, NGSTest.Daterequested " & _
                                 "FROM (NGSTest INNER JOIN Patients ON NGSTest.InternalPatientID = Patients.InternalPatientID) " & _
                                 "WHERE NGSTest.Selection= -1 ;"
-                    strbatchID = "SELECT ID From WESBatch Where batchname = '" + newbatch + "'"
+                    strbatchID = "SELECT NGSWESBatchID From NGSWESBatch Where batchname = '" + newbatch + "'"
                    
                     Set db = CurrentDb
                     Set rsAssign = db.OpenRecordset(strAssign, dbOpenDynaset, dbSeeChanges)
@@ -693,11 +716,11 @@ ElseIf IsNull(Me.cmb_BatchAssign) And Not IsNull(Me.txt_NEWBatch) Then
                      If Not .BOF And Not .EOF Then
                         While (Not .EOF)
                             If rsAssign!Selection = -1 Then
-                                strUpd8Batch = "UPDATE NGSTest SET WESBatch = " & rsBatch!ID & " WHERE NGSTest.NGSTestID = " & rsAssign!NGSTestID
+                                strUpd8Batch = "UPDATE NGSTest SET WESBatch = " & rsBatch!NGSWESBatchID & " WHERE NGSTest.NGSTestID = " & rsAssign!NGSTestID
                                 ' update the test status to nest step NextSEQ sequencing
                                 strUpd8Status = "UPDATE NGSTest SET StatusID = 1202218804 WHERE NGSTest.NGSTestID = " & rsAssign!NGSTestID
                                 ' update patient log
-                                strLogSQL = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" & rsAssign!InternalPatientID & ", 'NGS WES test: NGS testID " & rsAssign!NGSTestID & " assigned to WES batch " + newbatch + " (ID " & rsBatch!ID & "). ',#" + dt + "#,'" + usr + "','" + cmp + "')"
+                                strLogSQL = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" & rsAssign!InternalPatientID & ", 'NGS WES test: NGS testID " & rsAssign!NGSTestID & " assigned to WES batch " + newbatch + " (ID " & rsBatch!NGSWESBatchID & "). ',#" + dt + "#,'" + usr + "','" + cmp + "')"
                                 strLogSQL2 = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" & rsAssign!InternalPatientID & ", 'NGS WES test: Status updated to NextSEQ sequencing for test requested " & rsAssign!DateRequested & " NGS testID " & rsAssign!NGSTestID & ". ',#" + dt + "#,'" + usr + "','" + cmp + "')"
                                 'update NGSlogmemo
                                 strLogMemo = "INSERT INTO NGSLogMemo(InternalPatientID, Type, LinkID, LogMemoEntry, [Date], Login, PCName) VALUES(" + CStr(rsAssign!InternalPatientID) + ", 1, " + CStr(rsAssign!NGSTestID) + ",'NGS WES test status updated to: NextSEQ sequencing.' ,#" + dt + "#,'" + usr + "','" + cn + "')"
