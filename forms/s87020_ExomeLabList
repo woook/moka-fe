@@ -1,8 +1,8 @@
 Option Compare Database
 
-
-
 Private Sub NGSTestID_DblClick(Cancel As Integer)
+Dim stDocName As String
+Dim stLinkCriteria As String
 stDocName = "0901 ExomeNGSResults"
     If Not IsNull(Me.[NGSTestID]) Then
         stLinkCriteria = "[NGSTestID]=" & Me![NGSTestID]
@@ -10,6 +10,18 @@ stDocName = "0901 ExomeNGSResults"
         DoCmd.Close
         DoCmd.OpenForm stDocName, , , stLinkCriteria
     End If
+End Sub
+
+Private Sub PRU_DblClick(Cancel As Integer)
+Dim stDocName As String
+Dim stLinkCriteria As String
+ If Not IsNull(Me.[PRU]) Then
+    stDocName = "02 Patient Details"
+    stLinkCriteria = "[PatientID]=" & "'" & Me![PRU] & "'"
+    DoCmd.Close
+    DoCmd.OpenForm stDocName, , , stLinkCriteria
+End If
+
 End Sub
 
 Private Sub Referral_DblClick(Cancel As Integer)
@@ -21,7 +33,10 @@ Private Sub Referral_DblClick(Cancel As Integer)
 End Sub
 
 Private Sub ResultComment_DblClick(Cancel As Integer)
-MsgBox "display popup detailing past result comments"
+Dim stDocName As String
+    stDocName = "s0901_NGSLogMemo"
+    stLinkCriteria = "[Type]= 3 AND [LinkID] = " & Me![NGSTestID]
+    DoCmd.OpenForm stDocName, acFormDS, , stLinkCriteria
 End Sub
 
 Private Sub Selection_Click()
@@ -36,5 +51,9 @@ Me.Parent.Check_selectAll.Value = 0
 End Sub
 
 Private Sub status_DblClick(Cancel As Integer)
-MsgBox "display popup detailing past status updates"
+' View past comment history for test
+Dim stDocName As String
+    stDocName = "s0901_NGSLogMemo"
+    stLinkCriteria = "[Type]= 1 AND [LinkID] = " & Me![NGSTestID]
+    DoCmd.OpenForm stDocName, acFormDS, , stLinkCriteria
 End Sub
