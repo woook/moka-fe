@@ -7,7 +7,6 @@ stDocName = "0901 ExomeNGSResults"
     If Not IsNull(Me.[NGSTestID]) Then
         stLinkCriteria = "[NGSTestID]=" & Me![NGSTestID]
         'Debug.Print Me.[NGSTestID] & " load result form"
-        DoCmd.Close
         DoCmd.OpenForm stDocName, , , stLinkCriteria
     End If
 End Sub
@@ -18,7 +17,8 @@ Dim stLinkCriteria As String
  If Not IsNull(Me.[PRU]) Then
     stDocName = "02 Patient Details"
     stLinkCriteria = "[PatientID]=" & "'" & Me![PRU] & "'"
-    DoCmd.Close
+    ''Matt asked for this not to happen - 161109 JWA
+    'DoCmd.Close
     DoCmd.OpenForm stDocName, , , stLinkCriteria
 End If
 
@@ -28,7 +28,7 @@ Private Sub Referral_DblClick(Cancel As Integer)
     'Show detailed test info in popup window
     If Not IsNull(Me.[NGSTestID]) Then
         ' Debug.Print Me.[NGSTestID] & " load status form"
-        DoCmd.OpenForm "s87018_ExomeStatusPopup", , , , acFormAdd, , Me.[NGSTestID] & ", " & Me.PRU & ", " & Me.LastName & ", " & Me.FirstName & ", " & Me.DoB & ", " & Me.Gender & ", " & Me.Referral & ", " & Me.DateRequested & ", " & Me.RefName & ", " & Me.status
+        DoCmd.OpenForm "s87018_ExomeStatusPopup", , , , acFormAdd, , Me.[NGSTestID] & ", " & Me.PRU & ", " & Me.LastName & ", " & Me.FirstName & ", " & Me.DOB & ", " & Me.Gender & ", " & Me.Referral & ", " & Me.DateRequested & ", " & Me.RefName & ", " & Me.Status
     End If
 End Sub
 
@@ -46,8 +46,10 @@ Dim LTotal As Long
 LTotal = DCount("[Selection]", "s87020_ListWESSamples", "[Selection] = true")
 Me.Parent.txt_SelectionCount = LTotal
 ' set the select all tick box to empty
-Me.Parent.Check_selectAll.Value = 0
-
+''Added IF to try and prevent losing selections behaviour - see issue #60
+If Me.Parent.Check_selectAll.Value = 1 Then
+    Me.Parent.Check_selectAll.Value = 0
+    End If
 End Sub
 
 Private Sub status_DblClick(Cancel As Integer)
