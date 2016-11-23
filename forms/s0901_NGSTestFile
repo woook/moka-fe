@@ -10,9 +10,9 @@ Private Sub Form_Delete(Cancel As Integer)
     End If
 End Sub
 
-Private Sub Form_AfterDelConfirm(status As Integer)
+Private Sub Form_AfterDelConfirm(Status As Integer)
     'If user selects OK to delete selected files, add an entry into patient log for each file deleted.
-    If status = acDeleteOK Then
+    If Status = acDeleteOK Then
         NGSTestID = Me.Parent.NGSTestID
         delFiles = Split(delFileDesc, ",")
         For Each delFile In delFiles
@@ -42,7 +42,7 @@ Private Sub NGSTestFile_DblClick(Cancel As Integer)
     Dim fileExt As String
     Dim newFileName As String
     Dim newFilePath As String
-
+    
     On Error GoTo ErrHandler
     If IsNull(Me.Parent.WESBatch) Then
         MsgBox "Pleasee assign sample to batch before attaching files", vbExclamation, "Assign to Batch"
@@ -51,7 +51,7 @@ Private Sub NGSTestFile_DblClick(Cancel As Integer)
         openDir = "\\gstt.local\shared\Genetics\DNA LAB\Current\WES" 'Open file picker in this directory
         batchName = Me.Parent.WESBatch
         patID = Me.Parent.InternalPatientID
-
+    
         If Not IsNull(NGSTestFile) Then
             'If filepath already , open file
             Set objShell = CreateObject("Wscript.Shell")

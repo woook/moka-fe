@@ -1,11 +1,10 @@
 Option Compare Database
 
+
 Private Sub Form_Current()
-   If (Not IsNull(Form_s0901_WESTestResults.Checker1) And Not IsNull(Form_s0901_WESTestResults.Checker2) And [Form_0901 ExomeNGSResults].SafetyCheck.Value = False) Then
+   If (Not IsNull(Form_s0901_WESTestResults.Checker1) And Not IsNull(Form_s0901_WESTestResults.Checker3) And [Form_0901 ExomeNGSResults].SafetyCheck.Value = False) Then
         Form_s0901_WESTestResults.AllowEdits = False
-'        Form_s09_OligoPreliminaryResults.AllowEdits = False
-'        Form_s09_OligoPreliminaryResults.AllowDeletions = False
-'        Form_s09_OligoPreliminaryResults.AllowAdditions = False
+        Form_s0901_NGSVariants.AllowEdits = False
         Form_s09_referpheno.AllowEdits = False
         Form_s09_referpheno.AllowDeletions = False
         Form_s09_referpheno.AllowAdditions = False
@@ -15,16 +14,13 @@ Private Sub Form_Current()
 
     Else
         Form_s0901_WESTestResults.AllowEdits = True
-'        Form_s09_OligoPreliminaryResults.AllowEdits = True
-'        Form_s09_OligoPreliminaryResults.AllowDeletions = True
-'        Form_s09_OligoPreliminaryResults.AllowAdditions = True
+        Form_s0901_NGSVariants.AllowEdits = True
         Form_s09_referpheno.AllowEdits = True
         Form_s09_referpheno.AllowDeletions = True
         Form_s09_referpheno.AllowAdditions = True
         Form_s0901_NGSTestFile.AllowEdits = True
         Form_s0901_NGSTestFile.AllowDeletions = True
         Form_s0901_NGSTestFile.AllowAdditions = True
-        '[Form_09 ArrayResultsByPostition].AllowEdits = True
     End If
 End Sub
 
@@ -48,6 +44,7 @@ Exit_btn_FamilyDNAs:
 
 End Sub
 
+
 Private Sub btn_OpenPatientDetails_Click()
 On Error GoTo Err_btn_OpenPatientDetails_Click
 
@@ -61,31 +58,66 @@ On Error GoTo Err_btn_OpenPatientDetails_Click
     stLinkCriteria = "[PatientID]=" & "'" & Me![PatientID] & "'"
     DoCmd.OpenForm stDocName, , , stLinkCriteria
 
-Exit_btn_OpenPatientDetails_Click:
+Err_btn_OpenPatientDetails_Click:
     Exit Sub
 
 Err_OpenPatientDetails_Click:
     MsgBox Err.Description
-    Resume Exit_btn_OpenPatientDetails_Click
+    Resume Err_btn_OpenPatientDetails_Click
     
 End Sub
-End Sub
 
+
+Private Sub btn_WES_Dashboard_Click()
+'On Error GoTo Err_btn_WES_Dashboard_Click
+
+Dim stDocName As String
+
+DoCmd.DoMenuItem acFormBar, acRecordsMenu, 5, , acMenuVer70
+
+stDocName = "87020 ExomeLab"
+
+DoCmd.Close
+DoCmd.OpenForm stDocName
+
+'
+'Err_btn_WES_Dashboard_Click:
+'    MsgBox Err.Description
+'    Resume Exit_btn_WES_Dashboard_Click
+End Sub
 
 
 Private Sub Patient_Status_AfterUpdate()
     Dim r As ADODB.Recordset
     Dim S As String
     Dim dt As String
-    
     Dim cn As String
     Dim usr As String
+    
     usr = VBA.Environ("USERNAME")
     cn = VBA.Environ("COMPUTERNAME")
     
     dt = Format(Now, "dd/mmm/yyyy Hh:Nn:ss")
     Set r = New ADODB.Recordset
     S = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + ",'Patient: Status changed to " & Me![s_StatusOverall] & "',#" + dt + "#,'" + usr + "','" + cn + "')"
+    r.Open S, CurrentProject.Connection
+    Set r = Nothing
+    
+End Sub
+
+Private Sub Priority_AfterUpdate()
+    Dim r As ADODB.Recordset
+    Dim S As String
+    Dim dt As String
+    Dim cn As String
+    Dim usr As String
+    
+    usr = VBA.Environ("USERNAME")
+    cn = VBA.Environ("COMPUTERNAME")
+    
+    dt = Format(Now, "dd/mmm/yyyy Hh:Nn:ss")
+    Set r = New ADODB.Recordset
+    S = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + ",'NGS WES test: Marked as Priority for NGS test " + CStr(Me![NGSTestID]) + " requested " + CStr(Me![DateRequested]) + "',#" + dt + "#,'" + usr + "','" + cn + "')"
     r.Open S, CurrentProject.Connection
     Set r = Nothing
 End Sub
@@ -131,10 +163,10 @@ If Not IsNull(Form![s0901_WESTestResults]![Checker1]) Then
 Else: Y = "Absent"
 End If
 
-    If x = 4 And Y = "Absent" Then
+    If Y = "Absent" And (x = 1202218811 Or x = 1202218812 Or x = 1202218813) Then
         Cancel = True
         Debug.Print "got to if function"
-        mega = MsgBox("Checker 1 ID empty." + vbNewLine + "Unable to assign test status to complete until Checker 1 in entered", vbOKOnly Or vbExclamation, "No Checker 1 ID")
+        mega = MsgBox("Checker 1 ID empty." + vbNewLine + "Unable to assign test status to 'report due to be written' until Checker 1 in entered.", vbOKOnly Or vbExclamation, "No Checker 1 ID")
         Form![s0901_WESTestResults]![Checker1].SetFocus
     Else
         Cancel = False
@@ -146,5 +178,13 @@ Private Sub txt_PatientResult_DblClick(Cancel As Integer)
     Dim stLinkCriteria As String
     stDocName = "s02_PrevOverallResults"
     stLinkCriteria = "[InternalPatientID]=" & Me![InternalPatientID]
+    DoCmd.OpenForm stDocName, acFormDS, , stLinkCriteria
+End Sub
+
+Private Sub WES_Test_Status_DblClick(Cancel As Integer)
+' View past comment history for test
+Dim stDocName As String
+    stDocName = "s0901_NGSLogMemo"
+    stLinkCriteria = "[Type]= 1 AND [LinkID] = " & Me![NGSTestID]
     DoCmd.OpenForm stDocName, acFormDS, , stLinkCriteria
 End Sub
