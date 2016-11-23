@@ -609,15 +609,14 @@ ElseIf Not IsNull(Me.cmb_BatchAssign) And IsNull(Me.txt_NEWBatch) Then
     selTotal = DCount("[Selection]", "s87020_ListWESSamples", "[Selection] = True")
     Me.txt_SelectionCount = selTotal
     
-    ttotal = selTotal + batchTotal
-    
     ' check that at least one unassigned batching NGS test has been selected.
     If IsNull(selTotal) Or selTotal = 0 Then
-        msgc = MsgBox("No unassigned tests which are in the batching stage have been selected", vbExclamation, "Attention")
+        msgc = MsgBox("No unassigned tests pending batching have been selected", vbExclamation, "Attention")
     Else
         ' Count the number of samples already in the selected WES batch
         strCriteria = " WESBatch = '" & Me.cmb_BatchAssign.Column(1) & "'"
         batchTotal = DCount("WESBatch", "s87020_ListWESSamples", strCriteria)
+        ttotal = selTotal + batchTotal
         'Debug.Print "batch " & batchTotal
         
         ' confirm user decision.
@@ -662,12 +661,15 @@ ElseIf Not IsNull(Me.cmb_BatchAssign) And IsNull(Me.txt_NEWBatch) Then
                     End If
                 Wend
              End If
+             msg_success = MsgBox(selTotal & " WES Test have been added to " & Me.cmb_BatchAssign.Column(1) & vbNewLine & "Total tests in batch " & Me.cmb_BatchAssign.Column(1) & " = " & ttotal, vbOKOnly, "SUCCESS")
             End With
             Set rsAssign = Nothing
             Set db = Nothing
         End If
-    Call Unselect
-    Form![s87020_ExomeLabList].Requery
+    Call btn_Clear4_Click
+    Call btn_NoWESBatch_Click
+'    Call Unselect
+'    Form![s87020_ExomeLabList].Requery
     Exit Sub
     End If
         
@@ -691,16 +693,19 @@ ElseIf IsNull(Me.cmb_BatchAssign) And Not IsNull(Me.txt_NEWBatch) Then
         If rsWES.EOF Then 'checks entry is a unique name
             strNewBatch = "INSERT INTO NGSWESBatch(BatchName) VALUES ('" + newbatch + "')"
             
-            ' Debug.Print strNewBatch
             ' Add batch name into NGSWESBatch table
-            
+            DoCmd.SetWarnings False
+            DoCmd.RunSQL strNewBatch
+            DoCmd.SetWarnings True
+            Me![cmb_BatchAssign].Requery
+            Me![cmb_BatchView].Requery
+            msg_batch = MsgBox(newbatch & " has been created and added to WES Batch dropdown menu.", vbOKOnly Or vbInformation, newbatch & " created")
+
             ' unselect any tests/ samples which are already associated with a WES batch and not in batching stage --> will only assign tests which are not yet assigned to a batch
             unsel = "UPDATE NGSTest INNER JOIN Patients ON NGSTest.InternalPatientID = Patients.InternalPatientID SET NGSTest.Selection = False WHERE NGSTest.Selection = True AND (NGSTest.WESBatch is Not Null or NGSTest.statusID <> 1202218803)"
-            'DoCmd.SetWarnings False
+            DoCmd.SetWarnings False
             DoCmd.RunSQL unsel
-            DoCmd.RunSQL strNewBatch
-            MsgBox strNewBatch
-            'Me.Check_selectAll.Value = 0
+            Me.Check_selectAll.Value = 0
             Form![s87020_ExomeLabList].Requery
             DoCmd.SetWarnings True
                 
@@ -710,8 +715,9 @@ ElseIf IsNull(Me.cmb_BatchAssign) And Not IsNull(Me.txt_NEWBatch) Then
             
             ' Check at least 1 sample remains selected
             If IsNull(selTotal) Or selTotal = 0 Then
-                 msgc = MsgBox("No unassigned tests which are in the batching stage have been selected", vbExclamation, "Attention")
-                 txt_NEWBatch.SetFocus
+                 msgc = MsgBox("No unassigned tests pending batching have been selected." & vbNewLine & " No tests have been added to be added to " & newbatch, vbExclamation, "Attention")
+                 'txt_NEWBatch.SetFocus
+                 Call btn_Clear4_Click
                  Exit Sub
             Else
             ' open record set for tests to be assigned loop through records are and assign test to specified WES batch
@@ -720,10 +726,6 @@ ElseIf IsNull(Me.cmb_BatchAssign) And Not IsNull(Me.txt_NEWBatch) Then
                     Cancel = True
                     
                 Else
-                    ' Add batch name into NGSWESBatch table
-                    DoCmd.SetWarnings False
-                    DoCmd.RunSQL strNewBatch
-                    DoCmd.SetWarnings True
                     
                     strAssign = "SELECT Patients.InternalPatientID, NGSTest.NGSTestID, NGSTest.WESBatch, NGSTest.Selection, NGSTest.Daterequested " & _
                                 "FROM (NGSTest INNER JOIN Patients ON NGSTest.InternalPatientID = Patients.InternalPatientID) " & _
@@ -761,22 +763,30 @@ ElseIf IsNull(Me.cmb_BatchAssign) And Not IsNull(Me.txt_NEWBatch) Then
                             End If
                         Wend
                      End If
-                    End With
+                     msg_success = MsgBox(selTotal & " WES Test have been added to " & newbatch, vbOKOnly, "SUCCESS")
+                     End With
                     Set reWES = Nothing
                     Set rsAssign = Nothing
                     Set rsBatch = Nothing
                     Set db = Nothing
                 End If
+            
             End If
         Else
             msgd = MsgBox("WES batch: " + newbatch + " already exists." & vbNewLine & "Please select a WES Batch from the dropdown menu or enter a new batch name.", vbExclamation, "WES Batch Already Exists")
+            Call btn_Clear4_Click
             Exit Sub
         End If
-    Call btn_ViewAll_Click
+
+    Call btn_NoWESBatch_Click
+    Call btn_Clear4_Click
     Exit Sub
 End If
 End If
-Me.cmb_BatchView.Requery
+
+Call btn_NoWESBatch_Click
+Call btn_Clear4_Click
+
 End Sub
 
 Private Sub btn_Clear4_Click()
