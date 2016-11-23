@@ -309,7 +309,7 @@ Private Sub RemoveAll_MouseDown(Button As Integer, Shift As Integer, x As Single
             Set rsVarsForDel = Nothing
             Dim rsFilesForDel As ADODB.Recordset
             Set rsFilesForDel = New ADODB.Recordset
-            sqlFilesForDel = "SELECT NGSTestFile.NGSTestID, NGSTestFile.Description FROM NGSTestFile WHERE NGSTestFile.NGSTestID = " & Me.Parent.NGSTestID & " AND NGSTestFile.VCF_Filter_Import = -1"
+            sqlFilesForDel = "SELECT NGSTestFile.NGSTestID, NGSTestFile.Description FROM NGSTestFile WHERE NGSTestFile.NGSTestID = " & Me.Parent.NGSTestID & " AND NGSTestFile.VCF_Filter_Import = TRUE"
             rsFilesForDel.Open sqlFilesForDel, CurrentProject.Connection, adOpenKeyset
             While Not rsFilesForDel.EOF
                 sqlPatLog = "INSERT INTO PatientLog (InternalPatientID, LogEntry, [Date], Login, PCName) VALUES (" & patID & ", 'NGS: File removed from NGS test record. (NGSTestFile Description: " & rsFilesForDel.Fields("Description") & ", NGSTestID: " & rsFilesForDel.Fields("NGSTestID") & ")', #" + D + "#,'" + un + "','" + cn + "')"
@@ -321,7 +321,7 @@ Private Sub RemoveAll_MouseDown(Button As Integer, Shift As Integer, x As Single
             Set rsFilesForDel = Nothing
             sqlRemoveAnnot = "DELETE FROM NGSVariantAnnotations WHERE NGSVariantAnnotations.NGSVariantAnnotationsID IN (SELECT NGSVariantAnnotations.NGSVariantAnnotationsID FROM NGSVariant INNER JOIN NGSVariantAnnotations ON NGSVariant.NGSVariantID = NGSVariantAnnotations.NGSVariantID WHERE NGSVariant.NGSTestID = " & Me.Parent.NGSTestID & ")"
             sqlRemoveVars = "DELETE FROM NGSVariant WHERE NGSVariant.NGSTestID = " & Me.Parent.NGSTestID
-            sqlRemoveFiles = "DELETE FROM NGSTestFile WHERE NGSTestFile.NGSTestID = " & Me.Parent.NGSTestID & " AND NGSTestFile.VCF_Filter_Import = -1"
+            sqlRemoveFiles = "DELETE FROM NGSTestFile WHERE NGSTestFile.NGSTestID = " & Me.Parent.NGSTestID & " AND NGSTestFile.VCF_Filter_Import = TRUE"
             DoCmd.SetWarnings False
             DoCmd.RunSQL sqlRemoveAnnot
             DoCmd.RunSQL sqlRemoveVars
