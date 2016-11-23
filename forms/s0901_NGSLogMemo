@@ -3,3 +3,13 @@ Option Compare Database
 Private Sub Form_Load()
 PatientID.SelLength = 0
 End Sub
+
+Private Sub LogMemoEntry_DblClick(Cancel As Integer)
+    Dim stDocName As String
+    stDocName = "s0901_NGSlogmemoComment"
+    If Not IsNull(Me.LogMemoID) Then
+        stLinkCriteria = "[LogMemoID] = " & Me.LogMemoID
+        DoCmd.OpenForm stDocName, , , stLinkCriteria, acFormEdit, , Me.LogMemoID & "," & Me.PatientID
+        
+    End If
+End Sub

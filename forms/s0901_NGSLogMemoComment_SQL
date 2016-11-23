@@ -1,0 +1,2 @@
+SELECT NGSLogMemo.LogMemoEntry, NGSLogMemo.LogMemoID
+FROM NGSLogMemo;
