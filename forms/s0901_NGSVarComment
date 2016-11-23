@@ -1,5 +1,11 @@
 Option Compare Database
 
+Private Sub Comments_GotFocus()
+    'Prevents all text being selected on form load by cursor to end of text
+    Me.Comments.SelStart = Me.Comments.SelLength
+End Sub
+
+
 Private Sub Comments_AfterUpdate()
     Dim openArgs() As String
     Dim ngsVarID As String
@@ -13,7 +19,7 @@ Private Sub Comments_AfterUpdate()
     D = Format(Now(), "dd/mmm/yyyy Hh:Nn:ss")
     un = VBA.Environ("USERNAME")
     cn = VBA.Environ("COMPUTERNAME")
-    
+
     openArgs = Split(Me.openArgs, ",")
     ngsVarID = openArgs(0)
     patID = openArgs(1)
@@ -39,8 +45,8 @@ Private Sub Comments_AfterUpdate()
         DoCmd.RunSQL sqlPatLog
         DoCmd.SetWarnings True
     End If
-    
+
     ''Refresh s0901_NGSVariants so that the comment field is refreshed
     Form_s0901_NGSVariants.Requery
-    
+
 End Sub
