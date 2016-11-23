@@ -65,11 +65,11 @@ Dim sel As String
 
 Dim selTotal As Long
 
-' 1) check if samples are viewed by unassigned to WES batch button
-' 2) check if samples are viewed by require checker 1 button
-' 3) check if samples are viewed by require checker 2 button
-' 4) check if samples are viewed WES batch
-' 5) check if samples are viewedby status
+' 1) check if samples are viewed by 'unassigned to WES batch' button
+' 2) check if samples are viewed by 'require checker 1' button
+' 3) check if samples are viewed by 'require checker 2' button
+' 4) check if samples are viewed by WES batch
+' 5) check if samples are viewed by status
 ' 6) check if samples are viewed by WES batch AND Status
 ' 7) check if samples are viewed by All pending approval
 ' 8) Else View ALL pending If (Check_selectAll) = True Then 'INNER JOIN Patients ON NGSTest.InternalPatientID = Patients.InternalPatientID
@@ -900,19 +900,19 @@ Else
                       
                     'Display an notifcation is anytests selected are not able to have status updated.
                     If InBatching > 0 And SetBatching > 0 Then
-                        msg1 = MsgBox("Unable to update status of some selected tests for the following reasons:" & vbNewLine & vbNewLine & "1) " & InBatching & " selected test(s) currently in 'BATCHING' stage. These test must be assigned to a WES batch to proceed." & vbNewLine & vbNewLine & "2) " & SetBatching & " selected test(s) have already been assigned to a WES Batch. Test status cannot be reset to 'BATCHING'" & vbNewLine & vbNewLine & "The aforementioned tests have been unselected.", vbOKOnly Or vbInformation, "Batch Status Update Cannot Be Applied To All Selected Tests")
+                        msg1 = MsgBox("Unable to update status of some of the tests selected" & vbNewLine & vbNewLine & "REASONS:" & vbNewLine & "1) " & InBatching & " selected test(s) currently in 'BATCHING' stage. These test must be assigned to a WES batch to proceed." & vbNewLine & vbNewLine & "2) " & SetBatching & " selected test(s) have already been assigned to a WES Batch. Test status cannot be reset to 'BATCHING'" & vbNewLine & vbNewLine & "The aforementioned tests have been unselected.", vbOKOnly Or vbExclamation, "Status Update Cannot Be Applied To All Selected Tests")
                     End If
                     If InBatching > 0 Then
-                        msg2 = MsgBox(InBatching & " selected test(s) currently in 'BATCHING' stage." & vbNewLine & "Tests need to be assigned to a WES batch before test status can be updated" & vbNewLine & vbNewLine & "The aforementioned tests have been unselected.", vbOKOnly Or vbInformation, "Tests in Batching Stage Unselected")
+                        msg2 = MsgBox("Unable to update status of some of the tests selected" & vbNewLine & vbNewLine & "REASON:" & vbNewLine & InBatching & "  test(s)selected currently in 'BATCHING' stage." & vbNewLine & "Tests need to be assigned to a WES batch before test status can be updated" & vbNewLine & vbNewLine & "The aforementioned tests have been unselected.", vbOKOnly Or vbExclamation, "Tests in Batching Stage Unselected")
                     End If
                     If SetBatching > 0 Then
-                        msg3 = MsgBox(SetBatching & " selected test(s) already been assigned to a WES Batch." & vbNewLine & "Tests assigned to a WES batch are unable to be reset to the batching stage" & vbNewLine & vbNewLine & "The aforementioned tests have been unselected.", vbOKOnly Or vbInformation, "Test Already Assigned To A WES Batch")
+                        msg3 = MsgBox("Unable to update status of some of the tests selected" & vbNewLine & vbNewLine & "REASON:" & vbNewLine & SetBatching & " selected test(s) already been assigned to a WES Batch." & vbNewLine & "Tests assigned to a WES batch are unable to be reset to the 'Batching' stage" & vbNewLine & vbNewLine & "The aforementioned tests have been unselected.", vbOKOnly Or vbExclamation, "Test Already Assigned To A WES Batch")
                     End If
                     If testComp > 0 Then
-                        msg4 = MsgBox("Tests yet not reported" & vbNewLine & "Unreported tests selected = " & testComp & vbNewLine & vbNewLine & "Unable to set test status to 'Complete' for unreported  tests" & vbNewLine & "The aforementioned tests have been unselected.", vbOKOnly Or vbInformation, "Unreported tests")
+                        msg4 = MsgBox("Unable to update status of some of the tests selected" & vbNewLine & vbNewLine & "REASON:" & vbNewLine & "Tests yet not reported, Unreported tests selected = " & testComp & vbNewLine & vbNewLine & "Unable to set test status to 'Complete' for unreported  tests" & vbNewLine & "The aforementioned tests have been unselected.", vbOKOnly Or vbExclamation, "Unreported tests")
                     End If
                     If testFail > 0 Then
-                        msg4 = MsgBox("Tests yet not reported" & vbNewLine & "Unreported tests selected = " & testFail & vbNewLine & vbNewLine & "Unable to set test status to 'Test Failed' for unreported tests" & vbNewLine & "The aforementioned tests have been unselected.", vbOKOnly Or vbInformation, "Unreported tests")
+                        msg4 = MsgBox("Unable to update status of some of the tests selected" & vbNewLine & vbNewLine & "REASON:" & vbNewLine & "Tests yet not reported, Unreported tests selected = " & testFail & vbNewLine & vbNewLine & "Unable to set test status to 'Test Failed' for unreported tests" & vbNewLine & "The aforementioned tests have been unselected.", vbOKOnly Or vbExclamation, "Unreported tests")
                     End If
                     If signedOffTest > 0 Then
                         msg5 = MsgBox(signedOffTest & " of the tests selected have already been reported and closed. " & vbNewLine & "The test status for these tests cannot be altered.", vbOKOnly Or vbInformation, "WES Tests Already Reported")
@@ -925,6 +925,7 @@ Else
                     'recount selected tests
                     selTotal = DCount("[Selection]", "s87020_ListWESSamples", "[Selection] = True")
                     Me.txt_SelectionCount = selTotal
+                    Form![s87020_ExomeLabList]![Selection].Requery
                     'Debug.Print "total tests remaining =" & selTotal
                     
                     If IsNull(selTotal) Or selTotal = 0 Then
@@ -935,7 +936,7 @@ Else
                     Else
                     ' check if new test status = current status --> if true skip past
                     If rsStatus!Selection = True And Trim(rsStatus!StatusID) <> Me!cmb_StatusUpdate.Column(0) Then
-                        If MsgBox("You are about to update the status of " & selTotal & " test(s) to '" + Me!cmb_StatusUpdate.Column(1) + "'" & vbNewLine & "Do you wish to proceed?", vbYesNo Or vbExclamation, "Assign to WES Batch?") = vbNo Then
+                        If MsgBox("You are about to update the status of " & selTotal & " test(s) to:" & vbNewLine & vbNewLine + Me!cmb_StatusUpdate.Column(1) & vbNewLine & "Do you wish to proceed?", vbYesNo Or vbExclamation, "Assign to WES Batch?") = vbNo Then
                             Cancel = True
                             Exit Sub
                             
@@ -981,11 +982,10 @@ Else
 
                     Else
                         .MoveNext
-                        
-                    
                     End If
                     
                     msg6 = MsgBox("The status of " & selTotal & " WES tests has been updated to " + Me.cmb_StatusUpdate.Column(1), vbOKOnly, "Status update Sucessful")
+
                     End If
                  End If
             End With
@@ -993,8 +993,8 @@ Else
     End If
     
 ' Refresh form, clear filter settings recount samples
-Call btn_ViewAll_Click
-
+Call Unselect
+Form![s87020_ExomeLabList]![StatusID].Requery
 
 End Sub
                     
