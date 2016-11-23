@@ -28,7 +28,7 @@ Private Sub Referral_DblClick(Cancel As Integer)
     'Show detailed test info in popup window
     If Not IsNull(Me.[NGSTestID]) Then
         ' Debug.Print Me.[NGSTestID] & " load status form"
-        DoCmd.OpenForm "s87018_ExomeStatusPopup", , , , acFormAdd, , Me.[NGSTestID] & ", " & Me.PRU & ", " & Me.LastName & ", " & Me.FirstName & ", " & Me.DOB & ", " & Me.Gender & ", " & Me.Referral & ", " & Me.DateRequested & ", " & Me.RefName & ", " & Me.Status
+        DoCmd.OpenForm "s87018_ExomeStatusPopup", , , , acFormAdd, , Me.[NGSTestID] & ", " & Me.PRU & ", " & Me.LastName & ", " & Me.FirstName & ", " & Me.DoB & ", " & Me.Gender & ", " & Me.Referral & ", " & Me.DateRequested & ", " & Me.RefName & ", " & Me.Status
     End If
 End Sub
 
@@ -45,11 +45,9 @@ Me.Dirty = False
 Dim LTotal As Long
 LTotal = DCount("[Selection]", "s87020_ListWESSamples", "[Selection] = true")
 Me.Parent.txt_SelectionCount = LTotal
+
 ' set the select all tick box to empty
-''Added IF to try and prevent losing selections behaviour - see issue #60
-If Me.Parent.Check_selectAll.Value = 1 Then
-    Me.Parent.Check_selectAll.Value = 0
-    End If
+Me.Parent.Check_selectAll.Value = 0
 End Sub
 
 Private Sub status_DblClick(Cancel As Integer)

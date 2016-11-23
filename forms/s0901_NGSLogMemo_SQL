@@ -1,3 +1,3 @@
-SELECT Patients.PatientID, NGSTest.DateRequested, Referral.Referral, NGSLogMemo.LogMemoEntry, NGSLogMemo.Date, NGSLogMemo.Login, NGSLogMemo.InternalPatientID, NGSLogMemo.Type, NGSLogMemo.LinkID
+SELECT Patients.PatientID, NGSTest.DateRequested, Referral.Referral, NGSLogMemo.LogMemoEntry, NGSLogMemo.Date, NGSLogMemo.Login, NGSLogMemo.InternalPatientID, NGSLogMemo.Type, NGSLogMemo.LinkID, NGSLogMemo.LogMemoID
 FROM (Referral INNER JOIN (Patients INNER JOIN NGSTest ON Patients.InternalPatientID = NGSTest.InternalPatientID) ON Referral.ReferralID = NGSTest.ReferralID) INNER JOIN NGSLogMemo ON Patients.InternalPatientID = NGSLogMemo.InternalPatientID
 ORDER BY NGSLogMemo.Date DESC;

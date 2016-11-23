@@ -48,14 +48,14 @@ End Sub
 
 Private Sub btn_SelDNA_Click()
 ' open form to select DNA of NGS patients
-    DoCmd.Close
+    'DoCmd.Close
     DoCmd.OpenForm "87022 WESDNAPatients"
 End Sub
 
 
 Private Sub btn_DNAWorksheet_Click()
 ' open form to viw DNA QC worksheet for NGS patients
-    DoCmd.Close
+    'DoCmd.Close
     DoCmd.OpenForm "87024 WESDNAQC"
 End Sub
 
@@ -65,11 +65,11 @@ Dim sel As String
 
 Dim selTotal As Long
 
-' 1) check if samples are viewed by unassigned to WES batch button
-' 2) check if samples are viewed by require checker 1 button
-' 3) check if samples are viewed by require checker 2 button
-' 4) check if samples are viewed WES batch
-' 5) check if samples are viewedby status
+' 1) check if samples are viewed by 'unassigned to WES batch' button
+' 2) check if samples are viewed by 'require checker 1' button
+' 3) check if samples are viewed by 'require checker 2' button
+' 4) check if samples are viewed by WES batch
+' 5) check if samples are viewed by status
 ' 6) check if samples are viewed by WES batch AND Status
 ' 7) check if samples are viewed by All pending approval
 ' 8) Else View ALL pending If (Check_selectAll) = True Then 'INNER JOIN Patients ON NGSTest.InternalPatientID = Patients.InternalPatientID
@@ -250,16 +250,16 @@ Me.check_ViewAllPend = 0
 Me.cmb_BatchView.Value = Null
 Me.cmb_StatusView.Value = Null
     
-' reload subform calling querey to view samples not assigned to a WES batch
+' reload subform calling querey to view samples not assigned to a WES batch where test status does not equal not required, failed or complete
 subfrmSQL = "SELECT NGSTest.Selection, Patients.PatientID AS PRU, NGSTest.NGSTestID, dbo_Patient_table.LastName, dbo_Patient_table.FirstName, dbo_Patient_table.DoB, gw_GenderTable.GenderShort, Referral.Referral, NGSTest.DateRequested, Checker.Name AS RefName, Checker.Initials AS Referrer, NGSPanel.Panel AS PanelA, NGSPanel_1.Panel AS PanelB, Status_1.StatusID AS PatientStatus, NGSWESBatch.BatchName AS WESBatch, Status.StatusID, Status.Status AS TestStatus, NGSTest.ResultComment, Patients.InternalPatientID, Checker_1.Initials AS Checker1, NGSTest.Check1Date, Checker_2.Initials AS Checker2, NGSTest.Check2Date, Checker_3.Initials AS ReportApproved, NGSTest.Check3Date, Patients.s_StatusOverall, NGSPanel.PanelCode AS [Primary], NGSPanel_1.PanelCode AS Secondary " & _
             "FROM (((((((((((((NGSTest INNER JOIN Patients ON NGSTest.InternalPatientID = Patients.InternalPatientID) INNER JOIN Referral ON NGSTest.ReferralID = Referral.ReferralID) INNER JOIN Checker ON NGSTest.BookBy = Checker.Check1ID) INNER JOIN NGSPanel ON NGSTest.NGSPanelID = NGSPanel.NGSPanelID) LEFT JOIN NGSPanel AS NGSPanel_1 ON NGSTest.NGSPanelID_B = NGSPanel_1.NGSPanelID) INNER JOIN Status ON NGSTest.StatusID = Status.StatusID) INNER JOIN dbo_Patient_table ON Patients.PatientID = dbo_Patient_table.PatientTrustID) LEFT JOIN DNA ON NGSTest.DNA = DNA.DNANumber) INNER JOIN Status AS Status_1 ON Patients.s_StatusOverall = Status_1.StatusID) LEFT JOIN gw_GenderTable ON dbo_Patient_table.GenderID = gw_GenderTable.GenderID) " & _
             "LEFT JOIN NGSWESBatch ON NGSTest.WESBatch = NGSWESBatch.NGSWESBatchID) LEFT JOIN Checker AS Checker_1 ON NGSTest.Check1ID = Checker_1.Check1ID) LEFT JOIN Checker AS Checker_2 ON NGSTest.Check2ID = Checker_2.Check1ID) LEFT JOIN Checker AS Checker_3 ON NGSTest.Check3ID = Checker_3.Check1ID " & _
-            "WHERE (((Status_1.StatusID)=1202218798) AND ((Status.StatusID)<>1202218787) AND ((NGSTest.WESBatch) Is Null))" & _
+            "WHERE (((Status_1.StatusID)=1202218798) AND ((Status.StatusID)<>1202218787) AND ((Status.StatusID)<> 4) AND ((Status.StatusID)<> 1202218816) AND ((NGSTest.WESBatch) Is Null))" & _
             "ORDER BY NGSTest.DateRequested;"
 [Form_s87020_ExomeLabList].Form.RecordSource = subfrmSQL
 
 'refresh selection count
-strCriteria = "statusID <> 1202218787 AND WESBatch Is Null"
+strCriteria = "statusID <> 1202218787  AND statusID <> 4 AND statusID <> 1202218816 AND WESBatch Is Null"
 AllTotal = DCount("NGSTestID", "s87020_ListWESSamples", strCriteria)
 'Debug.Print AllTotal
 Me.txt_TotalTally = AllTotal
@@ -609,15 +609,14 @@ ElseIf Not IsNull(Me.cmb_BatchAssign) And IsNull(Me.txt_NEWBatch) Then
     selTotal = DCount("[Selection]", "s87020_ListWESSamples", "[Selection] = True")
     Me.txt_SelectionCount = selTotal
     
-    ttotal = selTotal + batchTotal
-    
     ' check that at least one unassigned batching NGS test has been selected.
     If IsNull(selTotal) Or selTotal = 0 Then
-        msgc = MsgBox("No unassigned tests which are in the batching stage have been selected", vbExclamation, "Attention")
+        msgc = MsgBox("No unassigned tests pending batching have been selected", vbExclamation, "Attention")
     Else
         ' Count the number of samples already in the selected WES batch
         strCriteria = " WESBatch = '" & Me.cmb_BatchAssign.Column(1) & "'"
         batchTotal = DCount("WESBatch", "s87020_ListWESSamples", strCriteria)
+        ttotal = selTotal + batchTotal
         'Debug.Print "batch " & batchTotal
         
         ' confirm user decision.
@@ -662,12 +661,15 @@ ElseIf Not IsNull(Me.cmb_BatchAssign) And IsNull(Me.txt_NEWBatch) Then
                     End If
                 Wend
              End If
+             msg_success = MsgBox(selTotal & " WES Test have been added to " & Me.cmb_BatchAssign.Column(1) & vbNewLine & "Total tests in batch " & Me.cmb_BatchAssign.Column(1) & " = " & ttotal, vbOKOnly, "SUCCESS")
             End With
             Set rsAssign = Nothing
             Set db = Nothing
         End If
-    Call Unselect
-    Form![s87020_ExomeLabList].Requery
+    Call btn_Clear4_Click
+    Call btn_NoWESBatch_Click
+'    Call Unselect
+'    Form![s87020_ExomeLabList].Requery
     Exit Sub
     End If
         
@@ -691,16 +693,19 @@ ElseIf IsNull(Me.cmb_BatchAssign) And Not IsNull(Me.txt_NEWBatch) Then
         If rsWES.EOF Then 'checks entry is a unique name
             strNewBatch = "INSERT INTO NGSWESBatch(BatchName) VALUES ('" + newbatch + "')"
             
-            ' Debug.Print strNewBatch
             ' Add batch name into NGSWESBatch table
-            
+            DoCmd.SetWarnings False
+            DoCmd.RunSQL strNewBatch
+            DoCmd.SetWarnings True
+            Me![cmb_BatchAssign].Requery
+            Me![cmb_BatchView].Requery
+            msg_batch = MsgBox(newbatch & " has been created and added to WES Batch dropdown menu.", vbOKOnly Or vbInformation, newbatch & " created")
+
             ' unselect any tests/ samples which are already associated with a WES batch and not in batching stage --> will only assign tests which are not yet assigned to a batch
             unsel = "UPDATE NGSTest INNER JOIN Patients ON NGSTest.InternalPatientID = Patients.InternalPatientID SET NGSTest.Selection = False WHERE NGSTest.Selection = True AND (NGSTest.WESBatch is Not Null or NGSTest.statusID <> 1202218803)"
-            'DoCmd.SetWarnings False
+            DoCmd.SetWarnings False
             DoCmd.RunSQL unsel
-            DoCmd.RunSQL strNewBatch
-            MsgBox strNewBatch
-            'Me.Check_selectAll.Value = 0
+            Me.Check_selectAll.Value = 0
             Form![s87020_ExomeLabList].Requery
             DoCmd.SetWarnings True
                 
@@ -710,8 +715,9 @@ ElseIf IsNull(Me.cmb_BatchAssign) And Not IsNull(Me.txt_NEWBatch) Then
             
             ' Check at least 1 sample remains selected
             If IsNull(selTotal) Or selTotal = 0 Then
-                 msgc = MsgBox("No unassigned tests which are in the batching stage have been selected", vbExclamation, "Attention")
-                 txt_NEWBatch.SetFocus
+                 msgc = MsgBox("No unassigned tests pending batching have been selected." & vbNewLine & " No tests have been added to be added to " & newbatch, vbExclamation, "Attention")
+                 'txt_NEWBatch.SetFocus
+                 Call btn_Clear4_Click
                  Exit Sub
             Else
             ' open record set for tests to be assigned loop through records are and assign test to specified WES batch
@@ -720,10 +726,6 @@ ElseIf IsNull(Me.cmb_BatchAssign) And Not IsNull(Me.txt_NEWBatch) Then
                     Cancel = True
                     
                 Else
-                    ' Add batch name into NGSWESBatch table
-                    DoCmd.SetWarnings False
-                    DoCmd.RunSQL strNewBatch
-                    DoCmd.SetWarnings True
                     
                     strAssign = "SELECT Patients.InternalPatientID, NGSTest.NGSTestID, NGSTest.WESBatch, NGSTest.Selection, NGSTest.Daterequested " & _
                                 "FROM (NGSTest INNER JOIN Patients ON NGSTest.InternalPatientID = Patients.InternalPatientID) " & _
@@ -761,22 +763,30 @@ ElseIf IsNull(Me.cmb_BatchAssign) And Not IsNull(Me.txt_NEWBatch) Then
                             End If
                         Wend
                      End If
-                    End With
+                     msg_success = MsgBox(selTotal & " WES Test have been added to " & newbatch, vbOKOnly, "SUCCESS")
+                     End With
                     Set reWES = Nothing
                     Set rsAssign = Nothing
                     Set rsBatch = Nothing
                     Set db = Nothing
                 End If
+            
             End If
         Else
             msgd = MsgBox("WES batch: " + newbatch + " already exists." & vbNewLine & "Please select a WES Batch from the dropdown menu or enter a new batch name.", vbExclamation, "WES Batch Already Exists")
+            Call btn_Clear4_Click
             Exit Sub
         End If
-    Call btn_ViewAll_Click
+
+    Call btn_NoWESBatch_Click
+    Call btn_Clear4_Click
     Exit Sub
 End If
 End If
-Me.cmb_BatchView.Requery
+
+Call btn_NoWESBatch_Click
+Call btn_Clear4_Click
+
 End Sub
 
 Private Sub btn_Clear4_Click()
@@ -890,19 +900,19 @@ Else
                       
                     'Display an notifcation is anytests selected are not able to have status updated.
                     If InBatching > 0 And SetBatching > 0 Then
-                        msg1 = MsgBox("Unable to update status of some selected tests for the following reasons:" & vbNewLine & vbNewLine & "1) " & InBatching & " selected test(s) currently in 'BATCHING' stage. These test must be assigned to a WES batch to proceed." & vbNewLine & vbNewLine & "2) " & SetBatching & " selected test(s) have already been assigned to a WES Batch. Test status cannot be reset to 'BATCHING'" & vbNewLine & vbNewLine & "The aforementioned tests have been unselected.", vbOKOnly Or vbInformation, "Batch Status Update Cannot Be Applied To All Selected Tests")
+                        msg1 = MsgBox("Unable to update status of some of the tests selected" & vbNewLine & vbNewLine & "REASONS:" & vbNewLine & "1) " & InBatching & " selected test(s) currently in 'BATCHING' stage. These test must be assigned to a WES batch to proceed." & vbNewLine & vbNewLine & "2) " & SetBatching & " selected test(s) have already been assigned to a WES Batch. Test status cannot be reset to 'BATCHING'" & vbNewLine & vbNewLine & "The aforementioned tests have been unselected.", vbOKOnly Or vbExclamation, "Status Update Cannot Be Applied To All Selected Tests")
                     End If
                     If InBatching > 0 Then
-                        msg2 = MsgBox(InBatching & " selected test(s) currently in 'BATCHING' stage." & vbNewLine & "Tests need to be assigned to a WES batch before test status can be updated" & vbNewLine & vbNewLine & "The aforementioned tests have been unselected.", vbOKOnly Or vbInformation, "Tests in Batching Stage Unselected")
+                        msg2 = MsgBox("Unable to update status of some of the tests selected" & vbNewLine & vbNewLine & "REASON:" & vbNewLine & InBatching & "  test(s)selected currently in 'BATCHING' stage." & vbNewLine & "Tests need to be assigned to a WES batch before test status can be updated" & vbNewLine & vbNewLine & "The aforementioned tests have been unselected.", vbOKOnly Or vbExclamation, "Tests in Batching Stage Unselected")
                     End If
                     If SetBatching > 0 Then
-                        msg3 = MsgBox(SetBatching & " selected test(s) already been assigned to a WES Batch." & vbNewLine & "Tests assigned to a WES batch are unable to be reset to the batching stage" & vbNewLine & vbNewLine & "The aforementioned tests have been unselected.", vbOKOnly Or vbInformation, "Test Already Assigned To A WES Batch")
+                        msg3 = MsgBox("Unable to update status of some of the tests selected" & vbNewLine & vbNewLine & "REASON:" & vbNewLine & SetBatching & " selected test(s) already been assigned to a WES Batch." & vbNewLine & "Tests assigned to a WES batch are unable to be reset to the 'Batching' stage" & vbNewLine & vbNewLine & "The aforementioned tests have been unselected.", vbOKOnly Or vbExclamation, "Test Already Assigned To A WES Batch")
                     End If
                     If testComp > 0 Then
-                        msg4 = MsgBox("Tests yet not reported" & vbNewLine & "Unreported tests selected = " & testComp & vbNewLine & vbNewLine & "Unable to set test status to 'Complete' for unreported  tests" & vbNewLine & "The aforementioned tests have been unselected.", vbOKOnly Or vbInformation, "Unreported tests")
+                        msg4 = MsgBox("Unable to update status of some of the tests selected" & vbNewLine & vbNewLine & "REASON:" & vbNewLine & "Tests yet not reported, Unreported tests selected = " & testComp & vbNewLine & vbNewLine & "Unable to set test status to 'Complete' for unreported  tests" & vbNewLine & "The aforementioned tests have been unselected.", vbOKOnly Or vbExclamation, "Unreported tests")
                     End If
                     If testFail > 0 Then
-                        msg4 = MsgBox("Tests yet not reported" & vbNewLine & "Unreported tests selected = " & testFail & vbNewLine & vbNewLine & "Unable to set test status to 'Test Failed' for unreported tests" & vbNewLine & "The aforementioned tests have been unselected.", vbOKOnly Or vbInformation, "Unreported tests")
+                        msg4 = MsgBox("Unable to update status of some of the tests selected" & vbNewLine & vbNewLine & "REASON:" & vbNewLine & "Tests yet not reported, Unreported tests selected = " & testFail & vbNewLine & vbNewLine & "Unable to set test status to 'Test Failed' for unreported tests" & vbNewLine & "The aforementioned tests have been unselected.", vbOKOnly Or vbExclamation, "Unreported tests")
                     End If
                     If signedOffTest > 0 Then
                         msg5 = MsgBox(signedOffTest & " of the tests selected have already been reported and closed. " & vbNewLine & "The test status for these tests cannot be altered.", vbOKOnly Or vbInformation, "WES Tests Already Reported")
@@ -915,6 +925,7 @@ Else
                     'recount selected tests
                     selTotal = DCount("[Selection]", "s87020_ListWESSamples", "[Selection] = True")
                     Me.txt_SelectionCount = selTotal
+                    Form![s87020_ExomeLabList]![Selection].Requery
                     'Debug.Print "total tests remaining =" & selTotal
                     
                     If IsNull(selTotal) Or selTotal = 0 Then
@@ -925,7 +936,7 @@ Else
                     Else
                     ' check if new test status = current status --> if true skip past
                     If rsStatus!Selection = True And Trim(rsStatus!StatusID) <> Me!cmb_StatusUpdate.Column(0) Then
-                        If MsgBox("You are about to update the status of " & selTotal & " test(s) to '" + Me!cmb_StatusUpdate.Column(1) + "'" & vbNewLine & "Do you wish to proceed?", vbYesNo Or vbExclamation, "Assign to WES Batch?") = vbNo Then
+                        If MsgBox("You are about to update the status of " & selTotal & " test(s) to:" & vbNewLine & vbNewLine + Me!cmb_StatusUpdate.Column(1) & vbNewLine & "Do you wish to proceed?", vbYesNo Or vbExclamation, "Assign to WES Batch?") = vbNo Then
                             Cancel = True
                             Exit Sub
                             
@@ -971,11 +982,10 @@ Else
 
                     Else
                         .MoveNext
-                        
-                    
                     End If
                     
                     msg6 = MsgBox("The status of " & selTotal & " WES tests has been updated to " + Me.cmb_StatusUpdate.Column(1), vbOKOnly, "Status update Sucessful")
+
                     End If
                  End If
             End With
@@ -983,8 +993,8 @@ Else
     End If
     
 ' Refresh form, clear filter settings recount samples
-Call btn_ViewAll_Click
-
+Call Unselect
+Form![s87020_ExomeLabList]![StatusID].Requery
 
 End Sub
                     
