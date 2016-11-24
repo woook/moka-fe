@@ -2,6 +2,21 @@ Option Compare Database
 'save boolean will only be set to True when user clicks 'Next' button, record won't be created if user exits window any other way.
 Private save As Boolean
 
+Private Sub Form_Load()
+    Dim rsPatDetails As ADODB.Recordset
+    'PRU passed from patient selection form
+    patientID_PRU = Me.openArgs
+    'Get patient details
+    sqlPatDetails = "SELECT LastName, FirstName FROM dbo_Patient_Table WHERE PatientTrustID = '" & patientID_PRU & "'"
+    Set rsPatDetails = New ADODB.Recordset
+    rsPatDetails.Open sqlPatDetails, CurrentProject.Connection, adOpenKeyset
+    surname = rsPatDetails.Fields("LastName")
+    firstname = rsPatDetails.Fields("FirstName")
+    'Set form caption to display patient details
+    captionStr = "Ordering WES test for: " & patientID_PRU & " " & surname & ", " & firstname
+    Me.Caption = captionStr
+End Sub
+
 Private Sub Form_Open(Cancel As Integer)
     save = False
 End Sub
@@ -36,7 +51,7 @@ Private Sub NextButton_Click()
     Dim referrerInitials As String
     Dim referrerInitialsFull As String
 
-    'PRU will be passed from Amy's form.
+    'PRU will be passed from patient selection form.
     patientID_PRU = Me.openArgs
 
     'Retrieve InternalPatientID from Moka patients table

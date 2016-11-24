@@ -18,6 +18,7 @@ Private Sub Form_Load()
     Dim openArgs() As String
     Dim subpanelCode As String
     Dim subpanelQuery As String
+    Dim rsPatDetails As ADODB.Recordset
 
     'Retrieve arguments passed from NGSTest form
     openArgs = Split(Me.openArgs, ", ")
@@ -28,6 +29,16 @@ Private Sub Form_Load()
     Referral = openArgs(4)
     referrerID = openArgs(5)
     referrerInitials = openArgs(6)
+
+    'Get patient details
+    sqlPatDetails = "SELECT LastName, FirstName FROM dbo_Patient_Table WHERE PatientTrustID = '" & patientID_PRU & "'"
+    Set rsPatDetails = New ADODB.Recordset
+    rsPatDetails.Open sqlPatDetails, CurrentProject.Connection, adOpenKeyset
+    surname = rsPatDetails.Fields("LastName")
+    firstname = rsPatDetails.Fields("FirstName")
+    'Set form caption to display patient details
+    captionStr = "Ordering WES test for: " & patientID_PRU & " " & surname & ", " & firstname
+    Me.Caption = captionStr
 End Sub
 
 Private Function refreshListBox(listboxNum As Integer)
