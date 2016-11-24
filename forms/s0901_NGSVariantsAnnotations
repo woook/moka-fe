@@ -3,7 +3,7 @@ Option Compare Database
 Private Sub dbSNPrs_DblClick(Cancel As Integer)
     'Open dbSNP record in browser
     If Not IsNull(Me.DBSNP) Then
-        Application.FollowHyperlink "https://www.ncbi.nlm.nih.gov/projects/SNP/snp_ref.cgi?searchType=adhoc_search&type=rs&rs=rs" & Me.DBSNP
+        Call firefoxurl("https://www.ncbi.nlm.nih.gov/projects/SNP/snp_ref.cgi?searchType=adhoc_search&type=rs&rs=rs" & Me.DBSNP)
     End If
 End Sub
 
@@ -22,7 +22,7 @@ Private Sub Transcript_DblClick(Cancel As Integer)
         If Not IsNull(Me.Parent.Classification) Then
             Dim resultStr As String
             Dim genotype As String
-            Dim class As String
+            Dim Class As String
             Dim rsGetComment As ADODB.Recordset
             genotype = Me.Parent.genotype
             If genotype = "0/1" Then
@@ -31,18 +31,31 @@ Private Sub Transcript_DblClick(Cancel As Integer)
                 genotype = "Hom"
             End If
             'Get classification level (1-5) from classification text
-            class = Mid(Me.Parent.Classification.Column(1), Len(Me.Parent.Classification.Column(1)) - 1, 1)
+            Class = Mid(Me.Parent.Classification.Column(1), Len(Me.Parent.Classification.Column(1)) - 1, 1)
             'Construct variant string
-            resultStr = genotype & " " & Me.GENE_SYMBOL & " " & Me.TRANSCRIPT_ID & " " & Me.HGVS_Transcript & " " & Me.HGVS_Protein & " Class: " & class
+            resultStr = genotype & " " & Me.GENE_SYMBOL & " " & Me.TRANSCRIPT_ID & " " & Me.HGVS_Transcript & " " & Me.HGVS_Protein & " Class: " & Class
             'Retrieve exsiting comment so variant can be appended to end
             Set rsGetComment = New ADODB.Recordset
             sqlGetComment = "SELECT NGSTest.ResultComment FROM NGSTest WHERE NGSTest.NGSTestID = " & Me.Parent.NGSTestID
             rsGetComment.Open sqlGetComment, CurrentProject.Connection, adOpenKeyset
             'Append to end of result comment
             newComment = rsGetComment.Fields("ResultComment") & vbNewLine & resultStr
+            newComment = Replace(newComment, "'", "''") 'Escape any apostrophes to prevent SQL error
             sqlUpdate = "UPDATE NGSTest SET NGSTest.ResultComment = '" & newComment & "' WHERE NGSTest.NGSTestID = " & Me.Parent.NGSTestID
+            'Retrieve details for log
+            patID = [Form_0901 ExomeNGSResults].InternalPatientID
+            dateReq = Form_s0901_WESTestResults.DateRequested
+            D = Format(Now(), "dd/mmm/yyyy Hh:Nn:ss")
+            un = VBA.Environ("USERNAME")
+            cn = VBA.Environ("COMPUTERNAME")
+            'SQL statements for log
+            sqlMemo = "INSERT INTO NGSLogMemo(InternalPatientID, Type, LinkID, LogMemoEntry, [Date], Login, PCName) VALUES(" + CStr(patID) + ", 3, " + CStr(Me.Parent.NGSTestID) + ",'NGS WES test: Result comment updated for WES test requested " + CStr(dateReq) + " - " + newComment + "',#" + D + "#,'" + un + "','" + cn + "')"
+            sqlPatLog = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" + CStr(patID) + ",'NGS WES test: Result comment updated for WES test requested " + CStr(dateReq) + " - see memo log',#" + D + "#,'" + un + "','" + cn + "')"
+            'Execute SQL statements
             DoCmd.SetWarnings False
             DoCmd.RunSQL sqlUpdate
+            DoCmd.RunSQL sqlMemo
+            DoCmd.RunSQL sqlPatLog
             DoCmd.SetWarnings True
             Forms![0901 ExomeNGSResults].Refresh 'Refresh so that result comments field is updated
         Else
