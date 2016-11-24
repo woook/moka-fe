@@ -57,3 +57,11 @@ Dim stDocName As String
     stLinkCriteria = "[Type]= 1 AND [LinkID] = " & Me![NGSTestID]
     DoCmd.OpenForm stDocName, acFormDS, , stLinkCriteria
 End Sub
+
+Private Sub TestResult_DblClick(Cancel As Integer)
+' View NGS Test result in full
+Dim stDocName As String
+    stDocName = "s87020_NGSTestResultComment"
+    stLinkCriteria = " NGSTestID = " & Me![NGSTestID]
+    DoCmd.OpenForm stDocName, acFormSF, , stLinkCriteria
+End Sub
