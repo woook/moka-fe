@@ -62,6 +62,8 @@ Private Sub NextButton_Click()
             MsgBox "Please tick to confirm phenotype information has been entered (using Phenotips) before continuing.", vbExclamation, "Confirm Phenotype Entry"
         ElseIf IsNull(Me![Clinician]) Then
             MsgBox "Please select referring clinician name before continuing.", vbExclamation, "Select Name"
+        ElseIf IsNull(Me![dept]) Or IsNull(Me![cost]) Then
+            MsgBox "Please select referring department and cost centre before continuing.", vbExclamation, "Select department/cost centre"
         Else
             'Save record
             DoCmd.DoMenuItem acFormBar, acRecordsMenu, 5, , acMenuVer70
