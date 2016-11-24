@@ -40,9 +40,22 @@ Private Sub Transcript_DblClick(Cancel As Integer)
             rsGetComment.Open sqlGetComment, CurrentProject.Connection, adOpenKeyset
             'Append to end of result comment
             newComment = rsGetComment.Fields("ResultComment") & vbNewLine & resultStr
+            newComment = Replace(newComment, "'", "''") 'Escape any apostrophes to prevent SQL error
             sqlUpdate = "UPDATE NGSTest SET NGSTest.ResultComment = '" & newComment & "' WHERE NGSTest.NGSTestID = " & Me.Parent.NGSTestID
+            'Retrieve details for log
+            patID = [Form_0901 ExomeNGSResults].InternalPatientID
+            dateReq = Form_s0901_WESTestResults.DateRequested
+            D = Format(Now(), "dd/mmm/yyyy Hh:Nn:ss")
+            un = VBA.Environ("USERNAME")
+            cn = VBA.Environ("COMPUTERNAME")
+            'SQL statements for log
+            sqlMemo = "INSERT INTO NGSLogMemo(InternalPatientID, Type, LinkID, LogMemoEntry, [Date], Login, PCName) VALUES(" + CStr(patID) + ", 3, " + CStr(Me.Parent.NGSTestID) + ",'NGS WES test: Result comment updated for WES test requested " + CStr(dateReq) + " - " + newComment + "',#" + D + "#,'" + un + "','" + cn + "')"
+            sqlPatLog = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" + CStr(patID) + ",'NGS WES test: Result comment updated for WES test requested " + CStr(dateReq) + " - see memo log',#" + D + "#,'" + un + "','" + cn + "')"
+            'Execute SQL statements
             DoCmd.SetWarnings False
             DoCmd.RunSQL sqlUpdate
+            DoCmd.RunSQL sqlMemo
+            DoCmd.RunSQL sqlPatLog
             DoCmd.SetWarnings True
             Forms![0901 ExomeNGSResults].Refresh 'Refresh so that result comments field is updated
         Else
