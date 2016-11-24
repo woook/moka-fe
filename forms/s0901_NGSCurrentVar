@@ -21,10 +21,16 @@ End Sub
 Private Sub commentShort_DblClick(Cancel As Integer)
     Dim stDocName As String
     stDocName = "s0901_NGSVarComment"
-    If Not IsNull(Me.NGSVariantCommentID) Then
+    'If a comment exists, but form is locked following test completion, open the comment window in READ ONLY mode so comment can be viewed but not edited
+    If Not IsNull(Me.NGSVariantCommentID) And Me.AllowEdits = False Then
+        stLinkCriteria = "[NGSVariantCommentID] = " & Me.NGSVariantCommentID
+        DoCmd.OpenForm stDocName, , , stLinkCriteria, acFormReadOnly, , Me.NGSVariantID & "," & Me.InternalPatientID
+    'If a comment exists and the form is not locked, open the comment window in EDIT mode
+    ElseIf Not IsNull(Me.NGSVariantCommentID) Then
         stLinkCriteria = "[NGSVariantCommentID] = " & Me.NGSVariantCommentID
         DoCmd.OpenForm stDocName, , , stLinkCriteria, acFormEdit, , Me.NGSVariantID & "," & Me.InternalPatientID
-    Else
+    'If no comment exists and the form is not locked, open the comment window in ADD mode so new comment is created
+    ElseIf Me.AllowEdits = True Then
         DoCmd.OpenForm stDocName, , , , acFormAdd, , Me.NGSVariantID & "," & Me.InternalPatientID
     End If
 End Sub
