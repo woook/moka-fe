@@ -513,15 +513,17 @@ Private Sub SubmitButton_Click()
             DoCmd.RunSQL sqlChangeStatus
             DoCmd.SetWarnings True
 
-            'Insert record of Exome test request and status change into patient log
+            'Insert record of Exome test request and status change into patient and NGSmemo logs
             D = Format(Now(), "dd/mmm/yyyy Hh:Nn:ss")
             un = VBA.Environ("USERNAME")
             cn = VBA.Environ("COMPUTERNAME")
             sqlPatLogTest = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" & internalPatID & ", 'NGS: " & Referral & " test request added. Primary panel: " & panelID_A & ". Secondary panel: " & panelID_B & "',#" + D + "#,'" + un + "','" + cn + "')"
             sqlPatLogStatus = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" & internalPatID & ", 'Patients: Status changed to NGS Pending ',#" + D + "#,'" + un + "','" + cn + "')"
+            sqlMemo = "INSERT INTO NGSLogMemo(InternalPatientID, Type, LinkID, LogMemoEntry, [Date], Login, PCName) VALUES(" & internalPatID & ", 1, " & NGSTestID & ",'NGS WES test status updated to: Approval Pending.' ,#" + D + "#,'" + un + "','" + cn + "')"
             DoCmd.SetWarnings False
             DoCmd.RunSQL sqlPatLogTest
             DoCmd.RunSQL sqlPatLogStatus
+            DoCmd.RunSQL sqlMemo
             DoCmd.SetWarnings True
 
             'Display message and close form
