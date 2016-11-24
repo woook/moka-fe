@@ -15,6 +15,9 @@ Private Sub Classification_AfterUpdate()
     DoCmd.RunSQL sqlMemo
     DoCmd.RunSQL sqlPatLogVar
     DoCmd.SetWarnings True
+    'Save record then update the variant table on results page
+    DoCmd.RunCommand acCmdSaveRecord
+    Form_s0901_NGSVariants.Requery
 End Sub
 
 
