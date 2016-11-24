@@ -2,8 +2,10 @@ Option Compare Database
 
 Function showPopup()
     'Show detailed test info in popup window
+    Dim stLinkCritera As String
     If Not IsNull(Me![NGSTestID]) Then
-        DoCmd.OpenForm "s87018_ExomeStatusPopup", , , , acFormAdd, , Me.NGSTestID & ", " & Me.PatientTrustID & ", " & Me.LastName & ", " & Me.FirstName & ", " & Me.DOB & ", " & Me.Gender & ", " & Me.Referral & ", " & Me.DateRequested & ", " & Me.RefName & ", " & Me.Status
+        stLinkCriteria = "[NGSTestID] = " & Me.NGSTestID
+        DoCmd.OpenForm "s87018_ExomeStatusPopup", , , stLinkCriteria
     End If
 End Function
 
@@ -32,6 +34,6 @@ Private Sub RequestedDate_DblClick(Cancel As Integer)
     Call showPopup
 End Sub
 
-Private Sub Status_DblClick(Cancel As Integer)
+Private Sub status_DblClick(Cancel As Integer)
     Call showPopup
 End Sub

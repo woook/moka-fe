@@ -1,7 +1,7 @@
 Private Sub Form_Load()
     'So doesnt show records on form open
     Dim sqlNull As String
-    sqlNull = "SELECT Null AS NGSTestID, Null AS PatientTrustID, Null AS LastName, Null AS FirstName, Null AS DOB, Null AS Gender, Null AS Referral, Null AS DateRequested, Null AS StatusID, Null AS Status, Null AS RefName, Null AS PanelA, Null AS PanelB;"
+    sqlNull = "SELECT Null AS NGSTestID, Null AS PatientTrustID, Null AS LastName, Null AS FirstName, Null AS DateRequested, Null AS StatusID, Null AS Status, Null AS RefName;"
     [Form_s87018_ExomeStatus].RecordSource = sqlNull
 End Sub
 
@@ -9,8 +9,8 @@ Private Sub Search_Click()
     Dim sqlInProgress As String
     'Set subform RecordSet to retrieve all WES tests that match PRU number
     If Not IsNull(Me![PatPRU]) Then
-        sqlSearchPatient = "SELECT NGSTest.NGSTestID, dbo_Patient_Table.PatientTrustID, dbo_Patient_Table.LastName, dbo_Patient_Table.FirstName, dbo_Patient_Table.DOB, gw_GenderTable.Gender, Referral.Referral, NGSTest.DateRequested, Status.StatusID, Status.Status, Checker.Name As RefName, NGSPanel.Panel AS PanelA, NGSPanel_1.Panel AS PanelB " & _
-        "FROM (((((((NGSTest INNER JOIN Patients ON NGSTest.InternalPatientID = Patients.InternalPatientID) INNER JOIN dbo_Patient_Table ON Patients.PatientID = dbo_Patient_Table.PatientTrustID) LEFT JOIN gw_GenderTable ON dbo_Patient_Table.GenderID = gw_GenderTable.GenderID) INNER JOIN Referral ON Referral.ReferralID = NGSTest.ReferralID) INNER JOIN Checker ON NGSTest.BookBy = Checker.Check1ID) INNER JOIN NGSPanel ON NGSTest.NGSPanelID = NGSPanel.NGSPanelID) LEFT JOIN NGSPanel AS NGSPanel_1 ON NGSTest.NGSPanelID_B = NGSPanel_1.NGSPanelID) INNER JOIN Status ON NGSTest.StatusID = Status.StatusID " & _
+        sqlSearchPatient = "SELECT NGSTest.NGSTestID, dbo_Patient_table.PatientTrustID, dbo_Patient_table.LastName, dbo_Patient_table.FirstName, NGSTest.DateRequested, Status.StatusID, Status.Status, Checker.Name As RefName " & _
+        "FROM (((NGSTest INNER JOIN Patients ON NGSTest.InternalPatientID = Patients.InternalPatientID) INNER JOIN dbo_Patient_table ON Patients.PatientID = dbo_Patient_table.PatientTrustID) INNER JOIN Checker ON NGSTest.BookBy = Checker.Check1ID) INNER JOIN Status ON NGSTest.StatusID = Status.StatusID " & _
         "WHERE (((Patients.PatientID) Like [Forms]![87018 ExomeStatus].[PatPRU] & '*')) " & _
         "ORDER BY NGSTest.DateRequested;"
         [Form_s87018_ExomeStatus].Form.RecordSource = sqlSearchPatient
@@ -20,9 +20,9 @@ End Sub
 Private Sub AllInProgress_Click()
     Dim sqlInProgress As String
     'Set subform RecordSet to retrieve all in progress WES tests
-    sqlInProgress = "SELECT NGSTest.NGSTestID, dbo_Patient_Table.PatientTrustID, dbo_Patient_Table.LastName, dbo_Patient_Table.FirstName, dbo_Patient_Table.DOB, gw_GenderTable.Gender, Referral.Referral, NGSTest.DateRequested, Status.StatusID, Status.Status, Checker.Name As RefName, NGSPanel.Panel AS PanelA, NGSPanel_1.Panel AS PanelB " & _
-    "FROM (((((((NGSTest INNER JOIN Patients ON NGSTest.InternalPatientID = Patients.InternalPatientID) INNER JOIN dbo_Patient_Table ON Patients.PatientID = dbo_Patient_Table.PatientTrustID) LEFT JOIN gw_GenderTable ON dbo_Patient_Table.GenderID = gw_GenderTable.GenderID) INNER JOIN Referral ON Referral.ReferralID = NGSTest.ReferralID) INNER JOIN Checker ON NGSTest.BookBy = Checker.Check1ID) INNER JOIN NGSPanel ON NGSTest.NGSPanelID = NGSPanel.NGSPanelID) LEFT JOIN NGSPanel AS NGSPanel_1 ON NGSTest.NGSPanelID_B = NGSPanel_1.NGSPanelID) INNER JOIN Status ON NGSTest.StatusID = Status.StatusID " & _
-    "WHERE Status.StatusID <> 4 And Status.StatusID <> 5 And Status.StatusID <> 1202218787 " & _
+    sqlInProgress = "SELECT NGSTest.NGSTestID, dbo_Patient_table.PatientTrustID, dbo_Patient_table.LastName, dbo_Patient_table.FirstName, NGSTest.DateRequested, Status.StatusID, Status.Status, Checker.Name As RefName " & _
+    "FROM (((NGSTest INNER JOIN Patients ON NGSTest.InternalPatientID = Patients.InternalPatientID) INNER JOIN dbo_Patient_table ON Patients.PatientID = dbo_Patient_table.PatientTrustID) INNER JOIN Checker ON NGSTest.BookBy = Checker.Check1ID) INNER JOIN Status ON NGSTest.StatusID = Status.StatusID " & _
+    "WHERE Status.StatusID <> 2 And Status.StatusID <> 4 And Status.StatusID <> 5 And Status.StatusID <> 1202218787 " & _
     "ORDER BY NGSTest.DateRequested;"
     [Form_s87018_ExomeStatus].Form.RecordSource = sqlInProgress
 End Sub
@@ -30,11 +30,18 @@ End Sub
 Private Sub AllApproval_Click()
     Dim sqlApproval As String
     'Set subform RecordSet to retrieve all in progress WES tests
-    sqlApproval = "SELECT NGSTest.NGSTestID, dbo_Patient_Table.PatientTrustID, dbo_Patient_Table.LastName, dbo_Patient_Table.FirstName, dbo_Patient_Table.DOB, gw_GenderTable.Gender, Referral.Referral, NGSTest.DateRequested, Status.StatusID, Status.Status, Checker.Name As RefName, NGSPanel.Panel AS PanelA, NGSPanel_1.Panel AS PanelB " & _
-    "FROM (((((((NGSTest INNER JOIN Patients ON NGSTest.InternalPatientID = Patients.InternalPatientID) INNER JOIN dbo_Patient_Table ON Patients.PatientID = dbo_Patient_Table.PatientTrustID) LEFT JOIN gw_GenderTable ON dbo_Patient_Table.GenderID = gw_GenderTable.GenderID) INNER JOIN Checker ON NGSTest.BookBy = Checker.Check1ID) INNER JOIN NGSPanel ON NGSTest.NGSPanelID = NGSPanel.NGSPanelID) LEFT JOIN NGSPanel AS NGSPanel_1 ON NGSTest.NGSPanelID_B = NGSPanel_1.NGSPanelID) INNER JOIN Status ON NGSTest.StatusID = Status.StatusID " & _
+    sqlApproval = "SELECT NGSTest.NGSTestID, dbo_Patient_table.PatientTrustID, dbo_Patient_table.LastName, dbo_Patient_table.FirstName, NGSTest.DateRequested, Status.StatusID, Status.Status, Checker.Name As RefName " & _
+    "FROM (((NGSTest INNER JOIN Patients ON NGSTest.InternalPatientID = Patients.InternalPatientID) INNER JOIN dbo_Patient_table ON Patients.PatientID = dbo_Patient_table.PatientTrustID) INNER JOIN Checker ON NGSTest.BookBy = Checker.Check1ID) INNER JOIN Status ON NGSTest.StatusID = Status.StatusID " & _
     "WHERE Status.StatusID = 1202218801 " & _
     "ORDER BY NGSTest.DateRequested;"
     [Form_s87018_ExomeStatus].Form.RecordSource = sqlApproval
+End Sub
+
+Private Sub Form_Unload(Cancel As Integer)
+    'Reset to null query so form doesn't try to load records next time form is opened
+    Dim sqlNull As String
+    sqlNull = "SELECT Null AS NGSTestID, Null AS PatientTrustID, Null AS LastName, Null AS FirstName, Null AS DateRequested, Null AS StatusID, Null AS Status, Null AS RefName;"
+    [Form_s87018_ExomeStatus].RecordSource = sqlNull
 End Sub
 
 Private Sub Close_Click()
