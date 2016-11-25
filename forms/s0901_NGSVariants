@@ -57,6 +57,24 @@ Private Sub countPrev_DblClick(Cancel As Integer)
     End If
 End Sub
 
+Private Sub Inheritance_AfterUpdate()
+    Dim D As String
+    Dim un As String
+    Dim cn As String
+    Dim Inheritance As String
+    D = Format(Now(), "dd/mmm/yyyy Hh:Nn:ss")
+    un = VBA.Environ("USERNAME")
+    cn = VBA.Environ("COMPUTERNAME")
+    patID = Me.Parent.InternalPatientID
+    Inheritance = Me.Inheritance.Column(1)
+    sqlMemo = "INSERT INTO NGSLogMemo(InternalPatientID, Type, LinkID, LogMemoEntry, [Date], Login, PCName) VALUES(" + CStr(patID) + ", 2, " + CStr(Me.NGSVariantID) + ",'Variant inheritance updated to: " + Inheritance + "',#" + D + "#,'" + un + "','" + cn + "')"
+    sqlPatLogVar = "INSERT INTO PatientLog (InternalPatientID, LogEntry, [Date], Login, PCName) VALUES (" & patID & ", 'NGS: Variant inheritance for NGSVariantID " & Me.NGSVariantID & " updated to: " & Inheritance & "', #" + D + "#,'" + un + "','" + cn + "')"
+    DoCmd.SetWarnings False
+    DoCmd.RunSQL sqlMemo
+    DoCmd.RunSQL sqlPatLogVar
+    DoCmd.SetWarnings True
+End Sub
+
 Private Sub SangerConf_Click()
     Dim D As String
     Dim un As String
