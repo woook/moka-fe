@@ -22,16 +22,16 @@ class MokaVCF(object):
     """Parses Ingenuity VCF output file and enters each variant into Moka NGSVariants Table"""
     def __init__(self, patID, ngsTestID):
         # THE LIST BELOW CONTAINS EACH ID FROM THE INGENUITY OUTPUT VCF INFO FIELD THAT WILL BE ADDED TO DATABASE.
-        # TO INCLUDE ADDITIONAL ANNOTATIONS, ADD THE CORRESPONDING INFO FIELD ID TO THE LIST BELOW AND ENSURE THERE 
+        # TO INCLUDE ADDITIONAL ANNOTATIONS, ADD THE CORRESPONDING INFO FIELD ID TO THE LIST BELOW AND ENSURE THERE
         # IS A FIELD WITH THE SAME NAME IN THE NGSVariantAnnotations TABLE IN MOKA
-        self.fields = ('GENE_SYMBOL', 
-                      'TRANSCRIPT_ID', 
-                      'HGVS_TRANSCRIPT', 
-                      'HGVS_PROTEIN', 
-                      'GENE_REGION', 
-                      'TRANSLATION_IMPACT', 
-                      'SIFT_FUNCTION', 
-                      'POLYPHEN_FUNCTION', 
+        self.fields = ('GENE_SYMBOL',
+                      'TRANSCRIPT_ID',
+                      'HGVS_TRANSCRIPT',
+                      'HGVS_PROTEIN',
+                      'GENE_REGION',
+                      'TRANSLATION_IMPACT',
+                      'SIFT_FUNCTION',
+                      'POLYPHEN_FUNCTION',
                       'ING_CLASSIFICATION',
                       'CADD',
                       'BLOSUM50',
@@ -88,7 +88,7 @@ class MokaVCF(object):
     def lookupHGNCID(self):
         # Create an HGNCID lookup dictionary from Moka genesHGNC_current table
         allVCFGenes = set([]) # using set instead of list to prevent gene symbols being added multiple times
-        for vcfFile in self.vcfPaths.itervalues(): # for each vcf...          
+        for vcfFile in self.vcfPaths.itervalues(): # for each vcf...
             vcfReader = vcf.Reader(open(vcfFile, 'r')) # read vcf
             for row in vcfReader:
                 # Add gene symbol to set. Will error if no gene symbol present, so use try/except to catch this.
@@ -138,7 +138,7 @@ class MokaVCF(object):
                     # Stores each variant as a string that can be used in VALUES section of SQL insert statement (see below).
                     varCurrent = (mokaChrID, position, ref, alt, self.ngsTestID, self.patID, "'{}'".format(self.datetime), str(panel[0]), "'{}'".format(panel[1]), gt, rd, cq, str(af), str(gq))
                     #varCurrent = (mokaChrID, position, ref, alt, self.ngsTestID, self.patID, "#"+self.datetime+"#", str(panel[0]), "'{}'".format(panel[1]), gt, rd, cq, str(af), str(gq))
-                    ######                
+                    ######
                     #EXTRACT DATA FOR NGSVariantAnnotations TABLE...
                     ######
                     # Lookup HGNCID in self.mokaHGNC dictionary, add HGNCID to start of 'annotations' string for SQL INSERT statement.
@@ -185,11 +185,17 @@ class MokaVCF(object):
                     # This list is added to each time a new row for that variant is encountered in the VCF.
                     self.vars[varCurrent] = self.vars.setdefault(varCurrent, []) + [annot]
             vcfReader = None # Releases file (pyvcf reader object has no .close() method)
-    def insertMoka(self):     
+    def insertMoka(self):
         # Loops through variant dictionary and inserts into Moka
-        sqlIns = "INSERT INTO NGSVariant (ChrID, Position_hg19, ref, alt, NGSTestID, InternalPatientID, DateAdded, PanelType, PanelTypeName, genotype, ReadDepth, CallQuality, AlleleFraction, GenotypeQuality) VALUES (%s)"
+        sqlIns = "INSERT INTO NGSVariant (Genes, ChrID, Position_hg19, ref, alt, NGSTestID, InternalPatientID, DateAdded, PanelType, PanelTypeName, genotype, ReadDepth, CallQuality, AlleleFraction, GenotypeQuality) VALUES (%s, %s)"
         for var in sorted(self.vars.keys()):
-            sqlRowIns = sqlIns % (", ".join(var))
+            #Retrieve gene symbol(s) associated with each variant so they can be added to NGSVariants table. Separate multiple genes with semi-colon (;).
+            genes = ";".join(set([annot[3][1:-1] for annot in self.vars[var] if annot[3] != "Null"]))
+            if genes != "":
+                genes = "'{}'".format(genes) #Surround in single quotes for SQL
+            else:
+                genes = "Null" #Insert Null value if vaiant not associated with any genes
+            sqlRowIns = sqlIns % (genes, ", ".join(var))
             self.cursor.execute(sqlRowIns) # Insert variant
             ngsVariantID = self.cursor.execute("SELECT @@IDENTITY").fetchone()[0] #Get last inserted ID
             for entry in self.vars[var]:
@@ -207,4 +213,3 @@ mv.lookupChr() # Retrieve IDs from Moka Chromosome table
 mv.lookupHGNCID() # Retrieve HGNCIDs for genes in VCF from Moka GenesHGNC_current table
 mv.getVars() # Extract variants and annotations from VCF
 mv.insertMoka() # Insert variant records and annotations into Moka NGSVariant and NGSVariantAnnotations tables.
-
