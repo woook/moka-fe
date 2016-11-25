@@ -18,6 +18,7 @@ Private Sub Form_Load()
     Dim openArgs() As String
     Dim subpanelCode As String
     Dim subpanelQuery As String
+    Dim rsPatDetails As ADODB.Recordset
 
     'Retrieve arguments passed from NGSTest form
     openArgs = Split(Me.openArgs, ", ")
@@ -28,6 +29,16 @@ Private Sub Form_Load()
     Referral = openArgs(4)
     referrerID = openArgs(5)
     referrerInitials = openArgs(6)
+
+    'Get patient details
+    sqlPatDetails = "SELECT LastName, FirstName FROM dbo_Patient_Table WHERE PatientTrustID = '" & patientID_PRU & "'"
+    Set rsPatDetails = New ADODB.Recordset
+    rsPatDetails.Open sqlPatDetails, CurrentProject.Connection, adOpenKeyset
+    surname = rsPatDetails.Fields("LastName")
+    firstname = rsPatDetails.Fields("FirstName")
+    'Set form caption to display patient details
+    captionStr = "Ordering WES test for: " & patientID_PRU & " " & surname & ", " & firstname
+    Me.Caption = captionStr
 End Sub
 
 Private Function refreshListBox(listboxNum As Integer)
@@ -513,15 +524,17 @@ Private Sub SubmitButton_Click()
             DoCmd.RunSQL sqlChangeStatus
             DoCmd.SetWarnings True
 
-            'Insert record of Exome test request and status change into patient log
+            'Insert record of Exome test request and status change into patient and NGSmemo logs
             D = Format(Now(), "dd/mmm/yyyy Hh:Nn:ss")
             un = VBA.Environ("USERNAME")
             cn = VBA.Environ("COMPUTERNAME")
             sqlPatLogTest = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" & internalPatID & ", 'NGS: " & Referral & " test request added. Primary panel: " & panelID_A & ". Secondary panel: " & panelID_B & "',#" + D + "#,'" + un + "','" + cn + "')"
             sqlPatLogStatus = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" & internalPatID & ", 'Patients: Status changed to NGS Pending ',#" + D + "#,'" + un + "','" + cn + "')"
+            sqlMemo = "INSERT INTO NGSLogMemo(InternalPatientID, Type, LinkID, LogMemoEntry, [Date], Login, PCName) VALUES(" & internalPatID & ", 1, " & NGSTestID & ",'NGS WES test status updated to: Approval Pending.' ,#" + D + "#,'" + un + "','" + cn + "')"
             DoCmd.SetWarnings False
             DoCmd.RunSQL sqlPatLogTest
             DoCmd.RunSQL sqlPatLogStatus
+            DoCmd.RunSQL sqlMemo
             DoCmd.SetWarnings True
 
             'Display message and close form
