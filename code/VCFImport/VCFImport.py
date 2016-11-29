@@ -1,10 +1,15 @@
 '''
-Created by: AB, 2016/09/22
+v1.1 - AB 2016/11/25
+
+###
+Changes from v1.0:
+insertMoka() method modified. Now inserts semi-colon delimited string of gene symbols in NGSVariant table.
+###
 
 Usage:
     Parses an Ingenuity VCF output file and inserts variants and annotations into Moka NGSVariant and NGSVariantAnnotations tables.
     Called from the WES results form [s0901_WESTestResults] in Moka
-    Takes the following 4 arguments: VCF file path, internal patient ID, DNA number, NGS test ID
+    Takes the following 3 arguments: comma separated string of VCF file paths, internal patient ID, NGS test ID
 
 Requirements:
     ODBC Connection to Moka
