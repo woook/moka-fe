@@ -1,5 +1,102 @@
 Option Compare Database
 
+Private Sub Check35_Click()
+    Dim resultStr As String
+    Dim genotype As String
+    Dim Class As String
+    Dim rsGetResult As ADODB.Recordset
+    Dim D As String
+    Dim usr As String
+    Dim cmp As String
+    
+    D = Format(Now(), "dd/mmm/yyyy Hh:Nn:ss")
+    usr = VBA.Environ("USERNAME")
+    cmp = VBA.Environ("COMPUTERNAME")
+    
+    Forms![0901 ExomeNGSResults].Dirty = False
+    
+    'Copies selected variant details into NGSTestresult feild.
+    If Not IsNull(Me.Parent.Classification) Then
+        genotype = Me.Parent.genotype
+        If genotype = "0/1" Then
+            genotype = "Het"
+        ElseIf genotype = "1/1" Then
+            genotype = "Hom"
+        End If
+        
+        'Get classification level (1-5) from classification text
+        Class = Mid(Me.Parent.Classification.Column(1), Len(Me.Parent.Classification.Column(1)) - 1, 1)
+        'Construct variant string in HGNC format
+        resultStr = genotype & " " & Me.GENE_SYMBOL & " " & Me.TRANSCRIPT_ID & " " & Me.HGVS_Transcript & " " & Me.HGVS_Protein & " Class: " & Class
+        
+        'If variant is marked as reported add, variant in HGNC format to the NGS test results feild
+        If Me.Check35 = True Then
+           'Retrieve exsiting NGSTest result so variant can be appended to end
+            Set rsGetResult = New ADODB.Recordset
+            sqlGetResult = "SELECT NGSTest.Result FROM NGSTest WHERE NGSTest.NGSTestID = " & Me.Parent.NGSTestID
+            rsGetResult.Open sqlGetResult, CurrentProject.Connection, adOpenKeyset
+            
+            ' checks that new variant entry will be inserted on with the first line or a newline
+            newresult = rsGetResult.Fields("Result")
+            lastChr = Right(newresult, 2)
+            lenghtStr = Len(newresult)
+            Debug.Print "." & lastChr & "."
+            If lenghtStr = 0 Or lastChr = vbCrLf Then
+                newresult = newresult & resultStr + vbCrLf
+                newresult = Replace(newresult, "'", "''") 'Escape any apostrophes to prevent SQL error
+                sqlUpdate = "UPDATE NGSTest SET NGSTest.Result = '" & newresult & "' WHERE NGSTest.NGSTestID = " & Me.Parent.NGSTestID
+
+            Else
+                Debug.Print "found enter"
+                ' append variant to result feild
+                newresult = newresult + vbCrLf & resultStr + vbCrLf
+                newresult = Replace(newresult, "'", "''") 'Escape any apostrophes to prevent SQL error
+                sqlUpdate = "UPDATE NGSTest SET NGSTest.Result = '" & newresult & "' WHERE NGSTest.NGSTestID = " & Me.Parent.NGSTestID
+            End If
+            
+            'Retrieve details inorder to update patient log
+            patID = [Form_0901 ExomeNGSResults].InternalPatientID
+            dateReq = Form_s0901_WESTestResults.DateRequested
+            ' update patient log
+            sqlPatLog = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" + CStr(patID) + ",'NGS WES test: Result automatically updated with HGCN variant for WES test requested " + CStr(dateReq) + "' ,#" + D + "#,'" + usr + "','" + cmp + "')"
+            'Execute SQL statements
+            DoCmd.SetWarnings False
+            DoCmd.RunSQL sqlUpdate
+            DoCmd.RunSQL sqlPatLog
+            DoCmd.SetWarnings True
+            Forms![0901 ExomeNGSResults].Refresh 'Refresh so that result comments field is updated
+            Form![s0901_WESTestResults].comb_WESResultBuild.SetFocus
+         
+         ' if the reported check box is unticked remove the HGCN varient from the NGSresult feild
+        ElseIf Me.Check35 = False Then
+            Set rsGetResult = New ADODB.Recordset
+            sqlGetResult = "SELECT NGSTest.Result FROM NGSTest WHERE NGSTest.NGSTestID = " & Me.Parent.NGSTestID
+            rsGetResult.Open sqlGetResult, CurrentProject.Connection, adOpenKeyset
+            newresult = rsGetResult.Fields("Result")
+             If Not IsNull(newresult) Then
+                ' remove selected variant from the results
+                newresult = Replace(newresult, resultStr + vbCrLf, "")
+                Forms![0901 ExomeNGSResults].Refresh
+            sqlUpdate = "UPDATE NGSTest SET NGSTest.Result = '" & newresult & "' WHERE NGSTest.NGSTestID = " & Me.Parent.NGSTestID
+            'Retrieve details inorder to update patient log
+            patID = [Form_0901 ExomeNGSResults].InternalPatientID
+            dateReq = Form_s0901_WESTestResults.DateRequested
+            ' update patient log
+            sqlPatLog = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" + CStr(patID) + ",'NGS WES test: HGCN variant Result removed for WES test requested " + CStr(dateReq) + "' ,#" + D + "#,'" + usr + "','" + cmp + "')"
+            'Execute SQL statements
+            DoCmd.SetWarnings False
+            DoCmd.RunSQL sqlUpdate
+            DoCmd.RunSQL sqlPatLog
+            DoCmd.SetWarnings True
+            Forms![0901 ExomeNGSResults].Refresh 'Refresh so that result comments field is updated
+            End If
+        End If
+    Else
+        MsgBox "Please assign a classification before adding variant to the results", vbExclamation, "Assign Classification"
+        Me.Check35 = False ' unselect reported check box.
+    End If
+End Sub
+
 Private Sub dbSNPrs_DblClick(Cancel As Integer)
     'Open dbSNP record in browser
     If Not IsNull(Me.DBSNP) Then
