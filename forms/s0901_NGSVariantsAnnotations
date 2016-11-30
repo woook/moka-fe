@@ -3,18 +3,18 @@ Option Compare Database
 Private Sub Check35_Click()
     Dim resultStr As String
     Dim genotype As String
-    Dim Class As String
+    Dim class As String
     Dim rsGetResult As ADODB.Recordset
     Dim D As String
     Dim usr As String
     Dim cmp As String
-    
+
     D = Format(Now(), "dd/mmm/yyyy Hh:Nn:ss")
     usr = VBA.Environ("USERNAME")
     cmp = VBA.Environ("COMPUTERNAME")
-    
+
     Forms![0901 ExomeNGSResults].Dirty = False
-    
+
     'Copies selected variant details into NGSTestresult feild.
     If Not IsNull(Me.Parent.Classification) Then
         genotype = Me.Parent.genotype
@@ -23,19 +23,19 @@ Private Sub Check35_Click()
         ElseIf genotype = "1/1" Then
             genotype = "Hom"
         End If
-        
+
         'Get classification level (1-5) from classification text
-        Class = Mid(Me.Parent.Classification.Column(1), Len(Me.Parent.Classification.Column(1)) - 1, 1)
+        class = Mid(Me.Parent.Classification.Column(1), Len(Me.Parent.Classification.Column(1)) - 1, 1)
         'Construct variant string in HGNC format
-        resultStr = genotype & " " & Me.GENE_SYMBOL & " " & Me.TRANSCRIPT_ID & " " & Me.HGVS_Transcript & " " & Me.HGVS_Protein & " Class: " & Class
-        
+        resultStr = genotype & " " & Me.GENE_SYMBOL & " " & Me.TRANSCRIPT_ID & " " & Me.HGVS_Transcript & " " & Me.HGVS_Protein & " Class: " & class
+
         'If variant is marked as reported add, variant in HGNC format to the NGS test results feild
         If Me.Check35 = True Then
            'Retrieve exsiting NGSTest result so variant can be appended to end
             Set rsGetResult = New ADODB.Recordset
             sqlGetResult = "SELECT NGSTest.Result FROM NGSTest WHERE NGSTest.NGSTestID = " & Me.Parent.NGSTestID
             rsGetResult.Open sqlGetResult, CurrentProject.Connection, adOpenKeyset
-            
+
             ' checks that new variant entry will be inserted on with the first line or a newline
             newresult = rsGetResult.Fields("Result")
             lastChr = Right(newresult, 2)
@@ -53,7 +53,7 @@ Private Sub Check35_Click()
                 newresult = Replace(newresult, "'", "''") 'Escape any apostrophes to prevent SQL error
                 sqlUpdate = "UPDATE NGSTest SET NGSTest.Result = '" & newresult & "' WHERE NGSTest.NGSTestID = " & Me.Parent.NGSTestID
             End If
-            
+
             'Retrieve details inorder to update patient log
             patID = [Form_0901 ExomeNGSResults].InternalPatientID
             dateReq = Form_s0901_WESTestResults.DateRequested
@@ -65,8 +65,7 @@ Private Sub Check35_Click()
             DoCmd.RunSQL sqlPatLog
             DoCmd.SetWarnings True
             Forms![0901 ExomeNGSResults].Refresh 'Refresh so that result comments field is updated
-            Form![s0901_WESTestResults].comb_WESResultBuild.SetFocus
-         
+
          ' if the reported check box is unticked remove the HGCN varient from the NGSresult feild
         ElseIf Me.Check35 = False Then
             Set rsGetResult = New ADODB.Recordset
@@ -119,7 +118,7 @@ Private Sub Transcript_DblClick(Cancel As Integer)
         If Not IsNull(Me.Parent.Classification) Then
             Dim resultStr As String
             Dim genotype As String
-            Dim Class As String
+            Dim class As String
             Dim rsGetComment As ADODB.Recordset
             genotype = Me.Parent.genotype
             If genotype = "0/1" Then
@@ -128,15 +127,21 @@ Private Sub Transcript_DblClick(Cancel As Integer)
                 genotype = "Hom"
             End If
             'Get classification level (1-5) from classification text
-            Class = Mid(Me.Parent.Classification.Column(1), Len(Me.Parent.Classification.Column(1)) - 1, 1)
+            class = Mid(Me.Parent.Classification.Column(1), Len(Me.Parent.Classification.Column(1)) - 1, 1)
             'Construct variant string
-            resultStr = genotype & " " & Me.GENE_SYMBOL & " " & Me.TRANSCRIPT_ID & " " & Me.HGVS_Transcript & " " & Me.HGVS_Protein & " Class: " & Class
+            resultStr = genotype & " " & Me.GENE_SYMBOL & " " & Me.TRANSCRIPT_ID & " " & Me.HGVS_Transcript & " " & Me.HGVS_Protein & " Class: " & class
             'Retrieve exsiting comment so variant can be appended to end
             Set rsGetComment = New ADODB.Recordset
             sqlGetComment = "SELECT NGSTest.ResultComment FROM NGSTest WHERE NGSTest.NGSTestID = " & Me.Parent.NGSTestID
             rsGetComment.Open sqlGetComment, CurrentProject.Connection, adOpenKeyset
-            'Append to end of result comment
-            newComment = rsGetComment.Fields("ResultComment") & vbNewLine & resultStr
+            'Get any existing comment
+            newComment = rsGetComment.Fields("ResultComment")
+            'If a comment has already been entered, add a new line
+            If Len(newComment) > 0 Then
+                newComment = newComment + vbNewLine
+            End If
+            'Append HGVS to end of result
+            newComment = newComment & resultStr
             newComment = Replace(newComment, "'", "''") 'Escape any apostrophes to prevent SQL error
             sqlUpdate = "UPDATE NGSTest SET NGSTest.ResultComment = '" & newComment & "' WHERE NGSTest.NGSTestID = " & Me.Parent.NGSTestID
             'Retrieve details for log
