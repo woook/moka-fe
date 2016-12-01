@@ -12,9 +12,8 @@ Private Sub Form_Load()
     rsPatDetails.Open sqlPatDetails, CurrentProject.Connection, adOpenKeyset
     surname = rsPatDetails.Fields("LastName")
     firstname = rsPatDetails.Fields("FirstName")
-    'Set form caption to display patient details
-    captionStr = "Ordering WES test for: " & patientID_PRU & " " & surname & ", " & firstname
-    Me.Caption = captionStr
+    'Display patient details on form
+    Me.nameTxt = "Ordering WES test for:" & "     " & patientID_PRU & "     " & surname & ", " & firstname
 End Sub
 
 Private Sub Form_Open(Cancel As Integer)

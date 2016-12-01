@@ -34,15 +34,15 @@ Private Sub Form_Load()
     Set rsTranHGVS = Nothing
 
     'get upstream and downstream positions
-    pos2us = Me.Position_hg19 - 2
-    pos2ds = Me.Position_hg19 + 2
+    pos2us = Me.Position_hg19 - 2 '2 bp downstream of the variant position
+    pos2ds = Me.Position_hg19 + Len(Me.ref) + 1 '2 bp downstream from the end of the ref allele
 
     'build record source query for prevVars subform
     'First fields to be pulled in
     sqlPrevVars = "SELECT NGSVariant.*, Chromosome.Chr, Patients.PatientID, " & sqlGetAbridgedComment
     'Next, determine whether each variant pulled in is a 'match' (i.e. exactly the same variant or causes the same protein change in any of the transcripts)
     'Following line checks if variant is an exact match (regardless of whether it's protein coding)
-    sqlPrevVars = sqlPrevVars & ", IIF((NGSVariant.ChrID = " & Me.ChrID & " AND NGSVariant.Position_hg19 = " & Me.Position_hg19 & " AND NGSVariant.ref = '" & Me.ref & "' AND NGSVariant.alt = '" & Me.Alt & "')"
+    sqlPrevVars = sqlPrevVars & ", IIF((NGSVariant.ChrID = " & Me.ChrID & " AND NGSVariant.Position_hg19 = " & Me.Position_hg19 & " AND NGSVariant.ref = '" & Me.ref & "' AND NGSVariant.alt = '" & Me.alt & "')"
     'Following lines find variants that cause the same protein change. First checks a string has been created for sqlProtMatchVars (i.e. if there is at least one protein change associated with variant).
     If sqlProtMatchVars <> "" Then
         sqlPrevVars = sqlPrevVars + " OR NGSVariant.NGSVariantID IN (" & sqlProtMatchVars & ")"
