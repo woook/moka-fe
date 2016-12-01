@@ -187,7 +187,7 @@ class MokaVCF(object):
             vcfReader = None # Releases file (pyvcf reader object has no .close() method)
     def insertMoka(self):
         # Loops through variant dictionary and inserts into Moka
-        sqlIns = "INSERT INTO NGSVariant (Genes, ChrID, Position_hg19, ref, alt, NGSTestID, InternalPatientID, DateAdded, PanelType, PanelTypeName, genotype, ReadDepth, CallQuality, AlleleFraction, GenotypeQuality) VALUES (%s, %s)"
+        sqlIns = "INSERT INTO NGSVariant (Gene, ChrID, Position_hg19, ref, alt, NGSTestID, InternalPatientID, DateAdded, PanelType, PanelTypeName, genotype, ReadDepth, CallQuality, AlleleFraction, GenotypeQuality) VALUES (%s, %s)"
         for var in sorted(self.vars.keys()):
             #Retrieve gene symbol(s) associated with each variant so they can be added to NGSVariants table. Separate multiple genes with semi-colon (;).
             genes = ";".join(set([annot[3][1:-1] for annot in self.vars[var] if annot[3] != "Null"]))
