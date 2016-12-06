@@ -20,6 +20,7 @@ End Sub
 
 Private Sub commentShort_DblClick(Cancel As Integer)
     Dim stDocName As String
+    Me.Dirty = False 'Force any changes to be saved
     stDocName = "s0901_NGSVarComment"
     'If a comment exists, but form is locked following test completion, open the comment window in READ ONLY mode so comment can be viewed but not edited
     If Not IsNull(Me.NGSVariantCommentID) And Me.AllowEdits = False Then
@@ -47,6 +48,7 @@ Private Sub CommentShort_MouseDown(Button As Integer, Shift As Integer, x As Sin
 End Sub
 
 Private Sub countPrev_DblClick(Cancel As Integer)
+    Me.Dirty = False 'Force any changes to be saved
     stLinkCriteria = "[NGSVariantID] = " & Me.NGSVariantID
     If Me.AllowEdits = False Then
         'If form is locked following test completion, open prev vars popup in READ ONLY mode so no updates can be made

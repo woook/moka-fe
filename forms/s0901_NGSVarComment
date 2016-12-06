@@ -2,7 +2,8 @@ Option Compare Database
 
 Private Sub Comments_GotFocus()
     'Prevents all text being selected on form load by cursor to end of text
-    Me.Comments.SelStart = Me.Comments.SelLength
+    'Me.Comments.SelStart = Len(Me.Comment)
+    Me.Comments.SelLength = 0
 End Sub
 
 

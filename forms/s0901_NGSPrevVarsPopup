@@ -6,6 +6,10 @@ Private Sub Form_Load()
     Dim sqlPrevVars As String
     Dim sqlCurrentVar As String
     Dim sqlProtMatchVars As String
+
+    'Clear any previous row source queries from prev vars phenotype listbox
+    Me.ListboxPhenoPrev.RowSource = "SELECT Null"
+
     'Full comments cannot be displayed in subform due to length, so abridged version is displayed and full comments are viewed/edited in popup window by double clicking
     'The statement below creates a max 30 char abridged comment, with line breaks removed, and "..." added if text has been removed to indicate more text can be viewed/edited by double clicking
     sqlGetAbridgedComment = "IIf(NGSVariantComment.Comment Is Null,NGSVariantComment.Comment,IIf(Len(Replace(NGSVariantComment.Comment,Chr(13) & Chr(10),' '))>30,Mid((Replace(NGSVariantComment.Comment,Chr(13) & Chr(10),' ')),1,27) & '...',Replace(NGSVariantComment.Comment,Chr(13) & Chr(10),' '))) AS commentShort"

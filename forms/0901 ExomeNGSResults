@@ -3,7 +3,11 @@ Option Compare Database
 
 Private Sub Form_Current()
    If (Not IsNull(Form_s0901_WESTestResults.Checker1) And Not IsNull(Form_s0901_WESTestResults.Checker3) And [Form_0901 ExomeNGSResults].SafetyCheck.Value = False) Then
+        Me.[Patient Status].Locked = True
         Form_s0901_WESTestResults.AllowEdits = False
+        Form_s0901_WESTestResults.VCFImport.Enabled = False
+        Form_s0901_WESTestResults.FilterImport.Enabled = False
+        Form_s0901_WESTestResults.RemoveAll.Enabled = False
         Form_s0901_NGSVariants.AllowEdits = False
         Form_s09_referpheno.AllowEdits = False
         Form_s09_referpheno.AllowDeletions = False
@@ -13,7 +17,11 @@ Private Sub Form_Current()
         Form_s0901_NGSTestFile.AllowAdditions = False
 
     Else
+        Me.[Patient Status].Locked = False
         Form_s0901_WESTestResults.AllowEdits = True
+        Form_s0901_WESTestResults.VCFImport.Enabled = True
+        Form_s0901_WESTestResults.FilterImport.Enabled = True
+        Form_s0901_WESTestResults.RemoveAll.Enabled = True
         Form_s0901_NGSVariants.AllowEdits = True
         Form_s09_referpheno.AllowEdits = True
         Form_s09_referpheno.AllowDeletions = True
@@ -49,12 +57,12 @@ Private Sub btn_OpenPatientDetails_Click()
 On Error GoTo Err_btn_OpenPatientDetails_Click
 
     DoCmd.DoMenuItem acFormBar, acRecordsMenu, 5, , acMenuVer70
-    
+
     Dim stDocName As String
     Dim stLinkCriteria As String
 
     stDocName = "02 Patient Details"
-    
+
     stLinkCriteria = "[PatientID]=" & "'" & Me![PatientID] & "'"
     DoCmd.OpenForm stDocName, , , stLinkCriteria
 
@@ -64,7 +72,7 @@ Err_btn_OpenPatientDetails_Click:
 Err_OpenPatientDetails_Click:
     MsgBox Err.Description
     Resume Err_btn_OpenPatientDetails_Click
-    
+
 End Sub
 
 
@@ -93,16 +101,16 @@ Private Sub Patient_Status_AfterUpdate()
     Dim dt As String
     Dim cn As String
     Dim usr As String
-    
+
     usr = VBA.Environ("USERNAME")
     cn = VBA.Environ("COMPUTERNAME")
-    
+
     dt = Format(Now, "dd/mmm/yyyy Hh:Nn:ss")
     Set r = New ADODB.Recordset
     S = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + ",'Patient: Status changed to " & Me![s_StatusOverall] & "',#" + dt + "#,'" + usr + "','" + cn + "')"
     r.Open S, CurrentProject.Connection
     Set r = Nothing
-    
+
 End Sub
 
 Private Sub Priority_AfterUpdate()
@@ -111,10 +119,10 @@ Private Sub Priority_AfterUpdate()
     Dim dt As String
     Dim cn As String
     Dim usr As String
-    
+
     usr = VBA.Environ("USERNAME")
     cn = VBA.Environ("COMPUTERNAME")
-    
+
     dt = Format(Now, "dd/mmm/yyyy Hh:Nn:ss")
     Set r = New ADODB.Recordset
     S = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + ",'NGS WES test: Marked as Priority for NGS test " + CStr(Me![NGSTestID]) + " requested " + CStr(Me![DateRequested]) + "',#" + dt + "#,'" + usr + "','" + cn + "')"
@@ -124,7 +132,7 @@ End Sub
 
 Private Sub txt_PatientResult_AfterUpdate()
     Me.Dirty = False
-    
+
     Dim r As ADODB.Recordset
     Dim S As String
     Dim dt As String
@@ -134,7 +142,7 @@ Private Sub txt_PatientResult_AfterUpdate()
     usr = VBA.Environ("USERNAME")
     cn = VBA.Environ("COMPUTERNAME")
     dt = Format(Now, "dd/mmm/yyyy Hh:Nn:ss")
-    
+
     Set r = New ADODB.Recordset
     If IsNull(txt_PatientResult) Then
         S = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + ",'Patient: Result deleted',#" + dt + "#,'" + usr + "','" + cn + "')"
