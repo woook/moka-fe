@@ -122,6 +122,10 @@ Private Sub RemoveAll_MouseDown(Button As Integer, Shift As Integer, x As Single
     End If
 End Sub
 
+Private Sub txt_Resultcmt_GotFocus()
+    Me.txt_Resultcmt.SelLength = 0
+End Sub
+
 Private Sub VCFImport_Click()
     Dim vcfBaseDir As String
     Dim batch As String
