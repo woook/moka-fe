@@ -1,0 +1,3 @@
+SELECT DNA.DNAID, ([DNA.Qubit]*[DNA.Volume]/1000) AS TotalDNA, DNAGelQuality.GelQuality, Item.Item AS SourceName, DNA_1.DNANumber AS FromDNA, Item_1.Item AS ExtractionMethod, Item_2.Item AS FromPOC, DNA.DNANumber, DNA.InternalPatientID, DNA.ExtractionRun, DNA.Concentration, DNA.Qubit, DNA.Active, DNA.DNAComment, DNA.TapeStationDin, DNA.Volume
+FROM (((((DNA LEFT JOIN DNAGelQuality ON DNA.GelQualityID = DNAGelQuality.GelQualityID) LEFT JOIN Item ON DNA.Source = Item.ItemID) LEFT JOIN DNA AS DNA_1 ON DNA.FromDNAID = DNA_1.DNAID) LEFT JOIN Item AS Item_1 ON DNA.ExtractionMethodID = Item_1.ItemID) LEFT JOIN Tissues ON DNA.FromTissue = Tissues.TissuesID) LEFT JOIN Item AS Item_2 ON Tissues.TissueType = Item_2.ItemID
+ORDER BY DNA.DNANumber DESC;
