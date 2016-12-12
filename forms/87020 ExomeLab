@@ -255,12 +255,12 @@ subfrmSQL = "SELECT NGSTest.Selection, Patients.PatientID AS PRU, NGSTest.NGSTes
             "FROM ((((((((((((((NGSTest INNER JOIN Patients ON NGSTest.InternalPatientID = Patients.InternalPatientID) INNER JOIN Referral ON NGSTest.ReferralID = Referral.ReferralID) INNER JOIN Checker ON NGSTest.BookBy = Checker.Check1ID) INNER JOIN NGSPanel ON NGSTest.NGSPanelID = NGSPanel.NGSPanelID) LEFT JOIN NGSPanel AS NGSPanel_1 ON NGSTest.NGSPanelID_B = NGSPanel_1.NGSPanelID) INNER JOIN Status ON NGSTest.StatusID = Status.StatusID) INNER JOIN dbo_Patient_table ON Patients.PatientID = dbo_Patient_table.PatientTrustID) LEFT JOIN DNA ON NGSTest.DNA = DNA.DNANumber) INNER JOIN Status AS Status_1 ON Patients.s_StatusOverall = Status_1.StatusID) LEFT JOIN gw_GenderTable ON dbo_Patient_table.GenderID = gw_GenderTable.GenderID) " & _
             "LEFT JOIN NGSWESBatch ON NGSTest.WESBatch = NGSWESBatch.NGSWESBatchID) LEFT JOIN Checker AS Checker_1 ON NGSTest.Check1ID = Checker_1.Check1ID) LEFT JOIN Checker AS Checker_2 ON NGSTest.Check2ID = Checker_2.Check1ID) LEFT JOIN Checker AS Checker_3 ON NGSTest.Check3ID = Checker_3.Check1ID) LEFT JOIN NGSPanel AS NGSPanel_2 ON NGSTest.NGSPanelID_C = NGSPanel_2.NGSPanelID " & _
             "WHERE (((Status_1.StatusID)=1202218798) AND ((Status.StatusID)= 1202218803) AND ((Status.StatusID)<> 4) AND ((Status.StatusID)<> 1202218816) AND ((NGSTest.WESBatch) Is Null))" & _
-            "ORDER BY NGSTest.Priority, NGSTest.DateRequested;"
+            "ORDER BY NGSTest.Priority , NGSTest.DateRequested;"
             
 [Form_s87020_ExomeLabList].Form.RecordSource = subfrmSQL
 
 'refresh selection count
-strCriteria = "statusID <> 1202218787  AND statusID <> 4 AND statusID <> 1202218816 AND WESBatch Is Null"
+strCriteria = "statusID = 1202218803   AND statusID <> 4 AND statusID <> 1202218816 AND WESBatch Is Null"
 AllTotal = DCount("NGSTestID", "s87020_ListWESSamples", strCriteria)
 'Debug.Print AllTotal
 Me.txt_TotalTally = AllTotal
@@ -295,7 +295,7 @@ subfrmSQL = "SELECT NGSTest.Selection, Patients.PatientID AS PRU, NGSTest.NGSTes
             "FROM ((((((((((((((NGSTest INNER JOIN Patients ON NGSTest.InternalPatientID = Patients.InternalPatientID) INNER JOIN Referral ON NGSTest.ReferralID = Referral.ReferralID) INNER JOIN Checker ON NGSTest.BookBy = Checker.Check1ID) INNER JOIN NGSPanel ON NGSTest.NGSPanelID = NGSPanel.NGSPanelID) LEFT JOIN NGSPanel AS NGSPanel_1 ON NGSTest.NGSPanelID_B = NGSPanel_1.NGSPanelID) INNER JOIN Status ON NGSTest.StatusID = Status.StatusID) INNER JOIN dbo_Patient_table ON Patients.PatientID = dbo_Patient_table.PatientTrustID) LEFT JOIN DNA ON NGSTest.DNA = DNA.DNANumber) INNER JOIN Status AS Status_1 ON Patients.s_StatusOverall = Status_1.StatusID) LEFT JOIN gw_GenderTable ON dbo_Patient_table.GenderID = gw_GenderTable.GenderID) " & _
             "LEFT JOIN NGSWESBatch ON NGSTest.WESBatch = NGSWESBatch.NGSWESBatchID) LEFT JOIN Checker AS Checker_1 ON NGSTest.Check1ID = Checker_1.Check1ID) LEFT JOIN Checker AS Checker_2 ON NGSTest.Check2ID = Checker_2.Check1ID) LEFT JOIN Checker AS Checker_3 ON NGSTest.Check3ID = Checker_3.Check1ID) LEFT JOIN NGSPanel AS NGSPanel_2 ON NGSTest.NGSPanelID_C = NGSPanel_2.NGSPanelID " & _
             "WHERE Status.StatusID = 1202218807 And checker_1.Initials Is Null " & _
-            "ORDER BY NGSTest.Priority, NGSTest.DateRequested;"
+            "ORDER BY NGSTest.Priority , NGSTest.DateRequested;"
 
 ' ADD TO WHERE CLAUSE -->  And ((status.status) = somethng approperate))
 [Form_s87020_ExomeLabList].Form.RecordSource = subfrmSQL
@@ -1017,7 +1017,5 @@ ErrHandler:
 End Sub
 
 Private Sub btn_refresh_Click()
-' button to refresh the subform while maintaing filtering criteria
-Form![s87020_ExomeLabList].Requery
-
+Form!s87020_ExomeLabList.Requery
 End Sub
