@@ -1,0 +1,25 @@
+Option Compare Database
+
+Private Sub PatientTrustID_DblClick(Cancel As Integer)
+    'Open patient form so that DNAs can be imported for geneworks
+    Dim stDocName As String
+    Dim stLinkCriteria As String
+    If Not IsNull(Me.PatientTrustID) Then
+        stDocName = "02 Patient Details"
+        stLinkCriteria = "[PatientID]=" & "'" & Me.PatientTrustID & "'"
+        DoCmd.OpenForm stDocName, , , stLinkCriteria
+    End If
+End Sub
+
+Private Sub StatusID_AfterUpdate()
+    'Update patient log and NGS log memo
+    D = Format(Now(), "dd/mmm/yyyy Hh:Nn:ss")
+    un = VBA.Environ("USERNAME")
+    cn = VBA.Environ("COMPUTERNAME")
+    sqlPatLog = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" & Me.InternalPatientID & ", 'NGS WES test: Status updated to " & Me.StatusID.Column(1) & " for test requested " & Me.DateRequested & " NGS testID " & Me.NGSTestID & ". ',#" & D & "#,'" & un & "','" & cn & "')"
+    sqlLogMemo = "INSERT INTO NGSLogMemo(InternalPatientID, Type, LinkID, LogMemoEntry, [Date], Login, PCName) VALUES(" & Me.InternalPatientID & ", 1, " & Me.NGSTestID & ",'NGS WES test status updated to: " & Me.StatusID.Column(1) & "' ,#" & D & "#,'" & un & "','" & cn & "')"
+    DoCmd.SetWarnings False
+    DoCmd.RunSQL sqlPatLog
+    DoCmd.RunSQL sqlLogMemo
+    DoCmd.SetWarnings True
+End Sub

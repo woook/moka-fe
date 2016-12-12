@@ -1,0 +1,80 @@
+Option Compare Database
+
+Private Sub DNAComment_AfterUpdate()
+    D = Format(Now(), "dd/mmm/yyyy Hh:Nn:ss")
+    un = VBA.Environ("USERNAME")
+    cn = VBA.Environ("COMPUTERNAME")
+    If IsNull(Me.DNAComment) Then
+        sqlPatLog = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" & Me.InternalPatientID & ",'DNA: Comment for DNA number [" & Me.DNANumber & "] deleted',#" + D + "#,'" + un + "','" + cn + "')"
+    Else
+        sqlPatLog = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" & Me.InternalPatientID & ",'DNA: Comment for DNA number [" & Me.DNANumber & "] changed to " & Me.DNAComment & "',#" + D + "#,'" + un + "','" + cn + "')"
+    End If
+    DoCmd.SetWarnings False
+    DoCmd.RunSQL sqlPatLog
+    DoCmd.SetWarnings True
+End Sub
+
+Private Sub Form_Load()
+    'Make sure no DNA samples are selected
+    sqlUnselectAll = "UPDATE DNA SET Selected = FALSE WHERE SELECTED = TRUE"
+    DoCmd.SetWarnings False
+    DoCmd.RunSQL sqlUnselectAll
+    DoCmd.SetWarnings True
+    Me.Requery 'Requery subform
+End Sub
+
+Private Sub Form_Unload(Cancel As Integer)
+    'Make sure no DNA samples are selected
+    sqlUnselectAll = "UPDATE DNA SET Selected = FALSE WHERE SELECTED = TRUE"
+    DoCmd.SetWarnings False
+    DoCmd.RunSQL sqlUnselectAll
+    DoCmd.SetWarnings True
+End Sub
+
+Private Sub Qubit_AfterUpdate()
+    D = Format(Now(), "dd/mmm/yyyy Hh:Nn:ss")
+    un = VBA.Environ("USERNAME")
+    cn = VBA.Environ("COMPUTERNAME")
+
+    If IsNull(Me.Qubit) Then
+        sqlPatLog = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" & Me.InternalPatientID & ",'DNA: Qubit concentration of DNA number [" & Me.DNANumber & "] deleted',#" + D + "#,'" + un + "','" + cn + "')"
+    Else
+        sqlPatLog = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" & Me.InternalPatientID & ",'DNA: Qubit concentration of DNA number [" & Me.DNANumber & "] changed to " & Me.Qubit & "',#" + D + "#,'" + un + "','" + cn + "')"
+    End If
+    DoCmd.SetWarnings False
+    DoCmd.RunSQL sqlPatLog
+    DoCmd.SetWarnings True
+End Sub
+
+Private Sub Selected_Click()
+    'Untick select all box if samples are individually ticked or unticked
+    Me.Parent.selectAll = 0
+End Sub
+
+Private Sub TapeStationDin_AfterUpdate()
+    D = Format(Now(), "dd/mmm/yyyy Hh:Nn:ss")
+    un = VBA.Environ("USERNAME")
+    cn = VBA.Environ("COMPUTERNAME")
+    If IsNull(Me.TapeStationDin) Then
+        sqlPatLog = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" & Me.InternalPatientID & ",'DNA: Tape Station (Din) of DNA number [" & Me.DNANumber & "] deleted',#" + D + "#,'" + un + "','" + cn + "')"
+    Else
+        sqlPatLog = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" & Me.InternalPatientID & ",'DNA: Tape Station (Din) of DNA number [" & Me.DNANumber & "] changed to " & Me.TapeStationDin & "',#" + D + "#,'" + un + "','" + cn + "')"
+    End If
+    DoCmd.SetWarnings False
+    DoCmd.RunSQL sqlPatLog
+    DoCmd.SetWarnings True
+End Sub
+
+Private Sub Volume_AfterUpdate()
+    D = Format(Now(), "dd/mmm/yyyy Hh:Nn:ss")
+    un = VBA.Environ("USERNAME")
+    cn = VBA.Environ("COMPUTERNAME")
+    If IsNull(Me.Volume) Then
+        sqlPatLog = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" & Me.InternalPatientID & ",'DNA: Volume of DNA number [" & Me.DNANumber & "] deleted',#" + D + "#,'" + un + "','" + cn + "')"
+    Else
+        sqlPatLog = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" & Me.InternalPatientID & ",'DNA: Volume of DNA number [" & Me.DNANumber & "] changed to " & Me.Volume & "',#" + D + "#,'" + un + "','" + cn + "')"
+    End If
+    DoCmd.SetWarnings False
+    DoCmd.RunSQL sqlPatLog
+    DoCmd.SetWarnings True
+End Sub

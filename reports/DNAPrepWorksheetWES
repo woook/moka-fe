@@ -1,0 +1,53 @@
+Option Compare Database
+Option Explicit
+
+Dim linecount As Integer
+
+Private Sub Reset()
+    Detail.BackColor = 16777215
+    DNANumber.BackColor = 16777215
+    Report!Name.BackColor = 16777215
+    Qubit.BackColor = 16777215
+    Volume.BackColor = 16777215
+    TapeStationDin.BackColor = 16777215
+    Volume.BackColor = 16777215
+    DNAComment.BackColor = 16777215
+End Sub
+
+Private Sub Detail_Print(Cancel As Integer, PrintCount As Integer)
+    linecount = linecount + 1
+    'Me.RowNum = linecount & ")"
+
+    If linecount Mod 2 = 0 Then
+        RowNum.BackColor = 12632256
+        Detail.BackColor = 12632256
+        DNANumber.BackColor = 12632256
+        Report!Name.BackColor = 12632256
+        Qubit.BackColor = 12632256
+        Volume.BackColor = 12632256
+        TapeStationDin.BackColor = 12632256
+        Volume.BackColor = 12632256
+        DNAComment.BackColor = 12632256
+    Else
+        RowNum.BackColor = 16777215
+        Detail.BackColor = 16777215
+        DNANumber.BackColor = 16777215
+        Report!Name.BackColor = 16777215
+        Qubit.BackColor = 16777215
+        Volume.BackColor = 16777215
+        TapeStationDin.BackColor = 16777215
+        Volume.BackColor = 16777215
+        DNAComment.BackColor = 16777215
+    End If
+
+End Sub
+
+Private Sub Report_Open(Cancel As Integer)
+    Reset
+    linecount = 0
+End Sub
+
+
+Private Sub Report_Page()
+    Reset
+End Sub
