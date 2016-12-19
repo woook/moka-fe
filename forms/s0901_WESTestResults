@@ -57,8 +57,8 @@ Private Sub Form_Current()
 grey = RGB(153, 153, 153)
 black = RGB(0, 0, 0)
 
-' Format checker2 combo box so that it is only be editable once checker 1 has been signed.
-If IsNull(Me.Checker1) Then
+' Format checker2 combo box so that it is only be editable once checker 1 has been signed off.
+If IsNull(Me.Checker1) Or IsNull(txt_Check1Date) Then
     Me.Checker2.Enabled = False
     Me.txt_Check2Date.Enabled = False
     Me!Label26.ForeColor = grey
@@ -70,13 +70,13 @@ End If
 
 ' format checker 3 combo box(reporter) so that it is only be visible once a test has been analysis and variants confimed
     
-If Not IsNull(Me.Checker1) And Not IsNull(Checker3) Then
+If Not IsNull(Me.Checker1) And Not IsNull(txt_Check1Date) And Not IsNull(Checker3) Then
     Me.Checker3.Enabled = True
     Me.txt_Check3Date.Enabled = True
     Me!Label38.ForeColor = black
     Me!Label56.ForeColor = black
 
-ElseIf Not IsNull(Me.Checker1) And (StatusID = 1202218811 Or StatusID = 1202218812 Or StatusID = 1202218813) Then
+ElseIf Not IsNull(Me.Checker1) Or Not IsNull(txt_Check1Date) And (StatusID = 1202218811 Or StatusID = 1202218812 Or StatusID = 1202218813) Then
     Me.Checker3.Enabled = True
     Me.txt_Check3Date.Enabled = True
     Me!Label38.ForeColor = black
@@ -89,11 +89,23 @@ Else
     Me!Label56.ForeColor = grey
 End If
 
+' format checker 4 combo box(approver) so that it is only be visible once a test has been reported
+If Not IsNull(Me.Checker1) And Not IsNull(txt_Check1Date) And Not IsNull(Checker3) Then
+    Me.Checker4.Enabled = True
+    Me.txt_Check4Date.Enabled = True
+    Me!Label63.ForeColor = black
+    Me!Label64.ForeColor = black
+Else
+    Me.Checker4.Enabled = False
+    Me.txt_Check4Date.Enabled = False
+    Me!Label63.ForeColor = grey
+    Me!Label64.ForeColor = grey
+End If
 End Sub
 
 
 Private Sub Form_Load()
-' If genome build has not been set, set to defult 109 = HG19
+' If genome build has not been set, set to default  109 = HG19
 If IsNull(Me![comb_WESResultBuild]) Then
     Me!comb_WESResultBuild = 109
 End If
@@ -115,7 +127,7 @@ Set rsPrevVar = Nothing
 Me.Requery 'Update variant subform
 
 
-'lock down result feld if test statusID = reported, compleated or failed
+'lock down result feld if test statusID = reported, completed or failed
 If Me.StatusID = 4 Or Me.StatusID = 1202218814 Or Me.StatusID = 1202218815 Or Me.StatusID = 1202218816 Then
         Me.Parent.txt_result.Locked = True
 Else
@@ -173,6 +185,8 @@ Private Sub RemoveAll_MouseDown(Button As Integer, Shift As Integer, x As Single
     End If
 End Sub
 
+
+
 Private Sub txt_Resultcmt_GotFocus()
     Me.txt_Resultcmt.SelLength = 0
 End Sub
@@ -220,7 +234,7 @@ Private Sub VCFImport_Click()
             End If
             VCFfilename = Dir 'Moves to next filename in record
         Loop
-        If vcfDict.Count = 0 Then 'If no VCF files found, display error message and exit
+        If vcfDict.count = 0 Then 'If no VCF files found, display error message and exit
             MsgBox "No VCF files found that match test details. Ingenuity results must be:" & vbNewLine & vbNewLine & _
             "1. Exported in VCF format" & vbNewLine & _
             "2. Saved with filename format: " & batch & "DNA" & dnaNum & "PRU" & PRU & "-<panel description>-<numerical suffix>.vcf" & vbNewLine & _
@@ -263,7 +277,7 @@ Private Sub VCFImport_Click()
                 For Each strKey In vcfDict.keys()
                 loopCount = loopCount + 1
                     csFileLst = csFileLst & vcfBaseDir & vcfDict(strKey)
-                    If loopCount <> vcfDict.Count Then 'If not the last file in list
+                    If loopCount <> vcfDict.count Then 'If not the last file in list
                         csFileLst = csFileLst & ","
                     End If
                 Next
@@ -464,7 +478,10 @@ Private Sub StatusID_BeforeUpdate(Cancel As Integer)
 If IsNull(Me.StatusID) Then
     msga = MsgBox("No test status selected." & vbNewLine & "To continue please select a test status.", vbOKOnly Or vbExclamation, "ATTENTION")
     Cancel = True
-ElseIf Me.StatusID = 4 Or Me.StatusID = 1202218814 Or Me.StatusID = 1202218815 Or Me.StatusID = 1202218816 Then
+ElseIf Me.StatusID = 4 Or Me.StatusID = 1202218816 Then
+    msgb = MsgBox("Sorry you cannot presently update this tests status to " & vbNewLine + Me![StatusID].Column(1) + vbNewLine & "Please select another status, or update the status using the NGS Dashboard", vbOKOnly Or vbInformation, "Status update")
+    Cancel = True
+ElseIf (Me.StatusID = 1202218814 Or Me.StatusID = 1202218815) And IsNull(Me.Checker3) Then
     msgb = MsgBox("Sorry you cannot presently update this tests status to " & vbNewLine + Me![StatusID].Column(1) + vbNewLine & "Please select another status, or update the status using the NGS Dashboard", vbOKOnly Or vbInformation, "Status update")
     Cancel = True
 End If
@@ -476,8 +493,8 @@ Private Sub StatusID_AfterUpdate()
     Dim Q As ADODB.Recordset
     Dim U As ADODB.Recordset
     Dim rs As ADODB.Recordset
-    Dim L As String
-    Dim V As String
+    Dim l As String
+    Dim v As String
     Dim b As String
     Dim dt As String
     Dim usr As String
@@ -493,14 +510,24 @@ Private Sub StatusID_AfterUpdate()
     ' If status is changed to 'Batching' check if WES test has been assigned to a WES Batch. If user confrms continuation remove sample from named WES batch
     If Me.StatusID = 1202218803 And Not IsNull(Me.WESBatch) Then
         If MsgBox("This test has already been assigned to WES Batch: " & Me![WESBatch] & vbNewLine & "Continuing will remove this test from this WES Batch." & vbNewLine & vbNewLine & "Do you wish to proceed?", vbYesNo Or vbExclamation, "TEST ALREADY ASSIGNED TO WES BATCH") = vbNo Then
+            Me.StatusID = 1202218807 ' set status to assessment by default
+            l = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + ",'NGS WES test: Status updated to " + Me![StatusID].Column(1) + " as default. For test requested " + CStr(Me![DateRequested]) + "',#" + dt + "#,'" + usr + "','" + cn + "')"
+            v = "INSERT INTO NGSLogMemo(InternalPatientID, Type, LinkID, LogMemoEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + ", 1, " + CStr(Me![NGSTestID]) + ",'NGS WES test status updated to: " + Me![StatusID].Column(1) + "' ,#" + dt + "#,'" + usr + "','" + cn + "')"
+            Q.Open l, CurrentProject.Connection
+            U.Open v, CurrentProject.Connection
             Cancel = True
         Else
             If MsgBox("Are you sure you wish to remove this test from WES Batch: " & Me![WESBatch], vbYesNo Or vbExclamation, "ARE YOU SURE?") = vbNo Then
+                Me.StatusID = 1202218807 ' set status to assessment by default
+                l = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + ",'NGS WES test: Status updated to " + Me![StatusID].Column(1) + " as default. For test requested " + CStr(Me![DateRequested]) + "',#" + dt + "#,'" + usr + "','" + cn + "')"
+                v = "INSERT INTO NGSLogMemo(InternalPatientID, Type, LinkID, LogMemoEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + ", 1, " + CStr(Me![NGSTestID]) + ",'NGS WES test status updated to: " + Me![StatusID].Column(1) + "' ,#" + dt + "#,'" + usr + "','" + cn + "')"
+                Q.Open l, CurrentProject.Connection
+                U.Open v, CurrentProject.Connection
                 Cancel = True
             Else
                 
-                L = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + ",'NGS WES test: Status updated to " + Me![StatusID].Column(1) + " for test requested " + CStr(Me![DateRequested]) + "',#" + dt + "#,'" + usr + "','" + cn + "')"
-                V = "INSERT INTO NGSLogMemo(InternalPatientID, Type, LinkID, LogMemoEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + ", 1, " + CStr(Me![NGSTestID]) + ",'NGS WES test status updated to: " + Me![StatusID].Column(1) + "' ,#" + dt + "#,'" + usr + "','" + cn + "')"
+                l = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + ",'NGS WES test: Status updated to " + Me![StatusID].Column(1) + " for test requested " + CStr(Me![DateRequested]) + "',#" + dt + "#,'" + usr + "','" + cn + "')"
+                v = "INSERT INTO NGSLogMemo(InternalPatientID, Type, LinkID, LogMemoEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + ", 1, " + CStr(Me![NGSTestID]) + ",'NGS WES test status updated to: " + Me![StatusID].Column(1) + "' ,#" + dt + "#,'" + usr + "','" + cn + "')"
                 'record sample being removed from WES batch
                 Set rs = New ADODB.Recordset
                 b = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" & Me!InternalPatientID & ", ' Test removed from WES batch " & Me![WESBatch] & " form NGS test " & Me!NGSTestID & ". ',#" + dt + "#,'" + usr + "','" + cmp + "')"
@@ -510,12 +537,12 @@ Private Sub StatusID_AfterUpdate()
             End If
         End If
     Else
-    L = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + ",'NGS WES test: Status updated to " + Me![StatusID].Column(1) + " for test requested " + CStr(Me![DateRequested]) + "',#" + dt + "#,'" + usr + "','" + cn + "')"
-    V = "INSERT INTO NGSLogMemo(InternalPatientID, Type, LinkID, LogMemoEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + ", 1, " + CStr(Me![NGSTestID]) + ",'NGS WES test status updated to: " + Me![StatusID].Column(1) + "' ,#" + dt + "#,'" + usr + "','" + cn + "')"
+    l = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + ",'NGS WES test: Status updated to " + Me![StatusID].Column(1) + " for test requested " + CStr(Me![DateRequested]) + "',#" + dt + "#,'" + usr + "','" + cn + "')"
+    v = "INSERT INTO NGSLogMemo(InternalPatientID, Type, LinkID, LogMemoEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + ", 1, " + CStr(Me![NGSTestID]) + ",'NGS WES test status updated to: " + Me![StatusID].Column(1) + "' ,#" + dt + "#,'" + usr + "','" + cn + "')"
     End If
     
-    Q.Open L, CurrentProject.Connection
-    U.Open V, CurrentProject.Connection
+    Q.Open l, CurrentProject.Connection
+    U.Open v, CurrentProject.Connection
     Me.Parent.Form.Requery
     Set Q = Nothing
     Set U = Nothing
@@ -524,16 +551,58 @@ End Sub
 
 
 Private Sub StatusID_GotFocus()
-' locks status form if the test has been assigned to either complete, Test failed or Pending approval
-If Me.StatusID = 4 Or Me.StatusID = 1202218814 Or Me.StatusID = 1202218815 Or Me.StatusID = 1202218816 Then
-    msg1 = MsgBox("Sorry, the test status may no longer be updated here once the test has been reported." & vbNewLine & "Please use the NGS dashboard to update the test status further.", vbOKOnly Or vbInformation, "Status update")
+' locks status form if the test has been assigned to either complete or Test failed
+If (Me.StatusID = 4 Or Me.StatusID = 1202218816) And Me.Parent.SafetyCheck.Value = False Then
+    msg1 = MsgBox("Sorry, the test status may no longer be updated. ", vbOKOnly Or vbInformation, "Status update")
     Me.StatusID.Locked = True
-Else
-    Me.StatusID.Locked = False
+'Else
+'    Me.StatusID.Locked = False
 End If
 End Sub
 
 Private Sub Checker1_AfterUpdate()
+    Dim rs As ADODB.Recordset
+    Dim rs2 As ADODB.Recordset
+    Dim plSQL As String
+    Dim pl2SQL As String
+    Dim dt As String
+    Dim usr As String
+    Dim cmp As String
+    
+    Set rs = New ADODB.Recordset
+    dt = Format(Now, "dd/mmm/yyyy Hh:Nn:ss")
+    usr = VBA.Environ("USERNAME")
+    cmp = VBA.Environ("COMPUTERNAME")
+ 
+ ' record log if checker1 entry is removed
+ 
+    If IsNull([Checker1]) Then
+        plSQL = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + ",'NGS WES test: Initials for variant interpretation analysis removed for NGS test " + CStr(Me![NGSTestID]) + " requested " + CStr(Me![DateRequested]) + "',#" + dt + "#,'" + usr + "','" + cmp + "')"
+        Me![txt_Check1Date] = Null
+        Me![txt_Check1Date].Requery
+        rs.Open plSQL, CurrentProject.Connection
+        
+        If Not IsNull([Checker2]) Then
+            Set rs2 = New ADODB.Recordset
+            pl2SQL = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + ",'NGS WES test: Initials (ID:" + CStr(Me![Checker2]) + ") for checking result page (variant interpretation) removed for NGS test " + CStr(Me![NGSTestID]) + " requested " + CStr(Me![DateRequested]) + "',#" + dt + "#,'" + usr + "','" + cmp + "')"
+            Me![Checker2] = Null
+            Me![txt_Check2Date] = Null
+            Me![Checker2].Requery
+            Me![txt_Check2Date].Requery
+            rs2.Open pl2SQL, CurrentProject.Connection
+        End If
+    Else
+         plSQL = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + ",'NGS WES test: Variant interpretation analysis assigned to " + Me![Checker1].Column(1) + " for test " + CStr(Me![NGSTestID]) + " requested " + CStr(Me![DateRequested]) + "',#" + dt + "#,'" + usr + "','" + cmp + "')"
+        rs.Open plSQL, CurrentProject.Connection
+    End If
+
+    Set rs = Nothing
+    'Refresh fromatting on the page
+    Me.Parent.Requery
+End Sub
+
+
+Private Sub txt_Check1Date_DblClick(Cancel As Integer)
     Dim rs As ADODB.Recordset
     Dim plSQL As String
     Dim dt As String
@@ -544,33 +613,53 @@ Private Sub Checker1_AfterUpdate()
     dt = Format(Now, "dd/mmm/yyyy Hh:Nn:ss")
     usr = VBA.Environ("USERNAME")
     cmp = VBA.Environ("COMPUTERNAME")
- 
- ' record log of checker1 entry
- 
-    If IsNull([Checker1]) Then
-        plSQL = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + ",'NGS WES test: Initials for variant interpretation analysis removed for NGS test " + CStr(Me![NGSTestID]) + " requested " + CStr(Me![DateRequested]) + "',#" + dt + "#,'" + usr + "','" + cmp + "')"
+    
+If Not IsNull([Checker1]) Then
+    plSQL = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + ",'NGS WES test: Variant interpretation analysis entered by " + Me![Checker1].Column(1) + " for test " + CStr(Me![NGSTestID]) + " requested " + CStr(Me![DateRequested]) + "',#" + dt + "#,'" + usr + "','" + cmp + "')"
+    Me![txt_Check1Date] = Now()
+    Me.[txt_Check1Date].Requery
+    rs.Open plSQL, CurrentProject.Connection
+Else
+    MsgBox "Enter initials into 'Assigned to' field to proceed", , "No Record For Checker1 Entered"
+End If
+
+    Set rs = Nothing
+    'Refresh fromatting on the page
+    Me.Parent.Requery
+
+End Sub
+
+Private Sub txt_Check1Date_AfterUpdate()
+    Dim rs As ADODB.Recordset
+    Dim rs2 As ADODB.Recordset
+    Dim plSQL As String
+    Dim pl2SQL As String
+    Dim dt As String
+    Dim usr As String
+    Dim cmp As String
+    
+    Set rs = New ADODB.Recordset
+    dt = Format(Now, "dd/mmm/yyyy Hh:Nn:ss")
+    usr = VBA.Environ("USERNAME")
+    cmp = VBA.Environ("COMPUTERNAME")
+    
+    If IsNull([txt_Check1Date]) Then
+        plSQL = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + ",'NGS WES test: Date of completed variant interpretation analysis removed for NGS test " + CStr(Me![NGSTestID]) + " requested " + CStr(Me![DateRequested]) + "',#" + dt + "#,'" + usr + "','" + cmp + "')"
         Me![txt_Check1Date] = Null
         Me![txt_Check1Date].Requery
-            
+        rs.Open plSQL, CurrentProject.Connection
+        
         If Not IsNull([Checker2]) Then
+            Set rs2 = New ADODB.Recordset
             pl2SQL = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + ",'NGS WES test: Initials (ID:" + CStr(Me![Checker2]) + ") for checking result page (variant interpretation) removed for NGS test " + CStr(Me![NGSTestID]) + " requested " + CStr(Me![DateRequested]) + "',#" + dt + "#,'" + usr + "','" + cmp + "')"
             Me![Checker2] = Null
             Me![txt_Check2Date] = Null
             Me![Checker2].Requery
             Me![txt_Check2Date].Requery
-
-        rs.Open pl2SQL, CurrentProject.Connection
+            rs2.Open pl2SQL, CurrentProject.Connection
         End If
-    Else
-        plSQL = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + ",'NGS WES test: Variant interpretation analysis entered by " + Me![Checker1].Column(1) + " for test " + CStr(Me![NGSTestID]) + " requested " + CStr(Me![DateRequested]) + "',#" + dt + "#,'" + usr + "','" + cmp + "')"
-        Me![txt_Check1Date] = Now()
-        Me.[txt_Check1Date].Requery
-        rs.Open plSQL, CurrentProject.Connection
     End If
-
-    Set rs = Nothing
-    'Refresh fromatting on the page
-    Me.Parent.Requery
+    
 End Sub
 
 
@@ -587,33 +676,34 @@ Private Sub Checker2_AfterUpdate()
     cmp = VBA.Environ("COMPUTERNAME")
 
 
-'checks checker 1 ID has been entered before permitting approval (checker 2). Updates patient log accordingly
-    If IsNull(Me![Checker1]) Then
-        MsgBox "Unable to comfirm check of variant interpretation until checker 1 intials are entered ", , "No Record For Checker1 Entered"
+'checks checker 1 ID and date has been entered before permitting approval (checker 2). Updates patient log accordingly
+    If IsNull(Me![Checker1]) Or IsNull(txt_Check1Date) Then
+        MsgBox "Unable to confirm check of variant interpretation until 'Assigned to' initials and associated date are entered", , "No Record For Checker1 Entered"
                    Me![Checker2] = Null
            Me![Checker2].Requery
            Me![txt_Check2Date] = Null
            Me![txt_Check2Date].Requery
     
-    
+'checks checker 1 ID and checker 2 id are not the same
     ElseIf Me.[Checker2] = Me.[Checker1] Then
-           MsgBox "Checker 2 cannot be the same person as Checker 1  ", vbOKOnly Or vbExclamation, "Attention"
+           MsgBox "Checked by ID cannot be the same as 'Assigned to'  ", vbOKOnly Or vbExclamation, "Attention"
            Me![Checker2] = Null
            Me![Checker2].Requery
            Me![txt_Check2Date] = Null
            Me![txt_Check2Date].Requery
     
     Else
-        
+'logs if checker 2 ID is deleated
         If IsNull([Checker2]) Then
             plSQL = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + ",'NGS WES test: Initials for checking result page removed for NGS test " + CStr(Me![NGSTestID]) + " requested " + CStr(Me![DateRequested]) + "',#" + dt + "#,'" + usr + "','" + cmp + "')"
             Me![txt_Check2Date] = Null
             Me![txt_Check2Date].Requery
-        Else
+            
+        Else 'logs if checker 2 ID entry
             plSQL = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + ",'NGS WES test: Result page (variant interpretation) checked by  " + Me![Checker2].Column(1) + " for test " + CStr(Me![NGSTestID]) + " requested " + CStr(Me![DateRequested]) + "',#" + dt + "#,'" + usr + "','" + cmp + "')"
             Me![txt_Check2Date] = Now()
             Me.[txt_Check2Date].Requery
-            Me.Parent.[SafetyCheck].Value = True
+            'Me.Parent.[SafetyCheck].Value = True
             
         End If
         rs.Open plSQL, CurrentProject.Connection
@@ -627,8 +717,9 @@ Private Sub Checker3_AfterUpdate()
     Dim Q As ADODB.Recordset
     Dim U As ADODB.Recordset
     Dim rs As ADODB.Recordset
-    Dim L As String
-    Dim V As String
+    Dim l As String
+    Dim ck As String
+    Dim v As String
     Dim dt As String
     Dim usr As String
     Dim cn As String
@@ -646,9 +737,9 @@ Private Sub Checker3_AfterUpdate()
         Me.Checker3 = Null
         Me!txt_Check3Date = Null
         
-    ' Check that the checker1 feild has been compleated
-    ElseIf IsNull(Checker1) Then
-        msg_b = MsgBox("Interpretation of test has not been marked as checked" & vbNewLine & "Please enter Checker1 intitials before proceeding ", vbOKOnly Or vbExclamation, "ATTENTION")
+    ' Check that the checker1 feild has been completed
+    ElseIf IsNull(Checker1) Or IsNull(txt_Check1Date) Then
+        msg_b = MsgBox("Interpretation of test has not been marked as checked" & vbNewLine & "Please enter 'Assigned to' intitials and date before proceeding ", vbOKOnly Or vbExclamation, "ATTENTION")
         Me.Checker3 = Null
         Me!txt_Check3Date = Null
         Me!Checker1.SetFocus
@@ -662,14 +753,16 @@ Private Sub Checker3_AfterUpdate()
         'Update test status to report pending approval
             Me![StatusID] = 1202218814
         'log test status change
-            L = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + ",'NGS WES test: Status updated to Pending Report Authorsation for test requested " + CStr(Me![DateRequested]) + "',#" + dt + "#,'" + usr + "','" + cn + "')"
-            V = "INSERT INTO NGSLogMemo(InternalPatientID, Type, LinkID, LogMemoEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + ", 1, " + CStr(Me![NGSTestID]) + ",'NGS WES test status updated to: Pending Report Authorsation' ,#" + dt + "#,'" + usr + "','" + cn + "')"
-            Ck = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + ",'NGS WES test: Result reported by " & Me.Checker3 & " for NGS test requested " + CStr(Me![DateRequested]) + "',#" + dt + "#,'" + usr + "','" + cn + "')"
+            l = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + ",'NGS WES test: Status updated to Pending Report Authorsation for test requested " + CStr(Me![DateRequested]) + "',#" + dt + "#,'" + usr + "','" + cn + "')"
+            v = "INSERT INTO NGSLogMemo(InternalPatientID, Type, LinkID, LogMemoEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + ", 1, " + CStr(Me![NGSTestID]) + ",'NGS WES test status updated to: Pending Report Authorsation' ,#" + dt + "#,'" + usr + "','" + cn + "')"
+            ck = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + ",'NGS WES test: Result reported by " & Me.Checker3 & " for NGS test requested " + CStr(Me![DateRequested]) + "',#" + dt + "#,'" + usr + "','" + cn + "')"
             
             Set rs = New ADODB.Recordset
-            rs.Open Ck, CurrentProject.Connection
-            Q.Open L, CurrentProject.Connection
-            U.Open V, CurrentProject.Connection
+            rs.Open ck, CurrentProject.Connection
+            Q.Open l, CurrentProject.Connection
+            U.Open v, CurrentProject.Connection
+             
+            msg_c = MsgBox(" Test status updated." & vbNewLine & "Report pending approval", vbOKOnly Or vbInformation, "Report pending approval")
            
             Me.StatusID.Locked = True
             Me.Parent.Form.Requery
@@ -692,31 +785,34 @@ Private Sub Checker3_AfterUpdate()
     'Update test status to report pending approval
         Me![StatusID] = 1202218815
     'log test status change
-        L = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + ",'NGS WES test: Status updated to " + Me![StatusID].Column(1) + " for test requested " + CStr(Me![DateRequested]) + "',#" + dt + "#,'" + usr + "','" + cn + "')"
-        V = "INSERT INTO NGSLogMemo(InternalPatientID, Type, LinkID, LogMemoEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + ", 1, " + CStr(Me![NGSTestID]) + ",'NGS WES test status updated to: " + Me![StatusID].Column(1) + "' ,#" + dt + "#,'" + usr + "','" + cn + "')"
-        Ck = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + ",'NGS WES test: Result reported by " & Me.Checker3 & " for NGS test requested " + CStr(Me![DateRequested]) + "',#" + dt + "#,'" + usr + "','" + cn + "')"
-            
+        l = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + ",'NGS WES test: Status updated to " + Me![StatusID].Column(1) + " for test requested " + CStr(Me![DateRequested]) + "',#" + dt + "#,'" + usr + "','" + cn + "')"
+        v = "INSERT INTO NGSLogMemo(InternalPatientID, Type, LinkID, LogMemoEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + ", 1, " + CStr(Me![NGSTestID]) + ",'NGS WES test status updated to: " + Me![StatusID].Column(1) + "' ,#" + dt + "#,'" + usr + "','" + cn + "')"
+        ck = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + ",'NGS WES test: Result reported by " & Me.Checker3 & " for NGS test requested " + CStr(Me![DateRequested]) + "',#" + dt + "#,'" + usr + "','" + cn + "')"
+        msg_d = MsgBox(" Test status updated." & vbNewLine & "Report pending approval", vbOKOnly Or vbInformation, "Report pending approval")
         Set rs = New ADODB.Recordset
-        rs.Open Ck, CurrentProject.Connection
-        Q.Open L, CurrentProject.Connection
-        U.Open V, CurrentProject.Connection
+        rs.Open ck, CurrentProject.Connection
+        Q.Open l, CurrentProject.Connection
+        U.Open v, CurrentProject.Connection
         Me.StatusID.Locked = True
         Me.Parent.Form.Requery
         Set Q = Nothing
         Set U = Nothing
         Set rs = Nothing
 
-    ' If reporter removes signiture, removal is logged
+    'If reporter removes signiture, removal is logged
     ElseIf IsNull(Me!Checker3) Then
         Me.txt_Check3Date = Null
-        Ck = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + ",'NGS WES test: Result reported by ID, removed for NGS test requested. NGSTest status we set to Assessment by defult " + CStr(Me![DateRequested]) + "',#" + dt + "#,'" + usr + "','" + cn + "')"
+        ck = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + ",'NGS WES test: Result reported by ID, removed for NGS test requested. NGSTest status set to Assessment by default  " + CStr(Me![DateRequested]) + "',#" + dt + "#,'" + usr + "','" + cn + "')"
+        v = "INSERT INTO NGSLogMemo(InternalPatientID, Type, LinkID, LogMemoEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + ", 1, " + CStr(Me![NGSTestID]) + ",'Reporter ID has been removed. Test status set to: Assessment (as default)" ' ,#" + dt + "#,'" + usr + "','" + cn + "')"
         Me.StatusID = 1202218807
-        msg_d = MsgBox("Reporter ID has been removed." & vbNewLine & "Test status will be set to Assessment as Defult", vbOKOnly, "Reporter ID")
+        msg_d = MsgBox("Reporter ID has been removed." & vbNewLine & "Test status will be set to Assessment as default ", vbOKOnly, "Reporter ID")
         Set rs = New ADODB.Recordset
-        rs.Open Ck, CurrentProject.Connection
+        rs.Open ck, CurrentProject.Connection
+        U.Open v, CurrentProject.Connection
         Set rs = Nothing
+        Set U = Nothing
     Else
-        msg_c = MsgBox("This test's, test status indicateds that it is not yet ready to be repoted", vbOKOnly Or vbInformation, "ATTENTION")
+        msg_c = MsgBox("This test's current test status indicates  that it is not yet ready to be repoted", vbOKOnly Or vbInformation, "ATTENTION")
         Me.Checker3 = Null
         Me.txt_Check3Date = Null
     End If
@@ -724,6 +820,144 @@ Private Sub Checker3_AfterUpdate()
 End Sub
 
 
+Private Sub Checker4_AfterUpdate()
+'Log aprover ID and status change
+    Dim Q As ADODB.Recordset
+    Dim U As ADODB.Recordset
+    Dim rs As ADODB.Recordset
+    Dim P As ADODB.Recordset
+    Dim l As String
+    Dim ck As String
+    Dim v As String
+    Dim p8 As String
+    Dim dt As String
+    Dim usr As String
+    Dim cn As String
+    Dim strUpd8Patient As String
+    Set U = New ADODB.Recordset
+    Set rs = New ADODB.Recordset
+    
+    dt = Format(Now, "dd/mmm/yyyy Hh:Nn:ss")
+    usr = VBA.Environ("USERNAME")
+    cn = VBA.Environ("COMPUTERNAME")
+      
+    
+    If IsNull(Me!Checker4) Then  ' If approver removes signiture, removal is logged chage patient status back to NGS
+        Me.txt_Check4Date = Null
+        
+        ck = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + ",'NGS WES test: Report Approval ID, removed for NGS test requested. NGSTest status set to default (Pending Report Authorsation)',#" + dt + "#,'" + usr + "','" + cn + "')"
+        v = "INSERT INTO NGSLogMemo(InternalPatientID, Type, LinkID, LogMemoEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + ", 1, " + CStr(Me![NGSTestID]) + ",'Reporter ID has been removed. Test status set to: Pending Report Authorsation (as default)' ,#" + dt + "#,'" + usr + "','" + cn + "')"
+        rs.Open ck, CurrentProject.Connection
+        U.Open v, CurrentProject.Connection
+        
+        'check is patient status had been updated is so, revert to NGS upon intial deleation
+        If Me.Parent.[Patient Status] = "Complete" Or Me.Parent.[Patient Status] = "Test Failed" Then
+            Set P = New ADODB.Recordset
+            strUpd8Patient = "UPDATE Patients SET s_StatusOverall = 1202218798 WHERE Patients.InternalPatientID = " & Me![InternalPatientID]
+            p8 = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + ",'Patient: Status changed to: NGS " + CStr(Me![DateRequested]) + "',#" + dt + "#,'" + usr + "','" + cn + "')"
+            
+            'run SQL
+            DoCmd.SetWarnings False
+            DoCmd.RunSQL strUpd8Patient
+            DoCmd.SetWarnings True
+            P.Open p8, CurrentProject.Connection
+            Set P = Nothing
+            Me.Parent.Requery
+        End If
+        
+        Me.StatusID.Locked = False
+        Me.StatusID = 1202218814 ' change status to bypass lock down error
+        
+        msg_d = MsgBox("Report approver ID has been removed." & vbNewLine & "Please update test Status", vbOKOnly Or vbInformation, "Approver ID")
+        Me.StatusID.SetFocus
+        
+        Set rs = Nothing
+        Set U = Nothing
+        Exit Sub
+    
+    ' Update patient and test status to complete providing that the test has been reported and test status is currently 'pending approval'
+    ElseIf Not IsNull(Checker3) And Me.StatusID = 1202218814 Then
+        ' Open extra recordsets required
+        Set Q = New ADODB.Recordset
+        Set P = New ADODB.Recordset
+        
+        ' Add date of approval and update test status
+        Me!txt_Check4Date = dt
+        Me![StatusID] = 4
+        
+        ' Log approval, update and log test status to 'complete'
+        ck = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + ",'NGS WES test: Report approved by " & Me.Checker4 & " for NGS test requested " + CStr(Me![DateRequested]) + "',#" + dt + "#,'" + usr + "','" + cn + "')"
+        l = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + ",'NGS WES test: Status updated to Complete for test requested " + CStr(Me![DateRequested]) + "',#" + dt + "#,'" + usr + "','" + cn + "')"
+        v = "INSERT INTO NGSLogMemo(InternalPatientID, Type, LinkID, LogMemoEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + ", 1, " + CStr(Me![NGSTestID]) + ",'Test status set to: Complete' ,#" + dt + "#,'" + usr + "','" + cn + "')"
+        
+        ' Update patient overal status to complete and log
+        strUpd8Patient = "UPDATE Patients SET s_StatusOverall = 4 WHERE Patients.InternalPatientID = " & Me![InternalPatientID]
+        p8 = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + ",'Patient: Status changed to: Complete " + CStr(Me![DateRequested]) + "',#" + dt + "#,'" + usr + "','" + cn + "')"
+        
+        'run SQL
+        DoCmd.SetWarnings False
+        DoCmd.RunSQL strUpd8Patient
+        DoCmd.SetWarnings True
+        
+        rs.Open ck, CurrentProject.Connection
+        Q.Open l, CurrentProject.Connection
+        U.Open v, CurrentProject.Connection
+        P.Open p8, CurrentProject.Connection
+        
+        Set rs = Nothing
+        Set Q = Nothing
+        Set U = Nothing
+        Set P = Nothing
+        Me.Parent.Requery
+    
+   ' Update patient and test status to 'Test Failed' providing that the test has been reported and test status is currently 'pending approval (failed report)'
+    ElseIf Not IsNull(Checker3) And Me.StatusID = 1202218815 Then
+        ' Open extra recordsets required
+        Set Q = New ADODB.Recordset
+        Set P = New ADODB.Recordset
+        
+        ' Add date of approval and update test status
+        Me!txt_Check4Date = dt
+        Me![StatusID] = 1202218816
+        
+        ' Log approval, update and log test status to 'Test Failed'
+        ck = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + ",'NGS WES test: Report approved by " & Me.Checker4 & " for NGS test requested " + CStr(Me![DateRequested]) + "',#" + dt + "#,'" + usr + "','" + cn + "')"
+        l = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + ",'NGS WES test: Status updated to Test Failed for test requested " + CStr(Me![DateRequested]) + "',#" + dt + "#,'" + usr + "','" + cn + "')"
+        v = "INSERT INTO NGSLogMemo(InternalPatientID, Type, LinkID, LogMemoEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + ", 1, " + CStr(Me![NGSTestID]) + ",'Test status set to: Test Failed' ,#" + dt + "#,'" + usr + "','" + cn + "')"
+
+        ' Update patient overal status to complete and log
+        strUpd8Patient = "UPDATE Patients SET s_StatusOverall = 1202218816 WHERE Patients.InternalPatientID = " & Me![InternalPatientID]
+        p8 = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + ",'Patient: Status changed to: Complete " + CStr(Me![DateRequested]) + "',#" + dt + "#,'" + usr + "','" + cn + "')"
+        
+        'run SQL
+        DoCmd.SetWarnings False
+        DoCmd.RunSQL strUpd8Patient
+        DoCmd.SetWarnings True
+    
+        rs.Open ck, CurrentProject.Connection
+        Q.Open l, CurrentProject.Connection
+        U.Open v, CurrentProject.Connection
+        P.Open p8, CurrentProject.Connection
+        
+        Set rs = Nothing
+        Set Q = Nothing
+        Set U = Nothing
+        Set P = Nothing
+        Me.Parent.Requery
+        
+    ' if approver ID is updated after being entered
+    ElseIf Me.StatusID = 4 Or Me.StatusID = 1202218816 Then
+        ck = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + ",'NGS WES test: Report approved by ID has been updated to " & Me.Checker4 & " for NGS test requested " + CStr(Me![DateRequested]) + "',#" + dt + "#,'" + usr + "','" + cn + "')"
+        msg_1 = MsgBox("Authoriser ID has been updated to " + Me.Checker4.Column(2), vbOKOnly Or vbInformation, "Authoriser updated")
+        rs.Open ck, CurrentProject.Connection
+        Set rs = Nothing
+        
+    Else
+        msg_w = MsgBox("Report is not yet ready for approval.", vbOKOnly Or vbExclamation, "Error")
+        Me.Checker4 = Null
+    End If
+
+End Sub
 Function UpdatePatientRes()
 ' Auto update the result recorded in Patients table
     Dim A As ADODB.Recordset
