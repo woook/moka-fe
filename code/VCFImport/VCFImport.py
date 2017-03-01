@@ -1,7 +1,10 @@
 '''
-v1.1 - AB 2016/11/25
+v1.2 - AB 2017/02/28
 
 ###
+Changes from v1.1:
+Updated getVars() method to account for new Ingenuity format of CADD scores <10
+Added stripCADDws() method to overcome Ingenuity bug that outputs whitespace between min and max CADD values.
 Changes from v1.0:
 insertMoka() method modified. Now inserts semi-colon delimited string of gene symbols in NGSVariant table.
 ###
@@ -67,6 +70,25 @@ class MokaVCF(object):
         self.patID = patID
         self.ngsTestID = ngsTestID
         self.datetime = time.strftime("%Y%m%d %H:%M:%S %p") # date/time in format: yyyymmdd hh:mm:ss AM/PM
+    def stripCADDws(self, vcfPathLst):
+        # Winter release of Ingenuity contains bug that outputs whitespace between min and max CADD values if CADD <10
+        # This method finds the CADD value and strips the whitespace to prevent pyVCF errors
+        for vcf in vcfPathLst:
+            vcfOut = ""
+            with open(vcf, 'r') as f_in:
+                for line in f_in:
+                    if not line.startswith('#'): # Skip header rows
+                        fields = line.split('\t') # Split on tab
+                        # Check the number of columns = 10
+                        assert (len(fields)==10), "Error spliting VCF on tab. Number columns doesn't equal 10"
+                        INFO = fields[7].split(';') # Split the INFO field on semi-colon
+                        #Re-build INFO field, replacing whitespace after comma in CADD score
+                        newINFO = ';'.join([x.replace(', ', ',') if x.startswith("CADD") else x for x in INFO])
+                        fields[7]=newINFO # Replace old INFO field with new INFO field
+                        line = "\t".join(fields) # Join the VCF columns back together with tabs and assign back to line
+                    vcfOut += line # Add line to reconstructed VCF
+            with open(vcf, 'w') as f_out:
+                f_out.write(vcfOut) # Write new VCF folder
     def makeVCFdict(self, vcfPathLst):
         for vcf in vcfPathLst:
             panelName = os.path.basename(vcf).split("-")[1]
@@ -175,6 +197,10 @@ class MokaVCF(object):
                         except KeyError:
                             annot.append("Null")
                         else:
+                            # CADD can be a single value in list, or a min and max value in list if CADD score less than 10.
+                            # Take the last value in the list, so the actual CADD score or max value is taken.
+                            if vcfTag == 'CADD':
+                                vcfVal = vcfVal[-1]
                             #If the number of items for a field is not specified in the VCF header, pyvcf returns a list.
                             #Every field should only have one value, so if a list is returned just take the first element
                             if type(vcfVal) == list:
@@ -212,6 +238,7 @@ patID = sys.argv[2]
 ngsTestID = sys.argv[3]
 
 mv = MokaVCF(patID, ngsTestID)
+mv.stripCADDws(vcfPathLst)
 mv.makeVCFdict(vcfPathLst)
 mv.lookupPrevVars()
 mv.lookupChr() # Retrieve IDs from Moka Chromosome table
