@@ -1,3 +1,4 @@
-SELECT "20" & Left([ArrayLabelling].[ArrayRunNumber],2) & "-" & Mid([ArrayLabelling].[ArrayRunNumber],3,2) AS [Month], Count([Arraylabelling].[DNALabellingID])*2 AS Activity
+SELECT TOP 24 "20" & Left([ArrayLabelling].[ArrayRunNumber],2) & "-" & Mid([ArrayLabelling].[ArrayRunNumber],3,2) AS [Month], Count([Arraylabelling].[DNALabellingID])*2 AS Activity
 FROM ArrayLabelling
-GROUP BY "20" & Left([ArrayLabelling].[ArrayRunNumber],2) & "-" & Mid([ArrayLabelling].[ArrayRunNumber],3,2);
+GROUP BY "20" & Left([ArrayLabelling].[ArrayRunNumber],2) & "-" & Mid([ArrayLabelling].[ArrayRunNumber],3,2)
+ORDER BY "20" & Left([ArrayLabelling].[ArrayRunNumber],2) & "-" & Mid([ArrayLabelling].[ArrayRunNumber],3,2) DESC;
