@@ -1,18 +1,18 @@
 Option Compare Database
- 
+
 ''warnings and logging
 
 Private Sub Form_AfterInsert()
     Dim Q As ADODB.Recordset
     Dim S As String
-    Dim d As String
+    Dim D As String
     Dim cn As String
     Dim un As String
     un = VBA.Environ("USERNAME")
     cn = VBA.Environ("COMPUTERNAME")
-    d = Format(Now, "dd/mmm/yyyy Hh:Nn:ss")
+    D = Format(Now, "dd/mmm/yyyy Hh:Nn:ss")
     Set Q = New ADODB.Recordset
-    S = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + ",'NGS test: " + Me![ReferralID].Column(1) + " " + Me![NGSPanelID].Column(1) + " request added " + CStr(Me![RequestedDate]) + "',#" + d + "#,'" + un + "','" + cn + "')"
+    S = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + ",'NGS test: " + Me![ReferralID].Column(1) + " " + Me![NGSPanelID].Column(1) + " request added " + CStr(Me![RequestedDate]) + "',#" + D + "#,'" + un + "','" + cn + "')"
     Q.Open S, CurrentProject.Connection
     Set Q = Nothing
     
@@ -29,14 +29,14 @@ End Sub
 Private Sub Form_Delete(Cancel As Integer)
     Dim Q As ADODB.Recordset
     Dim S As String
-    Dim d As String
+    Dim D As String
     Dim cn As String
     Dim un As String
     un = VBA.Environ("USERNAME")
     cn = VBA.Environ("COMPUTERNAME")
-    d = Format(Now, "dd/mmm/yyyy Hh:Nn:ss")
+    D = Format(Now, "dd/mmm/yyyy Hh:Nn:ss")
     Set Q = New ADODB.Recordset
-    S = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + ",'NGS test: " + Me![ReferralID].Column(1) + " " + Me![NGSPanelID].Column(1) + " request deleted (requested " + CStr(Me![DateRequested]) + ")',#" + d + "#,'" + un + "','" + cn + "')"
+    S = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + ",'NGS test: " + Me![ReferralID].Column(1) + " " + Me![NGSPanelID].Column(1) + " request deleted (requested " + CStr(Me![DateRequested]) + ")',#" + D + "#,'" + un + "','" + cn + "')"
     Q.Open S, CurrentProject.Connection
     Set Q = Nothing
     If [Form_02 Patient Details]![s_StatusOverall] = 1202218798 Then
@@ -48,14 +48,14 @@ End Sub
 Private Sub NGSPanelID_AfterUpdate()
     Dim Q As ADODB.Recordset
     Dim S As String
-    Dim d As String
+    Dim D As String
     Dim cn As String
     Dim un As String
     cn = VBA.Environ("COMPUTERNAME")
     un = VBA.Environ("USERNAME")
-    d = Format(Now, "dd/mmm/yyyy Hh:Nn:ss")
+    D = Format(Now, "dd/mmm/yyyy Hh:Nn:ss")
     Set Q = New ADODB.Recordset
-    S = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + ",'NGS test: Panel changed to " + Me![NGSPanelID].Column(1) + "',#" + d + "#,'" + un + "','" + cn + "')"
+    S = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + ",'NGS test: Panel changed to " + Me![NGSPanelID].Column(1) + "',#" + D + "#,'" + un + "','" + cn + "')"
     Q.Open S, CurrentProject.Connection
     Set Q = Nothing
 
@@ -64,4 +64,14 @@ End Sub
 ''Refresh
 Private Sub DNA_Enter()
     Me.DNA.Requery
+End Sub
+
+Private Sub StatusID_DblClick(Cancel As Integer)
+Dim stDocName As String
+Dim stLinkCriteria As String
+stDocName = "0901 ExomeNGSResults"
+    If Not IsNull(Me.[NGSTestID]) Then
+        stLinkCriteria = "[NGSTestID]=" & Me![NGSTestID]
+        DoCmd.OpenForm stDocName, , , stLinkCriteria
+    End If
 End Sub

@@ -1,4 +1,5 @@
-SELECT Format([RequestedDate],"yyyy") & "-" & Format(Format([RequestedDate],"mm"),"00") AS [Month], Count(ArrayTest.ArrayTestID) AS Received
+SELECT TOP 24 Format([RequestedDate],"yyyy") & "-" & Format(Format([RequestedDate],"mm"),"00") AS [Month], Count(ArrayTest.ArrayTestID) AS Received
 FROM ArrayTest
-WHERE (((ArrayTest.ReferralID)=2 Or (ArrayTest.ReferralID)=1185356886 Or (ArrayTest.ReferralID)=1199901176 Or (ArrayTest.ReferralID)=1199901175 Or (ArrayTest.ReferralID)=1199901192 Or (ArrayTest.ReferralID)=1199901183 Or (ArrayTest.ReferralID)=1199901169 Or (ArrayTest.ReferralID)=1199901181 Or (ArrayTest.ReferralID)=1199901194))
-GROUP BY Format([RequestedDate],"yyyy") & "-" & Format(Format([RequestedDate],"mm"),"00");
+WHERE (((ArrayTest.ReferralID)=2 Or (ArrayTest.ReferralID)=1185356886 Or (ArrayTest.ReferralID)=1199901176 Or (ArrayTest.ReferralID)=1199901175 Or (ArrayTest.ReferralID)=1199901192 Or (ArrayTest.ReferralID)=1199901183 Or (ArrayTest.ReferralID)=1199901169 Or (ArrayTest.ReferralID)=1199901181 Or (ArrayTest.ReferralID)=1199901194) AND ((ArrayTest.StatusID)<>1202218787))
+GROUP BY Format([RequestedDate],"yyyy") & "-" & Format(Format([RequestedDate],"mm"),"00")
+ORDER BY Format([RequestedDate],"yyyy") & "-" & Format(Format([RequestedDate],"mm"),"00") DESC;
