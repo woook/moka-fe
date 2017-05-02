@@ -349,7 +349,7 @@ Private Sub VCFImport_Click()
                     Dim sqlPrevVars As String
                     Dim rsPrevVars As ADODB.Recordset
                     'Query below returns the variant ID and number of previous records for each variant associated with this test.
-                    sqlPrevVars = "SELECT NGSVariant.NGSVariantID, (SELECT Count(*) FROM NGSVariant WHERE NGSVariant.NGSTestID <> currentVar.NGSTestID AND NGSVariant.ChrID=currentVar.ChrID AND NGSVariant.Position_hg19>=(currentVar.Position_hg19-2) And NGSVariant.Position_hg19<=(currentVar.Position_hg19+Len(currentVar.ref)+1)) AS countPrev FROM NGSVariant AS currentVar INNER JOIN NGSVariant ON currentVar.NGSVariantID = NGSVariant.NGSVariantID WHERE NGSVariant.NGSTestID = " & Me.Parent.NGSTestID
+                    sqlPrevVars = "SELECT NGSVariant.NGSVariantID, (SELECT Count(*) FROM NGSVariant WHERE NGSVariant.NGSTestID <> currentVar.NGSTestID AND NGSVariant.ChrID=currentVar.ChrID AND NGSVariant.Position_hg19>=(currentVar.Position_hg19-2) And NGSVariant.Position_hg19<=(currentVar.Position_hg19+Len(currentVar.ref)+1)) AS countPrev FROM NGSVariant AS currentVar INNER JOIN NGSVariant ON currentVar.NGSVariantID = NGSVariant.NGSVariantID WHERE NGSVariant.NGSTestID = " & NGSTestID
                     Set rsPrevVars = New ADODB.Recordset
                     rsPrevVars.Open sqlPrevVars, CurrentProject.Connection, adOpenKeyset
                     'For each variant, update the relVars field of NGSVariant table
