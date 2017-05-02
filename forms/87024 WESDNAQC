@@ -1,0 +1,110 @@
+Option Compare Database
+
+Private Sub BackBtn_Click()
+    DoCmd.Close
+    DoCmd.OpenForm "87022 WESDNAPatients"
+End Sub
+
+Private Sub batchUpdate_Click()
+    Dim rsCountNulls As ADODB.Recordset
+    Dim rsUpdate As ADODB.Recordset
+    Dim sqlSelect As String
+    Dim sqlUpdate As String
+    Dim cancelUpdate As Boolean
+    D = Format(Now(), "dd/mmm/yyyy Hh:Nn:ss")
+    un = VBA.Environ("USERNAME")
+    cn = VBA.Environ("COMPUTERNAME")
+
+    cancelUpdate = False
+    'Look for any selected samples that haven't had Qubit, Volume or Din entered
+    sqlCountNulls = "SELECT * FROM DNA WHERE Selected = True AND (Qubit IS NULL OR Volume IS NULL OR TapeStationDin IS NULL)"
+    Set rsCountNulls = New ADODB.Recordset
+    rsCountNulls.Open sqlCountNulls, CurrentProject.Connection, adOpenKeyset
+    'If any samples are missing QC data, warn user and give option to cancel.
+    If rsCountNulls.RecordCount > 0 Then
+        If vbNo = MsgBox("There are selected samples that DO NOT have data entered for Qubit, Volume or Tape Station Din!!" & vbNewLine & vbNewLine & "ARE YOU SURE YOU WANT TO UPDATE THESE SAMPLES TO BATCHING??", vbYesNo + vbExclamation, "WARNING: SAMPLES MISSING QC DATA") Then
+            cancelUpdate = True
+        End If
+    End If
+    If Not cancelUpdate Then
+        'Count number of samples that are selected.
+        selectedCount = DCount("DNAID", "DNA", "Selected = TRUE")
+        'Get user confirmation before updating status
+        If vbOK = MsgBox("This will update the test status to batching for " & selectedCount & " WES tests and remove them from the DNA QC list." & vbNewLine & vbNewLine & "Click OK to proceed.", vbInformation + vbOKCancel, "Update WES Status") Then
+            'Pull required data for selected samples
+            sqlSelect = "SELECT DNA.DNANumber, NGSTest.NGSTestID, NGSTest.DateRequested, NGSTest.InternalPatientID FROM DNA INNER JOIN NGSTest ON DNA.InternalPatientID = NGSTest.InternalPatientID WHERE DNA.Selected = TRUE AND NGSTest.StatusID = 1202218800"
+            Set rsUpdate = New ADODB.Recordset
+            rsUpdate.Open sqlSelect, CurrentProject.Connection, adOpenKeyset
+            DoCmd.SetWarnings False
+            'Loop through each record
+            While Not rsUpdate.EOF
+                'Update test status to batching and assign the selected DNA to the WES test
+                sqlUpdate = "UPDATE NGSTest SET StatusID = 1202218803, DNA = '" & rsUpdate.Fields("DNANumber") & "' WHERE NGSTestID = " & rsUpdate.Fields("NGSTestID")
+                'Update logs
+                sqlPatLog = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" & rsUpdate.Fields("InternalPatientID") & ", 'NGS WES test: Status updated to Batching for test requested " & rsUpdate.Fields("DateRequested") & " NGS testID " & rsUpdate.Fields("NGSTestID") & ". ',#" & D & "#,'" & un & "','" & cn & "')"
+                sqlLogMemo = "INSERT INTO NGSLogMemo(InternalPatientID, Type, LinkID, LogMemoEntry, [Date], Login, PCName) VALUES(" & rsUpdate.Fields("InternalPatientID") & ", 1, " & rsUpdate.Fields("NGSTestID") & ",'NGS WES test status updated to: Batching' ,#" & D & "#,'" & un & "','" & cn & "')"
+                sqlPatLogDNA = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" & rsUpdate.Fields("InternalPatientID") & ", 'NGS WES test: DNA " & rsUpdate.Fields("DNANumber") & " assigned to test requested " & rsUpdate.Fields("DateRequested") & " NGS testID " & rsUpdate.Fields("NGSTestID") & ". ',#" & D & "#,'" & un & "','" & cn & "')"
+                DoCmd.RunSQL sqlUpdate
+                DoCmd.RunSQL sqlPatLog
+                DoCmd.RunSQL sqlLogMemo
+                DoCmd.RunSQL sqlPatLogDNA
+                rsUpdate.MoveNext
+            Wend
+            DoCmd.SetWarnings True
+            'Make sure no DNA samples are selected
+            sqlUnselectAll = "UPDATE DNA SET Selected = FALSE WHERE SELECTED = TRUE"
+            DoCmd.SetWarnings False
+            DoCmd.RunSQL sqlUnselectAll
+            DoCmd.SetWarnings True
+            Me.selectAll = 0 'Unselect select all tickbox
+            Form_s87024_WESDNAQC.Requery
+        End If
+    End If
+    Set rsCountNulls = Nothing
+    Set rsUpdate = Nothing
+End Sub
+
+Private Sub dashboard_Click()
+    DoCmd.Close
+    DoCmd.OpenForm "87020 ExomeLab"
+End Sub
+
+Private Sub Form_Load()
+    Me.selectAll = 0
+End Sub
+
+Private Sub runsheet_Click()
+    DoCmd.OpenReport "DNAPrepWorksheetWES", acViewPreview
+End Sub
+
+Private Sub selectAll_Click()
+    Dim count As Integer
+    'If box has been ticked...
+    If Me.selectAll = True Then
+        'Clone the recordset of the subform. This ensures only samples currently displayed in the subform are selected, even if additional WES tests have been approved since the form was opened.
+        Set rs = Form_s87024_WESDNAQC.RecordsetClone
+        rs.MoveFirst 'Move to first record of record set
+        If rs.RecordCount > 0 Then
+            'Loop through recordset and build SQL to set selected to true for all currently displayed samples.
+            sqlSelectAll = "UPDATE DNA SET Selected = TRUE WHERE DNAID IN ("
+            While Not rs.EOF
+                sqlSelectAll = sqlSelectAll & rs.Fields("DNAID") & ","
+                rs.MoveNext
+            Wend
+            sqlSelectAll = Left(sqlSelectAll, Len(sqlSelectAll) - 1) 'Strip final comma
+            sqlSelectAll = sqlSelectAll & ")"
+            DoCmd.SetWarnings False
+            DoCmd.RunSQL sqlSelectAll 'Update samples
+            DoCmd.SetWarnings True
+        End If
+        Set rs = Nothing
+    'If box has been unticked, deselect any selected samples.
+    Else
+        sqlUnselectAll = "UPDATE DNA SET Selected = FALSE WHERE SELECTED = TRUE"
+        DoCmd.SetWarnings False
+        DoCmd.RunSQL sqlUnselectAll
+        DoCmd.SetWarnings True
+        Me.selectAll = 0
+    End If
+    Form_s87024_WESDNAQC.Requery
+End Sub

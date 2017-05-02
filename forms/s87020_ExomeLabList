@@ -1,0 +1,68 @@
+Option Compare Database
+
+Private Sub NGSTestID_DblClick(Cancel As Integer)
+Dim stDocName As String
+Dim stLinkCriteria As String
+stDocName = "0901 ExomeNGSResults"
+    If Not IsNull(Me.[NGSTestID]) Then
+        stLinkCriteria = "[NGSTestID]=" & Me![NGSTestID]
+        'Debug.Print Me.[NGSTestID] & " load result form"
+        DoCmd.OpenForm stDocName, , , stLinkCriteria
+    End If
+End Sub
+
+Private Sub PRU_DblClick(Cancel As Integer)
+Dim stDocName As String
+Dim stLinkCriteria As String
+ If Not IsNull(Me.[PRU]) Then
+    stDocName = "02 Patient Details"
+    stLinkCriteria = "[PatientID]=" & "'" & Me![PRU] & "'"
+    ''Matt asked for this not to happen - 161109 JWA
+    'DoCmd.Close
+    DoCmd.OpenForm stDocName, , , stLinkCriteria
+End If
+
+End Sub
+
+Private Sub Referral_DblClick(Cancel As Integer)
+    'Show detailed test info in popup window
+    If Not IsNull(Me.[NGSTestID]) Then
+        stDocName = "s87018_ExomeStatusPopup"
+        stLinkCriteria = " NGSTestID = " & Me![NGSTestID]
+        DoCmd.OpenForm stDocName, acFormSF, , stLinkCriteria
+        End If
+End Sub
+
+Private Sub ResultComment_DblClick(Cancel As Integer)
+Dim stDocName As String
+    stDocName = "s0901_NGSLogMemo"
+    stLinkCriteria = "[Type]= 3 AND [LinkID] = " & Me![NGSTestID]
+    DoCmd.OpenForm stDocName, acFormDS, , stLinkCriteria
+End Sub
+
+Private Sub Selection_Click()
+Me.Dirty = False
+' displays a count of the number of records selected.
+Dim LTotal As Long
+LTotal = DCount("[Selection]", "s87020_ListWESSamples", "[Selection] = true")
+Me.Parent.txt_SelectionCount = LTotal
+
+' set the select all tick box to empty
+Me.Parent.Check_selectAll.Value = 0
+End Sub
+
+Private Sub status_DblClick(Cancel As Integer)
+' View past comment history for test
+Dim stDocName As String
+    stDocName = "s0901_NGSLogMemo"
+    stLinkCriteria = "[Type]= 1 AND [LinkID] = " & Me![NGSTestID]
+    DoCmd.OpenForm stDocName, acFormDS, , stLinkCriteria
+End Sub
+
+Private Sub TestResult_DblClick(Cancel As Integer)
+' View NGS Test result in full
+Dim stDocName As String
+    stDocName = "s87020_NGSTestResultComment"
+    stLinkCriteria = " NGSTestID = " & Me![NGSTestID]
+    DoCmd.OpenForm stDocName, acFormSF, , stLinkCriteria
+End Sub

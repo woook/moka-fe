@@ -1,0 +1,4 @@
+SELECT NGSTest.Priority, NGSTest.DateRequested, dbo_Patient_table.PatientTrustID, dbo_Patient_table.LastName, dbo_Patient_table.FirstName, dbo_Patient_table.DoB, Patients.s_StatusOverall, NGSTest.StatusID, gw_GenderTable.Gender, Patients.InternalPatientID, NGSTest.NGSTestID
+FROM ((NGSTest INNER JOIN Patients ON NGSTest.InternalPatientID = Patients.InternalPatientID) INNER JOIN dbo_Patient_table ON Patients.PatientID = dbo_Patient_table.PatientTrustID) LEFT JOIN gw_GenderTable ON dbo_Patient_table.GenderID = gw_GenderTable.GenderID
+WHERE (((Patients.s_StatusOverall)=1202218798) AND ((NGSTest.StatusID)=1202218800))
+ORDER BY NGSTest.Priority, NGSTest.DateRequested;

@@ -1,0 +1,15 @@
+Option Compare Database
+
+Private Sub refresh_Click()
+    Form_s87022_WESDNAPatients.Requery
+End Sub
+
+Private Sub dashboard_Click()
+    DoCmd.Close
+    DoCmd.OpenForm "87020 ExomeLab"
+End Sub
+
+Private Sub NextBtn_Click()
+    DoCmd.Close
+    DoCmd.OpenForm "87024 WESDNAQC"
+End Sub

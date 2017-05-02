@@ -1,0 +1,123 @@
+Option Compare Database
+Private delFileDesc As String
+
+Private Sub Form_Delete(Cancel As Integer)
+    'Create comma separated string of file descriptions for files before they are deleted, so the deletion can be recorded in patient log.
+    If delFileDesc = "" Then
+        delFileDesc = Me.Description
+    Else
+        delFileDesc = delFileDesc & "," & Me.Description
+    End If
+End Sub
+
+Private Sub Form_AfterDelConfirm(Status As Integer)
+    'If user selects OK to delete selected files, add an entry into patient log for each file deleted.
+    If Status = acDeleteOK Then
+        NGSTestID = Me.Parent.NGSTestID
+        delFiles = Split(delFileDesc, ",")
+        For Each delFile In delFiles
+            patID = Me.Parent.InternalPatientID
+            D = Format(Now(), "dd/mmm/yyyy Hh:Nn:ss")
+            un = VBA.Environ("USERNAME")
+            cn = VBA.Environ("COMPUTERNAME")
+            sqlPatLog = "INSERT INTO PatientLog (InternalPatientID, LogEntry, [Date], Login, PCName) VALUES (" & patID & ", 'NGS: File removed from NGS test record. (NGSTestFile Description: " & delFile & ", NGSTestID: " & NGSTestID & ")', #" + D + "#,'" + un + "','" + cn + "')"
+            DoCmd.SetWarnings False
+            DoCmd.RunSQL sqlPatLog
+            DoCmd.SetWarnings True
+        Next
+    End If
+    delFileDesc = ""
+End Sub
+
+Private Sub NGSTestFile_DblClick(Cancel As Integer)
+    Dim destBaseDir As String
+    Dim batchName As String
+    Dim selectedFile As Office.FileDialog
+    Dim selectedPath As String
+    Dim Description As String
+    Dim Response As Integer
+    Dim origFName As String
+    Dim dotIndx As Integer
+    Dim origFNameNoExt As String
+    Dim fileExt As String
+    Dim newFileName As String
+    Dim newFilePath As String
+
+    On Error GoTo ErrHandler
+    If IsNull(Me.Parent.WESBatch) Then
+        MsgBox "Pleasee assign sample to batch before attaching files", vbExclamation, "Assign to Batch"
+    Else
+        destBaseDir = "\\gstt.local\Apps\Moka\Files\ngs\" 'Copy files to this directory
+        openDir = "\\gstt.local\shared\Genetics\DNA LAB\Current\WES" 'Open file picker in this directory
+        batchName = Me.Parent.WESBatch
+        patID = Me.Parent.InternalPatientID
+
+        If Not IsNull(NGSTestFile) Then
+            'If filepath already , open file
+            Set objShell = CreateObject("Wscript.Shell")
+            objShell.Run ("""" & Me.NGSTestFile & """")
+        Else
+            'Open file picker
+            Set selectedFile = Application.FileDialog(msoFileDialogFilePicker)
+            selectedFile.AllowMultiSelect = False 'Only allow one file to be selected
+            selectedFile.InitialFileName = openDir 'Open file picker in this directory
+            selectedFile.Title = "Select File to Attach to WES Test Record"
+            If selectedFile.Show = True Then 'If a file has been selected
+                selectedPath = selectedFile.SelectedItems.Item(1) 'Get selected file path
+                Response = MsgBox("Following file will be attached to NGS Test Record: " & vbNewLine & vbNewLine & selectedPath, vbInformation + vbOKCancel, "Information") 'User confirmation
+                If Response = vbOK Then
+                    Description = InputBox("Please enter brief file description", "File Description", "") 'Prompt for a file description
+                    If Description <> "" Then 'If a description has been entered...
+                        Me.Description = Description 'Update description field
+                        Me.DateAdded = Format(Now(), "dd/mmm/yyyy Hh:Nn:ss") 'Update date added field
+                        DoCmd.DoMenuItem acFormBar, acRecordsMenu, 5, , acMenuVer70 'Save record so NGSTestFileID is created
+                        'Add NGSTestFileID to end of file name (before file extension) to ensure every file has unique name
+                        origFName = Dir(selectedPath) 'Original file name including extension
+                        dotIndx = InStrRev(origFName, ".") 'Index of the start of file extension
+                        origFNameNoExt = Left(origFName, dotIndx - 1) 'Original filename without extension
+                        fileExt = Right(origFName, Len(origFName) - (dotIndx - 1)) 'File extension including dot
+                        newFileName = origFNameNoExt & "_" & Me.NGSTestFileID & fileExt
+                        newDir = destBaseDir & batchName & "\"
+                        If Len(Dir(newDir, vbDirectory)) = 0 Then
+                            MkDir newDir 'If WES batch folder doesn't already exist, create it
+                        End If
+                        newFilePath = newDir & newFileName
+                        'newFilePath = destBaseDir & newFileName
+                        FileCopy selectedPath, newFilePath 'Copy file to the F: drive
+                        SetAttr newFilePath, vbReadOnly 'Make copied file read only
+                        Me.NGSTestFile = newFilePath 'Update file path field
+                        'Update patient log
+                        D = Format(Now(), "dd/mmm/yyyy Hh:Nn:ss")
+                        un = VBA.Environ("USERNAME")
+                        cn = VBA.Environ("COMPUTERNAME")
+                        sqlPatLog = "INSERT INTO PatientLog (InternalPatientID, LogEntry, [Date], Login, PCName) VALUES (" & patID & ", 'NGS: File attached to NGS test record. (NGSTestFile ID: " & NGSTestFileID & ", Description: " & Me.Description & ")', #" + D + "#,'" + un + "','" + cn + "')"
+                        DoCmd.SetWarnings False
+                        DoCmd.RunSQL sqlPatLog
+                        DoCmd.SetWarnings True
+                    Else
+                        MsgBox "File can't be attached without description.", vbExclamation, "Unable to Attach File"
+                    End If
+                End If
+            End If
+            Set selectedFile = Nothing
+        End If
+    End If
+'ERROR HANDLER
+ErrHandler:
+    If Err.Number = -2147024894 Then
+        MsgBox "Unable to open file", vbExclamation, "Error"
+    ElseIf Err.Number <> 0 Then
+        If Err.Number = 75 Then
+            MsgBox "Error copying file. Couldn't access source or destination file path.", vbExclamation, "Error"
+        Else
+            MsgBox "An error has occured. File has not been attached." & vbNewLine & vbNewLine & Err.Number & ": " & Err.Description, vbExclamation, "Error"
+        End If
+        If Not IsNull(Me.NGSTestFileID) Then 'If a record has been created in NGSTestFile table, remove it because it may be incomplete or link to a non-existing file.
+            sqlUndo = "DELETE FROM NGSTestFile WHERE NGSTestFileID = " & Me.NGSTestFileID
+            DoCmd.SetWarnings False
+            DoCmd.RunSQL sqlUndo
+            DoCmd.SetWarnings True
+            Me.Requery 'Remove deleted row from subform
+        End If
+    End If
+End Sub

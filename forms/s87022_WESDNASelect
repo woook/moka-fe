@@ -1,0 +1,17 @@
+Option Compare Database
+
+Private Sub Active_AfterUpdate()
+    'When DNA is activated, deactivate other DNAs
+    If Me.Active = True Then
+        D = Format(Now(), "dd/mmm/yyyy Hh:Nn:ss")
+        un = VBA.Environ("USERNAME")
+        cn = VBA.Environ("COMPUTERNAME")
+        sqlUpdate = "UPDATE DNA SET Active = 0 WHERE InternalPatientID = " & Me.InternalPatientID & " AND DNAID <> " & Me.DNAID
+        sqlPatLog = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" & Me.InternalPatientID & ",'DNA: Active status changed for DNA number [" & Me.DNANumber & "]',#" + D + "#,'" + un + "','" + cn + "')"
+        DoCmd.SetWarnings False
+        DoCmd.RunSQL sqlUpdate
+        DoCmd.RunSQL sqlPatLog
+        DoCmd.SetWarnings True
+        Me.Requery
+    End If
+End Sub

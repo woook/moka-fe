@@ -1,0 +1,275 @@
+Option Compare Database
+
+
+Private Sub Form_Current()
+'if test has been analysised and reported and safty switch is off then lock down form, apart from approver box
+   If (Not IsNull(Form_s0901_WESTestResults.Checker1) And Not IsNull(Form_s0901_WESTestResults.txt_Check1Date) And Not IsNull(Form_s0901_WESTestResults.Checker3) And [Form_0901 ExomeNGSResults].SafetyCheck.Value = False) Then
+        Me.[Patient Status].Locked = True
+        'Form_s0901_WESTestResults.AllowEdits = False
+        Form_s0901_WESTestResults.VCFImport.Enabled = False
+        Form_s0901_WESTestResults.FilterImport.Enabled = False
+        Form_s0901_WESTestResults.RemoveAll.Enabled = False
+        Form_s0901_NGSVariants.AllowEdits = False
+        Form_s09_referpheno.AllowEdits = False
+        Form_s09_referpheno.AllowDeletions = False
+        Form_s09_referpheno.AllowAdditions = False
+        Form_s0901_NGSTestFile.AllowEdits = False
+        Form_s0901_NGSTestFile.AllowDeletions = False
+        Form_s0901_NGSTestFile.AllowAdditions = False
+        ' selective lock down of editable feilds in s0901_WESTestResults
+        Form_s0901_WESTestResults.txt_Resultcmt.Locked = True
+        Form_s0901_WESTestResults.comb_WESResultBuild.Locked = True
+        Form_s0901_WESTestResults.TertiaryPanel.Locked = True
+        Form_s0901_WESTestResults.StatusID.Locked = True
+        Form_s0901_WESTestResults.Checker1.Locked = True
+        Form_s0901_WESTestResults.txt_Check1Date.Locked = True
+        Form_s0901_WESTestResults.Checker2.Locked = True
+        Form_s0901_WESTestResults.Checker3.Locked = True
+        
+'if test report has been approved then completely lock down the form
+ElseIf (Not IsNull(Form_s0901_WESTestResults.Checker4) And Not IsNull(Form_s0901_WESTestResults.Checker3) And (Form_s0901_WESTestResults.StatusID = 4 Or Form_s0901_WESTestResults.StatusID = 1202218816) And [Form_0901 ExomeNGSResults].SafetyCheck.Value = False) Then
+        Me.[Patient Status].Locked = True
+        Form_s0901_WESTestResults.AllowEdits = False
+        Form_s0901_WESTestResults.VCFImport.Enabled = False
+        Form_s0901_WESTestResults.FilterImport.Enabled = False
+        Form_s0901_WESTestResults.RemoveAll.Enabled = False
+        Form_s0901_NGSVariants.AllowEdits = False
+        Form_s09_referpheno.AllowEdits = False
+        Form_s09_referpheno.AllowDeletions = False
+        Form_s09_referpheno.AllowAdditions = False
+        Form_s0901_NGSTestFile.AllowEdits = False
+        Form_s0901_NGSTestFile.AllowDeletions = False
+        Form_s0901_NGSTestFile.AllowAdditions = False
+        
+
+    Else
+        Me.[Patient Status].Locked = False
+        Form_s0901_WESTestResults.AllowEdits = True
+        Form_s0901_WESTestResults.VCFImport.Enabled = True
+        Form_s0901_WESTestResults.FilterImport.Enabled = True
+        Form_s0901_WESTestResults.RemoveAll.Enabled = True
+        Form_s0901_NGSVariants.AllowEdits = True
+        Form_s09_referpheno.AllowEdits = True
+        Form_s09_referpheno.AllowDeletions = True
+        Form_s09_referpheno.AllowAdditions = True
+        Form_s0901_NGSTestFile.AllowEdits = True
+        Form_s0901_NGSTestFile.AllowDeletions = True
+        Form_s0901_NGSTestFile.AllowAdditions = True
+        Form_s0901_WESTestResults.txt_Resultcmt.Locked = False
+        Form_s0901_WESTestResults.comb_WESResultBuild.Locked = False
+        Form_s0901_WESTestResults.TertiaryPanel.Locked = False
+        Form_s0901_WESTestResults.StatusID.Locked = False
+        Form_s0901_WESTestResults.Checker1.Locked = False
+        Form_s0901_WESTestResults.txt_Check1Date.Locked = False
+        Form_s0901_WESTestResults.Checker2.Locked = False
+        Form_s0901_WESTestResults.Checker3.Locked = False
+    End If
+End Sub
+
+Private Sub btnSafetyOnOff_Click()
+SafetyCheck.Value = Not SafetyCheck.Value
+Call Form_Current
+End Sub
+
+Private Sub btn_testStatuslog_Click()
+    'Show test status log
+    Dim stDocName As String
+    stDocName = "s0901_NGSLogMemo"
+    stLinkCriteria = "[Type] = 1 AND [LinkID] = " & Me![NGSTestID]
+    DoCmd.OpenForm stDocName, acFormDS, , stLinkCriteria
+End Sub
+
+
+Private Sub btn_FamilyDNAs_Click()
+
+    Dim stDocName As String
+    Dim stLinkCriteria As String
+    stDocName = "s0901_WESFamily"
+    stLinkCriteria = "[txt_FamID]=" & "'" & Me![txt_FamilyNoID] & "'"
+    DoCmd.OpenForm stDocName
+
+Exit_btn_FamilyDNAs:
+    Exit Sub
+
+
+End Sub
+
+
+Private Sub btn_OpenPatientDetails_Click()
+On Error GoTo Err_btn_OpenPatientDetails_Click
+
+    DoCmd.DoMenuItem acFormBar, acRecordsMenu, 5, , acMenuVer70
+    
+    Dim stDocName As String
+    Dim stLinkCriteria As String
+
+    stDocName = "02 Patient Details"
+    
+    stLinkCriteria = "[PatientID]=" & "'" & Me![PatientID] & "'"
+    DoCmd.OpenForm stDocName, , , stLinkCriteria
+
+Err_btn_OpenPatientDetails_Click:
+    Exit Sub
+
+Err_OpenPatientDetails_Click:
+    MsgBox Err.Description
+    Resume Err_btn_OpenPatientDetails_Click
+    
+End Sub
+
+
+Private Sub btn_WES_Dashboard_Click()
+'On Error GoTo Err_btn_WES_Dashboard_Click
+
+Dim stDocName As String
+
+DoCmd.DoMenuItem acFormBar, acRecordsMenu, 5, , acMenuVer70
+
+stDocName = "87020 ExomeLab"
+
+DoCmd.Close
+DoCmd.OpenForm stDocName
+
+'
+'Err_btn_WES_Dashboard_Click:
+'    MsgBox Err.Description
+'    Resume Exit_btn_WES_Dashboard_Click
+End Sub
+
+
+Private Sub Patient_Status_AfterUpdate()
+    Dim r As ADODB.Recordset
+    Dim S As String
+    Dim dt As String
+    Dim cn As String
+    Dim usr As String
+    
+    usr = VBA.Environ("USERNAME")
+    cn = VBA.Environ("COMPUTERNAME")
+    
+    dt = Format(Now, "dd/mmm/yyyy Hh:Nn:ss")
+    Set r = New ADODB.Recordset
+    S = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + ",'Patient: Status changed to " & Me![s_StatusOverall] & "',#" + dt + "#,'" + usr + "','" + cn + "')"
+    r.Open S, CurrentProject.Connection
+    Set r = Nothing
+    
+End Sub
+
+Private Sub Priority_AfterUpdate()
+    Dim r As ADODB.Recordset
+    Dim S As String
+    Dim dt As String
+    Dim cn As String
+    Dim usr As String
+    
+    usr = VBA.Environ("USERNAME")
+    cn = VBA.Environ("COMPUTERNAME")
+    
+    dt = Format(Now, "dd/mmm/yyyy Hh:Nn:ss")
+    Set r = New ADODB.Recordset
+    S = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + ",'NGS WES test: Marked as Priority for NGS test " + CStr(Me![NGSTestID]) + " requested " + CStr(Me![DateRequested]) + "',#" + dt + "#,'" + usr + "','" + cn + "')"
+    r.Open S, CurrentProject.Connection
+    Set r = Nothing
+End Sub
+
+Private Sub txt_PatientResult_AfterUpdate()
+    Me.Dirty = False
+    
+    Dim r As ADODB.Recordset
+    Dim S As String
+    Dim dt As String
+    Dim t As String
+    Dim cn As String
+    Dim usr As String
+    usr = VBA.Environ("USERNAME")
+    cn = VBA.Environ("COMPUTERNAME")
+    dt = Format(Now, "dd/mmm/yyyy Hh:Nn:ss")
+    
+    Set r = New ADODB.Recordset
+    If IsNull(txt_PatientResult) Then
+        S = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + ",'Patient: Result deleted',#" + dt + "#,'" + usr + "','" + cn + "')"
+        t = "INSERT INTO PrevOverallResult(InternalPatientID, OverallResult, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + ",'Patient result deleted',#" + dt + "#,'" + usr + "','" + cn + "')"
+    Else
+        S = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + ",'Patient: Result changed to [" + Me![txt_PatientResult] + "]',#" + dt + "#,'" + usr + "','" + cn + "')"
+        t = "INSERT INTO PrevOverallResult(InternalPatientID, OverallResult, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + ",'" & Me![txt_PatientResult] & "',#" + dt + "#,'" + usr + "','" + cn + "')"
+    End If
+    r.Open S, CurrentProject.Connection
+    r.Open t, CurrentProject.Connection
+    Set r = Nothing
+End Sub
+
+'
+'Private Sub Form_Unload(Cancel As Integer)
+'Dim Y As String
+'Dim x As Long
+'
+'If Not IsNull(Form![s0901_WESTestResults]![StatusID]) Then
+'    x = Form![s0901_WESTestResults]![StatusID]
+'Else: x = 3
+'End If
+'
+'If Not IsNull(Form![s0901_WESTestResults]![Checker1]) Then
+'    Y = Form![s0901_WESTestResults]![Checker1]
+'Else: Y = "Absent"
+'End If
+'
+'    If Y = "Absent" And (x = 1202218811 Or x = 1202218812 Or x = 1202218813) Then
+'        Cancel = True
+'        Debug.Print "got to if function"
+'        mega = MsgBox("Checker 1 ID empty." + vbNewLine + "Unable to assign test status to 'report due to be written' until Checker 1 in entered.", vbOKOnly Or vbExclamation, "No Checker 1 ID")
+'        Form![s0901_WESTestResults]![Checker1].SetFocus
+'    Else
+'        Cancel = False
+'  End If
+'End Sub
+
+Private Sub txt_PatientResult_DblClick(Cancel As Integer)
+    Dim stDocName As String
+    Dim stLinkCriteria As String
+    stDocName = "s02_PrevOverallResults"
+    stLinkCriteria = "[InternalPatientID]=" & Me![InternalPatientID]
+    DoCmd.OpenForm stDocName, acFormDS, , stLinkCriteria
+End Sub
+
+Private Sub WES_Test_Status_DblClick(Cancel As Integer)
+' View past comment history for test
+Dim stDocName As String
+    stDocName = "s0901_NGSLogMemo"
+    stLinkCriteria = "[Type]= 1 AND [LinkID] = " & Me![NGSTestID]
+    DoCmd.OpenForm stDocName, acFormDS, , stLinkCriteria
+End Sub
+
+
+Private Sub txt_result_AfterUpdate()
+
+    Dim l As String
+    Dim dt As String
+    Dim usr As String
+    Dim cn As String
+    Dim Q As ADODB.Recordset
+    Set Q = New ADODB.Recordset
+
+    dt = Format(Now, "dd/mmm/yyyy Hh:Nn:ss")
+    usr = VBA.Environ("USERNAME")
+    cn = VBA.Environ("COMPUTERNAME")
+
+' Update Patient log for change in NGS test record
+    If IsNull(Me.txt_result) Then
+        l = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + ",'NGS WES test: Test result deleted for WES test requested " + CStr(Me![DateRequested]) + "',#" + dt + "#,'" + usr + "','" + cn + "')"
+    Else
+        l = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + ",'NGS WES test: Test result changed to " + Me![txt_result] + " for WES test requested " + CStr(Me![DateRequested]) + "',#" + dt + "#,'" + usr + "','" + cn + "')"
+        End If
+    Q.Open l, CurrentProject.Connection
+    Set Q = Nothing
+
+'    If IsNull(Form![s0901_WESTestResult]!comb_WESResultBuild) Then
+'        MsgBox "Genome build not specified!", VbMsgBoxStyle.vbOKOnly Or VbMsgBoxStyle.vbExclamation, "Attention"
+'        End If
+
+
+End Sub
+
+
+Private Sub txt_result_OnChange()
+Me.Dirty = False
+End Sub

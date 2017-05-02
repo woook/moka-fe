@@ -1,0 +1,1057 @@
+Option Compare Database
+
+
+Private Sub Form_Load()
+txt_SelectionCount.Value = 0
+Me.Check_selectAll.Value = 0
+Me.Check_btnNoBatch = 0
+Me.Check_1st = 0
+Me.Check_2nd = 0
+Me.cmb_BatchView.Value = Null
+Me.cmb_StatusView.Value = Null
+Me.txt_displayed = "All WES tests currently in progress"
+Cmb_Approver.Visible = False
+End Sub
+
+
+Function Unselect()
+' Use to unselect a test. Sets selection to 0 for all
+Dim unsel As String
+
+    unsel = "UPDATE NGSTest SET NGSTest.Selection = False WHERE NGSTest.StatusID <> 1202218787"
+    DoCmd.SetWarnings False
+    DoCmd.RunSQL unsel
+    Me.Check_selectAll.Value = 0
+    Form![s87020_ExomeLabList].Requery
+    DoCmd.SetWarnings True
+    'Save record
+    'DoCmd.DoMenuItem acFormBar, acRecordsMenu, 5, , acMenuVer70
+            
+End Function
+
+Private Sub Form_Current()
+
+Dim selTotal As Long
+Dim AllTotal As Long
+Cmb_Approver.Visible = False
+' Deselct all selected samples
+Check_selectAll.Value = False
+Call Unselect
+
+
+'refresh selection count
+AllTotal = DCount("NGSTestID", "s87020_ListWESSamples", "[s_StatusOverall] = 1202218798")
+Me.txt_TotalTally = AllTotal
+selTotal = DCount("Selection", "s87020_ListWESSamples", "[Selection] = True")
+Me.txt_SelectionCount = selTotal
+
+End Sub
+
+Private Sub btn_SelDNA_Click()
+' open form to select DNA of NGS patients
+    'DoCmd.Close
+    DoCmd.OpenForm "87022 WESDNAPatients"
+End Sub
+
+
+Private Sub btn_DNAWorksheet_Click()
+' open form to viw DNA QC worksheet for NGS patients
+    'DoCmd.Close
+    DoCmd.OpenForm "87024 WESDNAQC"
+End Sub
+
+
+Private Sub Check_selectAll_Click()
+Dim sel As String
+
+Dim selTotal As Long
+
+' 1) check if samples are viewed by 'unassigned to WES batch' button
+' 2) check if samples are viewed by 'require checker 1' button
+' 3) check if samples are viewed by 'require checker 2' button
+' 4) check if samples are viewed by WES batch
+' 5) check if samples are viewed by status
+' 6) check if samples are viewed by WES batch AND Status
+' 7) check if samples are viewed by All pending approval
+' 8) Else View ALL pending If (Check_selectAll) = True Then 'INNER JOIN Patients ON NGSTest.InternalPatientID = Patients.InternalPatientID
+'SQL update WHERE clause depends on selection = only relevant samples are selected.
+
+' 1)
+If Check_btnNoBatch = -1 Then
+    If Check_selectAll = -1 Then
+        sel = "UPDATE NGSTest INNER JOIN Patients ON NGSTest.InternalPatientID = Patients.InternalPatientID SET NGSTest.Selection = True WHERE NGSTest.StatusID = 1202218803 And Patients.s_StatusOverall = 1202218798 AND NGSTest.WESBatch is Null"
+        DoCmd.SetWarnings False
+        'Save record
+        'DoCmd.DoMenuItem acFormBar, acRecordsMenu, 5, , acMenuVer70
+        DoCmd.RunSQL sel
+        Form![s87020_ExomeLabList].Requery
+        DoCmd.SetWarnings True
+    Else
+    Call Unselect
+    End If
+    
+' 2)
+ElseIf Check_1st = -1 Then
+    If Check_selectAll = -1 Then
+        sel = "UPDATE NGSTest INNER JOIN Patients ON NGSTest.InternalPatientID = Patients.InternalPatientID SET NGSTest.Selection = True WHERE NGSTest.StatusID = 1202218807 And Patients.s_StatusOverall = 1202218798 AND NGSTest.check1ID is Null"
+        'Save record
+        'DoCmd.DoMenuItem acFormBar, acRecordsMenu, 5, , acMenuVer70
+        DoCmd.SetWarnings False
+        DoCmd.RunSQL sel
+        Form![s87020_ExomeLabList].Requery
+        DoCmd.SetWarnings True
+    Else
+        Call Unselect
+    End If
+    
+' 3)
+ElseIf Check_2nd = -1 Then
+    If Check_selectAll = -1 Then
+        sel = "UPDATE NGSTest INNER JOIN Patients ON NGSTest.InternalPatientID = Patients.InternalPatientID SET NGSTest.Selection = True WHERE NGSTest.StatusID = 1202218807 And Patients.s_StatusOverall = 1202218798 AND NGSTest.check1ID is not Null AND NGSTest.check2ID is Null"
+        'Save record
+        'DoCmd.DoMenuItem acFormBar, acRecordsMenu, 5, , acMenuVer70
+        DoCmd.SetWarnings False
+        DoCmd.RunSQL sel
+        Form![s87020_ExomeLabList].Requery
+        DoCmd.SetWarnings True
+    Else
+        Call Unselect
+    End If
+    
+' 4)
+ElseIf Not IsNull(cmb_BatchView) Then
+    If Check_selectAll = -1 Then
+        sel = "UPDATE NGSTest INNER JOIN Patients ON NGSTest.InternalPatientID = Patients.InternalPatientID SET NGSTest.Selection = True WHERE NGSTest.StatusID <> 1202218787 And Patients.s_StatusOverall = 1202218798 AND NGSTest.WESBatch = " & Me![cmb_BatchView] & ";"
+        'Save record
+        'DoCmd.DoMenuItem acFormBar, acRecordsMenu, 5, , acMenuVer70
+        DoCmd.SetWarnings False
+        DoCmd.RunSQL sel
+        Form![s87020_ExomeLabList].Requery
+        DoCmd.SetWarnings True
+    Else
+        Call Unselect
+
+    End If
+' 5)
+ElseIf Not IsNull(cmb_StatusView) Then
+    If Check_selectAll = -1 Then
+        sel = "UPDATE NGSTest INNER JOIN Patients ON NGSTest.InternalPatientID = Patients.InternalPatientID SET NGSTest.Selection = True WHERE NGSTest.StatusID <> 1202218787 And  NGSTest.statusid = " & Me![cmb_StatusView] & ";" 'Patients.s_StatusOverall = 1202218798 AND
+        'Save record
+        'DoCmd.DoMenuItem acFormBar, acRecordsMenu, 5, , acMenuVer70
+        DoCmd.SetWarnings False
+        DoCmd.RunSQL sel
+        Form![s87020_ExomeLabList].Requery
+        DoCmd.SetWarnings True
+    Else
+        Call Unselect
+
+    End If
+' 6)
+ElseIf Not IsNull(cmb_StatusView) And Not IsNull(cmb_BatchView) Then
+    If Check_selectAll = -1 Then
+        sel = "UPDATE NGSTest INNER JOIN Patients ON NGSTest.InternalPatientID = Patients.InternalPatientID SET NGSTest.Selection = True WHERE NGSTest.StatusID <> 1202218787 And Patients.s_StatusOverall = 1202218798 AND NGSTest.statusid = " & Me![cmb_StatusView] & " AND NGSTest.WESBatch = " & Me![cmb_BatchView] & ";"
+        'Save record
+            'DoCmd.DoMenuItem acFormBar, acRecordsMenu, 5, , acMenuVer70
+            DoCmd.SetWarnings False
+        DoCmd.RunSQL sel
+        Form![s87020_ExomeLabList].Requery
+        DoCmd.SetWarnings True
+    Else
+        Call Unselect
+    End If
+    
+' 7)
+ElseIf check_ViewAllPend = -1 Then
+    If Check_selectAll = -1 Then
+        sel = "UPDATE NGSTest INNER JOIN Patients ON NGSTest.InternalPatientID = Patients.InternalPatientID SET NGSTest.Selection = True WHERE NGSTest.StatusID <> 1202218787 And Patients.s_StatusOverall = 1202218798 AND (NGSTest.StatusID = 1202218814 OR NGSTest.StatusID = 1202218815)"
+        
+        'Save record
+            'DoCmd.DoMenuItem acFormBar, acRecordsMenu, 5, , acMenuVer70
+            DoCmd.SetWarnings False
+        DoCmd.RunSQL sel
+        Form![s87020_ExomeLabList].Requery
+        DoCmd.SetWarnings True
+    Else
+        Call Unselect
+    End If
+    
+' 8)
+Else
+    If Check_selectAll = -1 Then
+        sel = "UPDATE NGSTest INNER JOIN Patients ON NGSTest.InternalPatientID = Patients.InternalPatientID SET NGSTest.Selection = true WHERE NGSTest.StatusID <> 1202218787 And NGSTest.StatusID <> 4 And NGSTest.StatusID <>1202218816"
+        'Save record
+            'DoCmd.DoMenuItem acFormBar, acRecordsMenu, 5, , acMenuVer70
+            DoCmd.SetWarnings False
+        DoCmd.RunSQL sel
+        Form![s87020_ExomeLabList].Requery
+        DoCmd.SetWarnings True
+    Else
+        Call Unselect
+
+    End If
+End If
+
+'refresh selection count
+selTotal = DCount("[Selection]", "s87020_ListWESSamples", "[Selection] = True")
+Me.txt_SelectionCount = selTotal
+
+End Sub
+
+
+Private Sub btn_ViewAll_Click()
+
+Dim subfrmSQL As String
+Dim AllTotal As Long
+
+
+' deselect any selected files and set the select all check box to empty
+Call Unselect
+    
+' reload subform calling querey to view all
+           
+subfrmSQL = "SELECT NGSTest.Selection, Patients.PatientID AS PRU, NGSTest.NGSTestID, dbo_Patient_table.LastName, dbo_Patient_table.FirstName, dbo_Patient_table.DoB, gw_GenderTable.GenderShort, Referral.Referral, NGSTest.DateRequested, Checker.Name AS RefName, Checker.Initials AS Referrer, NGSPanel.Panel AS PanelA, NGSPanel_1.Panel AS PanelB, Status_1.StatusID AS PatientStatus, NGSWESBatch.BatchName AS WESBatch, Status.StatusID, Status.Status AS TestStatus, NGSTest.ResultComment, Patients.InternalPatientID, Checker_1.Initials AS Checker1, NGSTest.Check1Date, Checker_2.Initials AS Checker2, NGSTest.Check2Date, Checker_3.Initials AS ReportApproved, NGSTest.Check3Date, Patients.s_StatusOverall, NGSPanel.PanelCode AS [Primary], NGSPanel_1.PanelCode AS Secondary, NGSTest.DNA, NGSTest.Priority, NGSTest.Result AS TestResult, NGSPanel_2.PanelCode AS Tertiary, Checker_4.Initials AS check4ID, NGSTest.Check4Date " & _
+            "FROM (((((((((((((((NGSTest INNER JOIN Patients ON NGSTest.InternalPatientID = Patients.InternalPatientID) INNER JOIN Referral ON NGSTest.ReferralID = Referral.ReferralID) INNER JOIN Checker ON NGSTest.BookBy = Checker.Check1ID) INNER JOIN NGSPanel ON NGSTest.NGSPanelID = NGSPanel.NGSPanelID) LEFT JOIN NGSPanel AS NGSPanel_1 ON NGSTest.NGSPanelID_B = NGSPanel_1.NGSPanelID) INNER JOIN Status ON NGSTest.StatusID = Status.StatusID) INNER JOIN dbo_Patient_table ON Patients.PatientID = dbo_Patient_table.PatientTrustID) LEFT JOIN DNA ON NGSTest.DNA = DNA.DNANumber) INNER JOIN Status AS Status_1 ON Patients.s_StatusOverall = Status_1.StatusID) LEFT JOIN gw_GenderTable ON dbo_Patient_table.GenderID = gw_GenderTable.GenderID) " & _
+            "LEFT JOIN NGSWESBatch ON NGSTest.WESBatch = NGSWESBatch.NGSWESBatchID) LEFT JOIN Checker AS Checker_1 ON NGSTest.Check1ID = Checker_1.Check1ID) LEFT JOIN Checker AS Checker_2 ON NGSTest.Check2ID = Checker_2.Check1ID) LEFT JOIN Checker AS Checker_3 ON NGSTest.Check3ID = Checker_3.Check1ID) LEFT JOIN NGSPanel AS NGSPanel_2 ON NGSTest.NGSPanelID_C = NGSPanel_2.NGSPanelID) LEFT JOIN Checker AS Checker_4 ON NGSTest.Check4ID = Checker_4.Check1ID " & _
+            "WHERE (((Status.StatusID)<>1202218787 And (Status.StatusID)<>4 And (Status.StatusID)<>1202218816)) " & _
+            "ORDER BY NGSTest.Priority, NGSTest.DateRequested;"
+            
+[Form_s87020_ExomeLabList].Form.RecordSource = subfrmSQL
+
+'refresh selection and total count
+AllTotal = DCount("NGSTestID", "s87020_ListWESSamples", "[s_StatusOverall] = 1202218798")
+Me.txt_TotalTally = AllTotal
+selTotal = DCount("[Selection]", "s87020_ListWESSamples", "[Selection] = True")
+Me.txt_SelectionCount = selTotal
+
+' Update summary of displayed samples and refresh search criteria
+    Me.Check_selectAll.Value = 0
+    Me.Check_btnNoBatch = 0
+    Me.Check_1st.Value = 0
+    Me.Check_2nd = 0
+    Me.check_ViewAllPend = 0
+    Me.cmb_BatchView.Value = Null
+    Me.cmb_StatusView.Value = Null
+Me.txt_displayed = "All WES tests currently in progress"
+End Sub
+
+
+Private Sub btn_NoWESBatch_Click()
+Dim subfrmSQL As String
+Dim AllTotal As Long
+Dim strCriteria As String
+
+Me.Check_btnNoBatch.Value = -1
+
+' deselect any selected files and set the select all check box to empty
+Call Unselect
+Me.Check_selectAll.Value = 0
+Me.Check_1st.Value = 0
+Me.Check_2nd.Value = 0
+Me.check_ViewAllPend = 0
+Me.cmb_BatchView.Value = Null
+Me.cmb_StatusView.Value = Null
+    
+' reload subform calling querey to view samples not assigned to a WES batch where test status does not equal not required, failed or complete
+subfrmSQL = "SELECT NGSTest.Selection, Patients.PatientID AS PRU, NGSTest.NGSTestID, dbo_Patient_table.LastName, dbo_Patient_table.FirstName, dbo_Patient_table.DoB, gw_GenderTable.GenderShort, Referral.Referral, NGSTest.DateRequested, Checker.Name AS RefName, Checker.Initials AS Referrer, NGSPanel.Panel AS PanelA, NGSPanel_1.Panel AS PanelB, Status_1.StatusID AS PatientStatus, NGSWESBatch.BatchName AS WESBatch, Status.StatusID, Status.Status AS TestStatus, NGSTest.ResultComment, Patients.InternalPatientID, Checker_1.Initials AS Checker1, NGSTest.Check1Date, Checker_2.Initials AS Checker2, NGSTest.Check2Date, Checker_3.Initials AS ReportApproved, NGSTest.Check3Date, Patients.s_StatusOverall, NGSPanel.PanelCode AS [Primary], NGSPanel_1.PanelCode AS Secondary, NGSTest.DNA, NGSTest.Priority, NGSTest.Result AS TestResult, NGSPanel_2.PanelCode AS Tertiary, Checker_4.Initials AS check4ID, NGSTest.Check4Date " & _
+            "FROM (((((((((((((((NGSTest INNER JOIN Patients ON NGSTest.InternalPatientID = Patients.InternalPatientID) INNER JOIN Referral ON NGSTest.ReferralID = Referral.ReferralID) INNER JOIN Checker ON NGSTest.BookBy = Checker.Check1ID) INNER JOIN NGSPanel ON NGSTest.NGSPanelID = NGSPanel.NGSPanelID) LEFT JOIN NGSPanel AS NGSPanel_1 ON NGSTest.NGSPanelID_B = NGSPanel_1.NGSPanelID) INNER JOIN Status ON NGSTest.StatusID = Status.StatusID) INNER JOIN dbo_Patient_table ON Patients.PatientID = dbo_Patient_table.PatientTrustID) LEFT JOIN DNA ON NGSTest.DNA = DNA.DNANumber) INNER JOIN Status AS Status_1 ON Patients.s_StatusOverall = Status_1.StatusID) LEFT JOIN gw_GenderTable ON dbo_Patient_table.GenderID = gw_GenderTable.GenderID) " & _
+            "LEFT JOIN NGSWESBatch ON NGSTest.WESBatch = NGSWESBatch.NGSWESBatchID) LEFT JOIN Checker AS Checker_1 ON NGSTest.Check1ID = Checker_1.Check1ID) LEFT JOIN Checker AS Checker_2 ON NGSTest.Check2ID = Checker_2.Check1ID) LEFT JOIN Checker AS Checker_3 ON NGSTest.Check3ID = Checker_3.Check1ID) LEFT JOIN NGSPanel AS NGSPanel_2 ON NGSTest.NGSPanelID_C = NGSPanel_2.NGSPanelID) LEFT JOIN Checker AS Checker_4 ON NGSTest.Check4ID = Checker_4.Check1ID " & _
+            "WHERE (((Status_1.StatusID)=1202218798) AND ((Status.StatusID)= 1202218803) AND ((Status.StatusID)<> 4) AND ((Status.StatusID)<> 1202218816) AND ((NGSTest.WESBatch) Is Null))" & _
+            "ORDER BY NGSTest.Priority , NGSTest.DateRequested;"
+            
+[Form_s87020_ExomeLabList].Form.RecordSource = subfrmSQL
+
+'refresh selection count
+strCriteria = "statusID = 1202218803   AND statusID <> 4 AND statusID <> 1202218816 AND WESBatch Is Null"
+AllTotal = DCount("NGSTestID", "s87020_ListWESSamples", strCriteria)
+'Debug.Print AllTotal
+Me.txt_TotalTally = AllTotal
+
+selTotal = DCount("[Selection]", "s87020_ListWESSamples", "[Selection] = True")
+Me.txt_SelectionCount = selTotal
+' Update summary of displayed samples
+Me.txt_displayed = "All WES tests awaiting assignment to a WES batch"
+End Sub
+
+
+Private Sub btn_req1stCheck_Click()
+Dim subfrmSQL As String
+Dim strCriteria As String
+Dim AllTotal As Long
+
+ ' Update summary of displayed samples and refresh search criteria
+    Me.Check_selectAll.Value = 0
+    Me.Check_btnNoBatch = 0
+    Me.check_ViewAllPend = 0
+    Me.Check_1st = -1
+    Me.Check_2nd = 0
+    Me.cmb_BatchView.Value = Null
+    Me.cmb_StatusView.Value = Null
+    Me.txt_displayed = "All WES tests awaiting primary analysis (check 1)"
+
+' deselect any selected files and set the select all check box to empty
+Call Unselect
+    
+' reload subform calling querey to view all test pending second check
+subfrmSQL = "SELECT NGSTest.Selection, Patients.PatientID AS PRU, NGSTest.NGSTestID, dbo_Patient_table.LastName, dbo_Patient_table.FirstName, dbo_Patient_table.DoB, gw_GenderTable.GenderShort, Referral.Referral, NGSTest.DateRequested, Checker.Name AS RefName, Checker.Initials AS Referrer, NGSPanel.Panel AS PanelA, NGSPanel_1.Panel AS PanelB, Status_1.StatusID AS PatientStatus, NGSWESBatch.BatchName AS WESBatch, Status.StatusID, Status.Status AS TestStatus, NGSTest.ResultComment, Patients.InternalPatientID, Checker_1.Initials AS Checker1, NGSTest.Check1Date, Checker_2.Initials AS Checker2, NGSTest.Check2Date, Checker_3.Initials AS ReportApproved, NGSTest.Check3Date, Patients.s_StatusOverall, NGSPanel.PanelCode AS [Primary], NGSPanel_1.PanelCode AS Secondary, NGSTest.DNA, NGSTest.Priority, NGSTest.Result AS TestResult, NGSPanel_2.PanelCode AS Tertiary, Checker_4.Initials AS check4ID, NGSTest.Check4Date " & _
+            "FROM (((((((((((((((NGSTest INNER JOIN Patients ON NGSTest.InternalPatientID = Patients.InternalPatientID) INNER JOIN Referral ON NGSTest.ReferralID = Referral.ReferralID) INNER JOIN Checker ON NGSTest.BookBy = Checker.Check1ID) INNER JOIN NGSPanel ON NGSTest.NGSPanelID = NGSPanel.NGSPanelID) LEFT JOIN NGSPanel AS NGSPanel_1 ON NGSTest.NGSPanelID_B = NGSPanel_1.NGSPanelID) INNER JOIN Status ON NGSTest.StatusID = Status.StatusID) INNER JOIN dbo_Patient_table ON Patients.PatientID = dbo_Patient_table.PatientTrustID) LEFT JOIN DNA ON NGSTest.DNA = DNA.DNANumber) INNER JOIN Status AS Status_1 ON Patients.s_StatusOverall = Status_1.StatusID) LEFT JOIN gw_GenderTable ON dbo_Patient_table.GenderID = gw_GenderTable.GenderID) " & _
+            "LEFT JOIN NGSWESBatch ON NGSTest.WESBatch = NGSWESBatch.NGSWESBatchID) LEFT JOIN Checker AS Checker_1 ON NGSTest.Check1ID = Checker_1.Check1ID) LEFT JOIN Checker AS Checker_2 ON NGSTest.Check2ID = Checker_2.Check1ID) LEFT JOIN Checker AS Checker_3 ON NGSTest.Check3ID = Checker_3.Check1ID) LEFT JOIN NGSPanel AS NGSPanel_2 ON NGSTest.NGSPanelID_C = NGSPanel_2.NGSPanelID) LEFT JOIN Checker AS Checker_4 ON NGSTest.Check4ID = Checker_4.Check1ID " & _
+            "WHERE Status.StatusID = 1202218807 And NGSTest.Check1Date Is Null " & _
+            "ORDER BY NGSTest.Priority , NGSTest.DateRequested;"
+
+' ADD TO WHERE CLAUSE -->  And ((status.status) = somethng approperate))
+[Form_s87020_ExomeLabList].Form.RecordSource = subfrmSQL
+
+'refresh selection and total count
+strCriteria = "TestStatus = '1202218807' AND Checker1 is Null "
+AllTotal = DCount("NGSTestID", "s87020_ListWESSamples", strCriteria)
+'Debug.Print AllTotal
+Me.txt_TotalTally = AllTotal
+
+selTotal = DCount("[Selection]", "s87020_ListWESSamples", "[Selection] = True")
+Me.txt_SelectionCount = selTotal
+
+End Sub
+
+
+Private Sub btn_req2ndCheck_Click()
+Dim subfrmSQL As String
+Dim strCriteria As String
+Dim AllTotal As Long
+ ' Update summary of displayed samples and refresh search criteria
+    Me.Check_selectAll.Value = 0
+    Me.Check_btnNoBatch = 0
+    Me.Check_1st = 0
+    Me.Check_2nd = -1
+    Me.check_ViewAllPend = 0
+    Me.cmb_BatchView.Value = Null
+    Me.cmb_StatusView.Value = Null
+    Me.txt_displayed = "All WES tests requiring second check"
+
+' deselect any selected files and set the select all check box to empty
+Call Unselect
+    
+' reload subform calling querey to view all test pending second check
+subfrmSQL = "SELECT NGSTest.Selection, Patients.PatientID AS PRU, NGSTest.NGSTestID, dbo_Patient_table.LastName, dbo_Patient_table.FirstName, dbo_Patient_table.DoB, gw_GenderTable.GenderShort, Referral.Referral, NGSTest.DateRequested, Checker.Name AS RefName, Checker.Initials AS Referrer, NGSPanel.Panel AS PanelA, NGSPanel_1.Panel AS PanelB, Status_1.StatusID AS PatientStatus, NGSWESBatch.BatchName AS WESBatch, Status.StatusID, Status.Status AS TestStatus, NGSTest.ResultComment, Patients.InternalPatientID, Checker_1.Initials AS Checker1, NGSTest.Check1Date, Checker_2.Initials AS Checker2, NGSTest.Check2Date, Checker_3.Initials AS ReportApproved, NGSTest.Check3Date, Patients.s_StatusOverall, NGSPanel.PanelCode AS [Primary], NGSPanel_1.PanelCode AS Secondary, NGSTest.DNA, NGSTest.Priority, NGSTest.Result AS TestResult, NGSPanel_2.PanelCode AS Tertiary, Checker_4.Initials AS check4ID, NGSTest.Check4Date " & _
+            "FROM (((((((((((((((NGSTest INNER JOIN Patients ON NGSTest.InternalPatientID = Patients.InternalPatientID) INNER JOIN Referral ON NGSTest.ReferralID = Referral.ReferralID) INNER JOIN Checker ON NGSTest.BookBy = Checker.Check1ID) INNER JOIN NGSPanel ON NGSTest.NGSPanelID = NGSPanel.NGSPanelID) LEFT JOIN NGSPanel AS NGSPanel_1 ON NGSTest.NGSPanelID_B = NGSPanel_1.NGSPanelID) INNER JOIN Status ON NGSTest.StatusID = Status.StatusID) INNER JOIN dbo_Patient_table ON Patients.PatientID = dbo_Patient_table.PatientTrustID) LEFT JOIN DNA ON NGSTest.DNA = DNA.DNANumber) INNER JOIN Status AS Status_1 ON Patients.s_StatusOverall = Status_1.StatusID) LEFT JOIN gw_GenderTable ON dbo_Patient_table.GenderID = gw_GenderTable.GenderID) " & _
+            "LEFT JOIN NGSWESBatch ON NGSTest.WESBatch = NGSWESBatch.NGSWESBatchID) LEFT JOIN Checker AS Checker_1 ON NGSTest.Check1ID = Checker_1.Check1ID) LEFT JOIN Checker AS Checker_2 ON NGSTest.Check2ID = Checker_2.Check1ID) LEFT JOIN Checker AS Checker_3 ON NGSTest.Check3ID = Checker_3.Check1ID) LEFT JOIN NGSPanel AS NGSPanel_2 ON NGSTest.NGSPanelID_C = NGSPanel_2.NGSPanelID) LEFT JOIN Checker AS Checker_4 ON NGSTest.Check4ID = Checker_4.Check1ID " & _
+            "WHERE (((Status_1.StatusID) = 1202218798) And ((Status.StatusID) <> 1202218787)) AND (((Checker_1.Initials) Is Not Null) AND ((NGSTest.Check1Date) Is Not NULL) AND((Checker_2.Initials) Is Null)) " & _
+            "ORDER BY NGSTest.Priority , NGSTest.DateRequested;"
+            
+[Form_s87020_ExomeLabList].Form.RecordSource = subfrmSQL
+
+'refresh selection and total count
+strCriteria = " Checker1 is not null And  Checker2 is Null "
+AllTotal = DCount("NGSTestID", "s87020_ListWESSamples", strCriteria)
+'Debug.Print AllTotal
+Me.txt_TotalTally = AllTotal
+
+selTotal = DCount("[Selection]", "s87020_ListWESSamples", "[Selection] = True")
+Me.txt_SelectionCount = selTotal
+
+End Sub
+
+
+Private Sub cmb_BatchView_Click()
+Dim subfrmSQL As String
+Dim AllTotal As Long
+Dim strCriteria As String
+
+
+' deselect any selected files and set the select all check box to empty
+Call Unselect
+
+' Update summary of displayed samples and refresh search criteria
+    Me.Check_selectAll.Value = 0
+    Me.Check_btnNoBatch = 0
+    Me.Check_1st = 0
+    Me.Check_2nd = 0
+    Me.check_ViewAllPend = 0
+    
+' reload subform calling querey to view samples are assigned to selected WES batch
+' if status selection  = null do normal SQL
+If Not IsNull(Me!cmb_BatchView) Then
+    If IsNull(cmb_StatusView) Then
+        subfrmSQL = "SELECT NGSTest.Selection, Patients.PatientID AS PRU, NGSTest.NGSTestID, dbo_Patient_table.LastName, dbo_Patient_table.FirstName, dbo_Patient_table.DoB, gw_GenderTable.GenderShort, Referral.Referral, NGSTest.DateRequested, Checker.Name AS RefName, Checker.Initials AS Referrer, NGSPanel.Panel AS PanelA, NGSPanel_1.Panel AS PanelB, Status_1.StatusID AS PatientStatus, NGSWESBatch.BatchName AS WESBatch, Status.StatusID, Status.Status AS TestStatus, NGSTest.ResultComment, Patients.InternalPatientID, Checker_1.Initials AS Checker1, NGSTest.Check1Date, Checker_2.Initials AS Checker2, NGSTest.Check2Date, Checker_3.Initials AS ReportApproved, NGSTest.Check3Date, Patients.s_StatusOverall, NGSPanel.PanelCode AS [Primary], NGSPanel_1.PanelCode AS Secondary, NGSTest.DNA, NGSTest.Priority, NGSTest.Result AS TestResult, NGSPanel_2.PanelCode AS Tertiary, Checker_4.Initials AS check4ID, NGSTest.Check4Date " & _
+                    "FROM (((((((((((((((NGSTest INNER JOIN Patients ON NGSTest.InternalPatientID = Patients.InternalPatientID) INNER JOIN Referral ON NGSTest.ReferralID = Referral.ReferralID) INNER JOIN Checker ON NGSTest.BookBy = Checker.Check1ID) INNER JOIN NGSPanel ON NGSTest.NGSPanelID = NGSPanel.NGSPanelID) LEFT JOIN NGSPanel AS NGSPanel_1 ON NGSTest.NGSPanelID_B = NGSPanel_1.NGSPanelID) INNER JOIN Status ON NGSTest.StatusID = Status.StatusID) INNER JOIN dbo_Patient_table ON Patients.PatientID = dbo_Patient_table.PatientTrustID) LEFT JOIN DNA ON NGSTest.DNA = DNA.DNANumber) INNER JOIN Status AS Status_1 ON Patients.s_StatusOverall = Status_1.StatusID)" & _
+                    "LEFT JOIN gw_GenderTable ON dbo_Patient_table.GenderID = gw_GenderTable.GenderID)" & _
+                    "LEFT JOIN NGSWESBatch ON NGSTest.WESBatch = NGSWESBatch.NGSWESBatchID) LEFT JOIN Checker AS Checker_1 ON NGSTest.Check1ID = Checker_1.Check1ID) LEFT JOIN Checker AS Checker_2 ON NGSTest.Check2ID = Checker_2.Check1ID) LEFT JOIN Checker AS Checker_3 ON NGSTest.Check3ID = Checker_3.Check1ID) LEFT JOIN NGSPanel AS NGSPanel_2 ON NGSTest.NGSPanelID_C = NGSPanel_2.NGSPanelID) LEFT JOIN Checker AS Checker_4 ON NGSTest.Check4ID = Checker_4.Check1ID " & _
+                    "WHERE ((Status.StatusID) <> 1202218787) And NGSTest.WESBatch = " & CStr(Me![cmb_BatchView]) & " " & _
+                    "ORDER BY NGSTest.Priority , NGSTest.DateRequested;"
+                                        
+        'Debug.Print subfrmSQL
+        [Form_s87020_ExomeLabList].Form.RecordSource = subfrmSQL
+        Me.txt_displayed = "Batch " + Me![cmb_BatchView].Column(1)
+        
+        ' refresh total tally
+        strCriteria = " WESBatch = '" & Me.cmb_BatchView.Column(1) & "'"
+        AllTotal = DCount("WESBatch", "s87020_ListWESSamples", strCriteria)
+        Me.txt_TotalTally = AllTotal
+        'Debug.Print strCriteria
+        'Debug.Print AllTotal
+        
+    ' else display the subform filtered on batch and status option if a status has aready been selected
+    Else
+        subfrmSQL = "SELECT NGSTest.Selection, Patients.PatientID AS PRU, NGSTest.NGSTestID, dbo_Patient_table.LastName, dbo_Patient_table.FirstName, dbo_Patient_table.DoB, gw_GenderTable.GenderShort, Referral.Referral, NGSTest.DateRequested, Checker.Name AS RefName, Checker.Initials AS Referrer, NGSPanel.Panel AS PanelA, NGSPanel_1.Panel AS PanelB, Status_1.StatusID AS PatientStatus, NGSWESBatch.BatchName AS WESBatch, Status.StatusID, Status.Status AS TestStatus, NGSTest.ResultComment, Patients.InternalPatientID, Checker_1.Initials AS Checker1, NGSTest.Check1Date, Checker_2.Initials AS Checker2, NGSTest.Check2Date, Checker_3.Initials AS ReportApproved, NGSTest.Check3Date, Patients.s_StatusOverall, NGSPanel.PanelCode AS [Primary], NGSPanel_1.PanelCode AS Secondary, NGSTest.DNA, NGSTest.Priority, NGSTest.Result AS TestResult, NGSPanel_2.PanelCode AS Tertiary, Checker_4.Initials AS check4ID, NGSTest.Check4Date " & _
+                    "FROM (((((((((((((((NGSTest INNER JOIN Patients ON NGSTest.InternalPatientID = Patients.InternalPatientID) INNER JOIN Referral ON NGSTest.ReferralID = Referral.ReferralID) INNER JOIN Checker ON NGSTest.BookBy = Checker.Check1ID) INNER JOIN NGSPanel ON NGSTest.NGSPanelID = NGSPanel.NGSPanelID) LEFT JOIN NGSPanel AS NGSPanel_1 ON NGSTest.NGSPanelID_B = NGSPanel_1.NGSPanelID) INNER JOIN Status ON NGSTest.StatusID = Status.StatusID) INNER JOIN dbo_Patient_table ON Patients.PatientID = dbo_Patient_table.PatientTrustID) LEFT JOIN DNA ON NGSTest.DNA = DNA.DNANumber) INNER JOIN Status AS Status_1 ON Patients.s_StatusOverall = Status_1.StatusID) LEFT JOIN gw_GenderTable ON dbo_Patient_table.GenderID = gw_GenderTable.GenderID) " & _
+                    "LEFT JOIN NGSWESBatch ON NGSTest.WESBatch = NGSWESBatch.NGSWESBatchID) LEFT JOIN Checker AS Checker_1 ON NGSTest.Check1ID = Checker_1.Check1ID) LEFT JOIN Checker AS Checker_2 ON NGSTest.Check2ID = Checker_2.Check1ID) LEFT JOIN Checker AS Checker_3 ON NGSTest.Check3ID = Checker_3.Check1ID) LEFT JOIN NGSPanel AS NGSPanel_2 ON NGSTest.NGSPanelID_C = NGSPanel_2.NGSPanelID) LEFT JOIN Checker AS Checker_4 ON NGSTest.Check4ID = Checker_4.Check1ID " & _
+                    "WHERE NGSTest.WESBatch = " & CStr(Me![cmb_BatchView]) & " AND Status.StatusID = " & CStr(cmb_StatusView) & " " & _
+                    "ORDER BY NGSTest.Priority , NGSTest.DateRequested;"
+                    
+        'Debug.Print subfrmSQL
+        [Form_s87020_ExomeLabList].Form.RecordSource = subfrmSQL
+        Me.txt_displayed = "Batch " + Me![cmb_BatchView].Column(1) + " with status " + Me![cmb_StatusView].Column(1)
+    
+        ' refresh total tally
+        strCriteria = " WESBatch = '" & Me.cmb_BatchView.Column(1) & "' AND TestStatus = '" & Me.cmb_StatusView.Column(1) & "'"
+        AllTotal = DCount("WESBatch", "s87020_ListWESSamples", strCriteria)
+        Me.txt_TotalTally = AllTotal
+        'Debug.Print strCriteria
+        'Debug.Print AllTotal
+        
+    End If
+End If
+
+'refresh selection count
+selTotal = DCount("[Selection]", "s87020_ListWESSamples", "[Selection] = True")
+Me.txt_SelectionCount = selTotal
+End Sub
+
+
+Private Sub cmb_BatchView_AfterUpdate()
+' If WES batch filter is set to NULL update the subform to reflect the filtering criteria
+' Either via status search or view all
+If IsNull(cmb_BatchView) Then
+    If Not IsNull(cmb_StatusView) Then
+        Call cmb_StatusView_Click
+Else
+    Call btn_ViewAll_Click
+    End If
+End If
+End Sub
+
+
+Private Sub btn_Clear1_Click()
+' clears user entry for batch view
+Me.cmb_BatchView = Null
+Call cmb_BatchView_AfterUpdate
+End Sub
+
+
+Private Sub cmb_StatusView_Click()
+Dim subfrmSQL As String
+Dim AllTotal As Long
+Dim strCriteria As String
+
+' deselect any selected files and set the select all check box to empty
+Call Unselect
+        
+    'refresh selection count
+    selTotal = DCount("[Selection]", "s87020_ListWESSamples", "[Selection] = True")
+    Me.txt_SelectionCount = selTotal
+
+    
+' Update summary of displayed samples and refresh search criteria
+    Me.Check_selectAll.Value = 0
+    Me.Check_btnNoBatch = 0
+    Me.Check_1st = 0
+    Me.Check_2nd = 0
+    Me.check_ViewAllPend = 0
+    
+' reload subform calling querey to view samples are assigned to selected status
+' if WES batch filter = null do normal SQL
+If Not IsNull(cmb_StatusView) Then
+    If IsNull(cmb_BatchView) Then
+        subfrmSQL = "SELECT NGSTest.Selection, Patients.PatientID AS PRU, NGSTest.NGSTestID, dbo_Patient_table.LastName, dbo_Patient_table.FirstName, dbo_Patient_table.DoB, gw_GenderTable.GenderShort, Referral.Referral, NGSTest.DateRequested, Checker.Name AS RefName, Checker.Initials AS Referrer, NGSPanel.Panel AS PanelA, NGSPanel_1.Panel AS PanelB, Status_1.StatusID AS PatientStatus, NGSWESBatch.BatchName AS WESBatch, Status.StatusID, Status.Status AS TestStatus, NGSTest.ResultComment, Patients.InternalPatientID, Checker_1.Initials AS Checker1, NGSTest.Check1Date, Checker_2.Initials AS Checker2, NGSTest.Check2Date, Checker_3.Initials AS ReportApproved, NGSTest.Check3Date, Patients.s_StatusOverall, NGSPanel.PanelCode AS [Primary], NGSPanel_1.PanelCode AS Secondary, NGSTest.DNA, NGSTest.Priority, NGSTest.Result AS TestResult, NGSPanel_2.PanelCode AS Tertiary, Checker_4.Initials AS check4ID, NGSTest.Check4Date " & _
+                    "FROM (((((((((((((((NGSTest INNER JOIN Patients ON NGSTest.InternalPatientID = Patients.InternalPatientID) INNER JOIN Referral ON NGSTest.ReferralID = Referral.ReferralID) INNER JOIN Checker ON NGSTest.BookBy = Checker.Check1ID) INNER JOIN NGSPanel ON NGSTest.NGSPanelID = NGSPanel.NGSPanelID) LEFT JOIN NGSPanel AS NGSPanel_1 ON NGSTest.NGSPanelID_B = NGSPanel_1.NGSPanelID) INNER JOIN Status ON NGSTest.StatusID = Status.StatusID) INNER JOIN dbo_Patient_table ON Patients.PatientID = dbo_Patient_table.PatientTrustID) LEFT JOIN DNA ON NGSTest.DNA = DNA.DNANumber) INNER JOIN Status AS Status_1 ON Patients.s_StatusOverall = Status_1.StatusID) LEFT JOIN gw_GenderTable ON dbo_Patient_table.GenderID = gw_GenderTable.GenderID) " & _
+                    "LEFT JOIN NGSWESBatch ON NGSTest.WESBatch = NGSWESBatch.NGSWESBatchID) LEFT JOIN Checker AS Checker_1 ON NGSTest.Check1ID = Checker_1.Check1ID) LEFT JOIN Checker AS Checker_2 ON NGSTest.Check2ID = Checker_2.Check1ID) LEFT JOIN Checker AS Checker_3 ON NGSTest.Check3ID = Checker_3.Check1ID) LEFT JOIN NGSPanel AS NGSPanel_2 ON NGSTest.NGSPanelID_C = NGSPanel_2.NGSPanelID) LEFT JOIN Checker AS Checker_4 ON NGSTest.Check4ID = Checker_4.Check1ID " & _
+                    "WHERE Status.StatusID = " & CStr(Me![cmb_StatusView]) & " " & _
+                    "ORDER BY NGSTest.Priority , NGSTest.DateRequested;"
+            
+        'Debug.Print subfrmSQL
+        [Form_s87020_ExomeLabList].Form.RecordSource = subfrmSQL
+        Me.txt_displayed = "Sample with status: " + Me![cmb_StatusView].Column(1)
+        
+        ' refresh total tally
+        strCriteria = " TestStatus = '" & Me.cmb_StatusView.Column(1) & "'"
+        AllTotal = DCount("TestStatus", "s87020_ListWESSamples", strCriteria)
+        Me.txt_TotalTally = AllTotal
+
+    ' else display the subform filtered on batch and status option if a status has aready been selected
+    Else
+        subfrmSQL = "SELECT NGSTest.Selection, Patients.PatientID AS PRU, NGSTest.NGSTestID, dbo_Patient_table.LastName, dbo_Patient_table.FirstName, dbo_Patient_table.DoB, gw_GenderTable.GenderShort, Referral.Referral, NGSTest.DateRequested, Checker.Name AS RefName, Checker.Initials AS Referrer, NGSPanel.Panel AS PanelA, NGSPanel_1.Panel AS PanelB, Status_1.StatusID AS PatientStatus, NGSWESBatch.BatchName AS WESBatch, Status.StatusID, Status.Status AS TestStatus, NGSTest.ResultComment, Patients.InternalPatientID, Checker_1.Initials AS Checker1, NGSTest.Check1Date, Checker_2.Initials AS Checker2, NGSTest.Check2Date, Checker_3.Initials AS ReportApproved, NGSTest.Check3Date, Patients.s_StatusOverall, NGSPanel.PanelCode AS [Primary], NGSPanel_1.PanelCode AS Secondary, NGSTest.DNA, NGSTest.Priority, NGSTest.Result AS TestResult, NGSPanel_2.PanelCode AS Tertiary, Checker_4.Initials AS check4ID, NGSTest.Check4Date " & _
+                    "FROM (((((((((((((((NGSTest INNER JOIN Patients ON NGSTest.InternalPatientID = Patients.InternalPatientID) INNER JOIN Referral ON NGSTest.ReferralID = Referral.ReferralID) INNER JOIN Checker ON NGSTest.BookBy = Checker.Check1ID) INNER JOIN NGSPanel ON NGSTest.NGSPanelID = NGSPanel.NGSPanelID) LEFT JOIN NGSPanel AS NGSPanel_1 ON NGSTest.NGSPanelID_B = NGSPanel_1.NGSPanelID) INNER JOIN Status ON NGSTest.StatusID = Status.StatusID) INNER JOIN dbo_Patient_table ON Patients.PatientID = dbo_Patient_table.PatientTrustID) LEFT JOIN DNA ON NGSTest.DNA = DNA.DNANumber) INNER JOIN Status AS Status_1 ON Patients.s_StatusOverall = Status_1.StatusID) LEFT JOIN gw_GenderTable ON dbo_Patient_table.GenderID = gw_GenderTable.GenderID) " & _
+                    "LEFT JOIN NGSWESBatch ON NGSTest.WESBatch = NGSWESBatch.NGSWESBatchID) LEFT JOIN Checker AS Checker_1 ON NGSTest.Check1ID = Checker_1.Check1ID) LEFT JOIN Checker AS Checker_2 ON NGSTest.Check2ID = Checker_2.Check1ID) LEFT JOIN Checker AS Checker_3 ON NGSTest.Check3ID = Checker_3.Check1ID) LEFT JOIN NGSPanel AS NGSPanel_2 ON NGSTest.NGSPanelID_C = NGSPanel_2.NGSPanelID) LEFT JOIN Checker AS Checker_4 ON NGSTest.Check4ID = Checker_4.Check1ID " & _
+                    "WHERE NGSTest.WESBatch = " & CStr(Me![cmb_BatchView]) & " AND Status.StatusID = " & CStr(cmb_StatusView) & " " & _
+                    "ORDER BY NGSTest.Priority , NGSTest.DateRequested;"
+      
+        'Debug.Print subfrmSQL
+        [Form_s87020_ExomeLabList].Form.RecordSource = subfrmSQL
+        Me.txt_displayed = "Batch " + Me![cmb_BatchView].Column(1) + " with status " + Me![cmb_StatusView].Column(1)
+        
+        ' refresh total tally
+        strCriteria = " WESBatch = '" & Me.cmb_BatchView.Column(1) & "' AND TestStatus = '" & Me.cmb_StatusView.Column(1) & "'"
+        AllTotal = DCount("TestStatus", "s87020_ListWESSamples", strCriteria)
+        Me.txt_TotalTally = AllTotal
+
+    End If
+End If
+End Sub
+
+
+Private Sub cmb_StatusView_AfterUpdate()
+' If Status filter is set to NULL update the subform to reflect the filtering criteria
+' Either via batch search or view all
+If IsNull(cmb_StatusView) Then
+    If Not IsNull(cmb_BatchView) Then
+        Call cmb_BatchView_Click
+Else
+    Call btn_ViewAll_Click
+    End If
+End If
+End Sub
+
+
+Private Sub btn_Clear2_Click()
+'clears users entry for viwing by status
+Me.cmb_StatusView = Null
+Call cmb_StatusView_AfterUpdate
+End Sub
+
+
+Private Sub btn_allpendingAprov_Click()
+
+Dim subfrmSQL As String
+Dim AllTotal As Long
+Dim strCriteria As String
+
+' deselect any selected files and set the select all check box to empty
+Call Unselect
+    
+' Update summary of displayed samples and refresh search criteria
+    Me.Check_selectAll.Value = 0
+    Me.Check_btnNoBatch = 0
+    Me.Check_1st = 0
+    Me.Check_2nd = 0
+    Me.check_ViewAllPend = -1
+    Me.cmb_BatchView.Value = Null
+    Me.cmb_StatusView.Value = Null
+    
+' reload subform calling querey to view samples are assigned to selected status
+' if WES batch filter = null do normal SQL
+subfrmSQL = "SELECT NGSTest.Selection, Patients.PatientID AS PRU, NGSTest.NGSTestID, dbo_Patient_table.LastName, dbo_Patient_table.FirstName, dbo_Patient_table.DoB, gw_GenderTable.GenderShort, Referral.Referral, NGSTest.DateRequested, Checker.Name AS RefName, Checker.Initials AS Referrer, NGSPanel.Panel AS PanelA, NGSPanel_1.Panel AS PanelB, Status_1.StatusID AS PatientStatus, NGSWESBatch.BatchName AS WESBatch, Status.StatusID, Status.Status AS TestStatus, NGSTest.ResultComment, Patients.InternalPatientID, Checker_1.Initials AS Checker1, NGSTest.Check1Date, Checker_2.Initials AS Checker2, NGSTest.Check2Date, Checker_3.Initials AS ReportApproved, NGSTest.Check3Date, Patients.s_StatusOverall, NGSPanel.PanelCode AS [Primary], NGSPanel_1.PanelCode AS Secondary, NGSTest.DNA, NGSTest.Priority, NGSTest.Result AS TestResult, NGSPanel_2.PanelCode AS Tertiary, Checker_4.Initials AS check4ID, NGSTest.Check4Date " & _
+            "FROM (((((((((((((((NGSTest INNER JOIN Patients ON NGSTest.InternalPatientID = Patients.InternalPatientID) INNER JOIN Referral ON NGSTest.ReferralID = Referral.ReferralID) INNER JOIN Checker ON NGSTest.BookBy = Checker.Check1ID) INNER JOIN NGSPanel ON NGSTest.NGSPanelID = NGSPanel.NGSPanelID) LEFT JOIN NGSPanel AS NGSPanel_1 ON NGSTest.NGSPanelID_B = NGSPanel_1.NGSPanelID) INNER JOIN Status ON NGSTest.StatusID = Status.StatusID) INNER JOIN dbo_Patient_table ON Patients.PatientID = dbo_Patient_table.PatientTrustID) LEFT JOIN DNA ON NGSTest.DNA = DNA.DNANumber) INNER JOIN Status AS Status_1 ON Patients.s_StatusOverall = Status_1.StatusID) LEFT JOIN gw_GenderTable ON dbo_Patient_table.GenderID = gw_GenderTable.GenderID) " & _
+            "LEFT JOIN NGSWESBatch ON NGSTest.WESBatch = NGSWESBatch.NGSWESBatchID) LEFT JOIN Checker AS Checker_1 ON NGSTest.Check1ID = Checker_1.Check1ID) LEFT JOIN Checker AS Checker_2 ON NGSTest.Check2ID = Checker_2.Check1ID) LEFT JOIN Checker AS Checker_3 ON NGSTest.Check3ID = Checker_3.Check1ID) LEFT JOIN NGSPanel AS NGSPanel_2 ON NGSTest.NGSPanelID_C = NGSPanel_2.NGSPanelID) LEFT JOIN Checker AS Checker_4 ON NGSTest.Check4ID = Checker_4.Check1ID " & _
+            "WHERE Status.StatusID = 1202218814 or Status.StatusID = 1202218815 " & _
+            "ORDER BY NGSTest.Priority , NGSTest.DateRequested;"
+            
+[Form_s87020_ExomeLabList].Form.RecordSource = subfrmSQL
+Me.txt_displayed = "All tests pending approval of the reports"
+        
+' refresh total tally
+strCriteria = "TestStatus = 'Pending Report Authorsation' Or TestStatus = 'Pending Report Authorsation (Fail report)' "
+AllTotal = DCount("TestStatus", "s87020_ListWESSamples", strCriteria)
+Me.txt_TotalTally = AllTotal
+'refresh selection count
+selTotal = DCount("[Selection]", "s87020_ListWESSamples", "[Selection] = True")
+Me.txt_SelectionCount = selTotal
+
+End Sub
+
+
+Private Sub btn_BatchAssign_Click()
+' Assign a/multile WES tests to a Batch
+Dim rsWES As dao.Recordset
+Dim rsAssign As dao.Recordset
+Dim rsBatch As dao.Recordset
+Dim batchTotal As Long
+Dim selTotal As Long
+Dim strSQL As String
+Dim strAssign As String
+Dim strUpd8Batch As String
+Dim strNewBatch As String
+Dim strLogSQL As String
+Dim strLogSQL2 As String
+Dim strCriteria As String
+Dim rsSQL As String
+Dim newbatch As String
+Dim usr As String
+Dim dt As String
+Dim comp As String
+Dim strUpd8Status As String
+Dim strLogMemo As String
+Dim unsel As String
+
+
+dt = Format(Now, "dd/mmm/yyyy Hh:Nn:ss")
+cmp = VBA.Environ("COMPUTERNAME")
+usr = VBA.Environ("USERNAME")
+
+' Checks that a WES batch has been selected
+If IsNull(Me.cmb_BatchAssign) And IsNull(Me.txt_NEWBatch) Then
+    msga = MsgBox("Unable to assign samples" & vbNewLine & "No WES batch specified", vbOKOnly Or vbExclamation, "No Batch Specified")
+    cmb_BatchAssign.SetFocus
+    Exit Sub
+    
+' Checks that only one option to assign a WES bach has been selected
+ElseIf Not IsNull(Me.cmb_BatchAssign) And Not IsNull(Me.txt_NEWBatch) Then
+    msgb = MsgBox("Unable to assign samples" & vbNewLine & "Please specify One WES batch option ONLY", vbOKOnly Or vbExclamation, "ATTENTION")
+    btn_Clear4.SetFocus
+    Exit Sub
+     
+' Assigning samples to a batch via drop down menu
+ElseIf Not IsNull(Me.cmb_BatchAssign) And IsNull(Me.txt_NEWBatch) Then
+    ' unselect any tests which are already associated with a WES batch and not in batching step of the pipeline--> will only assign tests which are not yet assigned to a batch and are in the batching stage
+    unsel = "UPDATE NGSTest INNER JOIN Patients ON NGSTest.InternalPatientID = Patients.InternalPatientID SET NGSTest.Selection = False WHERE NGSTest.Selection = True AND (NGSTest.WESBatch is Not Null or NGSTest.statusID <> 1202218803)"
+    Me.Check_selectAll.Value = 0
+    DoCmd.SetWarnings False
+    DoCmd.RunSQL unsel
+    Form![s87020_ExomeLabList].Requery
+    DoCmd.SetWarnings True
+        
+    'refresh selection count
+    selTotal = DCount("[Selection]", "s87020_ListWESSamples", "[Selection] = True")
+    Me.txt_SelectionCount = selTotal
+    
+    ' check that at least one unassigned batching NGS test has been selected.
+    If IsNull(selTotal) Or selTotal = 0 Then
+        msgc = MsgBox("No unassigned tests pending batching have been selected", vbExclamation, "Attention")
+    Else
+        ' Count the number of samples already in the selected WES batch
+        strCriteria = " WESBatch = '" & Me.cmb_BatchAssign.Column(1) & "'"
+        batchTotal = DCount("WESBatch", "s87020_ListWESSamples", strCriteria)
+        ttotal = selTotal + batchTotal
+        'Debug.Print "batch " & batchTotal
+        
+        ' confirm user decision.
+        If MsgBox(batchTotal & " tests already in WES Batch:  " & Me.cmb_BatchAssign.Column(1) & vbNewLine & vbNewLine & "You are about to assign an additional " & selTotal & " test(s) to batch " & Me.cmb_BatchAssign.Column(1) & vbNewLine & vbNewLine & Me.cmb_BatchAssign.Column(1) & " will total: " & ttotal & " WES tests" & vbNewLine & "This step can not be undone. Do you wish to proceed?", vbYesNo Or vbExclamation, "Assign to WES Batch?") = vbNo Then
+            Cancel = True
+            
+        Else
+            ' open record set for tests to be assigned loop through records and assign test to specified WES batch
+            strAssign = "SELECT Patients.InternalPatientID, NGSTest.NGSTestID, NGSTest.WESBatch, NGSTest.Selection, ngstest.DateRequested " & _
+                        "FROM (NGSTest INNER JOIN Patients ON NGSTest.InternalPatientID = Patients.InternalPatientID) " & _
+                        "WHERE NGSTest.Selection= True ;"
+            Set db = CurrentDb
+            Set rsAssign = db.OpenRecordset(strAssign, dbOpenDynaset, dbSeeChanges)
+            
+            With rsAssign
+             If Not .BOF And Not .EOF Then
+                While (Not .EOF)
+
+                    If rsAssign!Selection = True Then
+                        strUpd8Batch = "UPDATE NGSTest SET WESBatch = " & Me.cmb_BatchAssign & " WHERE NGSTest.NGSTestID = " & rsAssign!NGSTestID
+                        ' update the test status to nest step NextSEQ sequencing
+                        strUpd8Status = "UPDATE NGSTest SET StatusID = 1202218804 WHERE NGSTest.NGSTestID = " & rsAssign!NGSTestID
+                        'update patient log
+                        strLogSQL = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" & rsAssign!InternalPatientID & ", 'NGS WES test: NGS testID " & rsAssign!NGSTestID & " assigned to WES batch " & Me.cmb_BatchAssign.Column(1) & " (ID " & Me.cmb_BatchAssign.Column(0) & "). ',#" + dt + "#,'" + usr + "','" + cmp + "')"
+                        strLogSQL2 = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" & rsAssign!InternalPatientID & ", 'NGS WES test: Status updated to NextSEQ sequencing for test requested " & rsAssign!DateRequested & " NGS testID " & rsAssign!NGSTestID & ". ',#" + dt + "#,'" + usr + "','" + cmp + "')"
+                        'update NGSlogmemo
+                        strLogMemo = "INSERT INTO NGSLogMemo(InternalPatientID, Type, LinkID, LogMemoEntry, [Date], Login, PCName) VALUES(" + CStr(rsAssign!InternalPatientID) + ", 1, " + CStr(rsAssign!NGSTestID) + ",'NGS WES test status updated to: NextSEQ sequencing.' ,#" + dt + "#,'" + usr + "','" + cn + "')"
+                        'Debug.Print strLogMemo
+                        
+                        DoCmd.SetWarnings False
+                        DoCmd.RunSQL strUpd8Batch
+                        DoCmd.RunSQL strUpd8Status
+                        DoCmd.RunSQL strLogSQL
+                        DoCmd.RunSQL strLogSQL2
+                        DoCmd.RunSQL strLogMemo
+                        'Debug.Print "insert sql"
+                        DoCmd.SetWarnings True
+                        .MoveNext
+
+                    Else
+                        .MoveNext
+                    End If
+                Wend
+             End If
+             msg_success = MsgBox(selTotal & " WES Test have been added to " & Me.cmb_BatchAssign.Column(1) & vbNewLine & "Total tests in batch " & Me.cmb_BatchAssign.Column(1) & " = " & ttotal, vbOKOnly, "SUCCESS")
+            End With
+            Set rsAssign = Nothing
+            Set db = Nothing
+        End If
+    Call btn_Clear4_Click
+    Call btn_NoWESBatch_Click
+'    Call Unselect
+'    Form![s87020_ExomeLabList].Requery
+    Exit Sub
+    End If
+        
+'///////////////////////////////////////////
+
+' Create a new batch and assign samples (text box option)
+ElseIf IsNull(Me.cmb_BatchAssign) And Not IsNull(Me.txt_NEWBatch) Then
+    '1) check entry is an interger
+    If Not IsNumeric(Me.txt_NEWBatch) Then
+        msgb = MsgBox("Only numbers maybe entered when creating a new WES batch", vbExclamation, "ATTENTION")
+        Me.txt_NEWBatch = Null
+       
+    Else
+    '2) Add WES prefix then test if batch name has already been defined
+    newbatch = "WES" + CStr(Me.txt_NEWBatch)
+    'Debug.Print newbatch
+    strSQL = "SELECT * FROM NGSWESBatch WHERE BatchName = '" + newbatch + "'"
+    'Debug.Print strSQL
+    Set db = CurrentDb
+    Set rsWES = db.OpenRecordset(strSQL, dbOpenDynaset, dbSeeChanges)
+        If rsWES.EOF Then 'checks entry is a unique name
+            strNewBatch = "INSERT INTO NGSWESBatch(BatchName) VALUES ('" + newbatch + "')"
+            
+            ' Add batch name into NGSWESBatch table
+            DoCmd.SetWarnings False
+            DoCmd.RunSQL strNewBatch
+            DoCmd.SetWarnings True
+            Me![cmb_BatchAssign].Requery
+            Me![cmb_BatchView].Requery
+            msg_batch = MsgBox(newbatch & " has been created and added to WES Batch dropdown menu.", vbOKOnly Or vbInformation, newbatch & " created")
+
+            ' unselect any tests/ samples which are already associated with a WES batch and not in batching stage --> will only assign tests which are not yet assigned to a batch
+            unsel = "UPDATE NGSTest INNER JOIN Patients ON NGSTest.InternalPatientID = Patients.InternalPatientID SET NGSTest.Selection = False WHERE NGSTest.Selection = True AND (NGSTest.WESBatch is Not Null or NGSTest.statusID <> 1202218803)"
+            DoCmd.SetWarnings False
+            DoCmd.RunSQL unsel
+            Me.Check_selectAll.Value = 0
+            Form![s87020_ExomeLabList].Requery
+            DoCmd.SetWarnings True
+                
+            'refresh selection count
+            selTotal = DCount("[Selection]", "s87020_ListWESSamples", "[Selection] = True")
+            Me.txt_SelectionCount = selTotal
+            
+            ' Check at least 1 sample remains selected
+            If IsNull(selTotal) Or selTotal = 0 Then
+                 msgc = MsgBox("No unassigned tests pending batching have been selected." & vbNewLine & " No tests have been added to be added to " & newbatch, vbExclamation, "Attention")
+                 'txt_NEWBatch.SetFocus
+                 Call btn_Clear4_Click
+                 Exit Sub
+            Else
+            ' open record set for tests to be assigned loop through records are and assign test to specified WES batch
+            ' confirm user decision.
+                If MsgBox("You are about to assign " & selTotal & " test(s) to the new batch " + newbatch + vbNewLine & vbNewLine & "This step can not be undone." & vbNewLine & "Do you wish to proceed?", vbYesNo Or vbExclamation, "Assign to WES Batch?") = vbNo Then
+                    Cancel = True
+                    
+                Else
+                    
+                    strAssign = "SELECT Patients.InternalPatientID, NGSTest.NGSTestID, NGSTest.WESBatch, NGSTest.Selection, NGSTest.Daterequested " & _
+                                "FROM (NGSTest INNER JOIN Patients ON NGSTest.InternalPatientID = Patients.InternalPatientID) " & _
+                                "WHERE NGSTest.Selection= True ;"
+                    strbatchID = "SELECT NGSWESBatchID From NGSWESBatch Where batchname = '" + newbatch + "'"
+                   
+                    Set db = CurrentDb
+                    Set rsAssign = db.OpenRecordset(strAssign, dbOpenDynaset, dbSeeChanges)
+                    Set rsBatch = db.OpenRecordset(strbatchID, dbOpenDynaset, dbSeeChanges)
+                
+                    With rsAssign
+                     If Not .BOF And Not .EOF Then
+                        While (Not .EOF)
+                            If rsAssign!Selection = True Then
+                                strUpd8Batch = "UPDATE NGSTest SET WESBatch = " & rsBatch!NGSWESBatchID & " WHERE NGSTest.NGSTestID = " & rsAssign!NGSTestID
+                                ' update the test status to nest step NextSEQ sequencing
+                                strUpd8Status = "UPDATE NGSTest SET StatusID = 1202218804 WHERE NGSTest.NGSTestID = " & rsAssign!NGSTestID
+                                ' update patient log
+                                strLogSQL = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" & rsAssign!InternalPatientID & ", 'NGS WES test: NGS testID " & rsAssign!NGSTestID & " assigned to WES batch " + newbatch + " (ID " & rsBatch!NGSWESBatchID & "). ',#" + dt + "#,'" + usr + "','" + cmp + "')"
+                                strLogSQL2 = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" & rsAssign!InternalPatientID & ", 'NGS WES test: Status updated to NextSEQ sequencing for test requested " & rsAssign!DateRequested & " NGS testID " & rsAssign!NGSTestID & ". ',#" + dt + "#,'" + usr + "','" + cmp + "')"
+                                'update NGSlogmemo
+                                strLogMemo = "INSERT INTO NGSLogMemo(InternalPatientID, Type, LinkID, LogMemoEntry, [Date], Login, PCName) VALUES(" + CStr(rsAssign!InternalPatientID) + ", 1, " + CStr(rsAssign!NGSTestID) + ",'NGS WES test status updated to: NextSEQ sequencing.' ,#" + dt + "#,'" + usr + "','" + cn + "')"
+    
+                                DoCmd.SetWarnings False
+                                DoCmd.RunSQL strUpd8Batch
+                                DoCmd.RunSQL strUpd8Status
+                                DoCmd.RunSQL strLogSQL
+                                DoCmd.RunSQL strLogSQL2
+                                DoCmd.RunSQL strLogMemo
+                                DoCmd.SetWarnings True
+                                .MoveNext
+                                               
+                            Else
+                                .MoveNext
+                            End If
+                        Wend
+                     End If
+                     msg_success = MsgBox(selTotal & " WES Test have been added to " & newbatch, vbOKOnly, "SUCCESS")
+                     End With
+                    Set reWES = Nothing
+                    Set rsAssign = Nothing
+                    Set rsBatch = Nothing
+                    Set db = Nothing
+                End If
+            
+            End If
+        Else
+            msgd = MsgBox("WES batch: " + newbatch + " already exists." & vbNewLine & "Please select a WES Batch from the dropdown menu or enter a new batch name.", vbExclamation, "WES Batch Already Exists")
+            Call btn_Clear4_Click
+            Exit Sub
+        End If
+
+    Call btn_NoWESBatch_Click
+    Call btn_Clear4_Click
+    Exit Sub
+End If
+End If
+
+Call btn_NoWESBatch_Click
+Call btn_Clear4_Click
+
+End Sub
+
+
+Private Sub btn_Clear4_Click()
+Me.cmb_BatchAssign = Null
+Me.txt_NEWBatch = Null
+End Sub
+
+
+Private Sub cmb_StatusUpdate_AfterUpdate()
+If Me.cmb_StatusUpdate = 4 Or Me.cmb_StatusUpdate = 1202218816 Then
+    Cmb_Approver.Visible = True
+Else
+    Cmb_Approver.Visible = False
+End If
+End Sub
+
+
+Private Sub btn_UpdateStatus_Click()
+Dim rsStatus As dao.Recordset
+Dim selTotal As Long
+Dim strStatus As String
+Dim usr As String
+Dim dt As String
+Dim comp As String
+Dim InBatching As String
+Dim SetBatching As String
+Dim deselSQL As String
+Dim strUpd8Status As String
+Dim strUpd8Patient As String
+Dim strLogSQL As String
+Dim strLogAprov As String
+Dim strLogSQL2 As String
+Dim strLogMemo As String
+
+dt = Format(Now, "dd/mmm/yyyy Hh:Nn:ss")
+cmp = VBA.Environ("COMPUTERNAME")
+usr = VBA.Environ("USERNAME")
+
+If Me.cmb_StatusUpdate = 4 Or Me.cmb_StatusUpdate = 1202218816 Then
+    Cmb_Approver.Visible = True
+Else
+    Cmb_Approver.Visible = False
+End If
+
+' check if a new status has been selected
+If IsNull(Me.cmb_StatusUpdate) Then
+    msga = MsgBox("No status selected", vbOKOnly Or vbExclamation, "No Status Specified")
+    cmb_StatusUpdate.SetFocus
+    Exit Sub
+Else
+    ' Count number of selected tests
+    selTotal = DCount("Selection", "s87020_ListWESSamples", "Selection = true")
+    Me.txt_SelectionCount = selTotal
+    
+    ' Check at least 1 sample is selected
+    If IsNull(selTotal) Or selTotal = 0 Then
+        msgc = MsgBox("No WES tests selected", vbExclamation, "Attention")
+        txt_NEWBatch.SetFocus
+        Exit Sub
+    Else
+    ' open record set for tests to be updated loop through the records and update tests status
+    ' confirm user decision.
+
+        strStatus = "SELECT Patients.InternalPatientID, NGSTest.NGSTestID, NGSTest.Selection, NGSTest.StatusID, NGSTest.WESbatch, NGSTest.DateRequested " & _
+                    "FROM (NGSTest INNER JOIN Patients ON NGSTest.InternalPatientID = Patients.InternalPatientID) " & _
+                    "WHERE NGSTest.Selection= True;"
+                         
+        Set db = CurrentDb
+        Set rsStatus = db.OpenRecordset(strStatus, dbOpenDynaset, dbSeeChanges)
+        With rsStatus
+            signedOffTest = 0 'tally if test has been signed off as completed/ failed
+            InBatching = 0 ' tally tes which are already in batching stage to exclude from update
+            SetBatching = 0 ' tally number of tests aready assigned to a Batch when attempting to batch assign status to 'Batching'
+            testComp = 0 ' tally test not suitable for compleate status update
+            testFail = 0 'tally tests not suitable for test failed update
+
+            If Not .BOF Then  'And Not .EOF
+                While (Not .EOF)
+                ' identify selected tests which are N/A for status update
+                
+                    If rsStatus!StatusID = 4 Or rsStatus!StatusID = 1202218816 Then
+                        signedOffTest = signedOffTest + 1
+                        deselSQL = "Update NGSTest SET selection = False WHERE NGSTest.NGSTestID = " & rsStatus!NGSTestID
+                        DoCmd.SetWarnings False
+                        DoCmd.RunSQL deselSQL
+                        DoCmd.SetWarnings True
+                        .MoveNext
+                        
+                    ElseIf rsStatus!StatusID = 1202218803 Then
+                        InBatching = InBtching + 1
+                        'Debug.Print "InBatching= " & InBatching
+                        deselSQL = "Update NGSTest SET selection = False WHERE NGSTest.NGSTestID = " & rsStatus!NGSTestID
+                        DoCmd.SetWarnings False
+                        DoCmd.RunSQL deselSQL
+                        DoCmd.SetWarnings True
+                        .MoveNext
+                        
+                    ElseIf Me.cmb_StatusUpdate.Column(0) = 1202218803 And Not IsNull(rsStatus!WESBatch) Then
+                        SetBatching = SetBatching + 1
+                        'Debug.Print "SetBatching = " & SetBatching
+                        deselSQL = "Update NGSTest SET selection = False WHERE NGSTest.NGSTestID = " & rsStatus!NGSTestID
+                        DoCmd.SetWarnings False
+                        DoCmd.RunSQL deselSQL
+                        DoCmd.SetWarnings True
+                        .MoveNext
+                    
+                    ElseIf Me.cmb_StatusUpdate.Column(0) = 4 And rsStatus!StatusID <> 1202218814 Then
+                        testComp = testComp + 1
+                        deselSQL = "Update NGSTest SET selection = False WHERE NGSTest.NGSTestID = " & rsStatus!NGSTestID
+                        DoCmd.SetWarnings False
+                        DoCmd.RunSQL deselSQL
+                        DoCmd.SetWarnings True
+                        .MoveNext
+                        
+                    ElseIf Me.cmb_StatusUpdate.Column(0) = 1202218816 And rsStatus!StatusID <> 1202218815 Then
+                        testFail = testFail + 1
+                        deselSQL = "Update NGSTest SET selection = False WHERE NGSTest.NGSTestID = " & rsStatus!NGSTestID
+                        DoCmd.SetWarnings False
+                        DoCmd.RunSQL deselSQL
+                        DoCmd.SetWarnings True
+                        .MoveNext
+                                                
+                    Else
+                    .MoveNext
+                    End If
+                    Wend
+                      
+                    'Display an notifcation is anytests selected are not able to have status updated.
+                    If InBatching > 0 And SetBatching > 0 Then
+                        msg1 = MsgBox("Unable to update status of some of the tests selected" & vbNewLine & vbNewLine & "REASONS:" & vbNewLine & "1) " & InBatching & " selected test(s) currently in 'BATCHING' stage. These test must be assigned to a WES batch to proceed." & vbNewLine & vbNewLine & "2) " & SetBatching & " selected test(s) have already been assigned to a WES Batch. Test status cannot be reset to 'BATCHING'" & vbNewLine & vbNewLine & "The aforementioned tests have been unselected.", vbOKOnly Or vbExclamation, "Status Update Cannot Be Applied To All Selected Tests")
+                    End If
+                    If InBatching > 0 Then
+                        msg2 = MsgBox("Unable to update status of some of the tests selected" & vbNewLine & vbNewLine & "REASON:" & vbNewLine & InBatching & "  test(s)selected currently in 'BATCHING' stage." & vbNewLine & "Tests need to be assigned to a WES batch before test status can be updated" & vbNewLine & vbNewLine & "The aforementioned tests have been unselected.", vbOKOnly Or vbExclamation, "Tests in Batching Stage Unselected")
+                    End If
+                    If SetBatching > 0 Then
+                        msg3 = MsgBox("Unable to update status of some of the tests selected" & vbNewLine & vbNewLine & "REASON:" & vbNewLine & SetBatching & " selected test(s) already been assigned to a WES Batch." & vbNewLine & "Tests assigned to a WES batch are unable to be reset to the 'Batching' stage" & vbNewLine & vbNewLine & "The aforementioned tests have been unselected.", vbOKOnly Or vbExclamation, "Test Already Assigned To A WES Batch")
+                    End If
+                    If testComp > 0 Then
+                        msg4 = MsgBox("Unable to update status of some of the tests selected" & vbNewLine & vbNewLine & "REASON:" & vbNewLine & "Tests yet not reported, Unreported tests selected = " & testComp & vbNewLine & vbNewLine & "Unable to set test status to 'Complete' for unreported  tests" & vbNewLine & "The aforementioned tests have been unselected.", vbOKOnly Or vbExclamation, "Unreported tests")
+                    End If
+                    If testFail > 0 Then
+                        msg4 = MsgBox("Unable to update status of some of the tests selected" & vbNewLine & vbNewLine & "REASON:" & vbNewLine & "Tests yet not reported, Unreported tests selected = " & testFail & vbNewLine & vbNewLine & "Unable to set test status to 'Test Failed' for unreported tests" & vbNewLine & "The aforementioned tests have been unselected.", vbOKOnly Or vbExclamation, "Unreported tests")
+                    End If
+                    If signedOffTest > 0 Then
+                        msg5 = MsgBox(signedOffTest & " of the tests selected have already been reported and closed. " & vbNewLine & "The test status for these tests cannot be altered.", vbOKOnly Or vbInformation, "WES Tests Already Reported")
+                    End If
+                    If InBatching > 0 Or SetBatching > 0 Or testComp > 0 Or testFail > 0 Or signedOffTest > 0 Then
+                    Check_selectAll = 0
+                    End If
+                    
+                    .MoveFirst
+                    
+                    'recount selected tests
+                    selTotal = DCount("[Selection]", "s87020_ListWESSamples", "[Selection] = True")
+                    Me.txt_SelectionCount = selTotal
+                    Form![s87020_ExomeLabList]![Selection].Requery
+                    'Debug.Print "total tests remaining =" & selTotal
+                    
+                    If IsNull(selTotal) Or selTotal = 0 Then
+                        msgc = MsgBox("Sorry, No valid tests selected for status update", vbExclamation, "Attention")
+                        txt_NEWBatch.SetFocus
+                        Exit Sub
+                        
+                    Else
+                    ' check if new test status = current status --> if true skip past
+                    If rsStatus!Selection = True And Trim(rsStatus!StatusID) <> Me!cmb_StatusUpdate.Column(0) Then
+                        If MsgBox("You are about to update the status of " & selTotal & " test(s) to:" & vbNewLine & vbNewLine + Me!cmb_StatusUpdate.Column(1) & vbNewLine & vbNewLine & "Do you wish to proceed?", vbYesNo Or vbExclamation, "Assign to WES Batch?") = vbNo Then
+                            Cancel = True
+                            Exit Sub
+                            
+                        Else
+                            While (Not .EOF)
+                        ' updated test and patent status to complete Or test failed
+                            If (Me.cmb_StatusUpdate.Column(0) = 4 And rsStatus!StatusID = 1202218814) Or (Me.cmb_StatusUpdate.Column(0) = 1202218816 And rsStatus!StatusID = 1202218815) Then
+                               Me.Cmb_Approver.Visible = True
+                              ' Check that an authoriser ID has been entered
+                                If Not IsNull(Cmb_Approver) Then ' update test status to complete
+                                     strUpd8Status = "UPDATE NGSTest SET StatusID = " & Me!cmb_StatusUpdate.Column(0) & " , Check4ID = " & Me!Cmb_Approver & " , Check4Date =  #" + dt + "#   WHERE NGSTest.NGSTestID = " & rsStatus!NGSTestID
+                                     strUpd8Patient = "UPDATE Patients SET s_StatusOverall = " & Me!cmb_StatusUpdate.Column(0) & " WHERE Patients.InternalPatientID = " & rsStatus!InternalPatientID
+                                     
+                                     ' update patient log
+                                     strLogSQL = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" & rsStatus!InternalPatientID & ", 'Patient: Status changed to " + Me!cmb_StatusUpdate.Column(1) + ". ',#" + dt + "#,'" + usr + "','" + cmp + "')"
+                                     strLogAprov = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" & rsStatus!InternalPatientID & ", 'NGS WES test: Report approved by " & Me!Cmb_Approver.Column(0) & " for test requested " & rsStatus!DateRequested & " NGS testID " & rsStatus!NGSTestID & ". ',#" + dt + "#,'" + usr + "','" + cmp + "')"
+                                     strLogSQL2 = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" & rsStatus!InternalPatientID & ", 'NGS WES test: Status updated to " + Me!cmb_StatusUpdate.Column(1) + " for test requested " & rsStatus!DateRequested & " NGS testID " & rsStatus!NGSTestID & ". ',#" + dt + "#,'" + usr + "','" + cmp + "')"
+                                     'update NGSlogmemo
+                                     strLogMemo = "INSERT INTO NGSLogMemo(InternalPatientID, Type, LinkID, LogMemoEntry, [Date], Login, PCName) VALUES(" + CStr(rsStatus!InternalPatientID) + ", 1, " + CStr(rsStatus!NGSTestID) + ",'NGS WES test status updated to: " + Me!cmb_StatusUpdate.Column(1) + "' ,#" + dt + "#,'" + usr + "','" + cn + "')"
+                                    
+                                    Debug.Print strUpd8Status
+                                    
+                                     DoCmd.SetWarnings False
+                                     DoCmd.RunSQL strUpd8Status
+                                     DoCmd.RunSQL strUpd8Patient
+                                     DoCmd.RunSQL strLogSQL
+                                     DoCmd.RunSQL strLogAprov
+                                     DoCmd.RunSQL strLogSQL2
+                                     DoCmd.RunSQL strLogMemo
+                                     DoCmd.SetWarnings True
+                                     .MoveNext
+                                     
+                                Else
+                                    A = MsgBox("Approver ID is required to batch update test status to " & Me!cmb_StatusUpdate.Column(1), vbOKOnly Or vbExclamation, "Approver ID required")
+                                    Me.Cmb_Approver.SetFocus
+                                    Exit Sub
+                                    
+                                End If
+                                
+                            Else ' just update test status and status log
+                                strUpd8Status = "UPDATE NGSTest SET StatusID = " & Me!cmb_StatusUpdate.Column(0) & " WHERE NGSTest.NGSTestID = " & rsStatus!NGSTestID
+                                ' update patient log
+                                strLogSQL2 = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" & rsStatus!InternalPatientID & ", 'NGS WES test: Status updated to " + Me!cmb_StatusUpdate.Column(1) + " for test requested " & rsStatus!DateRequested & " NGS testID " & rsStatus!NGSTestID & ". ',#" + dt + "#,'" + usr + "','" + cmp + "')"
+                                'update NGSlogmemo
+                                strLogMemo = "INSERT INTO NGSLogMemo(InternalPatientID, Type, LinkID, LogMemoEntry, [Date], Login, PCName) VALUES(" + CStr(rsStatus!InternalPatientID) + ", 1, " + CStr(rsStatus!NGSTestID) + ",'NGS WES test status updated to: " + Me!cmb_StatusUpdate.Column(1) + "' ,#" + dt + "#,'" + usr + "','" + cn + "')"
+                               
+                                DoCmd.SetWarnings False
+                                DoCmd.RunSQL strUpd8Status
+                                DoCmd.RunSQL strLogSQL2
+                                DoCmd.RunSQL strLogMemo
+                                DoCmd.SetWarnings True
+                                .MoveNext
+                            End If
+                        Wend
+                        Me.Cmb_Approver = Null
+                        Me.Cmb_Approver.Visible = False
+                        End If
+
+                    Else
+                        .MoveNext
+                    End If
+                    
+                    msg6 = MsgBox("The status of " & selTotal & " WES tests has been updated to " + Me.cmb_StatusUpdate.Column(1), vbOKOnly, "Status update Sucessful")
+
+                    End If
+                 End If
+            End With
+        End If
+    End If
+    
+' Refresh form, clear filter settings recount samples
+Call Unselect
+Form![s87020_ExomeLabList]![StatusID].Requery
+
+End Sub
+                    
+            
+Private Sub btn_Clear3_Click()
+'clears user entry for update status
+Me.cmb_StatusUpdate = Null
+Cmb_Approver.Visible = False
+
+End Sub
+
+
+Private Sub btnClose_Click()
+    'Triggers Form_Unload procedure. Suppress error message that appears if close event cancelled by user.
+    On Error GoTo ErrHandler
+    DoCmd.Close
+ErrHandler:
+    If Err.Number = 2501 Then 'Do nothing. Error indicates close was cancelled by user.
+    End If
+End Sub
+
+Private Sub btn_refresh_Click()
+Form!s87020_ExomeLabList.Requery
+End Sub

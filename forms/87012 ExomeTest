@@ -2,6 +2,20 @@ Option Compare Database
 'save boolean will only be set to True when user clicks 'Next' button, record won't be created if user exits window any other way.
 Private save As Boolean
 
+Private Sub Form_Load()
+    Dim rsPatDetails As ADODB.Recordset
+    'PRU passed from patient selection form
+    patientID_PRU = Me.openArgs
+    'Get patient details
+    sqlPatDetails = "SELECT LastName, FirstName FROM dbo_Patient_Table WHERE PatientTrustID = '" & patientID_PRU & "'"
+    Set rsPatDetails = New ADODB.Recordset
+    rsPatDetails.Open sqlPatDetails, CurrentProject.Connection, adOpenKeyset
+    surname = rsPatDetails.Fields("LastName")
+    firstname = rsPatDetails.Fields("FirstName")
+    'Display patient details on form
+    Me.nameTxt = "Ordering WES test for:" & "     " & patientID_PRU & "     " & surname & ", " & firstname
+End Sub
+
 Private Sub Form_Open(Cancel As Integer)
     save = False
 End Sub
@@ -36,7 +50,7 @@ Private Sub NextButton_Click()
     Dim referrerInitials As String
     Dim referrerInitialsFull As String
 
-    'PRU will be passed from Amy's form.
+    'PRU will be passed from patient selection form.
     patientID_PRU = Me.openArgs
 
     'Retrieve InternalPatientID from Moka patients table
@@ -62,6 +76,8 @@ Private Sub NextButton_Click()
             MsgBox "Please tick to confirm phenotype information has been entered (using Phenotips) before continuing.", vbExclamation, "Confirm Phenotype Entry"
         ElseIf IsNull(Me![Clinician]) Then
             MsgBox "Please select referring clinician name before continuing.", vbExclamation, "Select Name"
+        ElseIf IsNull(Me![dept]) Or IsNull(Me![cost]) Then
+            MsgBox "Please select referring department and cost centre before continuing.", vbExclamation, "Select department/cost centre"
         Else
             'Save record
             DoCmd.DoMenuItem acFormBar, acRecordsMenu, 5, , acMenuVer70
