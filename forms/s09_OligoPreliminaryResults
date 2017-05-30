@@ -159,7 +159,8 @@ Private Sub DNALabellingID_DblClick(Cancel As Integer)
         cxn![ArrayResult] = NewResultText
         cxn.Update
         Set cxn = Nothing
-
+        
+        'logging
         Dim cxn2 As ADODB.Recordset
         Set cxn2 = New ADODB.Recordset
         Dim SQLlogquery As String
