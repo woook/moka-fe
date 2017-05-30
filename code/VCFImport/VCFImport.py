@@ -1,7 +1,13 @@
 '''
-v1.2 - AB 2017/02/28
+v1.3 - AB 2017/05/25
 
 ###
+Changes from v1.2:
+Added support for NaN AF values 
+Removed strip CADD whitespace feature because the bug that introduced whitespace has since been removed from Ingenuity
+Removed line that set GQ to 'Null' if it is false, because this results in GQ values of 0 being entered as Null and there 
+*should* always be a GQ output from GATK
+Added support for NaN values (e.g. in ING_AF field)
 Changes from v1.1:
 Updated getVars() method to account for new Ingenuity format of CADD scores <10
 Added stripCADDws() method to overcome Ingenuity bug that outputs whitespace between min and max CADD values.
@@ -23,6 +29,7 @@ Requirements:
 import sys
 import os
 import time
+import math
 import vcf
 import pyodbc
 
@@ -62,6 +69,7 @@ class MokaVCF(object):
                       'SVTYPE')
         self.vcfPaths = {}
         self.cnxn = pyodbc.connect("DRIVER={SQL Server}; SERVER=GSTTV-MOKA; DATABASE=mokadata;", autocommit=True)
+        #self.cnxn = pyodbc.connect(r'DRIVER={Microsoft Access Driver (*.mdb)};DBQ=C:\Users\Andy\MokaVCFImportTest\MOKA_FOR_WES_VCFImportTest.mdb;', autocommit=True)
         self.cursor = self.cnxn.cursor()
         self.prevVars = set([])
         self.mokaChr = {}
@@ -70,25 +78,8 @@ class MokaVCF(object):
         self.patID = patID
         self.ngsTestID = ngsTestID
         self.datetime = time.strftime("%Y%m%d %H:%M:%S %p") # date/time in format: yyyymmdd hh:mm:ss AM/PM
-    def stripCADDws(self, vcfPathLst):
-        # Winter release of Ingenuity contains bug that outputs whitespace between min and max CADD values if CADD <10
-        # This method finds the CADD value and strips the whitespace to prevent pyVCF errors
-        for vcf in vcfPathLst:
-            vcfOut = ""
-            with open(vcf, 'r') as f_in:
-                for line in f_in:
-                    if not line.startswith('#'): # Skip header rows
-                        fields = line.split('\t') # Split on tab
-                        # Check the number of columns = 10
-                        assert (len(fields)==10), "Error spliting VCF on tab. Number columns doesn't equal 10"
-                        INFO = fields[7].split(';') # Split the INFO field on semi-colon
-                        #Re-build INFO field, replacing whitespace after comma in CADD score
-                        newINFO = ';'.join([x.replace(', ', ',') if x.startswith("CADD") else x for x in INFO])
-                        fields[7]=newINFO # Replace old INFO field with new INFO field
-                        line = "\t".join(fields) # Join the VCF columns back together with tabs and assign back to line
-                    vcfOut += line # Add line to reconstructed VCF
-            with open(vcf, 'w') as f_out:
-                f_out.write(vcfOut) # Write new VCF folder
+        #self.datetime = time.strftime("%d/%b/%Y %H:%M:%S") # date/time in format: dd/mmm/yyyy hh:mm:ss
+
     def makeVCFdict(self, vcfPathLst):
         for vcf in vcfPathLst:
             panelName = os.path.basename(vcf).split("-")[1]
@@ -100,18 +91,21 @@ class MokaVCF(object):
                 self.vcfPaths[(3, "Phenotype")] = vcf
             else:
                 self.vcfPaths[(4, panelName)] = vcf
+
     def lookupPrevVars(self):
         # Find details of any variants already imported into Moka for this test and add to exclusion list to prevent duplication.
         sqlPrevVars = "SELECT NGSVariant.ChrID, NGSVariant.Position_hg19, NGSVariant.ref, NGSVariant.alt FROM NGSVariant WHERE NGSVariant.NGSTestID = %s" % (self.ngsTestID)
         mokaPrevVars = self.cursor.execute(sqlPrevVars).fetchall()
         for row in mokaPrevVars:
             self.prevVars.add((str(row.ChrID), str(row.Position_hg19), "'{}'".format(str(row.ref)), "'{}'".format(str(row.alt)))) # "'{}'".format() wraps string in single quotes. See below.
+
     def lookupChr(self):
         # Create a chromosome ID lookup dictionary from Moka Chromosome table
         sqlGetChr = "SELECT ChrID, Chr FROM Chromosome;"
         mokaChrAll = self.cursor.execute(sqlGetChr).fetchall()
         for row in mokaChrAll:
             self.mokaChr[row.Chr] = row.ChrID
+
     def lookupHGNCID(self):
         # Create an HGNCID lookup dictionary from Moka genesHGNC_current table
         allVCFGenes = set([]) # using set instead of list to prevent gene symbols being added multiple times
@@ -131,6 +125,7 @@ class MokaVCF(object):
             # Add each {gene symbol: HGNCID} pair to the self.mokaHGNC dictionary
             for row in mokaHGNCAll:
                 self.mokaHGNC[row.ApprovedSymbol] = str(row.HGNCID)
+
     def getVars(self):
         # Extracts variants and selected annotations from VCF.
         # Builds strings of variant and annotation data for SQL INSERT statements.
@@ -157,11 +152,9 @@ class MokaVCF(object):
                     rd = str(row.samples[0]['DP']) # Read depth
                     cq = str(row.QUAL) # Call quality
                     af = row.samples[0]['ING_AF'] # Ingenuity inferred allele fraction (percentage). Returns false if no ING_AF
-                    if not af:
+                    if not af or math.isnan(af):
                         af = 'Null' # Adds Null value to SQL statement
                     gq = row.samples[0]['GQ']
-                    if not gq:
-                        gq = 'Null'
                     # Stores each variant as a string that can be used in VALUES section of SQL insert statement (see below).
                     varCurrent = (mokaChrID, position, ref, alt, self.ngsTestID, self.patID, "'{}'".format(self.datetime), str(panel[0]), "'{}'".format(panel[1]), gt, rd, cq, str(af), str(gq))
                     #varCurrent = (mokaChrID, position, ref, alt, self.ngsTestID, self.patID, "#"+self.datetime+"#", str(panel[0]), "'{}'".format(panel[1]), gt, rd, cq, str(af), str(gq))
@@ -207,7 +200,10 @@ class MokaVCF(object):
                                 vcfVal = vcfVal[0]
                             #If the value is a number, need to convert to string for SQL statement.
                             if type(vcfVal) == int or type(vcfVal) == float:
-                                annot.append(str(vcfVal))
+                                if math.isnan(vcfVal): # If value is NaN, add a Null value
+                                    annot.append("Null")
+                                else:    
+                                    annot.append(str(vcfVal)) # Need to convert number to string for adding to SQL statement
                             #If the value is a string, need to enclose in single quotes for SQL statement.
                             else:
                                 annot.append("'{}'".format(vcfVal.replace("'", "''")))
@@ -216,6 +212,7 @@ class MokaVCF(object):
                     # This list is added to each time a new row for that variant is encountered in the VCF.
                     self.vars[varCurrent] = self.vars.setdefault(varCurrent, []) + [annot]
             vcfReader = None # Releases file (pyvcf reader object has no .close() method)
+
     def insertMoka(self):
         # Loops through variant dictionary and inserts into Moka
         sqlIns = "INSERT INTO NGSVariant (Gene, ChrID, Position_hg19, ref, alt, NGSTestID, InternalPatientID, DateAdded, PanelType, PanelTypeName, genotype, ReadDepth, CallQuality, AlleleFraction, GenotypeQuality) VALUES (%s, %s)"
@@ -233,15 +230,15 @@ class MokaVCF(object):
                 sqlInsAnnot = "INSERT INTO NGSVariantAnnotations (NGSVariantID, HGNCID, InferredCompHet, InferredActivity, %s) VALUES (%s, %s)" % (", ".join(self.fields), str(ngsVariantID), ", ".join(entry))
                 self.cursor.execute(sqlInsAnnot) # Insert annotations for each variant transcript
 
-vcfPathLst = sys.argv[1].split(",")
-patID = sys.argv[2]
-ngsTestID = sys.argv[3]
+if __name__ == "__main__":
+    vcfPathLst = sys.argv[1].split(",")
+    patID = sys.argv[2]
+    ngsTestID = sys.argv[3]
 
-mv = MokaVCF(patID, ngsTestID)
-mv.stripCADDws(vcfPathLst)
-mv.makeVCFdict(vcfPathLst)
-mv.lookupPrevVars()
-mv.lookupChr() # Retrieve IDs from Moka Chromosome table
-mv.lookupHGNCID() # Retrieve HGNCIDs for genes in VCF from Moka GenesHGNC_current table
-mv.getVars() # Extract variants and annotations from VCF
-mv.insertMoka() # Insert variant records and annotations into Moka NGSVariant and NGSVariantAnnotations tables.
+    mv = MokaVCF(patID, ngsTestID)
+    mv.makeVCFdict(vcfPathLst)
+    mv.lookupPrevVars()
+    mv.lookupChr() # Retrieve IDs from Moka Chromosome table
+    mv.lookupHGNCID() # Retrieve HGNCIDs for genes in VCF from Moka GenesHGNC_current table
+    mv.getVars() # Extract variants and annotations from VCF
+    mv.insertMoka() # Insert variant records and annotations into Moka NGSVariant and NGSVariantAnnotations tables.
