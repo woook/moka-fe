@@ -92,97 +92,93 @@ Private Sub Probes_DblClick(Cancel As Integer)
     chromeurl url
 End Sub
 
-''auto karyotype
 Private Sub DNALabellingID_DblClick(Cancel As Integer)
-    Dim Q As ADODB.Recordset
-    Set Q = New ADODB.Recordset
-    'Dim e As ADODB.Recordset
-    'Set e = New ADODB.Recordset
-    Dim r As String
-    'Dim c As String
-    Dim S As String
-    'Dim b As String
-    Dim t As String
-    'Dim a As String
-    Dim Sta As String
-    Dim Sto As String
-    'Dim rou As String
-    'Dim Siz As String
-    Dim u As ADODB.Recordset
-    Set u = New ADODB.Recordset
-    Dim V As String
-    Dim d As String
-    Dim un As String
-    Dim cn As String
-    d = Format(Now, "dd/mmm/yyyy Hh:Nn:ss")
-    un = VBA.Environ("USERNAME")
-    cn = VBA.Environ("COMPUTERNAME")
-    Dim W As String
-    Dim X As String
-    'Dim F As String
-    'Dim G As String
-        
-    W = Me.Parent![s09_OligoPreliminaryResults]![DNALabellingID]
-    X = Me.Parent![InternalPatientID]
+
+''auto karyotype
+    'Declare variables
+    Dim cxn As ADODB.Recordset
+    Set cxn = New ADODB.Recordset
+    Dim SQLquery As String
+    Dim DNAID As String
+    Dim IPID As String
+
+    'Pull out id's
+    DNAID = Me.Parent![s09_OligoPreliminaryResults]![DNALabellingID]
+    IPID = Me.Parent![InternalPatientID]
+
+    'Pull out copynumber
+    Dim CopyNumber As String
+    'Assign copy number
     If Not IsNull(Me![Copies].Column(1)) Then
-        f = Me![Copies].Column(1)
-    Else: f = " "
+        CopyNumber = Me![Copies].Column(1)
+    Else: CopyNumber = " "
         End If
-    'G = CStr(Me!Probes)
 
-
-
+    'If this is a hyb partner, add comment to say imbalance confirmed in hyb partner
     If Me!CNVTypeID = 1190384919 Then
-        r = "SELECT ArrayResultComment FROM ArrayTest WHERE DNALabellingID = " + CStr(W) + " AND InternalPatientID = " + X + ""
-        Q.Open r, CurrentProject.Connection, adOpenKeyset, adLockOptimistic, adCmdText
-        If Not IsNull(Q!ArrayResultComment) Then
-            t = Q!ArrayResultComment
-            S = "" + t + " " + vbNewLine + "Imbalance confirmed in hyb partner"
+
+        Dim ResultCommentText As String
+        Dim NewResultCommentText As String
+
+        SQLquery = "SELECT ArrayResultComment FROM ArrayTest WHERE DNALabellingID = " + CStr(DNAID) + " AND InternalPatientID = " + IPID + ""
+        cxn.Open SQLquery, CurrentProject.Connection, adOpenKeyset, adLockOptimistic, adCmdText
+
+        If Not IsNull(cxn![ArrayResultComment]) Then
+            ResultCommentText = cxn![ArrayResultComment]
+            NewResultCommentText = "" + ResultCommentText + " " + vbNewLine + "Imbalance confirmed in hyb partner"
         Else
-            S = "Imbalance confirmed in hyb partner"
+            NewResultCommentText = "Imbalance confirmed in hyb partner"
             End If
-    
-        Q!ArrayResultComment = S
-        Q.Update
-        Set Q = Nothing
-    
+
+        cxn!ArrayResultComment = NewResultCommentText
+        cxn.Update
+        Set cxn = Nothing
+
+    'If this is the patient with a CNV, add ISNC to result field
     Else
-        r = "SELECT ArrayResult FROM ArrayTest WHERE DNALabellingID = " + CStr(W) + " AND InternalPatientID = " + X + ""
-        Q.Open r, CurrentProject.Connection, adOpenKeyset, adLockOptimistic, adCmdText
-        Sta = FormatNumber(Me!Start19, 0, 0, 0, -1)
-        Sto = FormatNumber(Me!Stop19, 0, 0, 0, -1)
-        If Not IsNull(Q!ArrayResult) Then
-            t = Q!ArrayResult
-            S = "" + t + "," + Me![Band19] + "(" + Sta + "-" + Sto + ")" + f + ""
+        
+        SQLquery = "SELECT ArrayResult FROM ArrayTest WHERE DNALabellingID = " + CStr(DNAID) + " AND InternalPatientID = " + IPID + ""
+        cxn.Open SQLquery, CurrentProject.Connection, adOpenKeyset, adLockOptimistic, adCmdText
+
+        Dim StartPos As String
+        Dim StopPos As String
+
+        StartPos = Me![Start19]
+        StopPos = Me![Stop19]
+
+        Dim ResultText As String
+        Dim NewResultText As String
+
+        If Not IsNull(cxn![ArrayResult]) Then
+            ResultText = cxn![ArrayResult]
+            NewResultText = "" + ResultText + ",arr[GRCh37] " + Me![Band19] + "(" + StartPos + "_" + StopPos + ")" + CopyNumber + ""
         Else
-            S = "" + Me![Band19] + "(" + Sta + "-" + Sto + ")" + f + ""
+            NewResultText = "arr[GRCh37] " + Me![Band19] + "(" + StartPos + "_" + StopPos + ")" + CopyNumber + ""
             End If
     
-        Q!ArrayResult = S
-        Q.Update
-        Set Q = Nothing
+        cxn![ArrayResult] = NewResultText
+        cxn.Update
+        Set cxn = Nothing
+
+        Dim cxn2 As ADODB.Recordset
+        Set cxn2 = New ADODB.Recordset
+        Dim SQLlogquery As String
+        Dim DateStamp As String
+        Dim UserName As String
+        Dim ComputerName As String
+
+        DateStamp = Format(Now, "dd/mmm/yyyy Hh:Nn:ss")
+        UserName = VBA.Environ("USERNAME")
+        ComputerName = VBA.Environ("COMPUTERNAME")
     
-        V = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + ",'Array test: Result changed to " + S + " from HybID " + Me![DNALabellingID].Column(1) + "',#" + d + "#,'" + un + "','" + cn + "')"
-        u.Open V, CurrentProject.Connection
-        Set u = Nothing
+        SQLlogquery = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + ",'Array test: Result changed to " + NewResultText + " from HybID " + Me![DNALabellingID].Column(1) + "',#" + DateStamp + "#,'" + UserName + "','" + ComputerName + "')"
+        cxn2.Open SQLlogquery, CurrentProject.Connection
+        Set cxn2 = Nothing
         
         End If
-        
+    
+    'refresh GUI
     Me.Parent![s09_ArrayTest].Form.Requery
-        
-'    c = "SELECT ArrayResultComment FROM ArrayTest WHERE DNALabellingID = " + CStr(W) + " AND InternalPatientID = " + X + ""
-'    e.Open c, CurrentProject.Connection, adOpenKeyset, adLockOptimistic, adCmdText
-'    rou = Me!Size19 / 1000000
-'    Siz = FormatNumber(rou, 3, 0, 0, -1)
-'    If Not IsNull(e!ArrayResultComment) Then
-'        a = e!ArrayResultComment
-'        b = "" + a + vbNewLine + Me![Band19] + F + " " + Siz + "Mb, " + G + " probes"
-'    Else: b = "" + Me![Band19] + F + " " + Siz + "Mb, " + G + " probes"
-'    End If
-'
-'    e!ArrayResultComment = b
-'    e.Update
-'    Set e = Nothing
 
 End Sub
 
@@ -193,33 +189,33 @@ Private Sub Pathogenic_Change()
         Dim e As ADODB.Recordset
         Set e = New ADODB.Recordset
         'Dim r As String
-        Dim c As String
+        Dim C As String
         Dim S As String
         Dim b As String
         'Dim t As String
-        Dim a As String
+        Dim A As String
         'Dim Sta As String
         'Dim Sto As String
         Dim rou As String
         Dim Siz As String
-        Dim u As ADODB.Recordset
-        Set u = New ADODB.Recordset
-        Dim V As String
-        Dim d As String
+        Dim U As ADODB.Recordset
+        Set U = New ADODB.Recordset
+        Dim v As String
+        Dim D As String
         Dim dd As String
         Dim un As String
         Dim cn As String
-        d = Format(Now, "dd/mmm/yyyy Hh:Nn:ss")
+        D = Format(Now, "dd/mmm/yyyy Hh:Nn:ss")
         dd = Format(Now, "dd/mm/yyyy")
         un = VBA.Environ("USERNAME")
         cn = VBA.Environ("COMPUTERNAME")
         Dim W As String
-        Dim X As String
+        Dim x As String
         Dim f As String
         Dim g As String
             
         W = Me.Parent![s09_OligoPreliminaryResults]![DNALabellingID]
-        X = Me.Parent![InternalPatientID]
+        x = Me.Parent![InternalPatientID]
         If Not IsNull(Me![Copies].Column(1)) Then
             f = Me![Copies].Column(1)
             Else: f = " "
@@ -244,13 +240,13 @@ Private Sub Pathogenic_Change()
     '    q.Update
     '    Set q = Nothing
         
-        c = "SELECT ArrayResultComment FROM ArrayTest WHERE DNALabellingID = " + CStr(W) + " AND InternalPatientID = " + X + ""
-        e.Open c, CurrentProject.Connection, adOpenKeyset, adLockOptimistic, adCmdText
+        C = "SELECT ArrayResultComment FROM ArrayTest WHERE DNALabellingID = " + CStr(W) + " AND InternalPatientID = " + x + ""
+        e.Open C, CurrentProject.Connection, adOpenKeyset, adLockOptimistic, adCmdText
         rou = Me!Size19 / 1000000
         Siz = FormatNumber(rou, 3, -1, 0, -1)
         If Not IsNull(e!ArrayResultComment) Then
-            a = e!ArrayResultComment
-            b = "" + a + vbNewLine + un + " (" + dd + "): " + Me![Band19] + " " + f + " - " + Siz + "Mb, " + g + " probes, classified in Moka as " + h + ""
+            A = e!ArrayResultComment
+            b = "" + A + vbNewLine + un + " (" + dd + "): " + Me![Band19] + " " + f + " - " + Siz + "Mb, " + g + " probes, classified in Moka as " + h + ""
         Else: b = "" + un + " (" + dd + "): " + Me![Band19] + " " + f + " - " + Siz + "Mb, " + g + " probes, classified in Moka as " + h + ""
             End If
         
@@ -258,16 +254,16 @@ Private Sub Pathogenic_Change()
         e.Update
         Set e = Nothing
     
-        V = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + ",'Array test: " + Me![Band19] + " " + f + " classified as " + h + " from HybID " + Me![DNALabellingID].Column(1) + "',#" + d + "#,'" + un + "','" + cn + "')"
-        u.Open V, CurrentProject.Connection
-        Set u = Nothing
+        v = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + ",'Array test: " + Me![Band19] + " " + f + " classified as " + h + " from HybID " + Me![DNALabellingID].Column(1) + "',#" + D + "#,'" + un + "','" + cn + "')"
+        U.Open v, CurrentProject.Connection
+        Set U = Nothing
     
         Me.Parent![s09_ArrayTest].Form.Requery
     
         If IsNull(Me.Parent![s09_ArrayTest]![ArrayResultComment]) Then
-            S = "INSERT INTO PatientLogMemo(InternalPatientID, ArrayTestID, LogMemoEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + "," + CStr(Me.Parent![s09_ArrayTest]![ArrayTestID]) + ",'Array test: Result comment deleted for test requested " + CStr(Me.Parent![s09_ArrayTest]![RequestedDate]) + "',#" + d + "#,'" + un + "','" + cn + "')"
+            S = "INSERT INTO PatientLogMemo(InternalPatientID, ArrayTestID, LogMemoEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + "," + CStr(Me.Parent![s09_ArrayTest]![ArrayTestID]) + ",'Array test: Result comment deleted for test requested " + CStr(Me.Parent![s09_ArrayTest]![RequestedDate]) + "',#" + D + "#,'" + un + "','" + cn + "')"
         Else
-            S = "INSERT INTO PatientLogMemo(InternalPatientID, ArrayTestID, LogMemoEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + "," + CStr(Me.Parent![s09_ArrayTest]![ArrayTestID]) + ",'Array test: Result comment updated for array test requested " + CStr(Me.Parent![s09_ArrayTest]![RequestedDate]) + " - " + Me.Parent![s09_ArrayTest]![ArrayResultComment] + "',#" + d + "#,'" + un + "','" + cn + "')"
+            S = "INSERT INTO PatientLogMemo(InternalPatientID, ArrayTestID, LogMemoEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + "," + CStr(Me.Parent![s09_ArrayTest]![ArrayTestID]) + ",'Array test: Result comment updated for array test requested " + CStr(Me.Parent![s09_ArrayTest]![RequestedDate]) + " - " + Me.Parent![s09_ArrayTest]![ArrayResultComment] + "',#" + D + "#,'" + un + "','" + cn + "')"
             End If
         
         Q.Open S, CurrentProject.Connection
@@ -281,20 +277,20 @@ Private Sub Band19_DblClick(Cancel As Integer)
     If Not IsNull(Me!Band19) Then
         Dim e As ADODB.Recordset
         Set e = New ADODB.Recordset
-        Dim c As String
+        Dim C As String
         Dim b As String
-        Dim a As String
-        Dim X As String
+        Dim A As String
+        Dim x As String
         Dim f As String
     
-        X = Me.Parent![InternalPatientID]
+        x = Me.Parent![InternalPatientID]
         f = Me![Band19]
         
-        c = "SELECT CandidateAbnormality FROM Patients WHERE InternalPatientID = " + X + ""
-        e.Open c, CurrentProject.Connection, adOpenKeyset, adLockOptimistic, adCmdText
+        C = "SELECT CandidateAbnormality FROM Patients WHERE InternalPatientID = " + x + ""
+        e.Open C, CurrentProject.Connection, adOpenKeyset, adLockOptimistic, adCmdText
         If Not IsNull(e!CandidateAbnormality) Then
-            a = e!CandidateAbnormality
-            b = "" + a + ", " + f + ""
+            A = e!CandidateAbnormality
+            b = "" + A + ", " + f + ""
             Else
             b = f
             End If
