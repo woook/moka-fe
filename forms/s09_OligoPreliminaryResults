@@ -151,7 +151,7 @@ Private Sub DNALabellingID_DblClick(Cancel As Integer)
 
         If Not IsNull(cxn![ArrayResult]) Then
             ResultText = cxn![ArrayResult]
-            NewResultText = "" + ResultText + ",arr[GRCh37] " + Me![Band19] + "(" + StartPos + "_" + StopPos + ")" + CopyNumber + ""
+            NewResultText = "" + ResultText + "," + Me![Band19] + "(" + StartPos + "_" + StopPos + ")" + CopyNumber + ""
         Else
             NewResultText = "arr[GRCh37] " + Me![Band19] + "(" + StartPos + "_" + StopPos + ")" + CopyNumber + ""
             End If
