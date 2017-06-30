@@ -10,10 +10,10 @@ Private Sub Form_Load()
     sqlPatDetails = "SELECT LastName, FirstName FROM dbo_Patient_Table WHERE PatientTrustID = '" & patientID_PRU & "'"
     Set rsPatDetails = New ADODB.Recordset
     rsPatDetails.Open sqlPatDetails, CurrentProject.Connection, adOpenKeyset
-    surname = rsPatDetails.Fields("LastName")
-    firstname = rsPatDetails.Fields("FirstName")
+    Surname = rsPatDetails.Fields("LastName")
+    FirstName = rsPatDetails.Fields("FirstName")
     'Display patient details on form
-    Me.nameTxt = "Ordering WES test for:" & "     " & patientID_PRU & "     " & surname & ", " & firstname
+    Me.nameTxt = "Ordering WES test for:" & "     " & patientID_PRU & "     " & Surname & ", " & FirstName
 End Sub
 
 Private Sub Form_Open(Cancel As Integer)
@@ -49,15 +49,15 @@ Private Sub NextButton_Click()
     Dim referrerID As String
     Dim referrerInitials As String
     Dim referrerInitialsFull As String
-
+       
     'PRU will be passed from patient selection form.
     patientID_PRU = Me.openArgs
-
+    
     'Retrieve InternalPatientID from Moka patients table
     Set rs = New ADODB.Recordset
     sqlPatID = "SELECT InternalPatientID FROM Patients WHERE PatientID = '" & patientID_PRU & "'"
     rs.Open sqlPatID, CurrentProject.Connection, adOpenKeyset
-
+    
     If rs.EOF Then
         MsgBox "Unable to proceed, cannot locate patient ID.", vbCritical, "ERROR"
         Set rs = Nothing
@@ -67,8 +67,17 @@ Private Sub NextButton_Click()
         Set rs = Nothing
         'Set default values
         Me![DateRequested] = Format(Now(), "dd/mmm/yyyy Hh:Nn:ss")
-        Me![StatusID] = 1202218801 'Approval pending
-
+        
+        'OLD STATUS CHANGE FOR SEPARATE AUTHORISATION STEP
+        '################################
+        'Me![StatusID] = 1202218801 'Approval pending
+        '################################
+ 
+        'SKIP PAST AUTHORISATION STRAIGHT TO DNA QC
+        '################################
+        Me![StatusID] = 1202218800 'DNA QC
+        '################################
+        
         'Check Referral type and Phenotype info entered
         If IsNull(Me![ReferralID]) Then
             MsgBox "Please select a referral type before continuing.", vbExclamation, "Select Referral Type"
