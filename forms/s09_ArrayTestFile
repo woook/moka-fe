@@ -1,0 +1,83 @@
+Option Compare Database
+Private delFileDesc As String
+
+Private Sub Form_Delete(Cancel As Integer)
+    'Create comma separated string of file descriptions for files before they are deleted, so the deletion can be recorded in patient log.
+    If delFileDesc = "" Then
+        delFileDesc = Me.Description
+    Else
+        delFileDesc = delFileDesc & "," & Me.Description
+    End If
+End Sub
+
+Private Sub Form_AfterDelConfirm(Status As Integer)
+    Dim ArrayTestID As Long
+    Dim patID As Long
+    Dim D As String
+    Dim un As String
+    Dim cn As String
+    Dim sqlPatLog As String
+    'If user selects OK to delete selected files, add an entry into patient log for each file deleted.
+    If Status = acDeleteOK Then
+        ArrayTestID = Me.Parent.ArrayTestID
+        delFiles = Split(delFileDesc, ",")
+        For Each delFile In delFiles
+            patID = Me.Parent.InternalPatientID
+            D = Format(Now(), "dd/mmm/yyyy Hh:Nn:ss")
+            un = VBA.Environ("USERNAME")
+            cn = VBA.Environ("COMPUTERNAME")
+            sqlPatLog = "INSERT INTO PatientLog (InternalPatientID, LogEntry, [Date], Login, PCName) VALUES (" & patID & ", 'Array test: File removed from array test record. (File description: " & delFile & ")', #" + D + "#,'" + un + "','" + cn + "')"
+            DoCmd.SetWarnings False
+            DoCmd.RunSQL sqlPatLog
+            DoCmd.SetWarnings True
+        Next
+    End If
+    delFileDesc = ""
+End Sub
+
+Private Sub linkDescription_DblClick(Cancel As Integer)
+    Dim selectedFile As Office.FileDialog
+    Dim selectedPath As String
+    Dim Description As String
+
+    openDir = "\\gstt.local\Apps\Moka\Files\Analysis\" 'Open file picker in this directory
+    patID = Me.Parent.InternalPatientID
+
+    If Not IsNull(ArrayTestFile) Then
+        Me.ArrayTestFile.Action = acOLEActivate
+    Else
+        If Not IsNull(ArrayTestFilepath) Then
+            'If filepath already , open file
+            Set objShell = CreateObject("Wscript.Shell")
+            objShell.Run ("""" & ArrayTestFilepath & """")
+        Else
+            'Open file picker
+            Set selectedFile = Application.FileDialog(msoFileDialogFilePicker)
+            selectedFile.AllowMultiSelect = False 'Only allow one file to be selected
+            selectedFile.InitialFileName = openDir 'Open file picker in this directory
+            selectedFile.Title = "Select File to Attach to WES Test Record"
+            If selectedFile.Show = True Then 'If a file has been selected
+                Description = InputBox("Please enter brief file description", "File Description", "") 'Prompt for a file description
+                If Description <> "" Then 'If a description has been entered...
+                    Me.Description = Description 'Update description field
+                    Me.Date = Format(Now(), "dd/mmm/yyyy Hh:Nn:ss") 'Update date added field
+                    Me.ArrayTestFilepath = selectedFile.SelectedItems.Item(1) 'Update file path field
+                    DoCmd.DoMenuItem acFormBar, acRecordsMenu, 5, , acMenuVer70 'Save record so ArrayTestFileID is created and can be saved in patient log
+                    'Update patient log
+                    D = Format(Now(), "dd/mmm/yyyy Hh:Nn:ss")
+                    un = VBA.Environ("USERNAME")
+                    cn = VBA.Environ("COMPUTERNAME")
+                    sqlPatLog = "INSERT INTO PatientLog (InternalPatientID, LogEntry, [Date], Login, PCName) VALUES (" & patID & ", 'Array test: File attached to array test record. (ArrayTestFile ID: " & Me.ArrayTestFileID & ", Description: " & Me.Description & ")', #" + D + "#,'" + un + "','" + cn + "')"
+                    DoCmd.SetWarnings False
+                    DoCmd.RunSQL sqlPatLog
+                    DoCmd.SetWarnings True
+                    Me.Requery
+                Else
+                    MsgBox "File can't be attached without description.", vbExclamation, "Unable to Attach File"
+                End If
+            End If
+            Set selectedFile = Nothing
+        End If
+    End If
+End Sub
+
