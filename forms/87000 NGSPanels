@@ -1,0 +1,72 @@
+Option Compare Database
+
+Private Sub Copy_Click()
+    'Copies selected panel into a new panel and opens for user to edit
+    Dim origPanID As Integer
+    Dim newPanID As Integer
+    Dim origPanCode As String
+    Dim origPanName As String
+    Dim origPanCat As Integer
+    Dim origPanSubCat As Integer
+    Dim panIns As ADODB.Recordset
+    Dim stDocName As String
+    Dim stLinkCriteria As String
+    If Not IsNull(Me!s87000_NGSPanels.Form!PanelCode) Then
+        origPanID = Me!s87000_NGSPanels.Form!NGSPanelID
+        origPanCode = Me!s87000_NGSPanels.Form!PanelCode
+        origPanName = Me!s87000_NGSPanels.Form!Panel
+        origPanCat = Me!s87000_NGSPanels.Form!Category
+        origPanSubCat = Me!s87000_NGSPanels.Form!SubCategory
+        ans = MsgBox("You are about to create a copy of the following panel: " & vbNewLine & vbNewLine & origPanCode & ": " & origPanName & vbNewLine & vbNewLine & "Do you want to proceed?", vbYesNo + vbInformation, "Confirmation required")
+        If ans = vbYes Then
+            'Create new panel with same category and subcategory and original
+            Set panIns = New ADODB.Recordset
+            panInsSQL = "INSERT INTO NGSPanel (Category, SubCategory) VALUES (" & origPanCat & "," & origPanSubCat & ")"
+            panIns.Open panInsSQL, CurrentProject.Connection, adOpenKeyset
+            panIns.Open "SELECT @@identity", CurrentProject.Connection, adOpenKeyset 'Get ID of new entry
+            newPanID = panIns.Fields(0).Value
+            Set panIns = Nothing
+            'Copy genes into new panel
+            sqlGeneIns = "INSERT INTO NGSPanelGenes ( NGSPanelID, symbol, HGNCID) SELECT " & newPanID & ", NGSPanelGenes.Symbol, NGSPanelGenes.HGNCID FROM NGSPanelGenes WHERE NGSPanelGenes.NGSPanelID = " & origPanID
+            DoCmd.SetWarnings False
+            DoCmd.RunSQL sqlGeneIns
+            DoCmd.SetWarnings True
+            'Open new panel for editing
+            stDocName = "s87000_NGSPanels"
+            stLinkCriteria = "[NGSPanelID] = " & newPanID
+            DoCmd.OpenForm stDocName, acFormDS, , stLinkCriteria, acFormEdit
+        End If
+    End If
+End Sub
+
+Private Sub edit_Click()
+    'Opens exisiting panel for editing
+    Dim origPanID As Integer
+    Dim origPanCode As String
+    Dim origPanName As String
+    If Not IsNull(Me!s87000_NGSPanels.Form!PanelCode) Then
+        origPanCode = Me!s87000_NGSPanels.Form!PanelCode
+        origPanName = Me!s87000_NGSPanels.Form!Panel
+        origPanID = Me!s87000_NGSPanels.Form!NGSPanelID
+        ans = MsgBox("WARNING!!! READ MESSAGE BELOW BEFORE PROCEEDING!!!" & vbNewLine & vbNewLine & "Panels generally should not be edited once created! If genes need to be added to a panel, the panel should be copied and given a new version number!!" & vbNewLine & _
+                     "If additional genes are requested for a WES test, these should be added to the tertiary panel. Primary and secondary panels should never be edited once ordered!!" & vbNewLine & vbNewLine & _
+                     vbNewLine & "You are about to edit the following panel: " & vbNewLine & vbNewLine & origPanCode & ": " & origPanName & vbNewLine & vbNewLine & "Are you sure you want to proceed?", vbYesNo + vbExclamation, "WARNING!!!")
+        If ans = vbYes Then
+            stDocName = "s87000_NGSPanels"
+            stLinkCriteria = "[NGSPanelID] = " & origPanID
+            DoCmd.OpenForm stDocName, acFormDS, , stLinkCriteria, acFormEdit
+        End If
+    End If
+End Sub
+
+Private Sub refresh_Click()
+    'Refresh subform
+    Form_s87000_NGSPanels.Requery
+End Sub
+
+Private Sub Create_Click()
+    'Create a new panel
+    Dim stDocName As String
+    stDocName = "s87000_NGSPanels"
+    DoCmd.OpenForm stDocName, acFormDS, , , acFormAdd
+End Sub
