@@ -1,0 +1,1 @@
+SELECT Null AS NGSTestID, Null AS PatientTrustID, Null AS LastName, Null AS FirstName, Null AS DOB, Null AS Gender, Null AS Referral, Null AS DateRequested, Null AS StatusID, Null AS Status, Null AS RefName, Null AS PanelA, Null AS PanelB, Null AS BatchName;
