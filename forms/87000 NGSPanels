@@ -44,19 +44,15 @@ Private Sub edit_Click()
     Dim origPanID As Integer
     Dim origPanCode As String
     Dim origPanName As String
-    If Not IsNull(Me!s87000_NGSPanels.Form!PanelCode) Then
-        origPanCode = Me!s87000_NGSPanels.Form!PanelCode
-        origPanName = Me!s87000_NGSPanels.Form!Panel
         origPanID = Me!s87000_NGSPanels.Form!NGSPanelID
         ans = MsgBox("WARNING!!! READ MESSAGE BELOW BEFORE PROCEEDING!!!" & vbNewLine & vbNewLine & "Panels generally should not be edited once created! If genes need to be added to a panel, the panel should be copied and given a new version number!!" & vbNewLine & _
                      "If additional genes are requested for a WES test, these should be added to the tertiary panel. Primary and secondary panels should never be edited once ordered!!" & vbNewLine & vbNewLine & _
-                     vbNewLine & "You are about to edit the following panel: " & vbNewLine & vbNewLine & origPanCode & ": " & origPanName & vbNewLine & vbNewLine & "Are you sure you want to proceed?", vbYesNo + vbExclamation, "WARNING!!!")
+                     vbNewLine & "Are you sure you want to proceed?", vbYesNo + vbExclamation, "WARNING!!!")
         If ans = vbYes Then
             stDocName = "s87000_NGSPanels"
             stLinkCriteria = "[NGSPanelID] = " & origPanID
             DoCmd.OpenForm stDocName, acFormDS, , stLinkCriteria, acFormEdit
         End If
-    End If
 End Sub
 
 Private Sub refresh_Click()
