@@ -647,6 +647,45 @@ Private Sub SubmitButton_Click()
             save = True
             DoCmd.Close
             
+            'Send email to duty scientist
+            Set rsInfo = New ADODB.Recordset
+            sqlInfo = "SELECT Patients.BookinLastName, Patients.BookinFirstName, Patients.BookinDOB, Checker.Name " & _
+            "FROM (NGSTest INNER JOIN Patients ON NGSTest.InternalPatientID = Patients.InternalPatientID) INNER JOIN Checker ON NGSTest.BookBy = Checker.Check1ID " & _
+            "WHERE NGSTest.NGSTestID = " & NGSTestID
+            rsInfo.Open sqlInfo, CurrentProject.Connection, adOpenKeyset
+            
+            Set iCfg = New CDO.Configuration
+                With iCfg
+                    .Fields(cdoSMTPServer) = "relay.gstt.local"        '<---new smtp
+                    .Fields(cdoSMTPServerPort) = 25 ' typically
+                    .Fields(cdoSendUsingMethod) = cdoSendUsingPort
+                    .Fields(cdoSMTPConnectionTimeout) = 200
+                    .Fields.Update
+                End With
+    
+                emailto = "dnadutyscientist@viapath.co.uk"
+                subjectline = "WES test order for patient " & patientID_PRU
+                emailbody = "<font face='arial' size='3'><br />" _
+                            & "New WES test ordered. <br /><br />" _
+                            & "PRU: <b>" & patientID_PRU & "</b><br />" _
+                            & "Patient Name: <b>" & rsInfo.Fields("BookinLastName") & ", " & rsInfo.Fields("BookinFirstName") & "</b><br />" _
+                            & "Patient DOB: <b>" & rsInfo.Fields("BookinDOB") & "</b><br /><br />" _
+                            & "WES test ordered by " & rsInfo.Fields("Name") & "<br /><br />" _
+                            & "This is an automated alert from MOKA.<br />" _
+                            & "Please do not reply to this email.</font>"
+                Set iMsg = New CDO.Message
+                With iMsg
+                     Set .Configuration = iCfg
+                         .From = """Moka Alerts"" <moka.alerts@gstt.nhs.uk>"
+                         .Sender = "moka.alerts@gstt.nhs.uk"
+                         .ReplyTo = "DO NOT REPLY TO THIS MESSAGE"
+                         .Subject = subjectline
+                         .HTMLBody = emailbody
+                         .to = emailto
+                         .Send 'Send the email
+                End With
+           
+            
             'EMAIL SECTION DISABLED BECAUSE CURRENTLY NO AUTHORISATION STEP
             '###########################################
 '            If referrerID <> "1201865486" Then 'If it's not an external referral
