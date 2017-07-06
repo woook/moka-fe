@@ -1,0 +1,56 @@
+Option Compare Database
+
+Private Sub CreateReport_Click()
+
+    'define the entry boxes
+    Dim GEL_Participant_ID As Long
+    Dim remove_header As String
+    
+    'set variables to entered values
+    GEL_Participant_ID = Me.GEL_Participant_ID
+    remove_header = Me.remove_header
+    
+    
+    ''Call ssh_n_run script
+    ' define the variables to feed to EvE
+    Dim pythonScriptPath As String
+    Dim args As String
+    Dim TotalCmd As String
+    Dim cmd_to_run_on_server As String
+    
+    ' set the command that is to be run on the server
+    cmd_to_run_on_server = "/home/mokaguys/miniconda2/envs/pyODBC/bin/python /home/mokaguys/Apps/CIP_API/gel_report.py -g "
+    
+    
+    'set path to python script which ssh's onto server (and runs the above command)
+    pythonScriptPath = "F:\Moka\Files\Software\run_gel_report_script\dev_ssh_n_run.py -c "
+    
+        
+
+    'combine all to make totalCmd NB /K can be used for the cmd line window to remain after it has run - good for debugging - but may cause it to hang
+    ' note 2>&1 which combines stderr and stdout
+    TotalCmd = "cmd.exe /S /C \\gstt.local\shared\Genetics_Data2\Array\Software\Python\python.exe " & pythonScriptPath & """" & cmd_to_run_on_server & GEL_Participant_ID & " -h " & remove_header & """ 2>&1"
+    
+    Debug.Print TotalCmd
+    
+    
+    'Create shell object
+    Dim wsh As Object
+    Set wsh = CreateObject("WScript.Shell")
+    
+    ' use .Exec not .Run so can access the stdout
+    Set wshexec = wsh.Exec(TotalCmd)
+    'DoEvents pauses VB script until EvE has finished running. wshexec.status is 0 while running 1 when finished
+    ' and 2 when errored so could use a if statement but have combined stderr and stdout above so no need.
+    Do While wshexec.Status = 0
+        DoEvents
+    Loop
+    
+    'report captures stdout
+    Dim Report As String
+    Report = wshexec.StdOut.ReadAll()
+    
+    'display in MsgBox
+    MsgBox Report
+    
+End Sub
