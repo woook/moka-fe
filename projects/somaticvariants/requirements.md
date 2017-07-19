@@ -4,7 +4,7 @@
     - Team: Genome Informatics
     - Stakeholders: Oncology, Genome Informatics
 ## Current Status
-Draft
+Final
 ## Purpose
 Store somatic variants identified by NGS.
 ## Project Goals & Objectives
@@ -13,10 +13,11 @@ Store somatic variants identified by NGS.
 ## Requirements
 ### Functional
 The resulting app should:
-* Allow user to select a patient
+* Allow user to select a specimen
+* Allow user to associate multiple 'EK' and block numbers with a specimen 
 * Allow user to import a VCF file, exported from Ingenuity Variant Analysis software, for the patient
 * Imported variant annotation must include variant type, genomic coordinates and allele frequency
-* Create an NGS test record for the patient and attach variants to that test
+* Create an NGS test record for the block and attach variants to that test
 * Provide a results page to allow user to record variant interpretation 
 * Provide a way for the checking of the interpretation to be recorded
 * The Oncology tests must be identifiable so that they can be excluded from the WES dashboard, status tracker etc. (use referral type field)
