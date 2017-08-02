@@ -82,15 +82,20 @@ class MokaVCF(object):
 
     def makeVCFdict(self, vcfPathLst):
         for vcf in vcfPathLst:
-            panelName = os.path.basename(vcf).split("-")[1]
-            if panelName == "Primarypanel":
-                self.vcfPaths[(1, "Primary")] = vcf
-            elif panelName == "Secondarypanel":
-                self.vcfPaths[(2, "Secondary")] = vcf
-            elif panelName == "Phenotype":
-                self.vcfPaths[(3, "Phenotype")] = vcf
+            #if oncology sample
+            if os.path.basename(vcf).startswith("ONC"):
+                self.vcfPaths[(0, "Oncology")] = vcf
+            #else if WES sample
             else:
-                self.vcfPaths[(4, panelName)] = vcf
+                panelName = os.path.basename(vcf).split("-")[1]
+                if panelName == "Primarypanel":
+                    self.vcfPaths[(1, "Primary")] = vcf
+                elif panelName == "Secondarypanel":
+                    self.vcfPaths[(2, "Secondary")] = vcf
+                elif panelName == "Phenotype":
+                    self.vcfPaths[(3, "Phenotype")] = vcf
+                else:
+                    self.vcfPaths[(4, panelName)] = vcf
 
     def lookupPrevVars(self):
         # Find details of any variants already imported into Moka for this test and add to exclusion list to prevent duplication.
@@ -151,13 +156,15 @@ class MokaVCF(object):
                     gt = "'{}'".format(row.samples[0]['GT']) # Genotype
                     rd = str(row.samples[0]['DP']) # Read depth
                     cq = str(row.QUAL) # Call quality
-                    af = row.samples[0]['ING_AF'] # Ingenuity inferred allele fraction (percentage). Returns false if no ING_AF
+                    af = row.samples[0]['ING_AF'] # Ingenuity inferred allele fraction (percentage).
+                    ref_ad = row.samples[0]['AD'][0] # Reference Allele Depth
+                    alt_ad = row.samples[0]['AD'][1] # Alt Allele Depth
                     if not af or math.isnan(af):
                         af = 'Null' # Adds Null value to SQL statement
                     gq = row.samples[0]['GQ']
                     # Stores each variant as a string that can be used in VALUES section of SQL insert statement (see below).
-                    varCurrent = (mokaChrID, position, ref, alt, self.ngsTestID, self.patID, "'{}'".format(self.datetime), str(panel[0]), "'{}'".format(panel[1]), gt, rd, cq, str(af), str(gq))
-                    #varCurrent = (mokaChrID, position, ref, alt, self.ngsTestID, self.patID, "#"+self.datetime+"#", str(panel[0]), "'{}'".format(panel[1]), gt, rd, cq, str(af), str(gq))
+                    varCurrent = (mokaChrID, position, ref, alt, self.ngsTestID, self.patID, "'{}'".format(self.datetime), str(panel[0]), "'{}'".format(panel[1]), gt, rd, cq, str(af), str(ref_ad), str(alt_ad), str(gq))
+                    #varCurrent = (mokaChrID, position, ref, alt, self.ngsTestID, self.patID, "#"+self.datetime+"#", str(panel[0]), "'{}'".format(panel[1]), gt, rd, cq, str(af), str(ref_ad), str(alt_ad), str(gq))
                     ######
                     #EXTRACT DATA FOR NGSVariantAnnotations TABLE...
                     ######
@@ -215,7 +222,7 @@ class MokaVCF(object):
 
     def insertMoka(self):
         # Loops through variant dictionary and inserts into Moka
-        sqlIns = "INSERT INTO NGSVariant (Gene, ChrID, Position_hg19, ref, alt, NGSTestID, InternalPatientID, DateAdded, PanelType, PanelTypeName, genotype, ReadDepth, CallQuality, AlleleFraction, GenotypeQuality) VALUES (%s, %s)"
+        sqlIns = "INSERT INTO NGSVariant (Gene, ChrID, Position_hg19, ref, alt, NGSTestID, InternalPatientID, DateAdded, PanelType, PanelTypeName, genotype, ReadDepth, CallQuality, AlleleFraction, RefAlleleDepth, AltAlleleDepth, GenotypeQuality) VALUES (%s, %s)"
         for var in sorted(self.vars.keys()):
             #Retrieve gene symbol(s) associated with each variant so they can be added to NGSVariants table. Separate multiple genes with semi-colon (;).
             genes = ";".join(set([annot[3][1:-1] for annot in self.vars[var] if annot[3] != "Null"]))
