@@ -1,23 +1,15 @@
 '''
-v1.3 - AB 2017/05/25
+v1.4 - AB 2017/08/02
 
 ###
-Changes from v1.2:
-Added support for NaN AF values 
-Removed strip CADD whitespace feature because the bug that introduced whitespace has since been removed from Ingenuity
-Removed line that set GQ to 'Null' if it is false, because this results in GQ values of 0 being entered as Null and there 
-*should* always be a GQ output from GATK
-Added support for NaN values (e.g. in ING_AF field)
-Changes from v1.1:
-Updated getVars() method to account for new Ingenuity format of CADD scores <10
-Added stripCADDws() method to overcome Ingenuity bug that outputs whitespace between min and max CADD values.
-Changes from v1.0:
-insertMoka() method modified. Now inserts semi-colon delimited string of gene symbols in NGSVariant table.
+Changes from v1.3:
+Added support for Oncology panel type
+Pulls in allele depth
 ###
 
 Usage:
     Parses an Ingenuity VCF output file and inserts variants and annotations into Moka NGSVariant and NGSVariantAnnotations tables.
-    Called from the WES results form [s0901_WESTestResults] in Moka
+    Called from the WES results form [s0901_WESTestResults] or Oncology results form [s0902_OncologyTestResults] in Moka
     Takes the following 3 arguments: comma separated string of VCF file paths, internal patient ID, NGS test ID
 
 Requirements:
