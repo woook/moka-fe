@@ -1,0 +1,69 @@
+Option Compare Database
+
+Private Sub Create_NGS_Click()
+    Dim stDocName As String
+    Dim stLinkCriteria As String
+    
+    'Opens form to add an NGS test for selected EK
+    'Use recordset clone to determine if an EK is selected, tried using IsNull() but it caused error
+    If Me.s87026_OncologyEK.Form.RecordsetClone.RecordCount = 0 Then
+        MsgBox "An EK must be selected to create an NGS test. Use the 'Add EK' button to add an EK for this specimen.", vbInformation, "No EK selected"
+    Else
+        stDocName = "s87026_OncologyNGSPopup"
+        stLinkCriteria = "[OncologyLabID] = " & Me!s87026_OncologyEK.Form!OncologyLabID
+        DoCmd.OpenForm stDocName, , , stLinkCriteria
+    End If
+End Sub
+
+Private Sub edit_Click()
+    Dim stDocName As String
+    Dim stLinkCriteria As String
+    
+    'Opens existing EK for editing
+    'Use recordset clone to determine if an EK is selected, tried using IsNull() but it caused error
+    If Me.s87026_OncologyEK.Form.RecordsetClone.RecordCount = 0 Then
+        MsgBox "No EK selected for editing. Use the 'Add EK' button to add an EK for this specimen.", vbInformation, "No EK selected"
+    Else
+        stDocName = "s87026_OncologyEKEdit"
+        stLinkCriteria = "[OncologyLabID] = " & Me!s87026_OncologyEK.Form!OncologyLabID
+        DoCmd.OpenForm stDocName, acFormDS, , stLinkCriteria, acFormEdit
+        Forms!s87026_OncologyEKEdit.AllowAdditions = False
+    End If
+End Sub
+
+Private Sub Create_Click()
+    Dim D As String
+    Dim un As String
+    Dim cn As String
+    Dim sqlAddPatient As String
+    Dim sqlAddPat As String
+    Dim stDocName As String
+       
+    'If patient isn't already in Moka patients table, import from geneworks
+    If IsNull(Me.InternalPatientID) Then
+        D = Format(Now(), "dd/mmm/yyyy Hh:Nn:ss")
+        un = VBA.Environ("USERNAME")
+        cn = VBA.Environ("COMPUTERNAME")
+        sqlAddPatient = "INSERT INTO patients (PatientID, s_StatusOverall, MokaCreated, MokaCreatedBy, MokaCreatedPC, NHSNumber, BookinLastname, BookinFirstName, BookinDoB, BookinCreatedBy, BookinCreatedDate, BookinSex)" & _
+                           "VALUES ('" & Me.PatientID & "', 1202218798,'" & D & "','" & un & "','" & cn & "','" & Me.NHSNo & "','" & Me.LastName & "','" & Me.FirstName & "','" & Me.DoB & "','" & Me.CreatedByID & "','" & Me.CreatedDate & "','" & Me.GenderShort & "')"
+        DoCmd.SetWarnings False
+        DoCmd.RunSQL sqlAddPatient
+        DoCmd.SetWarnings True
+        'Requery to pull in Moka pat ID. To prevent a re-prompt for spec number update RecordSource with spec number
+        Me.RecordSource = Replace(Me.RecordSource, "[Specimen Number?]", "'" & Me.SpecimenNumber & "'")
+        Me.Requery
+        sqlPatLog = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" & Me.InternalPatientID & ", 'Patients: Patient added to Moka. ',#" + D + "#,'" + un + "','" + cn + "')"
+        DoCmd.SetWarnings False
+        DoCmd.RunSQL sqlPatLog
+        DoCmd.SetWarnings True
+    End If
+ 
+    'Open form to add new EK
+    stDocName = "s87026_OncologyEKAdd"
+    DoCmd.OpenForm stDocName, acFormDS, , , acFormAdd
+End Sub
+
+Private Sub Form_Activate()
+    'Refresh subform when window is activated
+    Me.refresh
+End Sub

@@ -1,0 +1,116 @@
+Option Compare Database
+
+
+Private Sub Form_Current()
+    If Form_s0902_OncologyTestResults.StatusID = 4 And Me.SafetyCheck.Value = False Then 'If test status is Complete
+        Me.txt_result.Locked = True
+        Form_s0902_OncologyTestResults.ResultBuild.Locked = True
+        Form_s0902_OncologyTestResults.StatusID.Locked = True
+        Form_s0902_OncologyTestResults.txt_Resultcmt.Locked = True
+        Form_s0902_OncologyTestResults.Checker1.Locked = True
+        Form_s0902_OncologyTestResults.txt_Check1Date.Locked = True
+        Form_s0902_OncologyTestResults.Checker2.Locked = True
+        Form_s0902_OncologyTestResults.txt_Check2Date.Locked = True
+        Form_s0902_OncologyTestResults.AllowEdits = False
+        Form_s0902_OncologyTestResults.VCFImport.Enabled = False
+        Form_s0902_OncologyTestResults.FilterImport.Enabled = False
+        Form_s0902_OncologyTestResults.RemoveAll.Enabled = False
+        Form_s0902_OncologyNGSVariants.AllowEdits = False
+        Form_s09_referpheno.AllowEdits = False
+        Form_s09_referpheno.AllowDeletions = False
+        Form_s09_referpheno.AllowAdditions = False
+        Form_s0901_NGSTestFile.AllowEdits = False
+        Form_s0901_NGSTestFile.AllowDeletions = False
+        Form_s0901_NGSTestFile.AllowAdditions = False
+    Else
+        Me.txt_result.Locked = False
+        Form_s0902_OncologyTestResults.ResultBuild.Locked = False
+        Form_s0902_OncologyTestResults.StatusID.Locked = False
+        Form_s0902_OncologyTestResults.txt_Resultcmt.Locked = False
+        Form_s0902_OncologyTestResults.Checker1.Locked = False
+        Form_s0902_OncologyTestResults.txt_Check1Date.Locked = False
+        Form_s0902_OncologyTestResults.Checker2.Locked = False
+        Form_s0902_OncologyTestResults.txt_Check2Date.Locked = False
+        Form_s0902_OncologyTestResults.AllowEdits = True
+        Form_s0902_OncologyTestResults.VCFImport.Enabled = True
+        Form_s0902_OncologyTestResults.FilterImport.Enabled = True
+        Form_s0902_OncologyTestResults.RemoveAll.Enabled = True
+        Form_s0902_OncologyNGSVariants.AllowEdits = True
+        Form_s09_referpheno.AllowEdits = True
+        Form_s09_referpheno.AllowDeletions = True
+        Form_s09_referpheno.AllowAdditions = True
+        Form_s0901_NGSTestFile.AllowEdits = True
+        Form_s0901_NGSTestFile.AllowDeletions = True
+        Form_s0901_NGSTestFile.AllowAdditions = True
+    End If
+End Sub
+
+Private Sub btnSafetyOnOff_Click()
+SafetyCheck.Value = Not SafetyCheck.Value
+Call Form_Current
+End Sub
+
+Private Sub btn_testStatuslog_Click()
+    'Show test status log
+    Dim stDocName As String
+    stDocName = "s0901_NGSLogMemo"
+    stLinkCriteria = "[Type] = 1 AND [LinkID] = " & Me![NGSTestID]
+    DoCmd.OpenForm stDocName, acFormDS, , stLinkCriteria
+End Sub
+
+
+Private Sub btn_OpenPatientDetails_Click()
+On Error GoTo Err_btn_OpenPatientDetails_Click
+
+    DoCmd.DoMenuItem acFormBar, acRecordsMenu, 5, , acMenuVer70
+    
+    Dim stDocName As String
+    Dim stLinkCriteria As String
+
+    stDocName = "02 Patient Details"
+    
+    stLinkCriteria = "[PatientID]=" & "'" & Me![PatientID] & "'"
+    DoCmd.OpenForm stDocName, , , stLinkCriteria
+
+Err_btn_OpenPatientDetails_Click:
+    Exit Sub
+
+Err_OpenPatientDetails_Click:
+    MsgBox Err.Description
+    Resume Err_btn_OpenPatientDetails_Click
+    
+End Sub
+
+Private Sub txt_result_AfterUpdate()
+
+    Dim l As String
+    Dim dt As String
+    Dim usr As String
+    Dim cn As String
+    Dim Q As ADODB.Recordset
+    Set Q = New ADODB.Recordset
+
+    dt = Format(Now, "dd/mmm/yyyy Hh:Nn:ss")
+    usr = VBA.Environ("USERNAME")
+    cn = VBA.Environ("COMPUTERNAME")
+
+' Update Patient log for change in NGS test record
+    If IsNull(Me.txt_result) Then
+        l = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + ",'NGS Oncology: Test result deleted for NGS test requested " + CStr(Me![DateRequested]) + "',#" + dt + "#,'" + usr + "','" + cn + "')"
+    Else
+        l = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + ",'NGS Oncology: Test result changed to " + Me![txt_result] + " for NGS test requested " + CStr(Me![DateRequested]) + "',#" + dt + "#,'" + usr + "','" + cn + "')"
+        End If
+    Q.Open l, CurrentProject.Connection
+    Set Q = Nothing
+
+'    If IsNull(Form![s0901_WESTestResult]!comb_WESResultBuild) Then
+'        MsgBox "Genome build not specified!", VbMsgBoxStyle.vbOKOnly Or VbMsgBoxStyle.vbExclamation, "Attention"
+'        End If
+
+
+End Sub
+
+
+Private Sub txt_result_OnChange()
+Me.Dirty = False
+End Sub

@@ -1,0 +1,2 @@
+SELECT NGSVariant.NGSVariantID, NGSVariant.ChrID, NGSVariant.Position_hg19, NGSVariant.ref, NGSVariant.alt
+FROM NGSVariant;

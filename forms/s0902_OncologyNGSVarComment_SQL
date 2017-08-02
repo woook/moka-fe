@@ -1,0 +1,2 @@
+SELECT NGSVariantComment.Comment, NGSVariantComment.NGSVariantCommentID, NGSVariant.NGSVariantID, NGSVariant.InternalPatientID
+FROM NGSVariantComment LEFT JOIN NGSVariant ON NGSVariantComment.NGSVariantCommentID = NGSVariant.NGSVariantCommentID;

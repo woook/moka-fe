@@ -1,0 +1,25 @@
+Private Sub Form_Current()
+    Me.Parent.ListboxPhenoPrev.RowSource = "SELECT Phenotype FROM Phenotype WHERE InternalPatientID = " & Me.InternalPatientID
+End Sub
+
+Private Sub s0901_NGSVariantsAnnotations_Enter()
+    Me.Parent.ListboxPhenoPrev.RowSource = "SELECT Phenotype FROM Phenotype WHERE InternalPatientID = " & Me.InternalPatientID
+End Sub
+
+Private Sub commentShort_DblClick(Cancel As Integer)
+    Dim stDocName As String
+    stDocName = "s0902_OncologyNGSVarComment"
+    stLinkCriteria = "[NGSVariantID] = " & Me.NGSVariantID
+    DoCmd.OpenForm stDocName, , , stLinkCriteria, acFormReadOnly
+End Sub
+
+Private Sub CommentShort_MouseDown(Button As Integer, Shift As Integer, x As Single, Y As Single)
+    If Shift = acCtrlMask Then
+        ' Ctrl + click will view log history for Variant
+        Me.Dirty = False 'Forces any changes to be saved
+        Dim stDocName As String
+        stDocName = "s0901_NGSLogMemo"
+        stLinkCriteria = "[Type] = 2 AND [LinkID] = " & Me.NGSVariantID
+        DoCmd.OpenForm stDocName, acFormDS, , stLinkCriteria
+    End If
+End Sub
