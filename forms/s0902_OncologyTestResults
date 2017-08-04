@@ -108,7 +108,7 @@ Private Sub VCFImport_Click()
     month_dir = year_dir & Month(Now()) & "\"
     
     'Find any VCFs matching correct pattern
-    basePath = vcfBaseDir & "*_" & EKnum & "_" & specNumNoSlash & "*.vcf"
+    basePath = vcfBaseDir & "*" & EKnum & specNumNoSlash & "*.vcf"
     Set vcfDict = CreateObject("scripting.dictionary")
     vcfFilename = Dir(basePath) 'Returns recordset of each matching filename
     'Check there's only one VCF found
@@ -120,13 +120,13 @@ Private Sub VCFImport_Click()
     If count = 0 Then 'If no VCF files found, display error message and exit
         MsgBox "No VCF files found that match test details. Ingenuity results must be:" & vbNewLine & vbNewLine & _
         "1. Exported in VCF format" & vbNewLine & _
-        "2. Saved with filename format: ONC<number>_<number>_" & EKnum & "_" & specNumNoSlash & "_<panel>_<Pan number>.vcf" & vbNewLine & _
+        "2. Saved with filename format: ONC<...>" & EKnum & specNumNoSlash & "<...>.vcf" & vbNewLine & _
         "3. Saved in the following directory: " & vcfBaseDir, vbExclamation, "No VCF Files Found"
     ElseIf count > 1 Then
         MsgBox "Multiple VCF files found that match test details. Can only import one VCF per NGS test.", vbExclamation, "Multiple VCF Files Found"
     Else 'Display the file that will be imported
         vcfFilename = Dir(basePath)
-        filesStr = "Variants from the following VCF file will be imported: " & vcfFilename
+        filesStr = "Variants from the following VCF file will be imported: " & vbNewLine & vbNewLine & vcfFilename
         If MsgBox(filesStr & vbNewLine & vbNewLine & "Do you wish to continue?", vbYesNo + vbInformation, "Continue?") = vbYes Then
             'Pass VCF filepath and test details to python script to parse VCF and insert records into Moka NGSVariants table
             Dim wsh As Object
@@ -153,18 +153,11 @@ Private Sub VCFImport_Click()
                 End If
                 'Move VCF file to F: drive
                 filepath = vcfBaseDir & vcfFilename
-                'Get the panelType from dictionary key. If Primarypanel or Secondarypanel, change to 'Primary' or 'Secondary'
-                PanelType = strKey
-                If PanelType = "Primarypanel" Then
-                    PanelType = "Primary"
-                ElseIf PanelType = "Secondarypanel" Then
-                    PanelType = "Secondary"
-                End If
                 'Copy file to F: drive, add to the NGSTestFiles table, and remove original file from S: drive
                 Set newNGSTestFile = New ADODB.Recordset
                 TodayDate = Format(Now(), "dd/mmm/yyyy Hh:Nn:ss")
                 'Create a new record in the NGSTestFile table and retrieve the auto increment ID for newly inserted record
-                sqlNewNGSFile = "INSERT INTO NGSTestFile (NGSTestID, Description, DateAdded, VCF_Filter_Import) VALUES (" & NGSTestID & ", " & "'Ingenuity VCF Output - " & PanelType & "', #" & TodayDate & "#, -1)"
+                sqlNewNGSFile = "INSERT INTO NGSTestFile (NGSTestID, Description, DateAdded, VCF_Filter_Import) VALUES (" & NGSTestID & ", " & "'Ingenuity VCF Output', #" & TodayDate & "#, -1)"
                 newNGSTestFile.Open sqlNewNGSFile, CurrentProject.Connection, adOpenKeyset
                 newNGSTestFile.Open "SELECT @@identity", CurrentProject.Connection, adOpenKeyset 'Get ID of new entry
                 NGSTestFileID = newNGSTestFile.Fields(0).Value
@@ -240,7 +233,7 @@ Private Sub FilterImport_Click()
     month_dir = year_dir & Month(Now()) & "\"
    
     'Check filter settings file with correct filename exists
-    filtBasePath = filtSrcDir & "*_" & EKnum & "_" & specNumNoSlash & "*.txt"
+    filtBasePath = filtSrcDir & "*" & EKnum & specNumNoSlash & "*.txt"
     matchFile = Dir(filtBasePath)
     
     Do While matchFile <> "" 'Loop until no more files
@@ -249,7 +242,7 @@ Private Sub FilterImport_Click()
     Loop
     If count = 0 Then 'If no filter settings files found, display error message and exit
         MsgBox "No filter  files found that match test details. Files must be:" & vbNewLine & vbNewLine & _
-        "1. Saved with filename format: ONC<number>_<number>_" & EKnum & "_" & specNumNoSlash & "_<panel>_<Pan number>.txt" & vbNewLine & _
+        "1. Saved with filename format: ONC<...>" & EKnum & specNumNoSlash & "<...>.txt" & vbNewLine & _
         "2. Saved in the following directory: " & filtSrcDir, vbExclamation, "No Filter Settings Files Found"
     ElseIf count > 1 Then
         MsgBox "Multiple filter settings files found that match test details. Can only import one VCF per NGS test.", vbExclamation, "Multiple VCF Files Found"
