@@ -4,6 +4,7 @@ v1.4 - AB 2017/08/02
 ###
 Changes from v1.3:
 Added support for Oncology panel type
+Can handle samples with no call quality
 Pulls in allele depth
 ###
 
@@ -147,7 +148,10 @@ class MokaVCF(object):
                 if (mokaChrID, position, ref, alt) not in self.prevVars:
                     gt = "'{}'".format(row.samples[0]['GT']) # Genotype
                     rd = str(row.samples[0]['DP']) # Read depth
-                    cq = str(row.QUAL) # Call quality
+                    if row.QUAL is not None:
+                        cq = str(row.QUAL) # Call quality
+                    else:
+                        cq = 'Null'
                     af = row.samples[0]['ING_AF'] # Ingenuity inferred allele fraction (percentage).
                     ref_ad = row.samples[0]['AD'][0] # Reference Allele Depth
                     alt_ad = row.samples[0]['AD'][1] # Alt Allele Depth
