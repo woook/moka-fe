@@ -1,11 +1,9 @@
 '''
-v1.4 - AB 2017/08/02
+v1.5 - AB 2017/08/09
 
 ###
-Changes from v1.3:
-Added support for Oncology panel type
-Can handle samples with no call quality
-Pulls in allele depth
+Changes from v1.4:
+Can handle samples with no genotype quality
 ###
 
 Usage:
@@ -157,7 +155,10 @@ class MokaVCF(object):
                     alt_ad = row.samples[0]['AD'][1] # Alt Allele Depth
                     if not af or math.isnan(af):
                         af = 'Null' # Adds Null value to SQL statement
-                    gq = row.samples[0]['GQ']
+                    if row.samples[0]['GQ'] is not None:
+                        gq = row.samples[0]['GQ'] # Genotype quality
+                    else:
+                        gq = 'Null'
                     # Stores each variant as a string that can be used in VALUES section of SQL insert statement (see below).
                     varCurrent = (mokaChrID, position, ref, alt, self.ngsTestID, self.patID, "'{}'".format(self.datetime), str(panel[0]), "'{}'".format(panel[1]), gt, rd, cq, str(af), str(ref_ad), str(alt_ad), str(gq))
                     #varCurrent = (mokaChrID, position, ref, alt, self.ngsTestID, self.patID, "#"+self.datetime+"#", str(panel[0]), "'{}'".format(panel[1]), gt, rd, cq, str(af), str(ref_ad), str(alt_ad), str(gq))
