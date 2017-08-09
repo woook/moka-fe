@@ -2,7 +2,8 @@
 ## Participants
     - Product owner: Joo Wook Ahn
     - Team: Genome Informatics
-    - Stakeholders: WES team, Mike Simpson Group, Clinical Genetics
+    - Stakeholders: WES team
+    - Other interested parties: Mike Simpson Group, Clinical Genetics
 ## Current Status
 Draft
 ## Purpose
