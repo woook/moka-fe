@@ -36,17 +36,6 @@ Private Sub commentShort_DblClick(Cancel As Integer)
     End If
 End Sub
 
-Private Sub CommentShort_MouseDown(Button As Integer, Shift As Integer, x As Single, Y As Single)
-    If Shift = acCtrlMask Then
-        ' Ctrl + click will view log history for Variant
-        Me.Dirty = False 'Forces any changes to be saved
-        Dim stDocName As String
-        stDocName = "s0901_NGSLogMemo"
-        stLinkCriteria = "[Type] = 2 AND [LinkID] = " & Me.NGSVariantID
-        DoCmd.OpenForm stDocName, acFormDS, , stLinkCriteria
-    End If
-End Sub
-
 Private Sub countPrev_DblClick(Cancel As Integer)
     Me.Dirty = False 'Force any changes to be saved
     stLinkCriteria = "[NGSVariantID] = " & Me.NGSVariantID
@@ -57,6 +46,15 @@ Private Sub countPrev_DblClick(Cancel As Integer)
         'If form is not locked, open prev vars popup in EDIT mode so no updates can be made
         DoCmd.OpenForm "s0901_NGSPrevVarsPopup", , , stLinkCriteria, acFormEdit
     End If
+End Sub
+
+Private Sub DateAdded_DblClick(Cancel As Integer)
+    'View log history for Variant
+    Me.Dirty = False 'Forces any changes to be saved
+    Dim stDocName As String
+    stDocName = "s0901_NGSLogMemo"
+    stLinkCriteria = "[Type] = 2 AND [LinkID] = " & Me.NGSVariantID
+    DoCmd.OpenForm stDocName, acFormDS, , stLinkCriteria
 End Sub
 
 Private Sub Inheritance_AfterUpdate()
@@ -81,7 +79,7 @@ Private Sub SangerConf_Click()
     Dim D As String
     Dim un As String
     Dim cn As String
-    Dim rc As String
+    Dim RC As String
     Dim sqlMemo As String
     Dim sqlPatLog As String
     D = Format(Now(), "dd/mmm/yyyy Hh:Nn:ss")
