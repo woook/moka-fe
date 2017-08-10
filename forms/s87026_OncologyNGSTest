@@ -1,0 +1,10 @@
+Option Compare Database
+
+Private Sub DateRequested_DblClick(Cancel As Integer)
+    Dim stDocName As String
+    Dim stLinkCriteria As String
+    'Open the results page
+    stDocName = "0902 OncologyNGSResults"
+    stLinkCriteria = "[NGSTestID] = " & Me.NGSTestID
+    DoCmd.OpenForm stDocName, , , stLinkCriteria
+End Sub

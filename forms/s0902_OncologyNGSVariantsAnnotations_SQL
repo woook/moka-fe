@@ -1,0 +1,2 @@
+SELECT NGSVariantAnnotations.*, IIf([NGSVariantAnnotations].[DBSNP] Is Not Null,"rs" & [NGSVariantAnnotations].[DBSNP],Null) AS rsDBSNP
+FROM NGSVariantAnnotations;

@@ -1,0 +1,3 @@
+SELECT NGSTest.NGSTestID, NGSTest.DateRequested, NGSTest.OncologyLabID, Status.Status, Referral.Referral, NGSPanel.PanelCode
+FROM ((NGSTest LEFT JOIN Status ON NGSTest.StatusID = Status.StatusID) INNER JOIN Referral ON NGSTest.ReferralID = Referral.ReferralID) INNER JOIN NGSPanel ON NGSTest.NGSPanelID = NGSPanel.NGSPanelID
+ORDER BY NGSTest.DateRequested DESC;

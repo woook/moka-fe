@@ -1,0 +1,2 @@
+SELECT OncologyLab.*, Patients.InternalPatientID, dbo_specimenlinked.SpecimenTrustID, dbo_specimenlinked.SpecimenID
+FROM (OncologyLab INNER JOIN (dbo_specimenlinked INNER JOIN dbo_patientlinked ON dbo_specimenlinked.PatientID = dbo_patientlinked.PatientID) ON OncologyLab.GWSpecID = dbo_specimenlinked.SpecimenID) INNER JOIN Patients ON dbo_patientlinked.PatientTrustID = Patients.PatientID;
