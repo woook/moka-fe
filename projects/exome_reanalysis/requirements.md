@@ -1,16 +1,16 @@
 # Exome Reanalysis Project Requirements
 ## Participants
-    - Product owner: Joo Wook Ahn
-    - Team: Genome Informatics
-    - Stakeholders: WES team
-    - Other interested parties: Mike Simpson Group, Clinical Genetics
+    - Product owner: Sue Lillis
+    - Team: WES team 
+    - Stakeholders: Genome Informatics
+    - Other key relationships: Mike Simpson Group, Clinical Genetics
 ## Current Status
 Draft
 ## Purpose
 Provide audit trail for patients and data for this research project
 ## Project Goals & Objectives
 * Record which patients have consented for this project
-* Record what data has ben shared with Mike Simpson group
+* Record what data has been shared with Mike Simpson group
 ## Requirements
 ### Functional
 * Record consent (Clinical Genetics responsible for holding evidence of this consent)
