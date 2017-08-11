@@ -127,11 +127,6 @@ Else
             rsGetComment.Open sqlGetComment, CurrentProject.Connection, adOpenKeyset
             'Get any existing comment
             newComment = rsGetComment.Fields("ResultComment")
-'            'If a comment has already been entered, add a new line
-'            If Len(newComment) > 0 Then
-'                newComment = newComment + vbNewLine
-'            End If
-'            'Append HGVS to end of result
             commentStr = "Coverage report generated " & dt & vbNewLine
             newComment = commentStr & newComment
             newComment = Replace(newComment, "'", "''") 'Escape any apostrophes to prevent SQL error
@@ -143,7 +138,7 @@ Else
             cn = VBA.Environ("COMPUTERNAME")
             'SQL statements for log
             sqlMemo = "INSERT INTO NGSLogMemo(InternalPatientID, Type, LinkID, LogMemoEntry, [Date], Login, PCName) VALUES(" + CStr(patID) + ", 3, " + CStr(Me.Parent.NGSTestID) + ",'NGS WES test:Coverage report generated for WES test requested " + CStr(dateReq) + "',#" + dt + "#,'" + un + "','" + cn + "')"
-            sqlPatLog = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" + CStr(patID) + ",'NGS WES test: RCoverage report generated for WES test requested " + CStr(dateReq) + "',#" + dt + "#,'" + un + "','" + cn + "')"
+            sqlPatLog = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" + CStr(patID) + ",'NGS WES test: Coverage report generated for WES test requested " + CStr(dateReq) + "',#" + dt + "#,'" + un + "','" + cn + "')"
             'Execute SQL statements
             DoCmd.SetWarnings False
             DoCmd.RunSQL sqlUpdate
