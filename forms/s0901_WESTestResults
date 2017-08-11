@@ -2,53 +2,161 @@ Option Compare Database
 
 Private Sub btn_Coverage_Click()
 
-If Not IsNull(Me.DNA) Then
+If IsNull(Me.DNA) Or IsNull(Me.Primary_Panel) Then
+    MsgBox "Please ensure DNA number and Primary Panel has been assigned to sample before generating coverage report", vbExclamation, "Assign DNA/GenePanel"
+Else
     
     ''call python script and pass through arguments
     ' define the variables to feed to script
-    Dim Path As String
+    
+    Dim destDir As String
+    Dim holdingDir As String
+    Dim rptPath As String
+    Dim tempRptPath As String
+    Dim PyPath As String
+    Dim ScriptPath As String
+    Dim rptName As String
     Dim Cmd As String
     Dim DNANumber As String
-    Dim TotalCmd As String
-        
-    'set path to script
-    Path = """F:\Moka\Files\Software\depthofcoverage\import_depth_of_coverage.py"""
+    Dim PRU As String
+    Dim NGStest As String
+    Dim covArgs As String
+    Dim PrimaryPanNo As String
+    Dim SecondPanNo As String
+    Dim TertiaryPanNo As String
+    Dim errReport As String
+    Dim dt As String
 
-    'get DNA number
-    DNANumber = Me.DNA
-
-    'set the commands to run script (eve.py, input file and output dir) taking into account the quotations etc needed due to spaces in file paths
-    Cmd = Path & " -d " & DNANumber
-
-    'combine all to make totalCmd NB /K can be used for the cmd line window to remain after it has run - good for debugging - but may cause it to hang
-    ' note 2>&1 which combines stderr and stdout
-    TotalCmd = "cmd.exe /S /C \\gstt.local\shared\Genetics_Data2\Array\Software\Python\python.exe " & Cmd & " 2>&1"
+    dt = Format(Now, "dd/mmm/yyyy Hh:Nn:ss")
     
-    'Create shell object
-    Dim wsh As Object
+    DNANumber = CStr(Me.DNA)
+    NGStest = CStr(Me.NGSTestID)
+    PRU = Replace(Me.PatientID, ":", "")
+    
+    ' Check if coverage report already exists in the destination directory on S: drive
+    destDir = "S:\Genetics\DNA LAB\R&D\New Tests\WES\Results\Coverage reports\"
+    rptName = PRU & "." & DNANumber & ".cov.pdf"
+    'Full path for coverage report
+    rptPath = destDir & rptName
+    ' Loop through coverage reports
+    CovFilename = Dir(rptPath) 'Returns recordset of each matching filename
+    dest_tally = 0
+    Do While CovFilename <> "" 'Loop until no more files counting matching files.
+        dest_tally = dest_tally + 1
+        CovFilename = Dir 'Moves to next filename in record
+    Loop
+    ' if existing file is detected offer user a chance to escape.
+    If dest_tally > 0 Then
+        If MsgBox("A Coverage report already exists for patient: " & Me.PatientID & vbNewLine & vbNewLine & _
+        "Generating a new coverage report will over write the existing file." & vbNewLine & _
+        "Do you wish to continue?", vbYesNo + vbExclamation, "Existing Coverage report Found") = vbNo Then
+        Exit Sub
+        End If
+    End If
+
+    If MsgBox("Generating a coverage report will take a few minutes to run." & vbNewLine & _
+    "Please wait for script to complete before continuing using MOKA." & vbNewLine & vbNewLine & _
+    "Do you wish to continue?", vbYesNo + vbExclamation, "Generate coverage report") = vbNo Then
+        Exit Sub
+    End If
+
+    'set path to python exe and script
+    PyPath = "\\gstt.local\Shared\Genetics_Data2\Array\Software\Python\python.exe"
+    ScriptPath = """F:\Moka\Files\Software\depthofcoverage\AutomateCoverageReports\Generate_external_reports.py"""
+
+    ' Compile arguments to pass to coverage rpt script
+    PrimaryPanNo = Replace(Me.Primary_Panel, "Pan", "") 'remove 'Pan' from panel number
+    covArgs = "-t " & NGStest & " -p " & PrimaryPanNo
+    ' add argument for secordary panel if applicable
+    If Not IsNull(Me.Secondary_Panel) Then
+        SecondPanNo = Replace(Me.Secondary_Panel, "Pan", "") 'remove 'Pan' from panel number
+        covArgs = covArgs & " -q " & SecondPanNo
+    End If
+    ' add argument for tertiary panel if applicable
+    If Not IsNull(Me.TertiaryPanel) Then
+        covArgs = covArgs & " -r " & Me.TertiaryPanel
+    End If
+    'Full cmd to be run
+    Cmd = PyPath & " " & ScriptPath & " " & covArgs
+
+    ' Execute python script with required arguments "2>&1" at the end redirects StdErr (2) to StdOut (1)
+        Dim wsh As Object
     Set wsh = CreateObject("WScript.Shell")
-    
-    ' settings to have cmd box visible while running
-    'Dim waitOnReturn As Boolean: waitOnReturn = True
-    'Dim windowStyle As Integer: windowStyle = 1
-    
-    ' use .Exec not .Run so can access the stdout
-    Set wshexec = wsh.Exec(TotalCmd)
-    'DoEvents pauses VB script until EvE has finished running. wshexec.status is 0 while running 1 when finished
-    ' and 2 when errored so could use a if statement but have combined stderr and stdout above so no need.
+    Set wshexec = wsh.Exec("cmd.exe /S /C " & Cmd & " 2>&1")
+
+    'DoEvents pauses VBA until python script has finished running. wshexec.status is 0 while running and 1 when finished
     Do While wshexec.Status = 0
         DoEvents
     Loop
-    
-    'report captures stdout
-    Dim Report As String
-    Report = wshexec.StdOut.ReadAll()
-    
-    'display in MsgBox
-    MsgBox Report
-
+    'Capture any error messages from python script (StdErr has been redirected to StdOut, see above)
+    errReport = wshexec.StdOut.ReadAll()
+    If errReport <> "" Then
+    MsgBox "The following output was observed when generating coverage report: " & vbNewLine & vbNewLine & errReport, vbInformation, "Script Output"
     End If
 
+    ' check that pdf has been generated in the holding area. Exit if no pdf present.
+    holdingDir = "P:\Bioinformatics\NGS\depthofcoverage\pdf_holding_area\"
+    rptName = PRU & "." & DNANumber & ".cov.pdf"
+    'Full path for coverage report
+    tempRptPath = holdingDir & rptName
+    ' Loop through coverage reports
+    tempCovFilename = Dir(tempRptPath) 'Returns recordset of each matching filename
+    hold_tally = 0
+    Do While tempCovFilename <> "" 'Loop until no more files counting matching files.
+        hold_tally = tally + 1
+        tempCovFilename = Dir 'Moves to next filename in record
+    Loop
+    If hold_tally = 0 Then
+        Debug.Print "exit"
+        Exit Sub
+    End If
+    
+    ' move Coverage report to the S: drive
+    If dest_tally > 0 Then 'remove existing coverage report before replacing with new coverage report
+        Kill rptPath
+    End If
+    'copy coverage report then reome temp cov report from holding area
+    FileCopy tempRptPath, rptPath 'Copy new file to the S: drive
+    Kill tempRptPath
+
+    'Add comment to results comment box and logs
+     Dim commentStr As String
+            'Retrieve exsiting comments so coverage comment can be added
+            Set rsGetComment = New ADODB.Recordset
+            sqlGetComment = "SELECT NGSTest.ResultComment FROM NGSTest WHERE NGSTest.NGSTestID = " & Me.Parent.NGSTestID
+            rsGetComment.Open sqlGetComment, CurrentProject.Connection, adOpenKeyset
+            'Get any existing comment
+            newComment = rsGetComment.Fields("ResultComment")
+'            'If a comment has already been entered, add a new line
+'            If Len(newComment) > 0 Then
+'                newComment = newComment + vbNewLine
+'            End If
+'            'Append HGVS to end of result
+            commentStr = "Coverage report generated " & dt & vbNewLine
+            newComment = commentStr & newComment
+            newComment = Replace(newComment, "'", "''") 'Escape any apostrophes to prevent SQL error
+            sqlUpdate = "UPDATE NGSTest SET NGSTest.ResultComment = '" & newComment & "' WHERE NGSTest.NGSTestID = " & Me.Parent.NGSTestID
+            'Retrieve details and update logs
+            patID = [Form_0901 ExomeNGSResults].InternalPatientID
+            dateReq = Form_s0901_WESTestResults.DateRequested
+            un = VBA.Environ("USERNAME")
+            cn = VBA.Environ("COMPUTERNAME")
+            'SQL statements for log
+            sqlMemo = "INSERT INTO NGSLogMemo(InternalPatientID, Type, LinkID, LogMemoEntry, [Date], Login, PCName) VALUES(" + CStr(patID) + ", 3, " + CStr(Me.Parent.NGSTestID) + ",'NGS WES test:Coverage report generated for WES test requested " + CStr(dateReq) + "',#" + dt + "#,'" + un + "','" + cn + "')"
+            sqlPatLog = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" + CStr(patID) + ",'NGS WES test: RCoverage report generated for WES test requested " + CStr(dateReq) + "',#" + dt + "#,'" + un + "','" + cn + "')"
+            'Execute SQL statements
+            DoCmd.SetWarnings False
+            DoCmd.RunSQL sqlUpdate
+            DoCmd.RunSQL sqlMemo
+            DoCmd.RunSQL sqlPatLog
+            DoCmd.SetWarnings True
+        Forms![0901 ExomeNGSResults].refresh 'Refresh so that result comments field is updated
+        
+    ' open pdf so user can check PID and gene panels
+    Set objShell = CreateObject("Wscript.Shell")
+    objShell.Run ("""" & rptPath & """")
+    
+End If
 
 End Sub
 
@@ -223,19 +331,19 @@ Private Sub VCFImport_Click()
         dnaNum = Me.txt_DNA
         basePath = vcfBaseDir & batch & "DNA" & dnaNum & "PRU" & PRU & "-*.vcf" 'VCFs will have variable suffix after hyphen, so wildcard (*) used
         Set vcfDict = CreateObject("scripting.dictionary")
-        VCFfilename = Dir(basePath) 'Returns recordset of each matching filename
-        Do While VCFfilename <> "" 'Loop until no more files
-            PanelType = Split(VCFfilename, "-")(1) 'Retrieve the panel type from current file (between first and second hyphen)
+        vcfFilename = Dir(basePath) 'Returns recordset of each matching filename
+        Do While vcfFilename <> "" 'Loop until no more files
+            PanelType = Split(vcfFilename, "-")(1) 'Retrieve the panel type from current file (between first and second hyphen)
             'add 'panel type: filename' to dictionary. If the panel type is already in dictionary display an error message and exit.
             If Not vcfDict.exists(PanelType) Then
-                vcfDict.Add PanelType, VCFfilename
+                vcfDict.Add PanelType, vcfFilename
             Else
                 MsgBox ("Multiple VCF files found of type: " & PanelType & ". Unable to continue with import")
                 Exit Sub
             End If
-            VCFfilename = Dir 'Moves to next filename in record
+            vcfFilename = Dir 'Moves to next filename in record
         Loop
-        If vcfDict.Count = 0 Then 'If no VCF files found, display error message and exit
+        If vcfDict.count = 0 Then 'If no VCF files found, display error message and exit
             MsgBox "No VCF files found that match test details. Ingenuity results must be:" & vbNewLine & vbNewLine & _
             "1. Exported in VCF format" & vbNewLine & _
             "2. Saved with filename format: " & batch & "DNA" & dnaNum & "PRU" & PRU & "-<panel description>-<numerical suffix>.vcf" & vbNewLine & _
@@ -278,7 +386,7 @@ Private Sub VCFImport_Click()
                 For Each strKey In vcfDict.keys()
                 loopCount = loopCount + 1
                     csFileLst = csFileLst & vcfBaseDir & vcfDict(strKey)
-                    If loopCount <> vcfDict.Count Then 'If not the last file in list
+                    If loopCount <> vcfDict.count Then 'If not the last file in list
                         csFileLst = csFileLst & ","
                     End If
                 Next
@@ -286,9 +394,9 @@ Private Sub VCFImport_Click()
                 Dim wsh As Object
                 Set wsh = CreateObject("WScript.Shell")
                 pythonPath = "\\gstt.local\Shared\Genetics_Data2\Array\Software\Python\python.exe"
-                scriptPath = "\\gstt.local\Apps\Moka\Files\Software\VCFImport\VCFImport.py"
+                ScriptPath = "\\gstt.local\Apps\Moka\Files\Software\VCFImport\VCFImport.py"
                 'Execute python script with required arguments. "2>&1" at the end redirects StdErr (2) to StdOut (1)
-                Set wshexec = wsh.Exec("cmd.exe /S /C " & pythonPath & " " & scriptPath & " """ & csFileLst & """ " & patID & " " & NGSTestID & " 2>&1")
+                Set wshexec = wsh.Exec("cmd.exe /S /C " & pythonPath & " " & ScriptPath & " """ & csFileLst & """ " & patID & " " & NGSTestID & " 2>&1")
                 'DoEvents pauses VBA until python script has finished running. wshexec.status is 0 while running and 1 when finished
                 Do While wshexec.Status = 0
                     DoEvents
@@ -980,7 +1088,7 @@ Function UpdatePatientRes()
     Dim dt As String
     Dim usr As String
     Dim cn As String
-    Dim r As String
+    Dim R As String
     Dim S As String
     Dim x As String
     Dim Y As String
@@ -999,8 +1107,8 @@ Function UpdatePatientRes()
 ' Check if there is a record already in the Patients results feild. If true, append new result to the end.
     x = Me.InternalPatientID
     Y = Me.Parent.txt_result
-    r = "SELECT OverallResultComments FROM Patients WHERE InternalPatientID = " + x + ""
-    A.Open r, CurrentProject.Connection, adOpenKeyset, adLockOptimistic, adCmdText
+    R = "SELECT OverallResultComments FROM Patients WHERE InternalPatientID = " + x + ""
+    A.Open R, CurrentProject.Connection, adOpenKeyset, adLockOptimistic, adCmdText
     
     If Not IsNull(A!OverallResultComments) Then
         t = A!OverallResultComments
@@ -1028,7 +1136,7 @@ End Function
 Private Sub txt_Resultcmt_AfterUpdate()
 ' NGS test results comments/ observations record
     Dim Q As ADODB.Recordset
-    Dim r As ADODB.Recordset
+    Dim R As ADODB.Recordset
     Dim S As String
     Dim t As String
     Dim dt As String
@@ -1048,24 +1156,24 @@ Private Sub txt_Resultcmt_AfterUpdate()
         S = "INSERT INTO NGSLogMemo(InternalPatientID, Type, LinkID, LogMemoEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + ", 3," + CStr(Me![NGSTestID]) + ",'NGS WES test: Result comment deleted for WES test requested " + CStr(Me![DateRequested]) + "',#" + dt + "#,'" + usr + "','" + cn + "')"
         'Debug.Print S
     Else
-        Dim rc As String
+        Dim RC As String
         'Debug.Print " test"
-        rc = Replace(Me![txt_Resultcmt], "'", "''")
-        S = "INSERT INTO NGSLogMemo(InternalPatientID, Type, LinkID, LogMemoEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + ", 3, " + CStr(Me![NGSTestID]) + ",'NGS WES test: Result comment updated for WES test requested " + CStr(Me![DateRequested]) + " - " + rc + "',#" + dt + "#,'" + usr + "','" + cn + "')"
+        RC = Replace(Me![txt_Resultcmt], "'", "''")
+        S = "INSERT INTO NGSLogMemo(InternalPatientID, Type, LinkID, LogMemoEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + ", 3, " + CStr(Me![NGSTestID]) + ",'NGS WES test: Result comment updated for WES test requested " + CStr(Me![DateRequested]) + " - " + RC + "',#" + dt + "#,'" + usr + "','" + cn + "')"
         'Debug.Print S
     End If
     Q.Open S, CurrentProject.Connection
     Set Q = Nothing
 
     ' Record input in the patient log
-    Set r = New ADODB.Recordset
+    Set R = New ADODB.Recordset
     If IsNull([txt_Resultcmt]) Then
         t = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + ",'NGS WES test: Result comment deleted for WES test requested " + CStr(Me![DateRequested]) + "',#" + dt + "#,'" + usr + "','" + cn + "')"
     Else
         t = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + ",'NGS WES test: Result comment updated for WES test requested " + CStr(Me![DateRequested]) + " - see memo log',#" + dt + "#,'" + usr + "','" + cn + "')"
     End If
-    r.Open t, CurrentProject.Connection
-    Set r = Nothing
+    R.Open t, CurrentProject.Connection
+    Set R = Nothing
 
 End Sub
 
