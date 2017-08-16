@@ -1,4 +1,8 @@
-Please use the following template for creating a requirements doc (examples of completed requirements can be found in subfolders of this directory):
+Please use the following template for creating a requirements doc.
+Examples of completed requirements can be found in subfolders of this directory.
+The Genome Informatics are available to advise but it is recommended to go to them with at least a barebones draft.
+
+
 
 # _TITLE_
 ## Participants
