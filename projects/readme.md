@@ -1,3 +1,4 @@
+The requirements doc should be filled in by the project owner. 
 Please use the following template for creating a requirements doc.
 Examples of completed requirements docs can be found in subfolders of this directory.
 The Genome Informatics team are available to advise but it is recommended to go to them with at least a barebones draft.
