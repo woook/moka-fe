@@ -2,53 +2,156 @@ Option Compare Database
 
 Private Sub btn_Coverage_Click()
 
-If Not IsNull(Me.DNA) Then
-
+If IsNull(Me.DNA) Or IsNull(Me.Primary_Panel) Then
+    MsgBox "Please ensure DNA number and Primary Panel has been assigned to sample before generating coverage report", vbExclamation, "Assign DNA/GenePanel"
+Else
+    
     ''call python script and pass through arguments
     ' define the variables to feed to script
-    Dim Path As String
+    
+    Dim destDir As String
+    Dim holdingDir As String
+    Dim rptPath As String
+    Dim tempRptPath As String
+    Dim PyPath As String
+    Dim ScriptPath As String
+    Dim rptName As String
     Dim Cmd As String
-    Dim DNAnumber As String
-    Dim TotalCmd As String
+    Dim DNANumber As String
+    Dim PRU As String
+    Dim NGStest As String
+    Dim covArgs As String
+    Dim PrimaryPanNo As String
+    Dim SecondPanNo As String
+    Dim TertiaryPanNo As String
+    Dim errReport As String
+    Dim dt As String
 
-    'set path to script
-    Path = """F:\Moka\Files\Software\depthofcoverage\import_depth_of_coverage.py"""
+    dt = Format(Now, "dd/mmm/yyyy Hh:Nn:ss")
+    
+    DNANumber = CStr(Me.DNA)
+    NGStest = CStr(Me.NGSTestID)
+    PRU = Replace(Me.PatientID, ":", "")
+    
+    ' Check if coverage report already exists in the destination directory on S: drive
+    destDir = "S:\Genetics\DNA LAB\R&D\New Tests\WES\Results\Coverage reports\"
+    rptName = PRU & "." & DNANumber & ".cov.pdf"
+    'Full path for coverage report
+    rptPath = destDir & rptName
+    ' Loop through coverage reports
+    CovFilename = Dir(rptPath) 'Returns recordset of each matching filename
+    dest_tally = 0
+    Do While CovFilename <> "" 'Loop until no more files counting matching files.
+        dest_tally = dest_tally + 1
+        CovFilename = Dir 'Moves to next filename in record
+    Loop
+    ' if existing file is detected offer user a chance to escape.
+    If dest_tally > 0 Then
+        If MsgBox("A Coverage report already exists for patient: " & Me.PatientID & vbNewLine & vbNewLine & _
+        "Generating a new coverage report will over write the existing file." & vbNewLine & _
+        "Do you wish to continue?", vbYesNo + vbExclamation, "Existing Coverage report Found") = vbNo Then
+        Exit Sub
+        End If
+    End If
 
-    'get DNA number
-    DNAnumber = Me.DNA
+    If MsgBox("Generating a coverage report will take a few minutes to run." & vbNewLine & _
+    "Please wait for script to complete before continuing using MOKA." & vbNewLine & vbNewLine & _
+    "Do you wish to continue?", vbYesNo + vbExclamation, "Generate coverage report") = vbNo Then
+        Exit Sub
+    End If
 
-    'set the commands to run script (eve.py, input file and output dir) taking into account the quotations etc needed due to spaces in file paths
-    Cmd = Path & " -d " & DNAnumber
+    'set path to python exe and script
+    PyPath = "\\gstt.local\Shared\Genetics_Data2\Array\Software\Python\python.exe"
+    ScriptPath = """F:\Moka\Files\Software\depthofcoverage\AutomateCoverageReports\Generate_external_reports.py"""
 
-    'combine all to make totalCmd NB /K can be used for the cmd line window to remain after it has run - good for debugging - but may cause it to hang
-    ' note 2>&1 which combines stderr and stdout
-    TotalCmd = "cmd.exe /S /C \\gstt.local\shared\Genetics_Data2\Array\Software\Python\python.exe " & Cmd & " 2>&1"
+    ' Compile arguments to pass to coverage rpt script
+    PrimaryPanNo = Replace(Me.Primary_Panel, "Pan", "") 'remove 'Pan' from panel number
+    covArgs = "-t " & NGStest & " -p " & PrimaryPanNo
+    ' add argument for secordary panel if applicable
+    If Not IsNull(Me.Secondary_Panel) Then
+        SecondPanNo = Replace(Me.Secondary_Panel, "Pan", "") 'remove 'Pan' from panel number
+        covArgs = covArgs & " -q " & SecondPanNo
+    End If
+    ' add argument for tertiary panel if applicable
+    If Not IsNull(Me.TertiaryPanel) Then
+        covArgs = covArgs & " -r " & Me.TertiaryPanel
+    End If
+    'Full cmd to be run
+    Cmd = PyPath & " " & ScriptPath & " " & covArgs
 
-    'Create shell object
-    Dim wsh As Object
+    ' Execute python script with required arguments "2>&1" at the end redirects StdErr (2) to StdOut (1)
+        Dim wsh As Object
     Set wsh = CreateObject("WScript.Shell")
+    Set wshexec = wsh.Exec("cmd.exe /S /C " & Cmd & " 2>&1")
 
-    ' settings to have cmd box visible while running
-    'Dim waitOnReturn As Boolean: waitOnReturn = True
-    'Dim windowStyle As Integer: windowStyle = 1
-
-    ' use .Exec not .Run so can access the stdout
-    Set wshexec = wsh.Exec(TotalCmd)
-    'DoEvents pauses VB script until EvE has finished running. wshexec.status is 0 while running 1 when finished
-    ' and 2 when errored so could use a if statement but have combined stderr and stdout above so no need.
+    'DoEvents pauses VBA until python script has finished running. wshexec.status is 0 while running and 1 when finished
     Do While wshexec.Status = 0
         DoEvents
     Loop
-
-    'report captures stdout
-    Dim Report As String
-    Report = wshexec.StdOut.ReadAll()
-
-    'display in MsgBox
-    MsgBox Report
-
+    'Capture any error messages from python script (StdErr has been redirected to StdOut, see above)
+    errReport = wshexec.StdOut.ReadAll()
+    If errReport <> "" Then
+    MsgBox "The following output was observed when generating coverage report: " & vbNewLine & vbNewLine & errReport, vbInformation, "Script Output"
     End If
 
+    ' check that pdf has been generated in the holding area. Exit if no pdf present.
+    holdingDir = "P:\Bioinformatics\NGS\depthofcoverage\pdf_holding_area\"
+    rptName = PRU & "." & DNANumber & ".cov.pdf"
+    'Full path for coverage report
+    tempRptPath = holdingDir & rptName
+    ' Loop through coverage reports
+    tempCovFilename = Dir(tempRptPath) 'Returns recordset of each matching filename
+    hold_tally = 0
+    Do While tempCovFilename <> "" 'Loop until no more files counting matching files.
+        hold_tally = tally + 1
+        tempCovFilename = Dir 'Moves to next filename in record
+    Loop
+    If hold_tally = 0 Then
+        Debug.Print "exit"
+        Exit Sub
+    End If
+    
+    ' move Coverage report to the S: drive
+    If dest_tally > 0 Then 'remove existing coverage report before replacing with new coverage report
+        Kill rptPath
+    End If
+    'copy coverage report then reome temp cov report from holding area
+    FileCopy tempRptPath, rptPath 'Copy new file to the S: drive
+    Kill tempRptPath
+
+    'Add comment to results comment box and logs
+     Dim commentStr As String
+            'Retrieve exsiting comments so coverage comment can be added
+            Set rsGetComment = New ADODB.Recordset
+            sqlGetComment = "SELECT NGSTest.ResultComment FROM NGSTest WHERE NGSTest.NGSTestID = " & Me.Parent.NGSTestID
+            rsGetComment.Open sqlGetComment, CurrentProject.Connection, adOpenKeyset
+            'Get any existing comment
+            newComment = rsGetComment.Fields("ResultComment")
+            commentStr = "Coverage report generated " & dt & vbNewLine
+            newComment = commentStr & newComment
+            newComment = Replace(newComment, "'", "''") 'Escape any apostrophes to prevent SQL error
+            sqlUpdate = "UPDATE NGSTest SET NGSTest.ResultComment = '" & newComment & "' WHERE NGSTest.NGSTestID = " & Me.Parent.NGSTestID
+            'Retrieve details and update logs
+            patID = [Form_0901 ExomeNGSResults].InternalPatientID
+            dateReq = Form_s0901_WESTestResults.DateRequested
+            un = VBA.Environ("USERNAME")
+            cn = VBA.Environ("COMPUTERNAME")
+            'SQL statements for log
+            sqlMemo = "INSERT INTO NGSLogMemo(InternalPatientID, Type, LinkID, LogMemoEntry, [Date], Login, PCName) VALUES(" + CStr(patID) + ", 3, " + CStr(Me.Parent.NGSTestID) + ",'NGS WES test:Coverage report generated for WES test requested " + CStr(dateReq) + "',#" + dt + "#,'" + un + "','" + cn + "')"
+            sqlPatLog = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" + CStr(patID) + ",'NGS WES test: Coverage report generated for WES test requested " + CStr(dateReq) + "',#" + dt + "#,'" + un + "','" + cn + "')"
+            'Execute SQL statements
+            DoCmd.SetWarnings False
+            DoCmd.RunSQL sqlUpdate
+            DoCmd.RunSQL sqlMemo
+            DoCmd.RunSQL sqlPatLog
+            DoCmd.SetWarnings True
+        Forms![0901 ExomeNGSResults].refresh 'Refresh so that result comments field is updated
+        
+    ' open pdf so user can check PID and gene panels
+    Set objShell = CreateObject("Wscript.Shell")
+    objShell.Run ("""" & rptPath & """")
+    
+End If
 
 End Sub
 
@@ -69,7 +172,7 @@ Else
 End If
 
 ' format checker 3 combo box(reporter) so that it is only be visible once a test has been analysis and variants confimed
-
+    
 If Not IsNull(Me.Checker1) And Not IsNull(txt_Check1Date) And Not IsNull(Checker3) Then
     Me.Checker3.Enabled = True
     Me.txt_Check3Date.Enabled = True
@@ -81,7 +184,7 @@ ElseIf Not IsNull(Me.Checker1) Or Not IsNull(txt_Check1Date) And (StatusID = 120
     Me.txt_Check3Date.Enabled = True
     Me!Label38.ForeColor = black
     Me!Label56.ForeColor = black
-
+    
 Else
     Me.Checker3.Enabled = False
     Me.txt_Check3Date.Enabled = False
@@ -203,36 +306,37 @@ Private Sub VCFImport_Click()
     Dim errReport As String
     Dim desBaseDir As String
     Dim newNGSTestFile As ADODB.Recordset
-    Dim todayDate As String
+    Dim TodayDate As String
     Dim vcfDict
     Dim PanelType As String
-
+    
     vcfBaseDir = "\\gstt.local\Shared\Genetics\DNA LAB\Current\WES\Ingenuity_output\Results\"
     destDir = "\\gstt.local\Apps\Moka\Files\ngs\"
-    batch = Me.WESBatch
-    dnaNum = Me.txt_DNA
     PRU = Me.Parent.PatientID
     PRU = Replace(PRU, ":", "")
     patID = Me.Parent.InternalPatientID
     NGSTestID = Me.Parent.NGSTestID
-
-
+    year_dir = destDir & Year(Now()) & "\"
+    month_dir = year_dir & Month(Now()) & "\"
+    
     If IsNull(Me.WESBatch) Or IsNull(Me.txt_DNA) Then
         MsgBox "Please ensure DNA number and WES batch are assigned to sample before uploading variants", vbExclamation, "Assign DNA/Batch"
     Else
+        batch = Me.WESBatch
+        dnaNum = Me.txt_DNA
         basePath = vcfBaseDir & batch & "DNA" & dnaNum & "PRU" & PRU & "-*.vcf" 'VCFs will have variable suffix after hyphen, so wildcard (*) used
         Set vcfDict = CreateObject("scripting.dictionary")
-        VCFfilename = Dir(basePath) 'Returns recordset of each matching filename
-        Do While VCFfilename <> "" 'Loop until no more files
-            PanelType = Split(VCFfilename, "-")(1) 'Retrieve the panel type from current file (between first and second hyphen)
+        vcfFilename = Dir(basePath) 'Returns recordset of each matching filename
+        Do While vcfFilename <> "" 'Loop until no more files
+            PanelType = Split(vcfFilename, "-")(1) 'Retrieve the panel type from current file (between first and second hyphen)
             'add 'panel type: filename' to dictionary. If the panel type is already in dictionary display an error message and exit.
             If Not vcfDict.exists(PanelType) Then
-                vcfDict.Add PanelType, VCFfilename
+                vcfDict.Add PanelType, vcfFilename
             Else
                 MsgBox ("Multiple VCF files found of type: " & PanelType & ". Unable to continue with import")
                 Exit Sub
             End If
-            VCFfilename = Dir 'Moves to next filename in record
+            vcfFilename = Dir 'Moves to next filename in record
         Loop
         If vcfDict.count = 0 Then 'If no VCF files found, display error message and exit
             MsgBox "No VCF files found that match test details. Ingenuity results must be:" & vbNewLine & vbNewLine & _
@@ -285,9 +389,9 @@ Private Sub VCFImport_Click()
                 Dim wsh As Object
                 Set wsh = CreateObject("WScript.Shell")
                 pythonPath = "\\gstt.local\Shared\Genetics_Data2\Array\Software\Python\python.exe"
-                scriptPath = "\\gstt.local\Apps\Moka\Files\Software\VCFImport\VCFImport.py"
+                ScriptPath = "\\gstt.local\Apps\Moka\Files\Software\VCFImport\VCFImport.py"
                 'Execute python script with required arguments. "2>&1" at the end redirects StdErr (2) to StdOut (1)
-                Set wshexec = wsh.Exec("cmd.exe /S /C " & pythonPath & " " & scriptPath & " """ & csFileLst & """ " & patID & " " & NGSTestID & " 2>&1")
+                Set wshexec = wsh.Exec("cmd.exe /S /C " & pythonPath & " " & ScriptPath & " """ & csFileLst & """ " & patID & " " & NGSTestID & " 2>&1")
                 'DoEvents pauses VBA until python script has finished running. wshexec.status is 0 while running and 1 when finished
                 Do While wshexec.Status = 0
                     DoEvents
@@ -297,9 +401,12 @@ Private Sub VCFImport_Click()
                 If errReport <> "" Then
                     MsgBox "The following error was encountered when attempting to import variants from VCF: " & vbNewLine & vbNewLine & errReport, vbCritical, "ERROR"
                 Else
-                    newDir = destDir & batch & "\" 'Files will be copied to WES batch folder on F: drive
-                    If Len(Dir(newDir, vbDirectory)) = 0 Then
-                        MkDir newDir 'If WES batch folder doesn't already exist, create it
+                    newDir = month_dir 'Files will be copied to WES batch folder on F: drive
+                    If Len(Dir(year_dir, vbDirectory)) = 0 Then
+                        MkDir year_dir 'If year folder doesn't already exist, create it
+                    End If
+                    If Len(Dir(month_dir, vbDirectory)) = 0 Then
+                        MkDir month_dir 'If month folder doesn't already exist, create it
                     End If
                     'Loop through dictionary of VCFs, and move files to F: drive
                     For Each strKey In vcfDict.keys()
@@ -314,9 +421,9 @@ Private Sub VCFImport_Click()
                         End If
                         'Copy file to F: drive, add to the NGSTestFiles table, and remove original file from S: drive
                         Set newNGSTestFile = New ADODB.Recordset
-                        todayDate = Format(Now(), "dd/mmm/yyyy Hh:Nn:ss")
+                        TodayDate = Format(Now(), "dd/mmm/yyyy Hh:Nn:ss")
                         'Create a new record in the NGSTestFile table and retrieve the auto increment ID for newly inserted record
-                        sqlNewNGSFile = "INSERT INTO NGSTestFile (NGSTestID, Description, DateAdded, VCF_Filter_Import) VALUES (" & NGSTestID & ", " & "'Ingenuity VCF Output - " & PanelType & "', #" & todayDate & "#, -1)"
+                        sqlNewNGSFile = "INSERT INTO NGSTestFile (NGSTestID, Description, DateAdded, VCF_Filter_Import) VALUES (" & NGSTestID & ", " & "'Ingenuity VCF Output - " & PanelType & "', #" & TodayDate & "#, -1)"
                         newNGSTestFile.Open sqlNewNGSFile, CurrentProject.Connection, adOpenKeyset
                         newNGSTestFile.Open "SELECT @@identity", CurrentProject.Connection, adOpenKeyset 'Get ID of new entry
                         NGSTestFileID = newNGSTestFile.Fields(0).Value
@@ -332,8 +439,8 @@ Private Sub VCFImport_Click()
                         un = VBA.Environ("USERNAME")
                         cn = VBA.Environ("COMPUTERNAME")
                         sqlAddFilePath = "UPDATE NGSTestFile SET NGSTestFile = '" & newDir & newFileName & "' WHERE NGSTestFileID = " & NGSTestFileID
-                        sqlPatLogVar = "INSERT INTO PatientLog (InternalPatientID, LogEntry, [Date], Login, PCName) VALUES (" & patID & ", 'NGS: Variants uploaded to NGSVariants table from Ingenuity VCF Output - " & PanelType & ". (NGSTest ID: " & NGSTestID & ")', #" + todayDate + "#,'" + un + "','" + cn + "')"
-                        sqlPatLogVCF = "INSERT INTO PatientLog (InternalPatientID, LogEntry, [Date], Login, PCName) VALUES (" & patID & ", 'NGS: Ingenuity VCF Output - " & PanelType & " attached. (NGSTestFile ID: " & NGSTestFileID & ")', #" + todayDate + "#,'" + un + "','" + cn + "')"
+                        sqlPatLogVar = "INSERT INTO PatientLog (InternalPatientID, LogEntry, [Date], Login, PCName) VALUES (" & patID & ", 'NGS: Variants uploaded to NGSVariants table from Ingenuity VCF Output - " & PanelType & ". (NGSTest ID: " & NGSTestID & ")', #" + TodayDate + "#,'" + un + "','" + cn + "')"
+                        sqlPatLogVCF = "INSERT INTO PatientLog (InternalPatientID, LogEntry, [Date], Login, PCName) VALUES (" & patID & ", 'NGS: Ingenuity VCF Output - " & PanelType & " attached. (NGSTestFile ID: " & NGSTestFileID & ")', #" + TodayDate + "#,'" + un + "','" + cn + "')"
                         DoCmd.SetWarnings False
                         DoCmd.RunSQL sqlAddFilePath
                         DoCmd.RunSQL sqlPatLogVar
@@ -345,7 +452,7 @@ Private Sub VCFImport_Click()
                     'Find number of other variants within +/- 2bp and add to NGSVariant table so it can be displayed in subform
                     'Have to do it this way because calculating the count on the fly in subform recordsource query makes the subform read only, so classifcation, comments etc. can't be updated
                     'This is recalculated every time the results form is opened, so up to date number is always displayed to user.
-                    Me.Refresh 'Refresh is required to sync imported variants from Python script
+                    Me.refresh 'Refresh is required to sync imported variants from Python script
                     Dim sqlPrevVars As String
                     Dim rsPrevVars As ADODB.Recordset
                     'Query below returns the variant ID and number of previous records for each variant associated with this test.
@@ -380,21 +487,22 @@ Private Sub FilterImport_Click()
     Dim filepath As String
     Dim desBaseDir As String
     Dim newNGSTestFile As ADODB.Recordset
-    Dim todayDate As String
-
+    Dim TodayDate As String
+    
     filtSrcDir = "\\gstt.local\Shared\Genetics\DNA LAB\Current\WES\Ingenuity_output\Filter_settings\"
     destDir = "\\gstt.local\Apps\Moka\Files\ngs\"
-    batch = Me.WESBatch
-    dnaNum = Me.txt_DNA
     PRU = Me.Parent.PatientID
     PRU = Replace(PRU, ":", "")
     patID = Me.Parent.InternalPatientID
     NGSTestID = Me.Parent.NGSTestID
-
-
+    year_dir = destDir & Year(Now()) & "\"
+    month_dir = year_dir & Month(Now()) & "\"
+   
     If IsNull(Me.WESBatch) Or IsNull(Me.txt_DNA) Then
         MsgBox "Please ensure DNA number and WES batch are assigned to sample before uploading variants", vbExclamation, "Assign DNA/Batch"
     Else
+        batch = Me.WESBatch
+        dnaNum = Me.txt_DNA
         'Check filter settings file with correct filename exists
         filtBasePath = filtSrcDir & batch & "DNA" & dnaNum & "PRU" & PRU & ".txt"
         matchFile = Dir(filtBasePath)
@@ -403,14 +511,17 @@ Private Sub FilterImport_Click()
             filepath = filtSrcDir & matchFile
             proceed = MsgBox("The following filter settings file will be attached to this NGS Test:" & vbNewLine & vbNewLine & filepath & vbNewLine & vbNewLine & "Click OK to proceed.", vbOKCancel + vbInformation, "Confirm Correct File")
             If proceed = vbOK Then
-                newDir = destDir & batch & "\" 'File will be copied to WES batch folder on F: drive
-                If Len(Dir(newDir, vbDirectory)) = 0 Then
-                    MkDir newDir 'If WES batch folder doesn't already exist, create it
+                newDir = month_dir 'Files will be copied to folder on F: drive
+                If Len(Dir(year_dir, vbDirectory)) = 0 Then
+                    MkDir year_dir 'If year folder doesn't already exist, create it
+                End If
+                If Len(Dir(month_dir, vbDirectory)) = 0 Then
+                    MkDir month_dir 'If month folder doesn't already exist, create it
                 End If
                 Set newNGSTestFile = New ADODB.Recordset
-                todayDate = Format(Now(), "dd/mmm/yyyy Hh:Nn:ss")
+                TodayDate = Format(Now(), "dd/mmm/yyyy Hh:Nn:ss")
                 'Create a new record in the NGSTestFile table and retrieve the auto increment ID for newly inserted record
-                sqlNewNGSFile = "INSERT INTO NGSTestFile (NGSTestID, Description, DateAdded, VCF_Filter_Import) VALUES (" & NGSTestID & ", " & "'Ingenuity Filter Settings', #" & todayDate & "#, -1)"
+                sqlNewNGSFile = "INSERT INTO NGSTestFile (NGSTestID, Description, DateAdded, VCF_Filter_Import) VALUES (" & NGSTestID & ", " & "'Ingenuity Filter Settings', #" & TodayDate & "#, -1)"
                 newNGSTestFile.Open sqlNewNGSFile, CurrentProject.Connection, adOpenKeyset
                 newNGSTestFile.Open "SELECT @@identity", CurrentProject.Connection, adOpenKeyset 'Get ID of new entry
                 NGSTestFileID = newNGSTestFile.Fields(0).Value
@@ -499,14 +610,14 @@ Private Sub StatusID_AfterUpdate()
     Dim dt As String
     Dim usr As String
     Dim cn As String
-
+    
     Set Q = New ADODB.Recordset
     Set U = New ADODB.Recordset
-
+    
     dt = Format(Now, "dd/mmm/yyyy Hh:Nn:ss")
     usr = VBA.Environ("USERNAME")
     cn = VBA.Environ("COMPUTERNAME")
-
+    
     ' If status is changed to 'Batching' check if WES test has been assigned to a WES Batch. If user confrms continuation remove sample from named WES batch
     If Me.StatusID = 1202218803 And Not IsNull(Me.WESBatch) Then
         If MsgBox("This test has already been assigned to WES Batch: " & Me![WESBatch] & vbNewLine & "Continuing will remove this test from this WES Batch." & vbNewLine & vbNewLine & "Do you wish to proceed?", vbYesNo Or vbExclamation, "TEST ALREADY ASSIGNED TO WES BATCH") = vbNo Then
@@ -525,7 +636,7 @@ Private Sub StatusID_AfterUpdate()
                 U.Open v, CurrentProject.Connection
                 Cancel = True
             Else
-
+                
                 l = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + ",'NGS WES test: Status updated to " + Me![StatusID].Column(1) + " for test requested " + CStr(Me![DateRequested]) + "',#" + dt + "#,'" + usr + "','" + cn + "')"
                 v = "INSERT INTO NGSLogMemo(InternalPatientID, Type, LinkID, LogMemoEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + ", 1, " + CStr(Me![NGSTestID]) + ",'NGS WES test status updated to: " + Me![StatusID].Column(1) + "' ,#" + dt + "#,'" + usr + "','" + cn + "')"
                 'record sample being removed from WES batch
@@ -540,7 +651,7 @@ Private Sub StatusID_AfterUpdate()
     l = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + ",'NGS WES test: Status updated to " + Me![StatusID].Column(1) + " for test requested " + CStr(Me![DateRequested]) + "',#" + dt + "#,'" + usr + "','" + cn + "')"
     v = "INSERT INTO NGSLogMemo(InternalPatientID, Type, LinkID, LogMemoEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + ", 1, " + CStr(Me![NGSTestID]) + ",'NGS WES test status updated to: " + Me![StatusID].Column(1) + "' ,#" + dt + "#,'" + usr + "','" + cn + "')"
     End If
-
+    
     Q.Open l, CurrentProject.Connection
     U.Open v, CurrentProject.Connection
     Me.Parent.Form.Requery
@@ -568,20 +679,20 @@ Private Sub Checker1_AfterUpdate()
     Dim dt As String
     Dim usr As String
     Dim cmp As String
-
+    
     Set rs = New ADODB.Recordset
     dt = Format(Now, "dd/mmm/yyyy Hh:Nn:ss")
     usr = VBA.Environ("USERNAME")
     cmp = VBA.Environ("COMPUTERNAME")
-
+ 
  ' record log if checker1 entry is removed
-
+ 
     If IsNull([Checker1]) Then
         plSQL = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + ",'NGS WES test: Initials for variant interpretation analysis removed for NGS test " + CStr(Me![NGSTestID]) + " requested " + CStr(Me![DateRequested]) + "',#" + dt + "#,'" + usr + "','" + cmp + "')"
         Me![txt_Check1Date] = Null
         Me![txt_Check1Date].Requery
         rs.Open plSQL, CurrentProject.Connection
-
+        
         If Not IsNull([Checker2]) Then
             Set rs2 = New ADODB.Recordset
             pl2SQL = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + ",'NGS WES test: Initials (ID:" + CStr(Me![Checker2]) + ") for checking result page (variant interpretation) removed for NGS test " + CStr(Me![NGSTestID]) + " requested " + CStr(Me![DateRequested]) + "',#" + dt + "#,'" + usr + "','" + cmp + "')"
@@ -608,17 +719,23 @@ Private Sub txt_Check1Date_DblClick(Cancel As Integer)
     Dim dt As String
     Dim usr As String
     Dim cmp As String
-
+    
     Set rs = New ADODB.Recordset
     dt = Format(Now, "dd/mmm/yyyy Hh:Nn:ss")
     usr = VBA.Environ("USERNAME")
     cmp = VBA.Environ("COMPUTERNAME")
+    
+'prevent check 1 date being updated after a check
+If Not IsNull(Checker2) Or Not IsNull(Checker3) Then
+    MsgBox "Report already has been marked as Check and/or Reported. Unable to update this feild", , "Update not permitted"
+    Exit Sub
+    
+ElseIf Not IsNull([Checker1]) Then
+          plSQL = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + ",'NGS WES test: Variant interpretation analysis entered by " + Me![Checker1].Column(1) + " for test " + CStr(Me![NGSTestID]) + " requested " + CStr(Me![DateRequested]) + "',#" + dt + "#,'" + usr + "','" + cmp + "')"
+        Me![txt_Check1Date] = Now()
+        Me.[txt_Check1Date].Requery
+        rs.Open plSQL, CurrentProject.Connection
 
-If Not IsNull([Checker1]) Then
-    plSQL = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + ",'NGS WES test: Variant interpretation analysis entered by " + Me![Checker1].Column(1) + " for test " + CStr(Me![NGSTestID]) + " requested " + CStr(Me![DateRequested]) + "',#" + dt + "#,'" + usr + "','" + cmp + "')"
-    Me![txt_Check1Date] = Now()
-    Me.[txt_Check1Date].Requery
-    rs.Open plSQL, CurrentProject.Connection
 Else
     MsgBox "Enter initials into 'Assigned to' field to proceed", , "No Record For Checker1 Entered"
 End If
@@ -637,18 +754,18 @@ Private Sub txt_Check1Date_AfterUpdate()
     Dim dt As String
     Dim usr As String
     Dim cmp As String
-
+    
     Set rs = New ADODB.Recordset
     dt = Format(Now, "dd/mmm/yyyy Hh:Nn:ss")
     usr = VBA.Environ("USERNAME")
     cmp = VBA.Environ("COMPUTERNAME")
-
+    
     If IsNull([txt_Check1Date]) Then
         plSQL = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + ",'NGS WES test: Date of completed variant interpretation analysis removed for NGS test " + CStr(Me![NGSTestID]) + " requested " + CStr(Me![DateRequested]) + "',#" + dt + "#,'" + usr + "','" + cmp + "')"
         Me![txt_Check1Date] = Null
         Me![txt_Check1Date].Requery
         rs.Open plSQL, CurrentProject.Connection
-
+        
         If Not IsNull([Checker2]) Then
             Set rs2 = New ADODB.Recordset
             pl2SQL = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + ",'NGS WES test: Initials (ID:" + CStr(Me![Checker2]) + ") for checking result page (variant interpretation) removed for NGS test " + CStr(Me![NGSTestID]) + " requested " + CStr(Me![DateRequested]) + "',#" + dt + "#,'" + usr + "','" + cmp + "')"
@@ -659,7 +776,7 @@ Private Sub txt_Check1Date_AfterUpdate()
             rs2.Open pl2SQL, CurrentProject.Connection
         End If
     End If
-
+    
 End Sub
 
 
@@ -683,7 +800,7 @@ Private Sub Checker2_AfterUpdate()
            Me![Checker2].Requery
            Me![txt_Check2Date] = Null
            Me![txt_Check2Date].Requery
-
+    
 'checks checker 1 ID and checker 2 id are not the same
     ElseIf Me.[Checker2] = Me.[Checker1] Then
            MsgBox "Checked by ID cannot be the same as 'Assigned to'  ", vbOKOnly Or vbExclamation, "Attention"
@@ -691,20 +808,20 @@ Private Sub Checker2_AfterUpdate()
            Me![Checker2].Requery
            Me![txt_Check2Date] = Null
            Me![txt_Check2Date].Requery
-
+    
     Else
 'logs if checker 2 ID is deleated
         If IsNull([Checker2]) Then
             plSQL = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + ",'NGS WES test: Initials for checking result page removed for NGS test " + CStr(Me![NGSTestID]) + " requested " + CStr(Me![DateRequested]) + "',#" + dt + "#,'" + usr + "','" + cmp + "')"
             Me![txt_Check2Date] = Null
             Me![txt_Check2Date].Requery
-
+            
         Else 'logs if checker 2 ID entry
             plSQL = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + ",'NGS WES test: Result page (variant interpretation) checked by  " + Me![Checker2].Column(1) + " for test " + CStr(Me![NGSTestID]) + " requested " + CStr(Me![DateRequested]) + "',#" + dt + "#,'" + usr + "','" + cmp + "')"
             Me![txt_Check2Date] = Now()
             Me.[txt_Check2Date].Requery
             'Me.Parent.[SafetyCheck].Value = True
-
+            
         End If
         rs.Open plSQL, CurrentProject.Connection
     End If
@@ -726,24 +843,24 @@ Private Sub Checker3_AfterUpdate()
 
     Set Q = New ADODB.Recordset
     Set U = New ADODB.Recordset
-
+    
     dt = Format(Now, "dd/mmm/yyyy Hh:Nn:ss")
     usr = VBA.Environ("USERNAME")
     cn = VBA.Environ("COMPUTERNAME")
-
+    
     ' Check that a final result has been entered into for the test
     If IsNull(Me.Parent.txt_result) Then
         msg_a = MsgBox("No Result has been entered for this WES test", vbOKOnly Or vbExclamation, "ATTENTION")
         Me.Checker3 = Null
         Me!txt_Check3Date = Null
-
+        
     ' Check that the checker1 feild has been completed
     ElseIf IsNull(Checker1) Or IsNull(txt_Check1Date) Then
         msg_b = MsgBox("Interpretation of test has not been marked as checked" & vbNewLine & "Please enter 'Assigned to' intitials and date before proceeding ", vbOKOnly Or vbExclamation, "ATTENTION")
         Me.Checker3 = Null
         Me!txt_Check3Date = Null
         Me!Checker1.SetFocus
-
+        
     ' check that if the test status = report negative or report positive, then a second check has been approved.
     ElseIf Me![StatusID] = 1202218811 Or Me![StatusID] = 1202218812 Then
         If Not IsNull(Checker2) Then
@@ -756,14 +873,14 @@ Private Sub Checker3_AfterUpdate()
             l = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + ",'NGS WES test: Status updated to Pending Report Authorsation for test requested " + CStr(Me![DateRequested]) + "',#" + dt + "#,'" + usr + "','" + cn + "')"
             v = "INSERT INTO NGSLogMemo(InternalPatientID, Type, LinkID, LogMemoEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + ", 1, " + CStr(Me![NGSTestID]) + ",'NGS WES test status updated to: Pending Report Authorsation' ,#" + dt + "#,'" + usr + "','" + cn + "')"
             ck = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + ",'NGS WES test: Result reported by " & Me.Checker3 & " for NGS test requested " + CStr(Me![DateRequested]) + "',#" + dt + "#,'" + usr + "','" + cn + "')"
-
+            
             Set rs = New ADODB.Recordset
             rs.Open ck, CurrentProject.Connection
             Q.Open l, CurrentProject.Connection
             U.Open v, CurrentProject.Connection
-
+             
             msg_c = MsgBox(" Test status updated." & vbNewLine & "Report pending approval", vbOKOnly Or vbInformation, "Report pending approval")
-
+           
             Me.StatusID.Locked = True
             Me.Parent.Form.Requery
             Set Q = Nothing
@@ -776,7 +893,7 @@ Private Sub Checker3_AfterUpdate()
             Me!txt_Check3Date = Null
             Me!Checker2.SetFocus
         End If
-
+                   
    ' update log and status for tests to be reported as failed
     ElseIf Me![StatusID] = 1202218813 Then
         Me!txt_Check3Date = dt
@@ -836,26 +953,26 @@ Private Sub Checker4_AfterUpdate()
     Dim strUpd8Patient As String
     Set U = New ADODB.Recordset
     Set rs = New ADODB.Recordset
-
+    
     dt = Format(Now, "dd/mmm/yyyy Hh:Nn:ss")
     usr = VBA.Environ("USERNAME")
     cn = VBA.Environ("COMPUTERNAME")
-
-
+      
+    
     If IsNull(Me!Checker4) Then  ' If approver removes signiture, removal is logged chage patient status back to NGS
         Me.txt_Check4Date = Null
-
+        
         ck = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + ",'NGS WES test: Report Approval ID, removed for NGS test requested. NGSTest status set to default (Pending Report Authorsation)',#" + dt + "#,'" + usr + "','" + cn + "')"
         v = "INSERT INTO NGSLogMemo(InternalPatientID, Type, LinkID, LogMemoEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + ", 1, " + CStr(Me![NGSTestID]) + ",'Reporter ID has been removed. Test status set to: Pending Report Authorsation (as default)' ,#" + dt + "#,'" + usr + "','" + cn + "')"
         rs.Open ck, CurrentProject.Connection
         U.Open v, CurrentProject.Connection
-
+        
         'check is patient status had been updated is so, revert to NGS upon intial deleation
         If Me.Parent.[Patient Status] = "Complete" Or Me.Parent.[Patient Status] = "Test Failed" Then
             Set P = New ADODB.Recordset
             strUpd8Patient = "UPDATE Patients SET s_StatusOverall = 1202218798 WHERE Patients.InternalPatientID = " & Me![InternalPatientID]
             p8 = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + ",'Patient: Status changed to: NGS " + CStr(Me![DateRequested]) + "',#" + dt + "#,'" + usr + "','" + cn + "')"
-
+            
             'run SQL
             DoCmd.SetWarnings False
             DoCmd.RunSQL strUpd8Patient
@@ -864,62 +981,62 @@ Private Sub Checker4_AfterUpdate()
             Set P = Nothing
             Me.Parent.Requery
         End If
-
+        
         Me.StatusID.Locked = False
         Me.StatusID = 1202218814 ' change status to bypass lock down error
-
+        
         msg_d = MsgBox("Report approver ID has been removed." & vbNewLine & "Please update test Status", vbOKOnly Or vbInformation, "Approver ID")
         Me.StatusID.SetFocus
-
+        
         Set rs = Nothing
         Set U = Nothing
         Exit Sub
-
+    
     ' Update patient and test status to complete providing that the test has been reported and test status is currently 'pending approval'
     ElseIf Not IsNull(Checker3) And Me.StatusID = 1202218814 Then
         ' Open extra recordsets required
         Set Q = New ADODB.Recordset
         Set P = New ADODB.Recordset
-
+        
         ' Add date of approval and update test status
         Me!txt_Check4Date = dt
         Me![StatusID] = 4
-
+        
         ' Log approval, update and log test status to 'complete'
         ck = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + ",'NGS WES test: Report approved by " & Me.Checker4 & " for NGS test requested " + CStr(Me![DateRequested]) + "',#" + dt + "#,'" + usr + "','" + cn + "')"
         l = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + ",'NGS WES test: Status updated to Complete for test requested " + CStr(Me![DateRequested]) + "',#" + dt + "#,'" + usr + "','" + cn + "')"
         v = "INSERT INTO NGSLogMemo(InternalPatientID, Type, LinkID, LogMemoEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + ", 1, " + CStr(Me![NGSTestID]) + ",'Test status set to: Complete' ,#" + dt + "#,'" + usr + "','" + cn + "')"
-
+        
         ' Update patient overal status to complete and log
         strUpd8Patient = "UPDATE Patients SET s_StatusOverall = 4 WHERE Patients.InternalPatientID = " & Me![InternalPatientID]
         p8 = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + ",'Patient: Status changed to: Complete " + CStr(Me![DateRequested]) + "',#" + dt + "#,'" + usr + "','" + cn + "')"
-
+        
         'run SQL
         DoCmd.SetWarnings False
         DoCmd.RunSQL strUpd8Patient
         DoCmd.SetWarnings True
-
+        
         rs.Open ck, CurrentProject.Connection
         Q.Open l, CurrentProject.Connection
         U.Open v, CurrentProject.Connection
         P.Open p8, CurrentProject.Connection
-
+        
         Set rs = Nothing
         Set Q = Nothing
         Set U = Nothing
         Set P = Nothing
         Me.Parent.Requery
-
+    
    ' Update patient and test status to 'Test Failed' providing that the test has been reported and test status is currently 'pending approval (failed report)'
     ElseIf Not IsNull(Checker3) And Me.StatusID = 1202218815 Then
         ' Open extra recordsets required
         Set Q = New ADODB.Recordset
         Set P = New ADODB.Recordset
-
+        
         ' Add date of approval and update test status
         Me!txt_Check4Date = dt
         Me![StatusID] = 1202218816
-
+        
         ' Log approval, update and log test status to 'Test Failed'
         ck = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + ",'NGS WES test: Report approved by " & Me.Checker4 & " for NGS test requested " + CStr(Me![DateRequested]) + "',#" + dt + "#,'" + usr + "','" + cn + "')"
         l = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + ",'NGS WES test: Status updated to Test Failed for test requested " + CStr(Me![DateRequested]) + "',#" + dt + "#,'" + usr + "','" + cn + "')"
@@ -928,30 +1045,30 @@ Private Sub Checker4_AfterUpdate()
         ' Update patient overal status to complete and log
         strUpd8Patient = "UPDATE Patients SET s_StatusOverall = 1202218816 WHERE Patients.InternalPatientID = " & Me![InternalPatientID]
         p8 = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + ",'Patient: Status changed to: Complete " + CStr(Me![DateRequested]) + "',#" + dt + "#,'" + usr + "','" + cn + "')"
-
+        
         'run SQL
         DoCmd.SetWarnings False
         DoCmd.RunSQL strUpd8Patient
         DoCmd.SetWarnings True
-
+    
         rs.Open ck, CurrentProject.Connection
         Q.Open l, CurrentProject.Connection
         U.Open v, CurrentProject.Connection
         P.Open p8, CurrentProject.Connection
-
+        
         Set rs = Nothing
         Set Q = Nothing
         Set U = Nothing
         Set P = Nothing
         Me.Parent.Requery
-
+        
     ' if approver ID is updated after being entered
     ElseIf Me.StatusID = 4 Or Me.StatusID = 1202218816 Then
         ck = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + ",'NGS WES test: Report approved by ID has been updated to " & Me.Checker4 & " for NGS test requested " + CStr(Me![DateRequested]) + "',#" + dt + "#,'" + usr + "','" + cn + "')"
         msg_1 = MsgBox("Authoriser ID has been updated to " + Me.Checker4.Column(2), vbOKOnly Or vbInformation, "Authoriser updated")
         rs.Open ck, CurrentProject.Connection
         Set rs = Nothing
-
+        
     Else
         msg_w = MsgBox("Report is not yet ready for approval.", vbOKOnly Or vbExclamation, "Error")
         Me.Checker4 = Null
@@ -966,7 +1083,7 @@ Function UpdatePatientRes()
     Dim dt As String
     Dim usr As String
     Dim cn As String
-    Dim r As String
+    Dim R As String
     Dim S As String
     Dim x As String
     Dim Y As String
@@ -977,23 +1094,23 @@ Function UpdatePatientRes()
     Set A = New ADODB.Recordset
     Set b = New ADODB.Recordset
     Set C = New ADODB.Recordset
-
+    
     dt = Format(Now, "dd/mmm/yyyy Hh:Nn:ss")
     usr = VBA.Environ("USERNAME")
     cn = VBA.Environ("COMPUTERNAME")
-
+    
 ' Check if there is a record already in the Patients results feild. If true, append new result to the end.
     x = Me.InternalPatientID
     Y = Me.Parent.txt_result
-    r = "SELECT OverallResultComments FROM Patients WHERE InternalPatientID = " + x + ""
-    A.Open r, CurrentProject.Connection, adOpenKeyset, adLockOptimistic, adCmdText
-
+    R = "SELECT OverallResultComments FROM Patients WHERE InternalPatientID = " + x + ""
+    A.Open R, CurrentProject.Connection, adOpenKeyset, adLockOptimistic, adCmdText
+    
     If Not IsNull(A!OverallResultComments) Then
         t = A!OverallResultComments
         S = "" + t + "," + Y + ""
     Else: S = "" + Y + ""
     End If
-
+    
 ' update record
     A!OverallResultComments = S
     A.Update
@@ -1007,51 +1124,51 @@ Function UpdatePatientRes()
 Set A = Nothing
 Set b = Nothing
 Set C = Nothing
-
+                
 End Function
 
 
 Private Sub txt_Resultcmt_AfterUpdate()
 ' NGS test results comments/ observations record
     Dim Q As ADODB.Recordset
-    Dim r As ADODB.Recordset
+    Dim R As ADODB.Recordset
     Dim S As String
     Dim t As String
     Dim dt As String
     Dim usr As String
     Dim cn As String
-
+    
     dt = Format(Now, "dd/mmm/yyyy Hh:Nn:ss")
     usr = VBA.Environ("USERNAME")
     cn = VBA.Environ("COMPUTERNAME")
     Set Q = New ADODB.Recordset
-
+    
     'Debug.Print Me.txt_Resultcmt
-
+    
     ' Insert record and comment into PatientLog memo which can then be recalled later with input info.
     If IsNull(Me.txt_Resultcmt) Then
         'Debug.Print "If null test"
         S = "INSERT INTO NGSLogMemo(InternalPatientID, Type, LinkID, LogMemoEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + ", 3," + CStr(Me![NGSTestID]) + ",'NGS WES test: Result comment deleted for WES test requested " + CStr(Me![DateRequested]) + "',#" + dt + "#,'" + usr + "','" + cn + "')"
         'Debug.Print S
     Else
-        Dim rc As String
+        Dim RC As String
         'Debug.Print " test"
-        rc = Replace(Me![txt_Resultcmt], "'", "''")
-        S = "INSERT INTO NGSLogMemo(InternalPatientID, Type, LinkID, LogMemoEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + ", 3, " + CStr(Me![NGSTestID]) + ",'NGS WES test: Result comment updated for WES test requested " + CStr(Me![DateRequested]) + " - " + rc + "',#" + dt + "#,'" + usr + "','" + cn + "')"
+        RC = Replace(Me![txt_Resultcmt], "'", "''")
+        S = "INSERT INTO NGSLogMemo(InternalPatientID, Type, LinkID, LogMemoEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + ", 3, " + CStr(Me![NGSTestID]) + ",'NGS WES test: Result comment updated for WES test requested " + CStr(Me![DateRequested]) + " - " + RC + "',#" + dt + "#,'" + usr + "','" + cn + "')"
         'Debug.Print S
     End If
     Q.Open S, CurrentProject.Connection
     Set Q = Nothing
 
     ' Record input in the patient log
-    Set r = New ADODB.Recordset
+    Set R = New ADODB.Recordset
     If IsNull([txt_Resultcmt]) Then
         t = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + ",'NGS WES test: Result comment deleted for WES test requested " + CStr(Me![DateRequested]) + "',#" + dt + "#,'" + usr + "','" + cn + "')"
     Else
         t = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + ",'NGS WES test: Result comment updated for WES test requested " + CStr(Me![DateRequested]) + " - see memo log',#" + dt + "#,'" + usr + "','" + cn + "')"
     End If
-    r.Open t, CurrentProject.Connection
-    Set r = Nothing
+    R.Open t, CurrentProject.Connection
+    Set R = Nothing
 
 End Sub
 
@@ -1064,3 +1181,6 @@ Dim stDocName As String
     stLinkCriteria = "[Type] = 3 AND [LinkID] = " & Me![NGSTestID]
     DoCmd.OpenForm stDocName, acFormDS, , stLinkCriteria
 End Sub
+
+
+

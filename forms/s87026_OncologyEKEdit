@@ -1,0 +1,23 @@
+Option Compare Database
+
+Private Sub EK_AfterUpdate()
+    D = Format(Now(), "dd/mmm/yyyy Hh:Nn:ss")
+    un = VBA.Environ("USERNAME")
+    cn = VBA.Environ("COMPUTERNAME")
+    'Add record of changed EK to patient log
+    sqlPatLog = "INSERT INTO PatientLog(InternalPatientID, SpecNo, GWSpecID, LogEntry, [Date], Login, PCName) VALUES(" & Me.InternalPatientID & ", '" & Me.SpecimenTrustID & "', " & Me.SpecimenID & ", 'NGS Oncology: OncologyLabID " & Me.OncologyLabID & " - EK number changed to: " & Me.EK & "', #" + D + "#,'" + un + "','" + cn + "')"
+    DoCmd.SetWarnings False
+    DoCmd.RunSQL sqlPatLog
+    DoCmd.SetWarnings True
+End Sub
+
+Private Sub BlockNo_AfterUpdate()
+    D = Format(Now(), "dd/mmm/yyyy Hh:Nn:ss")
+    un = VBA.Environ("USERNAME")
+    cn = VBA.Environ("COMPUTERNAME")
+    'Add record of changed block number to patient log
+    sqlPatLog = "INSERT INTO PatientLog(InternalPatientID, SpecNo, GWSpecID, LogEntry, [Date], Login, PCName) VALUES(" & Me.InternalPatientID & ", '" & Me.SpecimenTrustID & "', " & Me.SpecimenID & ", 'NGS Oncology: OncologyLabID " & Me.OncologyLabID & " - Block number changed to: " & Me.BlockNo & "', #" + D + "#,'" + un + "','" + cn + "')"
+    DoCmd.SetWarnings False
+    DoCmd.RunSQL sqlPatLog
+    DoCmd.SetWarnings True
+End Sub

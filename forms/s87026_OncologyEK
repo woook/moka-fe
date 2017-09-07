@@ -1,0 +1,10 @@
+Option Compare Database
+
+Private Sub EK_DblClick(Cancel As Integer)
+    Dim stDocName As String
+    Dim stLinkCriteria As String
+    'Opens form to add an NGS test for selected EK
+    stDocName = "s87026_OncologyNGSPopup"
+    stLinkCriteria = "[OncologyLabID] = " & Me.OncologyLabID
+    DoCmd.OpenForm stDocName, , , stLinkCriteria
+End Sub

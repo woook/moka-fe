@@ -1,0 +1,167 @@
+Option Compare Database
+
+Private Sub Check35_Click()
+    Dim resultStr As String
+    Dim genotype As String
+    Dim Class As String
+    Dim rsGetResult As ADODB.Recordset
+    Dim D As String
+    Dim usr As String
+    Dim cmp As String
+    
+    D = Format(Now(), "dd/mmm/yyyy Hh:Nn:ss")
+    usr = VBA.Environ("USERNAME")
+    cmp = VBA.Environ("COMPUTERNAME")
+    
+    Forms![0902 OncologyNGSResults].Dirty = False
+    
+    'Copies selected variant details into NGSTestresult feild.
+    If Not IsNull(Me.Parent.Classification) Then
+        genotype = Me.Parent.genotype
+        If genotype = "0/1" Then
+            genotype = "Het"
+        ElseIf genotype = "1/1" Then
+            genotype = "Hom"
+        End If
+        
+        'Get classification level (1-5) from classification text
+        Class = Mid(Me.Parent.Classification.Column(1), Len(Me.Parent.Classification.Column(1)) - 1, 1)
+        'Construct variant string in HGNC format
+        resultStr = genotype & " " & Me.GENE_SYMBOL & " " & Me.TRANSCRIPT_ID & " " & Me.HGVS_Transcript & " " & Me.HGVS_Protein & " Class: " & Class
+        
+        'If variant is marked as reported add, variant in HGVS format to the NGS test results field
+        If Me.Check35 = True Then
+           'Retrieve exsiting NGSTest result so variant can be appended to end
+            Set rsGetResult = New ADODB.Recordset
+            sqlGetResult = "SELECT NGSTest.Result FROM NGSTest WHERE NGSTest.NGSTestID = " & Me.Parent.NGSTestID
+            rsGetResult.Open sqlGetResult, CurrentProject.Connection, adOpenKeyset
+            
+            ' checks that new variant entry will be inserted on with the first line or a newline
+            newresult = rsGetResult.Fields("Result")
+            lastChr = Right(newresult, 2)
+            lenghtStr = Len(newresult)
+            Debug.Print "." & lastChr & "."
+            If lenghtStr = 0 Or lastChr = vbCrLf Then
+                newresult = newresult & resultStr + vbCrLf
+                newresult = Replace(newresult, "'", "''") 'Escape any apostrophes to prevent SQL error
+                sqlUpdate = "UPDATE NGSTest SET NGSTest.Result = '" & newresult & "' WHERE NGSTest.NGSTestID = " & Me.Parent.NGSTestID
+
+            Else
+                Debug.Print "found enter"
+                ' append variant to result feild
+                newresult = newresult + vbCrLf & resultStr + vbCrLf
+                newresult = Replace(newresult, "'", "''") 'Escape any apostrophes to prevent SQL error
+                sqlUpdate = "UPDATE NGSTest SET NGSTest.Result = '" & newresult & "' WHERE NGSTest.NGSTestID = " & Me.Parent.NGSTestID
+            End If
+            
+            'Retrieve details inorder to update patient log
+            patID = [Form_0902 OncologyNGSResults].InternalPatientID
+            dateReq = Form_s0902_OncologyTestResults.DateRequested
+            ' update patient log
+            sqlPatLog = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" + CStr(patID) + ",'NGS Oncology: Result automatically updated with HGVS variant for NGS test requested " + CStr(dateReq) + "' ,#" + D + "#,'" + usr + "','" + cmp + "')"
+            'Execute SQL statements
+            DoCmd.SetWarnings False
+            DoCmd.RunSQL sqlUpdate
+            DoCmd.RunSQL sqlPatLog
+            DoCmd.SetWarnings True
+            Forms![0902 OncologyNGSResults].refresh 'Refresh so that result comments field is updated
+
+         ' if the reported check box is unticked remove the HGCN varient from the NGSresult feild
+        ElseIf Me.Check35 = False Then
+            Set rsGetResult = New ADODB.Recordset
+            sqlGetResult = "SELECT NGSTest.Result FROM NGSTest WHERE NGSTest.NGSTestID = " & Me.Parent.NGSTestID
+            rsGetResult.Open sqlGetResult, CurrentProject.Connection, adOpenKeyset
+            newresult = rsGetResult.Fields("Result")
+             If Not IsNull(newresult) Then
+                ' remove selected variant from the results
+                newresult = Replace(newresult, resultStr + vbCrLf, "")
+                Forms![0902 OncologyNGSResults].refresh
+            sqlUpdate = "UPDATE NGSTest SET NGSTest.Result = '" & newresult & "' WHERE NGSTest.NGSTestID = " & Me.Parent.NGSTestID
+            'Retrieve details inorder to update patient log
+            patID = [Form_0902 OncologyNGSResults].InternalPatientID
+            dateReq = Form_s0902_OncologyTestResults.DateRequested
+            ' update patient log
+            sqlPatLog = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" + CStr(patID) + ",'NGS Oncology: HGVS variant result removed for NGS test requested " + CStr(dateReq) + "' ,#" + D + "#,'" + usr + "','" + cmp + "')"
+            'Execute SQL statements
+            DoCmd.SetWarnings False
+            DoCmd.RunSQL sqlUpdate
+            DoCmd.RunSQL sqlPatLog
+            DoCmd.SetWarnings True
+            Forms![0902 OncologyNGSResults].refresh 'Refresh so that result comments field is updated
+            End If
+        End If
+    Else
+        MsgBox "Please assign a classification before adding variant to the results", vbExclamation, "Assign Classification"
+        Me.Check35 = False ' unselect reported check box.
+    End If
+End Sub
+
+Private Sub dbSNPrs_DblClick(Cancel As Integer)
+    'Open dbSNP record in browser
+    If Not IsNull(Me.DBSNP) Then
+        Call firefoxurl("https://www.ncbi.nlm.nih.gov/projects/SNP/snp_ref.cgi?searchType=adhoc_search&type=rs&rs=rs" & Me.DBSNP)
+    End If
+End Sub
+
+Private Sub Form_Load()
+    'When subform is opened on main results page, add '**' to label indicating that double clicking transcript performs an action (see below)
+    If Me.Parent.Name = "s0902_OncologyNGSVariants" Then
+        Me.transcriptLabel.Caption = "Transcript**"
+    Else
+        Me.transcriptLabel.Caption = "Transcript"
+    End If
+End Sub
+
+Private Sub Transcript_DblClick(Cancel As Integer)
+    'Copies selected variant details into results comments.
+    If Me.Parent.Name = "s0902_OncologyNGSVariants" Then 'Prevents function from being used when on the previous varaiants popup.
+        If Not IsNull(Me.Parent.Classification) Then
+            Dim resultStr As String
+            Dim genotype As String
+            Dim Class As String
+            Dim rsGetComment As ADODB.Recordset
+            genotype = Me.Parent.genotype
+            If genotype = "0/1" Then
+                genotype = "Het"
+            ElseIf genotype = "1/1" Then
+                genotype = "Hom"
+            End If
+            'Get classification level (1-5) from classification text
+            Class = Mid(Me.Parent.Classification.Column(1), Len(Me.Parent.Classification.Column(1)) - 1, 1)
+            'Construct variant string
+            resultStr = genotype & " " & Me.GENE_SYMBOL & " " & Me.TRANSCRIPT_ID & " " & Me.HGVS_Transcript & " " & Me.HGVS_Protein & " Class: " & Class
+            'Retrieve exsiting comment so variant can be appended to end
+            Set rsGetComment = New ADODB.Recordset
+            sqlGetComment = "SELECT NGSTest.ResultComment FROM NGSTest WHERE NGSTest.NGSTestID = " & Me.Parent.NGSTestID
+            rsGetComment.Open sqlGetComment, CurrentProject.Connection, adOpenKeyset
+            'Get any existing comment
+            newComment = rsGetComment.Fields("ResultComment")
+            'If a comment has already been entered, add a new line
+            If Len(newComment) > 0 Then
+                newComment = newComment + vbNewLine
+            End If
+            'Append HGVS to end of result
+            newComment = newComment & resultStr
+            newComment = Replace(newComment, "'", "''") 'Escape any apostrophes to prevent SQL error
+            sqlUpdate = "UPDATE NGSTest SET NGSTest.ResultComment = '" & newComment & "' WHERE NGSTest.NGSTestID = " & Me.Parent.NGSTestID
+            'Retrieve details for log
+            patID = [Form_0902 OncologyNGSResults].InternalPatientID
+            dateReq = Form_s0902_OncologyTestResults.DateRequested
+            D = Format(Now(), "dd/mmm/yyyy Hh:Nn:ss")
+            un = VBA.Environ("USERNAME")
+            cn = VBA.Environ("COMPUTERNAME")
+            'SQL statements for log
+            sqlMemo = "INSERT INTO NGSLogMemo(InternalPatientID, Type, LinkID, LogMemoEntry, [Date], Login, PCName) VALUES(" + CStr(patID) + ", 3, " + CStr(Me.Parent.NGSTestID) + ",'NGS test: Result comment updated for NGS test requested " + CStr(dateReq) + " - " + newComment + "',#" + D + "#,'" + un + "','" + cn + "')"
+            sqlPatLog = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" + CStr(patID) + ",'NGS Oncology: Result comment updated for NGS test requested " + CStr(dateReq) + " - see memo log',#" + D + "#,'" + un + "','" + cn + "')"
+            'Execute SQL statements
+            DoCmd.SetWarnings False
+            DoCmd.RunSQL sqlUpdate
+            DoCmd.RunSQL sqlMemo
+            DoCmd.RunSQL sqlPatLog
+            DoCmd.SetWarnings True
+            Forms![0902 OncologyNGSResults].refresh 'Refresh so that result comments field is updated
+        Else
+            MsgBox "Please assign a classification before copying to results field", vbExclamation, "Assign Classification"
+        End If
+    End If
+End Sub

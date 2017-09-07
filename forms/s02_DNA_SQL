@@ -1,0 +1,3 @@
+SELECT DNA.DNAID, DNA.DNACheckRun, DNA.DNANumber, DNA.InternalPatientID, DNA.Concentration, DNA.Qubit, DNA.GelQualityID, DNA.Active, DNA.DNAComment, DNA.Source, DNA.FromDNAID, DNA.FromTissue, DNA.ExtractionMethodID, DNA.ExtractionRun, DNA.ExtractionBy, DNA.TapeStationDin, DNA.Volume, ([DNA.Qubit]*[DNA.Volume]/1000) AS TotalDNA
+FROM DNA
+ORDER BY DNA.DNACheckRun DESC , DNA.DNANumber DESC;

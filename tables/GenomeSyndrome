@@ -1,0 +1,22 @@
+USE [mokadata]
+GO
+/****** Object:  Table [dbo].[GenomeSyndrome]    Script Date: 09/06/2017 15:18:28 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[GenomeSyndrome](
+[GenomicSyndromeID] [int] IDENTITY(1,1) NOT NULL,
+[DecipherID] [int] NULL,
+[Syndrome] [nvarchar](max) NOT NULL,
+[ChrID19] [int] NOT NULL,
+[Start19] [int] NOT NULL,
+[Stop19] [int] NOT NULL,
+[Abbrev] [nvarchar](max) NULL,
+[Link] [nvarchar](max) NULL,
+[PreNat] [smallint] NULL,
+[PreNatComment] [nvarchar](max) NULL,
+[OMIMID] [int] NULL,
+[OldStart120930] [int] NULL,
+[OldStop120930] [int] NULL
+) ON [PRIMARY]

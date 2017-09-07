@@ -1,0 +1,31 @@
+Option Compare Database
+
+Private Sub Cancel_Click()
+    DoCmd.Close acForm, Me.Name
+End Sub
+
+Private Sub Create_NGS_Click()
+    Dim sqlNGSTest As String
+    Dim D As String
+    
+    If IsNull(Me.BookBy) Or IsNull(Me.ReferralID) Or IsNull(Me.PanelID) Then
+        MsgBox "You must complete the 'Booked By', 'Referral' and 'Panel' fields to proceed"
+    Else
+        'Add NGS Test
+        D = Format(Now(), "dd/mmm/yyyy Hh:Nn:ss")
+        sqlNGSTest = "INSERT INTO NGSTest (InternalPatientID, ReferralID, NGSPanelID, StatusID, DateRequested, BookBy, BookingAuthorisedDate, BookingAuthorisedByID, GWSpecID, OncologyLabID) " _
+                     & "VALUES (" & Me.InternalPatientID & ", " & Me.ReferralID & ", " & Me.PanelID & ", 1202218777, #" & D & "#, " & Me.BookBy & ", #" & D & "#, 1201865434, " & Me.SpecimenID & ", " & Me.OncologyLabID & ")"
+        DoCmd.SetWarnings False
+        DoCmd.RunSQL sqlNGSTest
+        DoCmd.SetWarnings True
+        [Form_87026 OncologyAddEK].Form.refresh
+        un = VBA.Environ("USERNAME")
+        cn = VBA.Environ("COMPUTERNAME")
+        'Add record of NGS test creation to patient log
+        sqlPatLog = "INSERT INTO PatientLog(InternalPatientID, SpecNo, GWSpecID, LogEntry, [Date], Login, PCName) VALUES(" & Me.InternalPatientID & ", '" & Me.SpecimenTrustID & "', " & Me.SpecimenID & ", 'NGS Oncology: " & Me.ReferralID.Column(1) & " test request added. Panel: " & Me.PanelID.Column(1) & ". ',#" + D + "#,'" + un + "','" + cn + "')"
+        DoCmd.SetWarnings False
+        DoCmd.RunSQL sqlPatLog
+        DoCmd.SetWarnings True
+        DoCmd.Close acForm, Me.Name
+    End If
+End Sub

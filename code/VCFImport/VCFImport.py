@@ -1,23 +1,14 @@
 '''
-v1.3 - AB 2017/05/25
+v1.5 - AB 2017/08/09
 
 ###
-Changes from v1.2:
-Added support for NaN AF values 
-Removed strip CADD whitespace feature because the bug that introduced whitespace has since been removed from Ingenuity
-Removed line that set GQ to 'Null' if it is false, because this results in GQ values of 0 being entered as Null and there 
-*should* always be a GQ output from GATK
-Added support for NaN values (e.g. in ING_AF field)
-Changes from v1.1:
-Updated getVars() method to account for new Ingenuity format of CADD scores <10
-Added stripCADDws() method to overcome Ingenuity bug that outputs whitespace between min and max CADD values.
-Changes from v1.0:
-insertMoka() method modified. Now inserts semi-colon delimited string of gene symbols in NGSVariant table.
+Changes from v1.4:
+Can handle samples with no genotype quality
 ###
 
 Usage:
     Parses an Ingenuity VCF output file and inserts variants and annotations into Moka NGSVariant and NGSVariantAnnotations tables.
-    Called from the WES results form [s0901_WESTestResults] in Moka
+    Called from the WES results form [s0901_WESTestResults] or Oncology results form [s0902_OncologyTestResults] in Moka
     Takes the following 3 arguments: comma separated string of VCF file paths, internal patient ID, NGS test ID
 
 Requirements:
@@ -82,15 +73,20 @@ class MokaVCF(object):
 
     def makeVCFdict(self, vcfPathLst):
         for vcf in vcfPathLst:
-            panelName = os.path.basename(vcf).split("-")[1]
-            if panelName == "Primarypanel":
-                self.vcfPaths[(1, "Primary")] = vcf
-            elif panelName == "Secondarypanel":
-                self.vcfPaths[(2, "Secondary")] = vcf
-            elif panelName == "Phenotype":
-                self.vcfPaths[(3, "Phenotype")] = vcf
+            #if oncology sample
+            if os.path.basename(vcf).startswith("ONC"):
+                self.vcfPaths[(0, "Oncology")] = vcf
+            #else if WES sample
             else:
-                self.vcfPaths[(4, panelName)] = vcf
+                panelName = os.path.basename(vcf).split("-")[1]
+                if panelName == "Primarypanel":
+                    self.vcfPaths[(1, "Primary")] = vcf
+                elif panelName == "Secondarypanel":
+                    self.vcfPaths[(2, "Secondary")] = vcf
+                elif panelName == "Phenotype":
+                    self.vcfPaths[(3, "Phenotype")] = vcf
+                else:
+                    self.vcfPaths[(4, panelName)] = vcf
 
     def lookupPrevVars(self):
         # Find details of any variants already imported into Moka for this test and add to exclusion list to prevent duplication.
@@ -150,14 +146,22 @@ class MokaVCF(object):
                 if (mokaChrID, position, ref, alt) not in self.prevVars:
                     gt = "'{}'".format(row.samples[0]['GT']) # Genotype
                     rd = str(row.samples[0]['DP']) # Read depth
-                    cq = str(row.QUAL) # Call quality
-                    af = row.samples[0]['ING_AF'] # Ingenuity inferred allele fraction (percentage). Returns false if no ING_AF
+                    if row.QUAL is not None:
+                        cq = str(row.QUAL) # Call quality
+                    else:
+                        cq = 'Null'
+                    af = row.samples[0]['ING_AF'] # Ingenuity inferred allele fraction (percentage).
+                    ref_ad = row.samples[0]['AD'][0] # Reference Allele Depth
+                    alt_ad = row.samples[0]['AD'][1] # Alt Allele Depth
                     if not af or math.isnan(af):
                         af = 'Null' # Adds Null value to SQL statement
-                    gq = row.samples[0]['GQ']
+                    if row.samples[0]['GQ'] is not None:
+                        gq = row.samples[0]['GQ'] # Genotype quality
+                    else:
+                        gq = 'Null'
                     # Stores each variant as a string that can be used in VALUES section of SQL insert statement (see below).
-                    varCurrent = (mokaChrID, position, ref, alt, self.ngsTestID, self.patID, "'{}'".format(self.datetime), str(panel[0]), "'{}'".format(panel[1]), gt, rd, cq, str(af), str(gq))
-                    #varCurrent = (mokaChrID, position, ref, alt, self.ngsTestID, self.patID, "#"+self.datetime+"#", str(panel[0]), "'{}'".format(panel[1]), gt, rd, cq, str(af), str(gq))
+                    varCurrent = (mokaChrID, position, ref, alt, self.ngsTestID, self.patID, "'{}'".format(self.datetime), str(panel[0]), "'{}'".format(panel[1]), gt, rd, cq, str(af), str(ref_ad), str(alt_ad), str(gq))
+                    #varCurrent = (mokaChrID, position, ref, alt, self.ngsTestID, self.patID, "#"+self.datetime+"#", str(panel[0]), "'{}'".format(panel[1]), gt, rd, cq, str(af), str(ref_ad), str(alt_ad), str(gq))
                     ######
                     #EXTRACT DATA FOR NGSVariantAnnotations TABLE...
                     ######
@@ -215,7 +219,7 @@ class MokaVCF(object):
 
     def insertMoka(self):
         # Loops through variant dictionary and inserts into Moka
-        sqlIns = "INSERT INTO NGSVariant (Gene, ChrID, Position_hg19, ref, alt, NGSTestID, InternalPatientID, DateAdded, PanelType, PanelTypeName, genotype, ReadDepth, CallQuality, AlleleFraction, GenotypeQuality) VALUES (%s, %s)"
+        sqlIns = "INSERT INTO NGSVariant (Gene, ChrID, Position_hg19, ref, alt, NGSTestID, InternalPatientID, DateAdded, PanelType, PanelTypeName, genotype, ReadDepth, CallQuality, AlleleFraction, RefAlleleDepth, AltAlleleDepth, GenotypeQuality) VALUES (%s, %s)"
         for var in sorted(self.vars.keys()):
             #Retrieve gene symbol(s) associated with each variant so they can be added to NGSVariants table. Separate multiple genes with semi-colon (;).
             genes = ";".join(set([annot[3][1:-1] for annot in self.vars[var] if annot[3] != "Null"]))

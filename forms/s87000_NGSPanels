@@ -1,0 +1,67 @@
+Option Compare Database
+
+''open forms
+Private Sub Category_DblClick(Cancel As Integer)
+    Dim stDocName As String
+    Dim stLinkCriteria As String
+    stDocName = "s87000_AddCategories"
+    DoCmd.OpenForm stDocName, , , stLinkCriteria
+End Sub
+
+''Auto Pan number
+Private Sub Checker1_AfterUpdate()
+If Not IsNull(Me.Checker1) Then
+    Me.Panel = Me.Category.Column(1) & " - " & Me.SubCategory.Column(1)
+    If Me.Dirty Then
+        Me.Dirty = False
+        End If
+    Me.PanelCode = "Pan" & Me.NGSPanelID
+    Me.Active = 0
+    Else
+    Me.Panel = Null
+    Me.PanelCode = ""
+    End If
+End Sub
+
+''autodate
+Private Sub Checker2_AfterUpdate()
+If Not IsNull(Me.Checker2) Then
+    Me.CheckDate = Now()
+    Me.Active = 1
+    Else
+    Me.CheckDate = Null
+    End If
+End Sub
+
+Private Sub PanelCode_DblClick(Cancel As Integer)
+''Write file of gene symbols in the panel
+    Dim DestFile As String
+    Dim DestFolder As String
+    Dim PanID As String
+    Dim DateTime As String
+    
+    DestFile = Me.PanelCode & "_genes.txt"
+    'ForTesting DestFolder = "C:\Array\TMP"
+    DestFolder = "\\SV-PR-FS13\Genetics\DNA LAB\R&D\New Tests\WES\Ingenuity\Moka Panels"
+    DestFile = DestFolder & "\" & DestFile
+    PanID = Me.NGSPanelID
+    DateTime = Format(Now, "dd/mmm/yyyy Hh:Nn:ss")
+    
+    Set fs = CreateObject("Scripting.FileSystemObject")
+    Set a = fs.CreateTextFile(DestFile, False)
+    a.WriteLine ("#Created by Moka " & DateTime)
+    Dim rst As DAO.Recordset
+    Set rst = CurrentDb.OpenRecordset("SELECT NGSPanelGenes.Symbol, NGSPanelGenes.NGSPanelID From NGSPanelGenes WHERE NGSPanelGenes.NGSPanelID=" + PanID, dbOpenSnapshot)
+    Do While Not rst.EOF
+        a.WriteLine (rst!Symbol)
+        rst.MoveNext
+    Loop
+    rst.Close
+    Set rst = Nothing
+    
+''Open folder containing file
+    ''normal way of opening and showing the directory doesn't want to work so switching to an alternative method
+    'Set objShell = CreateObject("Wscript.Shell")
+    'objShell.Run (DestFolder)
+    shell "explorer.exe """ & DestFolder & "", vbNormalFocus
+End Sub

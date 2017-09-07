@@ -1,0 +1,3 @@
+SELECT NGSPanel.NGSPanelID, NGSPanel.Category, NGSPanel.SubCategory, NGSPanel.Panel, NGSPanel.PanelCode, NGSPanel.Checker1, NGSPanel.Checker2, NGSPanel.CheckDate, Item.Item, Item_1.Item, NGSPanel.PanelCode, NGSPanel.Active, NGSPanel.PanelType
+FROM (NGSPanel INNER JOIN Item ON NGSPanel.Category = Item.ItemID) INNER JOIN Item AS Item_1 ON NGSPanel.SubCategory = Item_1.ItemID
+ORDER BY NGSPanel.NGSPanelID DESC;
