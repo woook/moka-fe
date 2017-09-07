@@ -56,7 +56,9 @@ Private Sub Pathogenic_DblClick(Cancel As Integer)
     'if the imbalance hasn't already got a record create one with internalpatientid and oligoresultid
     If vafpresent = 0 Then
         ' run insert query
+        DoCmd.SetWarnings False
         DoCmd.RunSQL stInsertImbalance
+        DoCmd.SetWarnings True
         ' open the form
         DoCmd.OpenForm stDocName, , , stLinkCriteria
     ElseIf vafpresent = 1 Then
