@@ -30,36 +30,41 @@ Private Sub Form_DblClick(Cancel As Integer)
     DoCmd.OpenForm stDocName, acFormDS, , stLinkCriteria
 End Sub
 
+'' Open variant assessment form
 Private Sub Pathogenic_DblClick(Cancel As Integer)
     Dim stDocName As String
     Dim stLinkCriteria As String
     Dim stImbalanceID As String
-    Dim stRecordPresentQuery As String
     Dim stInsertImbalance As String
-    
-    stImbalanceID = Me![OligoResultID]
-    stRecordPresentQuery = "select count(*) from ArrayImbalanceVAF where OligoResultID = " & Me![OligoResultID]
-    stDocName = "s09_ArrayVariantAssessment"
-    stLinkCriteria = "[OligoResultID]=" & Me![OligoResultID]
-    stInsertImbalance = "insert into ArrayImbalanceVAF(OligoResultID,InternalPatientID) values (" & Me![OligoResultID] & "," & Me![InternalPatientID] & ")"
-    
     Dim vafpresent As Long
     
-    'Debug.Print Me![OligoResultID]
+    ' capture the oligoresultid
+    stImbalanceID = Me![OligoResultID]
     
+    ' set which form to be opened
+    stDocName = "s09_ArrayVariantAssessment"
+    ' join the subform with parent form using oligoresultid
+    stLinkCriteria = "[OligoResultID]=" & Me![OligoResultID]
+    'query to create new record in ArrayImbalanceVAF table
+    stInsertImbalance = "insert into ArrayImbalanceVAF(OligoResultID,InternalPatientID) values (" & Me![OligoResultID] & "," & Me![InternalPatientID] & ")"
+       
+    ' count the number of times the oligoresultID is in the ArrayImbalanceVAF table.
     vafpresent = DCount("OligoResultID", "ArrayImbalanceVAF", "[OligoResultID]=" & Me![OligoResultID])
     
-    Debug.Print vafpresent
+    'Debug.Print vafpresent
         
-    ''if not add
+    'if the imbalance hasn't already got a record create one with internalpatientid and oligoresultid
     If vafpresent = 0 Then
-    DoCmd.RunSQL stInsertImbalance
-    DoCmd.OpenForm stDocName, , , stLinkCriteria
+        ' run insert query
+        DoCmd.RunSQL stInsertImbalance
+        ' open the form
+        DoCmd.OpenForm stDocName, , , stLinkCriteria
     ElseIf vafpresent = 1 Then
-    ''if it does open form
-    DoCmd.OpenForm stDocName, , , stLinkCriteria
+        ''if variant is in the table open form
+        DoCmd.OpenForm stDocName, , , stLinkCriteria
     Else
-    MsgBox ("Somehow there is more than one VAF for this imbalance")
+        ' if there is more than one record throw an error (the oligoresultid field is set to be unique so this shouldn't hapen)
+        MsgBox ("Somehow there is more than one VAF for this imbalance")
     End If
 End Sub
 
