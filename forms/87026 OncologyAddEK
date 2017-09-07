@@ -31,6 +31,7 @@ Private Sub edit_Click()
     End If
 End Sub
 
+'add/create EK number
 Private Sub Create_Click()
     Dim D As String
     Dim un As String
@@ -40,7 +41,7 @@ Private Sub Create_Click()
     Dim stDocName As String
     Dim ln As String
     Dim fn As String
-    
+
     'If patient isn't already in Moka patients table, import from geneworks
     If IsNull(Me.InternalPatientID) Then
         D = Format(Now(), "dd/mmm/yyyy Hh:Nn:ss")
@@ -53,13 +54,14 @@ Private Sub Create_Click()
         Else
         ln = "unknown"
         End If
+        
         ' escape any apostrophes in the first name
         If Not IsNull(Me![FirstName]) Then
         fn = Replace(Me![FirstName], "'", "''")
         Else
         fn = "unknown"
         End If
-        'use escaped names in the insert query
+        
         sqlAddPatient = "INSERT INTO patients (PatientID, s_StatusOverall, MokaCreated, MokaCreatedBy, MokaCreatedPC, NHSNumber, BookinLastname, BookinFirstName, BookinDoB, BookinCreatedBy, BookinCreatedDate, BookinSex)" & _
                            "VALUES ('" & Me.PatientID & "', 1202218798,'" & D & "','" & un & "','" & cn & "','" & Me.NHSNo & "','" & ln & "','" & fn & "','" & Me.DOB & "','" & Me.CreatedByID & "','" & Me.CreatedDate & "','" & Me.GenderShort & "')"
         DoCmd.SetWarnings False
