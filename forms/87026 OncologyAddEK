@@ -61,9 +61,10 @@ Private Sub Create_Click()
         Else
         fn = "unknown"
         End If
-        
+        'use escaped names in the insert query
         sqlAddPatient = "INSERT INTO patients (PatientID, s_StatusOverall, MokaCreated, MokaCreatedBy, MokaCreatedPC, NHSNumber, BookinLastname, BookinFirstName, BookinDoB, BookinCreatedBy, BookinCreatedDate, BookinSex)" & _
                            "VALUES ('" & Me.PatientID & "', 1202218798,'" & D & "','" & un & "','" & cn & "','" & Me.NHSNo & "','" & ln & "','" & fn & "','" & Me.DOB & "','" & Me.CreatedByID & "','" & Me.CreatedDate & "','" & Me.GenderShort & "')"
+                           
         DoCmd.SetWarnings False
         DoCmd.RunSQL sqlAddPatient
         DoCmd.SetWarnings True
