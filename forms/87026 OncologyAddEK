@@ -38,14 +38,30 @@ Private Sub Create_Click()
     Dim sqlAddPatient As String
     Dim sqlAddPat As String
     Dim stDocName As String
-       
+    Dim ln As String
+    Dim fn As String
+    
     'If patient isn't already in Moka patients table, import from geneworks
     If IsNull(Me.InternalPatientID) Then
         D = Format(Now(), "dd/mmm/yyyy Hh:Nn:ss")
         un = VBA.Environ("USERNAME")
         cn = VBA.Environ("COMPUTERNAME")
+        
+        ' escape any apostrophes in the last name
+        If Not IsNull(Me![LastName]) Then
+        ln = Replace(Me![LastName], "'", "''")
+        Else
+        ln = "unknown"
+        End If
+        ' escape any apostrophes in the first name
+        If Not IsNull(Me![FirstName]) Then
+        fn = Replace(Me![FirstName], "'", "''")
+        Else
+        fn = "unknown"
+        End If
+        'use escaped names in the insert query
         sqlAddPatient = "INSERT INTO patients (PatientID, s_StatusOverall, MokaCreated, MokaCreatedBy, MokaCreatedPC, NHSNumber, BookinLastname, BookinFirstName, BookinDoB, BookinCreatedBy, BookinCreatedDate, BookinSex)" & _
-                           "VALUES ('" & Me.PatientID & "', 1202218798,'" & D & "','" & un & "','" & cn & "','" & Me.NHSNo & "','" & Me.LastName & "','" & Me.FirstName & "','" & Me.DoB & "','" & Me.CreatedByID & "','" & Me.CreatedDate & "','" & Me.GenderShort & "')"
+                           "VALUES ('" & Me.PatientID & "', 1202218798,'" & D & "','" & un & "','" & cn & "','" & Me.NHSNo & "','" & ln & "','" & fn & "','" & Me.DOB & "','" & Me.CreatedByID & "','" & Me.CreatedDate & "','" & Me.GenderShort & "')"
         DoCmd.SetWarnings False
         DoCmd.RunSQL sqlAddPatient
         DoCmd.SetWarnings True
@@ -62,6 +78,7 @@ Private Sub Create_Click()
     stDocName = "s87026_OncologyEKAdd"
     DoCmd.OpenForm stDocName, acFormDS, , , acFormAdd
 End Sub
+
 
 Private Sub Form_Activate()
     'Refresh subform when window is activated
