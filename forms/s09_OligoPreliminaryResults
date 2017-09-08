@@ -30,6 +30,46 @@ Private Sub Form_DblClick(Cancel As Integer)
     DoCmd.OpenForm stDocName, acFormDS, , stLinkCriteria
 End Sub
 
+'' Open variant assessment form
+Private Sub Pathogenic_DblClick(Cancel As Integer)
+    Dim stDocName As String
+    Dim stLinkCriteria As String
+    Dim stImbalanceID As String
+    Dim stInsertImbalance As String
+    Dim vafpresent As Long
+    
+    ' capture the oligoresultid
+    stImbalanceID = Me![OligoResultID]
+    
+    ' set which form to be opened
+    stDocName = "s09_ArrayVariantAssessment"
+    ' join the subform with parent form using oligoresultid
+    stLinkCriteria = "[OligoResultID]=" & Me![OligoResultID]
+    'query to create new record in ArrayImbalanceVAF table
+    stInsertImbalance = "insert into ArrayImbalanceVAF(OligoResultID,InternalPatientID) values (" & Me![OligoResultID] & "," & Me![InternalPatientID] & ")"
+       
+    ' count the number of times the oligoresultID is in the ArrayImbalanceVAF table.
+    vafpresent = DCount("OligoResultID", "ArrayImbalanceVAF", "[OligoResultID]=" & Me![OligoResultID])
+    
+    'Debug.Print vafpresent
+        
+    'if the imbalance hasn't already got a record create one with internalpatientid and oligoresultid
+    If vafpresent = 0 Then
+        ' run insert query
+        DoCmd.SetWarnings False
+        DoCmd.RunSQL stInsertImbalance
+        DoCmd.SetWarnings True
+        ' open the form
+        DoCmd.OpenForm stDocName, , , stLinkCriteria
+    ElseIf vafpresent = 1 Then
+        ''if variant is in the table open form
+        DoCmd.OpenForm stDocName, , , stLinkCriteria
+    Else
+        ' if there is more than one record throw an error (the oligoresultid field is set to be unique so this shouldn't hapen)
+        MsgBox ("Somehow there is more than one VAF for this imbalance")
+    End If
+End Sub
+
 ''dgv
 Private Sub Start19_DblClick(Cancel As Integer)
     Dim url As String
