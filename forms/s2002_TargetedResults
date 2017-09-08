@@ -1,0 +1,5 @@
+Option Compare Database
+
+Private Sub Form_Open(Cancel As Integer)
+Me.HybIDLabel.Caption = "HybID: " & [Forms]![2002 ImportPrenat]![HybID]
+End Sub
