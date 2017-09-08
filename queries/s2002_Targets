@@ -1,0 +1,4 @@
+SELECT s2002_PreNatSize.C, s2002_PreNatSize.CytoBand, s2002_PreNatSize.Start, s2002_PreNatSize.Stop, s2002_PreNatSize.Probe, s2002_PreNatSize.RatioPos, s2002_PreNatSize.RatioNeg
+FROM s2002_PreNatSize
+UNION SELECT s2002_PreNatSyndromes.C, s2002_PreNatSyndromes.CytoBand, s2002_PreNatSyndromes.Start, s2002_PreNatSyndromes.Stop, s2002_PreNatSyndromes.Probe, s2002_PreNatSyndromes.RatioPos, s2002_PreNatSyndromes.RatioNeg
+FROM s2002_PreNatSyndromes;

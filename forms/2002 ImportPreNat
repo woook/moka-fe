@@ -1,0 +1,36 @@
+Option Compare Database
+
+Private Sub Form_Open(Cancel As Integer)
+    Dim TblName As String
+    Dim Obj As AccessObject, Dbs As Object
+
+    Set Dbs = Application.CurrentData
+    
+    For Each Obj In Dbs.AllTables
+        TblName = Obj.Name
+        ''Search for closed tables and delete TempPreNat table
+        If Obj.IsLoaded = False And TblName = "TempPreNat" Then
+            Access.DoCmd.DeleteObject acTable, Obj.Name
+            End If
+        ''Search for closed tables and delete ImportErrors table from previous import
+        If Obj.IsLoaded = False And InStr(1, TblName, "ImportErrors") > 0 Then
+                Access.DoCmd.DeleteObject acTable, Obj.Name
+            End If
+        Next Obj
+End Sub
+
+Private Sub Command12_Click()
+    Dim Hyb As String
+    Dim FilePath As String
+    Dim stDocName As String
+    Dim stLinkCriteria As String
+    
+    Hyb = Me.HybID
+    FilePath = "F:\Moka\Files\Analysis\Prenatal\intervals\" & Hyb & ".txt"
+    
+    ''Import interval based report and open TargetedResults form
+    DoCmd.TransferText acImportDelim, "pren_1", "TempPreNat", FilePath, yes
+    stDocName = "s2002_TargetedResults"
+    DoCmd.OpenForm stDocName
+    DoCmd.Close acForm, "2002 ImportPrenat", acSaveNo
+End Sub

@@ -1,0 +1,145 @@
+Option Compare Database
+
+''current
+Private Sub Form_Current()
+If Not IsNull(Me.Checked) And Me.SafetyCheck.Value = False Then
+    AllowEdits = False
+    Else: AllowEdits = True
+    End If
+        
+End Sub
+
+'' safety
+Private Sub Command59_Click()
+
+SafetyCheck.Value = Not SafetyCheck.Value
+    DoCmd.ShowAllRecords
+    
+End Sub
+
+''Add specimens to daybooktests table
+Private Sub Form_Open(Cancel As Integer)
+
+Do While Not Recordset.EOF
+    
+    Dim Q As ADODB.Recordset
+    Set Q = New ADODB.Recordset
+    Dim S As String
+        
+    If IsNull(Me.GWSpecID) Then
+        Dim GWSID As String
+        Dim SN As String
+        Dim ST As String
+        Dim STI As String
+        Dim STL As String
+        Dim DBR As String
+        Dim DBN As String
+        
+        GWSID = Me.SpecimenID
+        SN = Me.LDSpecimenNo
+        ST = Me.SpecimenTypeCode
+        STI = Me.SpecimenTypeID
+        STL = Me.SpecType
+        DBR = Me.DateReceived
+        DBN = Replace(Me.SpecName, "'", "''", , , vbBinaryCompare)
+            
+        If Not IsNull(Me.ContainerTypeCode) Then
+            Dim CT As String
+            Dim CTI As String
+            CTI = Me.ContainerTypeID
+            CT = Me.ContainerTypeCode
+            
+            S = "INSERT INTO DaybookTest(GWSpecID, SpecimenNo, SpecimenTypeID, SpecimenTypeCode, Daybookname, DaybookSpecTypeLab, DaybookReceived, ContainerTypeID, ContainerTypeCode) VALUES ('" + GWSID + "','" + SN + "','" + STI + "','" + ST + "','" + DBN + "','" + STL + "','" + DBR + "','" + CTI + "','" + CT + "')"
+            Else
+            S = "INSERT INTO DaybookTest(GWSpecID, SpecimenNo, SpecimenTypeID, SpecimenTypeCode, Daybookname, DaybookSpecTypeLab, DaybookReceived) VALUES ('" + GWSID + "','" + SN + "','" + STI + "','" + ST + "','" + DBN + "','" + STL + "','" + DBR + "')"
+            End If
+            
+        Q.Open S, CurrentProject.Connection
+        Set Q = Nothing
+        
+        'MsgBox (STL)
+        
+        End If
+        
+    Recordset.MoveNext
+    Loop
+
+''Note: 14/02/14 - got a message from Ian saying that this form wasn't opening. When I tried to open it, I got an ODBC connection error.
+''Turns out it couldn't insert a row into the DaybookTest table because that SpecimenNo already existed.
+''Turns out that the specimen number had been entered into GW, then the specimen number and GW SpecID imported into Moka, and then
+''the specimen was deleted from the specimen table, and then re-entered which resulted it in being assigned a new GW SpecID.
+''This cause a conflict due to duplicate specimen numbers in Moka when it tried to import. The workaround is to delete the old entry
+''in the DaybookTest table and then the import code will run as there is no longer a duplicate.
+''The fix is to find out how this is being done in GW and then prevent that from happening.
+''Use query w140521_FindBadSpecimens to find the offending spec no.
+
+''Go back to first record
+DoCmd.GoToRecord , , acFirst
+Me.Requery
+
+End Sub
+
+''autodate
+Private Sub Signed_AfterUpdate()
+    Me.SignedDate = Format(Now, "dd/mmm/yyyy Hh:Nn:ss")
+End Sub
+
+''sanity check in case user has ticked array and targeted array
+Private Sub TickArray_AfterUpdate()
+    If Me.TickArray = True And Me.TickArrayTargeted Then
+        MsgBox "Error: you have selected arrays as well as targeted arrays. Only one should be selected. Please correct these choices.", , "Don't be a dummy"
+        End If
+End Sub
+
+''sanity check in case user has ticked array and targeted array
+Private Sub TickArrayTargeted_AfterUpdate()
+    If Me.TickArray = True And Me.TickArrayTargeted Then
+        MsgBox "Error: you have selected arrays as well as targeted arrays. Only one should be selected. Please correct these choices.", , "Don't be a dummy"
+        End If
+End Sub
+
+''navigate buttons
+Private Sub Command52_Click()
+On Error GoTo Err_Command52_Click
+
+    DoCmd.GoToRecord , , acPrevious
+
+Exit_Command52_Click:
+    Exit Sub
+
+Err_Command52_Click:
+    MsgBox Err.Description
+    Resume Exit_Command52_Click
+    
+End Sub
+
+Private Sub Command53_Click()
+On Error GoTo Err_Command53_Click
+
+    DoCmd.GoToRecord , , acNext
+
+Exit_Command53_Click:
+    Exit Sub
+
+Err_Command53_Click:
+    MsgBox Err.Description
+    Resume Exit_Command53_Click
+    
+End Sub
+
+Private Sub Command55_Click()
+On Error GoTo Err_Command55_Click
+
+    DoCmd.ShowAllRecords
+    'DoCmd.DoMenuItem acFormBar, acRecordsMenu, 5, , acMenuVer70
+
+Exit_Command55_Click:
+    Exit Sub
+
+Err_Command55_Click:
+    MsgBox Err.Description
+    Resume Exit_Command55_Click
+    
+End Sub
+
+

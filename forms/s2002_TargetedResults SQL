@@ -1,0 +1,1 @@
+SELECT s2002_Targets.C AS Chr, s2002_Targets.CytoBand AS [Band], s2002_Targets.Start, s2002_Targets.Stop, [Stop]-[Start]+1 AS [Size], s2002_Targets.Probe, s2002_Targets.RatioPos, s2002_Targets.RatioNeg FROM s2002_Targets ORDER BY s2002_Targets.C, s2002_Targets.Start, s2002_Targets.Stop DESC;

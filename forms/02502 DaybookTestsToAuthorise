@@ -322,7 +322,7 @@ Private Sub Checked_AfterUpdate()
             .ReplyTo = "Prenatal-array@gstt.nhs.uk"
             .Subject = subjectline
             .HTMLBody = emailbody
-            .To = emailto
+            .to = emailto
             .BCC = "moka.alerts@gstt.nhs.uk"
             .Send
             End With
@@ -351,7 +351,7 @@ Private Sub Checked_AfterUpdate()
             .ReplyTo = "Prenatal-array@gstt.nhs.uk"
             .Subject = subjectline
             .HTMLBody = emailbody
-            .To = emailto
+            .to = emailto
             .BCC = "moka.alerts@gstt.nhs.uk"
             .Send
             End With
@@ -368,7 +368,7 @@ Private Sub Checked_AfterUpdate()
         ''add tests into Moka and log
         
         ''More variables
-        Dim d As String
+        Dim D As String
         Dim un As String
         Dim cn As String
         Dim t As String
@@ -381,7 +381,7 @@ Private Sub Checked_AfterUpdate()
         Dim tacgh As String
         Dim Sta As String
                                
-        d = Format(Now, "dd/mmm/yyyy Hh:Nn:ss")
+        D = Format(Now, "dd/mmm/yyyy Hh:Nn:ss")
         un = VBA.Environ("USERNAME")
         cn = VBA.Environ("COMPUTERNAME")
         qfpcrprenat = 1199901167
@@ -397,7 +397,7 @@ Private Sub Checked_AfterUpdate()
         
         If Me.TickPCR = True Then
             Q = "INSERT INTO QFPCRRequest(SpecimenNo, GWSpecID, ReferralID, RequestedDate, BookedByID, BookingCheckedByID, StatusID) VALUES ('" + LDS + "'," + GSI + "," + qfpcrprenat + ",#" & Format(Me.CheckedDate, "dd/mmm/yyyy Hh:Nn:ss") & "#," & Me.Signed & "," & Me.Checked & "," + Sta + ")"
-            t = "INSERT INTO PatientLog(SpecNo, GWSpecID, LogEntry, [Date], Login, PCName) VALUES ('" + LDS + "'," + GSI + ",'Daybook: QF-PCR trisomies, prenatal, request added for spec no " + LDS + "',#" + d + "#,'" + un + "','" + cn + "')"
+            t = "INSERT INTO PatientLog(SpecNo, GWSpecID, LogEntry, [Date], Login, PCName) VALUES ('" + LDS + "'," + GSI + ",'Daybook: QF-PCR trisomies, prenatal, request added for spec no " + LDS + "',#" + D + "#,'" + un + "','" + cn + "')"
             
             DoCmd.SetWarnings False
             DoCmd.RunSQL Q
@@ -407,7 +407,7 @@ Private Sub Checked_AfterUpdate()
         
         If Me.TickSex = True Then
             Q = "INSERT INTO QFPCRRequest(SpecimenNo, GWSpecID, ReferralID, RequestedDate, BookedByID, BookingCheckedByID, StatusID) VALUES ('" + LDS + "'," + GSI + "," + qfpcrsex + ",#" & Format(Me.CheckedDate, "dd/mmm/yyyy Hh:Nn:ss") & "#," & Me.Signed & "," & Me.Checked & "," + Sta + ")"
-            t = "INSERT INTO PatientLog(SpecNo, GWSpecID, LogEntry, [Date], Login, PCName) VALUES ('" + LDS + "'," + GSI + ",'Daybook: QF-PCR sex test request added for spec no " + LDS + "',#" + d + "#,'" + un + "','" + cn + "')"
+            t = "INSERT INTO PatientLog(SpecNo, GWSpecID, LogEntry, [Date], Login, PCName) VALUES ('" + LDS + "'," + GSI + ",'Daybook: QF-PCR sex test request added for spec no " + LDS + "',#" + D + "#,'" + un + "','" + cn + "')"
             
             DoCmd.SetWarnings False
             DoCmd.RunSQL Q
@@ -417,7 +417,7 @@ Private Sub Checked_AfterUpdate()
         
         If Me.TickStGeorgesSex = True Then
             Q = "INSERT INTO QFPCRRequest(SpecimenNo, GWSpecID, ReferralID, RequestedDate, BookedByID, BookingCheckedByID, StatusID) VALUES ('" + LDS + "'," + GSI + "," + qfpcrrsex + ",#" & Format(Me.CheckedDate, "dd/mmm/yyyy Hh:Nn:ss") & "#," & Me.Signed & "," & Me.Checked & "," + Sta + ")"
-            t = "INSERT INTO PatientLog(SpecNo, GWSpecID, LogEntry, [Date], Login, PCName) VALUES ('" + LDS + "'," + GSI + ",'Daybook: Retrospective QF-PCR sex test request added for spec no " + LDS + "',#" + d + "#,'" + un + "','" + cn + "')"
+            t = "INSERT INTO PatientLog(SpecNo, GWSpecID, LogEntry, [Date], Login, PCName) VALUES ('" + LDS + "'," + GSI + ",'Daybook: Retrospective QF-PCR sex test request added for spec no " + LDS + "',#" + D + "#,'" + un + "','" + cn + "')"
             
             DoCmd.SetWarnings False
             DoCmd.RunSQL Q
@@ -427,7 +427,7 @@ Private Sub Checked_AfterUpdate()
             
         If Me.TickGenotype = True Then
             Q = "INSERT INTO QFPCRRequest(SpecimenNo, GWSpecID, ReferralID, RequestedDate, BookedByID, BookingCheckedByID, StatusID) VALUES ('" + LDS + "'," + GSI + "," + qfpcrg + ",#" & Format(Me.CheckedDate, "dd/mmm/yyyy Hh:Nn:ss") & "#," & Me.Signed & "," & Me.Checked & "," + Sta + ")"
-            t = "INSERT INTO PatientLog(SpecNo, GWSpecID, LogEntry, [Date], Login, PCName) VALUES ('" + LDS + "'," + GSI + ",'Daybook: QF-PCR genotype test request added for spec no " + LDS + "',#" + d + "#,'" + un + "','" + cn + "')"
+            t = "INSERT INTO PatientLog(SpecNo, GWSpecID, LogEntry, [Date], Login, PCName) VALUES ('" + LDS + "'," + GSI + ",'Daybook: QF-PCR genotype test request added for spec no " + LDS + "',#" + D + "#,'" + un + "','" + cn + "')"
             
             DoCmd.SetWarnings False
             DoCmd.RunSQL Q
@@ -437,7 +437,7 @@ Private Sub Checked_AfterUpdate()
         
         If Me.TickArray = True Then
             Q = "INSERT INTO ArrayTest(SpecimenNo, GWSpecID, ReferralID, RequestedDate, BookedByID, BookingCheckedByID, StatusID) VALUES ('" + LDS + "'," + GSI + "," + acgh + ",#" & Format(Me.CheckedDate, "dd/mmm/yyyy Hh:Nn:ss") & "#," & Me.Signed & "," & Me.Checked & "," + Sta + ")"
-            t = "INSERT INTO PatientLog(SpecNo, GWSpecID, LogEntry, [Date], Login, PCName) VALUES ('" + LDS + "'," + GSI + ",'Daybook: Array test, prenatal request added for spec no " + LDS + "',#" + d + "#,'" + un + "','" + cn + "')"
+            t = "INSERT INTO PatientLog(SpecNo, GWSpecID, LogEntry, [Date], Login, PCName) VALUES ('" + LDS + "'," + GSI + ",'Daybook: Array test, prenatal request added for spec no " + LDS + "',#" + D + "#,'" + un + "','" + cn + "')"
             
             DoCmd.SetWarnings False
             DoCmd.RunSQL Q
@@ -447,7 +447,7 @@ Private Sub Checked_AfterUpdate()
     
         If Me.TickArrayTargeted = True Then
             Q = "INSERT INTO ArrayTest(SpecimenNo, GWSpecID, ReferralID, RequestedDate, BookedByID, BookingCheckedByID, StatusID) VALUES ('" + LDS + "'," + GSI + "," + tacgh + ",#" & Format(Me.CheckedDate, "dd/mmm/yyyy Hh:Nn:ss") & "#," & Me.Signed & "," & Me.Checked & "," + Sta + ")"
-            t = "INSERT INTO PatientLog(SpecNo, GWSpecID, LogEntry, [Date], Login, PCName) VALUES ('" + LDS + "'," + GSI + ",'Daybook: Array test, targeted prenatal request added for spec no " + LDS + "',#" + d + "#,'" + un + "','" + cn + "')"
+            t = "INSERT INTO PatientLog(SpecNo, GWSpecID, LogEntry, [Date], Login, PCName) VALUES ('" + LDS + "'," + GSI + ",'Daybook: Array test, targeted prenatal request added for spec no " + LDS + "',#" + D + "#,'" + un + "','" + cn + "')"
             
             DoCmd.SetWarnings False
             DoCmd.RunSQL Q
@@ -455,8 +455,20 @@ Private Sub Checked_AfterUpdate()
             DoCmd.SetWarnings True
             End If
     
-    
-    
+        If Me.USReportRecievedTickBox = True Then
+            Q = "Insert into FetalInformation(SpecimenNo, GWSpecID,USReportRecieved) values ('" + LDS + "'," + GSI + ",-1)"
+            
+            DoCmd.SetWarnings False
+            DoCmd.RunSQL Q
+            DoCmd.SetWarnings True
+        
+        ElseIf Me.USReportRecievedTickBox = False Then
+            Q = "Insert into FetalInformation(SpecimenNo, GWSpecID,USReportRecieved) values ('" + LDS + "'," + GSI + ",0)"
+            DoCmd.SetWarnings False
+            DoCmd.RunSQL Q
+            DoCmd.SetWarnings True
+        End If
+        
         ''unautodate is checked is null
         Else
             Me.CheckedDate = Null
