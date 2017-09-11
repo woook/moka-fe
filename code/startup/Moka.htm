@@ -1,0 +1,39 @@
+<SCRIPT language="VBScript">
+    Sub OKClicked
+        If UserOption(0).Checked Then
+            ButtonClicked.Value = "Genetics Clinic Access"
+        End If
+        If UserOption(1).Checked Then
+            ButtonClicked.Value = "Cytogenetics Access"
+        End If
+        If UserOption(2).Checked Then
+            ButtonClicked.Value = "Admin Access"
+        End If
+    End Sub
+
+    Sub CancelClicked
+        ButtonClicked.Value = "Cancelled"
+    End Sub
+</SCRIPT>
+
+<style type="text/css">
+span.c3 {font-family: Arial; font-size: 100%}
+span.c2 {font-family: Verdana; font-size: 120%; margin-left: 70pt; line-height: 150%;}
+span.c1 {font-family: Arial; font-size: 144%}
+</style>
+
+<body>
+  <br />
+  <span class="c1">Please select your level of Moka access:</span><br />
+  <br />
+  <span class="c2"><input type="radio" name="UserOption" />Clinic</span><br />
+  <span class="c2"><input type="radio" name="UserOption" checked="checked" />Cytogenetics</span><br />
+  <span class="c2"><input type="radio" name="UserOption" />Admin</span><br />
+  <br />
+  <span class="c2"><input type="Button" value=" OK " onclick="OKClicked" />  <input type="Button" value="Cancel" onclick="CancelClicked" /><input type="hidden" name="ButtonClicked" /></span>
+  <br />
+  <br />
+  <br />
+  <span class="c3">If you are adding or editing information, please make sure you are logged into this computer before using Moka</span><br />
+  <br />
+</body>
