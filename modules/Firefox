@@ -1,24 +1,26 @@
 Option Compare Database
 
 Public Function firefoxurl(url As String)
-    Dim V As String
-    V = """C:\Program Files\Mozilla Firefox\firefox.exe"""
+    Dim v As String
+    'v = """C:\Program Files\Mozilla Firefox\firefox.exe"""
+    'Switch to chrome instead of firefox on Windows 10 (updated more regularly)
+    v = """C:\Program Files (x86)\Google\Chrome\Application\chrome.exe"""
     Set objShell = CreateObject("Wscript.Shell")
-    objShell.Run (V & " -new-tab " & url)
+    objShell.Run (v & " -new-tab " & url)
 End Function
 
 Public Function chromeurl(url As String)
-    Dim V As String
-    V = """C:\Array\Software\Chrome\GoogleChromePortable.exe"""
+    Dim v As String
+    v = """C:\Array\Software\Chrome\GoogleChromePortable.exe"""
     Set objShell = CreateObject("Wscript.Shell")
-    objShell.Run (V & " -url " & url)
+    objShell.Run (v & " -url " & url)
 End Function
 
 Public Function chromeurlserv(url As String)
-    Dim V As String
-    V = """F:\Moka\Files\Chrome\GoogleChromePortable.exe"""
+    Dim v As String
+    v = """F:\Moka\Files\Chrome\GoogleChromePortable.exe"""
     Set objShell = CreateObject("Wscript.Shell")
-    objShell.Run (V & " -url " & url)
+    objShell.Run (v & " -url " & url)
 End Function
 
 ''concatenate function to bring values relating to a single ID together to be a single field, e.g. contatenating a patient's phenotype
@@ -27,19 +29,19 @@ End Function
 Public Function Concater(Fieldx, Identity, Value, Source) As Variant
   Dim cnn As ADODB.Connection
   Dim rs As ADODB.Recordset
-  Dim SQL As String
+  Dim Sql As String
   Dim vFld As Variant
   
   Set cnn = CurrentProject.Connection
   Set rs = New ADODB.Recordset
   vFld = Null
   
-  SQL = "SELECT [" & Fieldx & "] as Fld" & _
+  Sql = "SELECT [" & Fieldx & "] as Fld" & _
         " FROM [" & Source & "]" & _
         " WHERE [" & Identity & "]=" & Value
   
   ' open recordset.
-  rs.Open SQL, cnn, adOpenForwardOnly, adLockReadOnly
+  rs.Open Sql, cnn, adOpenForwardOnly, adLockReadOnly
   
   ' concatenate the field.
   Do While Not rs.EOF
@@ -73,5 +75,3 @@ Public Function Lastworkday(MyDay As Date) As String
     Lastworkday = Format(MyDate, "dd/mm/yyyy")
      
 End Function
-
-
