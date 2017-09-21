@@ -18,7 +18,10 @@ class SelectFE(object):
 	def __init__(self):
 		# Define interface attributes
 		self.root = Tk()
-		self.root.iconbitmap(r"C:\Program Files (x86)\Moka\moka.ico")
+		if os.path.exists(r"C:\Program Files (x86)\GSTT\Moka\moka.ico"):
+			self.root.iconbitmap(r"C:\Program Files (x86)\GSTT\Moka\moka.ico")
+		elif os.path.exists(r"C:\Program Files\GSTT\Moka\moka.ico"):
+			self.root.iconbitmap(r"C:\Program Files\GSTT\Moka\moka.ico")
 		self.root.title("Moka")
 		self.app = Frame(self.root)
 		self.app.grid(padx=10, pady=10)
@@ -61,7 +64,10 @@ class waitMessage(object):
 		self.types = {1: "Clinic", 2: "Lab", 3: "Admin"}
 		self.message = "Retrieving updated %s file. This may take several minutes to complete..." % (self.types[selection])
 		self.root = Tk()
-		self.root.iconbitmap(r"C:\Program Files (x86)\Moka\moka.ico")
+		if os.path.exists(r"C:\Program Files (x86)\GSTT\Moka\moka.ico"):
+			self.root.iconbitmap(r"C:\Program Files (x86)\GSTT\Moka\moka.ico")
+		elif os.path.exists(r"C:\Program Files\GSTT\Moka\moka.ico"):
+			self.root.iconbitmap(r"C:\Program Files\GSTT\Moka\moka.ico")
 		self.root.title("Moka")
 		self.app = Frame(self.root)
 		self.app.grid(padx=10, pady=10)
