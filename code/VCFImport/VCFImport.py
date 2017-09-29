@@ -79,11 +79,11 @@ class MokaVCF(object):
             #else if WES sample
             else:
                 panelName = os.path.basename(vcf).split("-")[1]
-                if panelName == "Primarypanel":
+                if panelName.lower() == "primarypanel":
                     self.vcfPaths[(1, "Primary")] = vcf
-                elif panelName == "Secondarypanel":
+                elif panelName.lower() == "secondarypanel":
                     self.vcfPaths[(2, "Secondary")] = vcf
-                elif panelName == "Phenotype":
+                elif panelName.lower() == "phenotype":
                     self.vcfPaths[(3, "Phenotype")] = vcf
                 else:
                     self.vcfPaths[(4, panelName)] = vcf
