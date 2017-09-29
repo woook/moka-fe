@@ -1,9 +1,9 @@
 '''
-v1.5 - AB 2017/08/09
+v1.6 - AB 2017/09/29
 
 ###
-Changes from v1.4:
-Can handle samples with no genotype quality
+Changes from v1.5:
+Panel type in filename is now case insensitive
 ###
 
 Usage:
