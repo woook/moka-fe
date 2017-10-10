@@ -1,0 +1,48 @@
+
+Private Sub Form_Open(Cancel As Integer)
+Dim pilot_cases As Integer
+Dim main_cases As Integer
+Dim pilot_awaiting_analysis As Integer
+Dim pilot_in_analysis As Integer
+Dim pilot_furthertesting As Integer
+Dim pilot_pending_auth As Integer
+Dim pilot_complete As Integer
+Dim main_awaiting_analysis As Integer
+Dim main_in_analysis As Integer
+Dim main_furthertesting As Integer
+Dim main_pending_auth As Integer
+Dim main_complete As Integer
+
+
+pilot_cases = DCount("*", "100KAnalysisStatus", " GEL_programme = 1202218827")
+main_cases = DCount("*", "100KAnalysisStatus", " GEL_programme = 1202218828")
+pilot_awaiting_analysis = DCount("*", "100KAnalysisStatus", " GEL_programme = 1202218827 and Lab_status = 1202218824")
+pilot_in_analysis = DCount("*", "100KAnalysisStatus", " GEL_programme = 1202218827 and Lab_status = 1202218825")
+pilot_furthertesting = DCount("*", "100KAnalysisStatus", " GEL_programme = 1202218827 and Lab_status = 1202218826")
+pilot_pending_auth = DCount("*", "100KAnalysisStatus", " GEL_programme = 1202218827 and Lab_status = 1202218814")
+pilot_complete = DCount("*", "100KAnalysisStatus", " GEL_programme = 1202218827 and Lab_status = 4")
+main_awaiting_analysis = DCount("*", "100KAnalysisStatus", " GEL_programme = 1202218828 and Lab_status = 1202218824")
+main_in_analysis = DCount("*", "100KAnalysisStatus", " GEL_programme = 1202218828 and Lab_status = 1202218825")
+main_furthertesting = DCount("*", "100KAnalysisStatus", " GEL_programme = 1202218828 and Lab_status = 1202218826")
+main_pending_auth = DCount("*", "100KAnalysisStatus", " GEL_programme = 1202218828 and Lab_status = 1202218814")
+main_complete = DCount("*", "100KAnalysisStatus", " GEL_programme = 1202218828 and Lab_status = 4")
+
+
+
+
+Me.pilot_count.Value = pilot_cases
+Me.main_count.Value = main_cases
+Me.pilot_awaitinganalysis.Value = pilot_awaiting_analysis
+Me.pilot_inanalysis.Value = pilot_in_analysis
+Me.pilot_furthertesting.Value = pilot_furthertesting
+Me.pilot_pendingauth.Value = pilot_pending_auth
+Me.pilot_complete.Value = pilot_complete
+Me.main_awaitinganalysis.Value = main_awaiting_analysis
+Me.main_inanalysis.Value = main_in_analysis
+Me.main_furthertesting.Value = main_furthertesting
+Me.main_pendingauth.Value = main_pending_auth
+Me.main_complete.Value = main_complete
+
+
+
+End Sub
