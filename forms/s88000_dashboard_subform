@@ -2,6 +2,7 @@ Option Compare Database
 
 
 Private Sub Form_Open(Cancel As Integer)
+' define variables
 Dim pilot_cases As Integer
 Dim main_cases As Integer
 Dim pilot_awaiting_analysis As Integer
@@ -15,14 +16,16 @@ Dim main_furthertesting As Integer
 Dim main_pending_auth As Integer
 Dim main_complete As Integer
 
-
-pilot_cases = DCount("*", "GEL100KAnalysisStatus", " GEL_programme = 1202218827")
-main_cases = DCount("*", "GEL100KAnalysisStatus", " GEL_programme = 1202218828")
+' use Dcount to perform counts in the table
+' Pilot cases
+pilot_cases = DCount("*", "GEL100KAnalysisStatus", " GEL_programme = 1202218827") ' all pilot cases
 pilot_awaiting_analysis = DCount("*", "GEL100KAnalysisStatus", " GEL_programme = 1202218827 and Lab_status = 1202218824")
 pilot_in_analysis = DCount("*", "GEL100KAnalysisStatus", " GEL_programme = 1202218827 and Lab_status = 1202218825")
 pilot_furthertesting = DCount("*", "GEL100KAnalysisStatus", " GEL_programme = 1202218827 and Lab_status = 1202218826")
 pilot_pending_auth = DCount("*", "GEL100KAnalysisStatus", " GEL_programme = 1202218827 and Lab_status = 1202218814")
 pilot_complete = DCount("*", "GEL100KAnalysisStatus", " GEL_programme = 1202218827 and Lab_status = 4")
+' Main program cases
+main_cases = DCount("*", "GEL100KAnalysisStatus", " GEL_programme = 1202218828")
 main_awaiting_analysis = DCount("*", "GEL100KAnalysisStatus", " GEL_programme = 1202218828 and Lab_status = 1202218824")
 main_in_analysis = DCount("*", "GEL100KAnalysisStatus", " GEL_programme = 1202218828 and Lab_status = 1202218825")
 main_furthertesting = DCount("*", "GEL100KAnalysisStatus", " GEL_programme = 1202218828 and Lab_status = 1202218826")
@@ -31,7 +34,7 @@ main_complete = DCount("*", "GEL100KAnalysisStatus", " GEL_programme = 120221882
 
 
 
-
+' update the variables on the form with the counts
 Me.pilot_count.Value = pilot_cases
 Me.main_count.Value = main_cases
 Me.pilot_awaitinganalysis.Value = pilot_awaiting_analysis
