@@ -243,7 +243,7 @@ End Sub
 Private Sub RemoveAll_MouseDown(Button As Integer, Shift As Integer, x As Single, Y As Single)
     If Shift = acCtrlMask Then
         If MsgBox("WARNING: This will remove all variants for this WES test." & vbNewLine & vbNewLine & "Are you sure you REALLY want to proceed??", vbYesNo + vbExclamation, "WARNING") = vbYes Then
-            D = Format(Now(), "dd/mmm/yyyy Hh:Nn:ss")
+            d = Format(Now(), "dd/mmm/yyyy Hh:Nn:ss")
             un = VBA.Environ("USERNAME")
             cn = VBA.Environ("COMPUTERNAME")
             patID = Me.Parent.InternalPatientID
@@ -252,8 +252,8 @@ Private Sub RemoveAll_MouseDown(Button As Integer, Shift As Integer, x As Single
             sqlVarsForDel = "SELECT NGSVariant.NGSVariantID FROM NGSVariant WHERE NGSTestID = " & Me.Parent.NGSTestID
             rsVarsForDel.Open sqlVarsForDel, CurrentProject.Connection, adOpenKeyset
             While Not rsVarsForDel.EOF
-                sqlMemo = "INSERT INTO NGSLogMemo(InternalPatientID, Type, LinkID, LogMemoEntry, [Date], Login, PCName) VALUES(" + CStr(patID) + ", 2, " + CStr(rsVarsForDel.Fields("NGSVariantID")) + ",'Variant deleted.',#" + D + "#,'" + un + "','" + cn + "')"
-                sqlPatLog = "INSERT INTO PatientLog (InternalPatientID, LogEntry, [Date], Login, PCName) VALUES (" & patID & ", 'NGS: Variant deleted. NGSVariantID: " & CStr(rsVarsForDel.Fields("NGSVariantID")) & "', #" + D + "#,'" + un + "','" + cn + "')"
+                sqlMemo = "INSERT INTO NGSLogMemo(InternalPatientID, Type, LinkID, LogMemoEntry, [Date], Login, PCName) VALUES(" + CStr(patID) + ", 2, " + CStr(rsVarsForDel.Fields("NGSVariantID")) + ",'Variant deleted.',#" + d + "#,'" + un + "','" + cn + "')"
+                sqlPatLog = "INSERT INTO PatientLog (InternalPatientID, LogEntry, [Date], Login, PCName) VALUES (" & patID & ", 'NGS: Variant deleted. NGSVariantID: " & CStr(rsVarsForDel.Fields("NGSVariantID")) & "', #" + d + "#,'" + un + "','" + cn + "')"
                 DoCmd.SetWarnings False
                 DoCmd.RunSQL sqlMemo
                 DoCmd.RunSQL sqlPatLog
@@ -266,7 +266,7 @@ Private Sub RemoveAll_MouseDown(Button As Integer, Shift As Integer, x As Single
             sqlFilesForDel = "SELECT NGSTestFile.NGSTestID, NGSTestFile.Description FROM NGSTestFile WHERE NGSTestFile.NGSTestID = " & Me.Parent.NGSTestID & " AND NGSTestFile.VCF_Filter_Import = TRUE"
             rsFilesForDel.Open sqlFilesForDel, CurrentProject.Connection, adOpenKeyset
             While Not rsFilesForDel.EOF
-                sqlPatLog = "INSERT INTO PatientLog (InternalPatientID, LogEntry, [Date], Login, PCName) VALUES (" & patID & ", 'NGS: File removed from NGS test record. (NGSTestFile Description: " & rsFilesForDel.Fields("Description") & ", NGSTestID: " & rsFilesForDel.Fields("NGSTestID") & ")', #" + D + "#,'" + un + "','" + cn + "')"
+                sqlPatLog = "INSERT INTO PatientLog (InternalPatientID, LogEntry, [Date], Login, PCName) VALUES (" & patID & ", 'NGS: File removed from NGS test record. (NGSTestFile Description: " & rsFilesForDel.Fields("Description") & ", NGSTestID: " & rsFilesForDel.Fields("NGSTestID") & ")', #" + d + "#,'" + un + "','" + cn + "')"
                 DoCmd.SetWarnings False
                 DoCmd.RunSQL sqlPatLog
                 DoCmd.SetWarnings True
@@ -539,10 +539,10 @@ Private Sub FilterImport_Click()
                 DoCmd.RunSQL sqlAddFilePath
                 DoCmd.SetWarnings True
                 Me.Requery
-                D = Format(Now(), "dd/mmm/yyyy Hh:Nn:ss")
+                d = Format(Now(), "dd/mmm/yyyy Hh:Nn:ss")
                 un = VBA.Environ("USERNAME")
                 cn = VBA.Environ("COMPUTERNAME")
-                sqlPatLogFil = "INSERT INTO PatientLog (InternalPatientID, LogEntry, [Date], Login, PCName) VALUES (" & patID & ", 'NGS: Ingenuity Filter Settings file attached. (NGSTestFile ID: " & NGSTestFileID & ")', #" + D + "#,'" + un + "','" + cn + "')"
+                sqlPatLogFil = "INSERT INTO PatientLog (InternalPatientID, LogEntry, [Date], Login, PCName) VALUES (" & patID & ", 'NGS: Ingenuity Filter Settings file attached. (NGSTestFile ID: " & NGSTestFileID & ")', #" + d + "#,'" + un + "','" + cn + "')"
                 DoCmd.SetWarnings False
                 DoCmd.RunSQL sqlPatLogFil
                 DoCmd.SetWarnings True
@@ -798,34 +798,71 @@ Private Sub Checker2_AfterUpdate()
         MsgBox "Unable to confirm check of variant interpretation until 'Assigned to' initials and associated date are entered", , "No Record For Checker1 Entered"
                    Me![Checker2] = Null
            Me![Checker2].Requery
-           Me![txt_Check2Date] = Null
-           Me![txt_Check2Date].Requery
+'           Me![txt_Check2Date] = Null
+'           Me![txt_Check2Date].Requery
     
 'checks checker 1 ID and checker 2 id are not the same
     ElseIf Me.[Checker2] = Me.[Checker1] Then
            MsgBox "Checked by ID cannot be the same as 'Assigned to'  ", vbOKOnly Or vbExclamation, "Attention"
            Me![Checker2] = Null
            Me![Checker2].Requery
-           Me![txt_Check2Date] = Null
-           Me![txt_Check2Date].Requery
+'           Me![txt_Check2Date] = Null
+'           Me![txt_Check2Date].Requery
     
     Else
 'logs if checker 2 ID is deleated
         If IsNull([Checker2]) Then
             plSQL = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + ",'NGS WES test: Initials for checking result page removed for NGS test " + CStr(Me![NGSTestID]) + " requested " + CStr(Me![DateRequested]) + "',#" + dt + "#,'" + usr + "','" + cmp + "')"
-            Me![txt_Check2Date] = Null
-            Me![txt_Check2Date].Requery
+'            Me![txt_Check2Date] = Null
+'            Me![txt_Check2Date].Requery
             
         Else 'logs if checker 2 ID entry
-            plSQL = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + ",'NGS WES test: Result page (variant interpretation) checked by  " + Me![Checker2].Column(1) + " for test " + CStr(Me![NGSTestID]) + " requested " + CStr(Me![DateRequested]) + "',#" + dt + "#,'" + usr + "','" + cmp + "')"
-            Me![txt_Check2Date] = Now()
-            Me.[txt_Check2Date].Requery
+            plSQL = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + ",'NGS WES test: Result page (variant interpretation) checking assigned to  " + Me![Checker2].Column(1) + " for test " + CStr(Me![NGSTestID]) + " requested " + CStr(Me![DateRequested]) + "',#" + dt + "#,'" + usr + "','" + cmp + "')"
+'            Me![txt_Check2Date] = Now()
+'            Me.[txt_Check2Date].Requery
             'Me.Parent.[SafetyCheck].Value = True
             
         End If
         rs.Open plSQL, CurrentProject.Connection
     End If
     Set rs = Nothing
+End Sub
+
+Private Sub txt_Check2Date_DblClick(Cancel As Integer)
+    Dim rs As ADODB.Recordset
+    Dim plSQL As String
+    Dim dt As String
+    Dim usr As String
+    Dim cmp As String
+    
+    Set rs = New ADODB.Recordset
+    dt = Format(Now, "dd/mmm/yyyy Hh:Nn:ss")
+    usr = VBA.Environ("USERNAME")
+    cmp = VBA.Environ("COMPUTERNAME")
+    
+'prevent check 2 date being updated after a check
+If Not IsNull(Checker3) Then
+    MsgBox "Report already has been marked as Reported. Unable to update this feild", , "Update not permitted"
+    Exit Sub
+    
+ElseIf IsNull(Checker1) Then
+    MsgBox "Analyst not assigned. Unable to update this feild", , "Update not permitted"
+    Exit Sub
+    
+ElseIf Not IsNull([Checker2]) Then
+          plSQL = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + ",'NGS WES test: Variant interpretation checked by " + Me![Checker1].Column(1) + " for test " + CStr(Me![NGSTestID]) + " requested " + CStr(Me![DateRequested]) + "',#" + dt + "#,'" + usr + "','" + cmp + "')"
+        Me![txt_Check2Date] = Now()
+        Me.[txt_Check2Date].Requery
+        rs.Open plSQL, CurrentProject.Connection
+
+Else
+    MsgBox "Enter initials into 'Checked by' field to proceed", , "No Record For Checker2 Entered"
+End If
+
+    Set rs = Nothing
+    'Refresh fromatting on the page
+    Me.Parent.Requery
+
 End Sub
 
 
