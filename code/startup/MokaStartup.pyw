@@ -16,29 +16,33 @@ import ttk
 
 class SelectFE(object):
 	def __init__(self):
-		# Define interface attributes
+		#Create root window
 		self.root = Tk()
+		#Set window icon to Moka icon. In different locations on Win 10 and XP so have to check file exists.
 		if os.path.exists(r"C:\Program Files (x86)\GSTT\Moka\moka.ico"):
 			self.root.iconbitmap(r"C:\Program Files (x86)\GSTT\Moka\moka.ico")
 		elif os.path.exists(r"C:\Program Files\GSTT\Moka\moka.ico"):
 			self.root.iconbitmap(r"C:\Program Files\GSTT\Moka\moka.ico")
-		self.root.title("Moka")
-		self.app = Frame(self.root)
-		self.app.grid(padx=10, pady=10)
-		self.var = IntVar()
-		self.var.set(2)
+		self.root.title("Moka") #Window title
+		self.app = Frame(self.root) #Create frame to hold content
+		self.app.grid(padx=10, pady=10) #Add padding
+		self.choice = IntVar() #Set choice variable to integer
+		self.choice.set(2) #Default is 2 (Laboratory)
+		#Create radio buttons to get users choice of front end
 		self.L1 = Label(self.app, text = "Please select your level of Moka access:", font = (None, 14))
 		self.L1.grid(row = 0, column = 0, columnspan = 2, sticky = W)
-		self.R1 = Radiobutton(self.app, text="Clinic", variable=self.var, value=1, font = (None, 12))
+		self.R1 = Radiobutton(self.app, text="Clinic", variable=self.choice, value=1, font = (None, 12))
 		self.R1.grid(row = 1, column = 0, columnspan = 2, sticky = W)
-		self.R2 = Radiobutton(self.app, text="Lab", variable=self.var, value=2, font = (None, 12))
+		self.R2 = Radiobutton(self.app, text="Lab", variable=self.choice, value=2, font = (None, 12))
 		self.R2.grid(row = 2, column = 0, columnspan = 2, sticky = W)
-		self.R3 = Radiobutton(self.app, text="Admin", variable=self.var, value=3, font = (None, 12))
+		self.R3 = Radiobutton(self.app, text="Admin", variable=self.choice, value=3, font = (None, 12))
 		self.R3.grid(row = 3, column = 0, columnspan = 2, sticky = W)
+		#Add text 
 		self.L2 = Label(self.app, 
 						text = "If you are adding or editing information, please make sure you are logged into this computer before using Moka", 
 						font = (None, 8, "italic"))
 		self.L2.grid(row = 4, column = 0, columnspan = 2, sticky = W)
+		#Add buttons
 		self.B1 = Button(self.app, text="OK", command=self.sel, font = (None, 10), width = 10)
 		self.B1.grid(row = 5, column = 0, columnspan = 1, sticky = N)
 		self.B2 = Button(self.app, text="Cancel", command=self.cancel, font = (None, 10), width = 10)
@@ -51,7 +55,7 @@ class SelectFE(object):
 
 	def sel(self):
 		# Capture users selection, close window and call script to update and open Moka
-		selection = self.var.get()
+		selection = self.choice.get()
 		self.close()
 		o = OpenMoka(selection)
 		o.openLatest()
@@ -60,19 +64,27 @@ class SelectFE(object):
 		self.close()
 
 class waitMessage(object):
+	'''
+	Displays a wait message whilst new copy of front end is copied from server
+	'''
 	def __init__(self, selection):
+		#Create text string for selected front end
 		self.types = {1: "Clinic", 2: "Lab", 3: "Admin"}
 		self.message = "Retrieving updated %s file. This may take several minutes to complete..." % (self.types[selection])
-		self.root = Tk()
+		#Create root window, set icon and title
+		self.root = Tk() 
 		if os.path.exists(r"C:\Program Files (x86)\GSTT\Moka\moka.ico"):
 			self.root.iconbitmap(r"C:\Program Files (x86)\GSTT\Moka\moka.ico")
 		elif os.path.exists(r"C:\Program Files\GSTT\Moka\moka.ico"):
 			self.root.iconbitmap(r"C:\Program Files\GSTT\Moka\moka.ico")
 		self.root.title("Moka")
-		self.app = Frame(self.root)
-		self.app.grid(padx=10, pady=10)
+		self.app = Frame(self.root) #Create frame to hold content
+		self.app.grid(padx=10, pady=10) #Add padding
+		#Add text set above
 		self.L1 = Label(self.app, text = self.message, font = (None, 12))
 		self.L1.grid()
+		#Add indeterminate progress bar 
+		#doesn't actually display progress but bounces back and forth so user knows 'something is happening'
 		self.P1 = ttk.Progressbar(self.app, length = 100, mode = 'indeterminate')
 		self.P1.grid()
 		self.P1.start(15)
@@ -80,6 +92,7 @@ class waitMessage(object):
 
 class OpenMoka(object):
 	def __init__(self, selection):
+		#Locations for front end and timestamp files
 		self.selection = selection
 		self.locFE = {1: r"H:\Moka\clinicial.mdb",
 						   2: r"H:\Moka\master.mdb",
