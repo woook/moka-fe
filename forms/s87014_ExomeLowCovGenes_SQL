@@ -1,0 +1,2 @@
+SELECT NGSTest.NGSTestID, NGSTest.BookBy, NGSTest.BookingAuthorisedDate, NGSTest.BookingAuthorisedByID, NGSTest.InternalPatientID
+FROM NGSTest;

@@ -1,0 +1,47 @@
+Private Sub Form_Load()
+    Dim rs As New ADODB.Recordset
+    
+    'IMPORTANT: ALSO NEED TO CHANGE THRESHOLD IN LISTBOX ROW SOURCE IN BOTH HALVES OF UNION QUERY!!!!!
+    threshold = 92
+
+    'Pull out count of all genes and count of low coverage genes
+    sqlAllGenes = "SELECT DISTINCT GenesHGNC_current.ApprovedSymbol, NGSWESCoverageByGene.median_20x " _
+            & "FROM ((NGSTestPanelSelection INNER JOIN NGSPanelGenes ON cInt(NGSTestPanelSelection.SelectionID) = NGSPanelGenes.NGSPanelID) INNER JOIN GenesHGNC_current ON NGSPanelGenes.HGNCID = GenesHGNC_current.HGNCID) INNER JOIN NGSWESCoverageByGene ON GenesHGNC_current.HGNCID = NGSWESCoverageByGene.HGNCID " _
+            & "WHERE NGSTestPanelSelection.SelectionType = 1 AND NGSTestPanelSelection.NGSTestID = " & NGSTestID _
+            & " UNION SELECT DISTINCT GenesHGNC_current.ApprovedSymbol, NGSWESCoverageByGene.median_20x " _
+            & "FROM (NGSTestPanelSelection INNER JOIN GenesHGNC_current ON NGSTestPanelSelection.SelectionID = GenesHGNC_current.HGNCID) INNER JOIN NGSWESCoverageByGene ON GenesHGNC_current.HGNCID = NGSWESCoverageByGene.HGNCID " _
+            & "WHERE NGSTestPanelSelection.SelectionType = 2 AND NGSTestPanelSelection.NGSTestID = " & NGSTestID
+    sqlCountAllGenes = "SELECT COUNT (Genes.ApprovedSymbol) AS AllCount FROM (" & sqlAllGenes & ") As Genes"
+    sqlCountLowGenes = "SELECT COUNT (Genes.ApprovedSymbol) AS LowCount FROM (" & sqlAllGenes & ") As Genes WHERE Genes.median_20x < " & threshold
+    Set rs = New ADODB.Recordset
+    rs.Open sqlCountAllGenes, CurrentProject.Connection, adOpenKeyset
+    allGeneCount = rs.Fields("AllCount")
+    Set rs = Nothing
+    Set rs = New ADODB.Recordset
+    rs.Open sqlCountLowGenes, CurrentProject.Connection, adOpenKeyset
+    lowGeneCount = rs.Fields("LowCount")
+    Set rs = Nothing
+    'Display counts in text box
+    Me.countText.Value = "Please be aware that " & lowGeneCount & " of the " & allGeneCount & " genes requested typically have low coverage:"
+End Sub
+
+Private Sub OK_Click()
+    'If user wants to proceed with testing, record approval
+    Dim d As String
+    d = Format(Now(), "dd/mmm/yyyy Hh:Nn:ss")
+    cn = VBA.Environ("COMPUTERNAME")
+    un = VBA.Environ("USERNAME")
+    Me.BookingAuthorisedByID = Me.BookBy
+    Me.BookingAuthorisedDate = d
+    sqlPatLog = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" & Me.InternalPatientID & ", 'NGS: Low coverage genes approved.',#" + d + "#,'" + un + "','" + cn + "')"
+    sqlMemo = "INSERT INTO NGSLogMemo(InternalPatientID, Type, LinkID, LogMemoEntry, [Date], Login, PCName) VALUES(" & Me.InternalPatientID & ", 1, " & Me.NGSTestID & ",'Low coverage genes approved.' ,#" + d + "#,'" + un + "','" + cn + "')"
+    DoCmd.SetWarnings False
+    DoCmd.RunSQL sqlPatLog
+    DoCmd.RunSQL sqlMemo
+    DoCmd.SetWarnings True
+    DoCmd.Close
+End Sub
+
+Private Sub Cancel_Click()
+    DoCmd.Close
+End Sub
