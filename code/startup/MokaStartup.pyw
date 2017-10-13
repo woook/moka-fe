@@ -81,15 +81,15 @@ class waitMessage(object):
 class OpenMoka(object):
 	def __init__(self, selection):
 		self.selection = selection
-		self.locFE = {1: r"C:\Moka\clinicial.mdb",
-						   2: r"C:\Moka\master.mdb",
-						   3: r"C:\Moka\admin.mdb"}
+		self.locFE = {1: r"H:\Moka\clinicial.mdb",
+						   2: r"H:\Moka\master.mdb",
+						   3: r"H:\Moka\admin.mdb"}
 		self.sourceFE = {1: r"\\gstt.local\apps\Moka\FrontEnd\clinicial.mdb",
 		 					  2: r"\\gstt.local\apps\Moka\FrontEnd\master.mdb",
 							  3: r"\\gstt.local\apps\Moka\FrontEnd\admin.mdb"}
-		self.timestamps = {1: r"C:\Moka\clinicial.txt",
-						   2: r"C:\Moka\master.txt",
-						   3: r"C:\Moka\Admin.txt"}
+		self.timestamps = {1: r"H:\Moka\clinicial.txt",
+						   2: r"H:\Moka\master.txt",
+						   3: r"H:\Moka\Admin.txt"}
 
 	def waitMsgBox(self):
 		# Displays a wait message box while front end is updated. Must be run on separate thread so rest of code not stalled. 
