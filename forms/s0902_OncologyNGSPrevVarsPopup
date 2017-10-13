@@ -17,6 +17,8 @@ Private Sub Form_Load()
     sqlCurrentVar = "SELECT NGSVariant.*, Chromosome.Chr, Patients.PatientID, " & sqlGetAbridgedComment & " FROM ((NGSVariant INNER JOIN Chromosome ON NGSVariant.ChrID = Chromosome.ChrID) INNER JOIN Patients ON NGSVariant.InternalPatientID = Patients.InternalPatientID) LEFT JOIN NGSVariantComment ON NGSVariant.NGSVariantCommentID = NGSVariantComment.NGSVariantCommentID WHERE NGSVariant.NGSVariantID = " & Me.NGSVariantID
     
     [Form_s0902_OncologyNGSCurrentVar].RecordSource = sqlCurrentVar
+    [Form_s0902_OncologyNGSCurrentVar].Requery 'Reports that occassionally wrong variant is displayed. Not been able to recreate problem so trying a requery here to see if it fixes it??
+    
     
     'Create recordset of each transcript and HGVS protein change for the current variant
     sqlTranHGVS = "SELECT NGSVariantAnnotations.TRANSCRIPT_ID, NGSVariantAnnotations.HGVS_Protein FROM NGSVariant INNER JOIN NGSVariantAnnotations ON NGSVariant.NGSVariantID = NGSVariantAnnotations.NGSVariantID WHERE NGSVariant.NGSVariantID = " & Me.NGSVariantID & " AND NGSVariantAnnotations.TRANSCRIPT_ID IS NOT NULL AND NGSVariantAnnotations.HGVS_Protein IS NOT NULL"
@@ -56,4 +58,6 @@ Private Sub Form_Load()
   
     'Update record source of NGSPrevVar subform
     [Form_s0902_OncologyNGSPrevVars].RecordSource = sqlPrevVars
+    [Form_s0902_OncologyNGSPrevVars].Requery 'Reports that occassionally wrong variant is displayed. Not been able to recreate problem so trying a requery here to see if it fixes it??
+
 End Sub

@@ -34,7 +34,7 @@ Else
     PRU = Replace(Me.PatientID, ":", "")
     
     ' Check if coverage report already exists in the destination directory on S: drive
-    destDir = "S:\Genetics\DNA LAB\R&D\New Tests\WES\Results\Coverage reports\"
+    destDir = "\\gstt.local\Shared\Genetics\DNA LAB\R&D\New Tests\WES\Results\Coverage reports\"
     rptName = PRU & "." & DNANumber & ".cov.pdf"
     'Full path for coverage report
     rptPath = destDir & rptName
@@ -62,7 +62,7 @@ Else
 
     'set path to python exe and script
     PyPath = "\\gstt.local\Shared\Genetics_Data2\Array\Software\Python\python.exe"
-    ScriptPath = """F:\Moka\Files\Software\depthofcoverage\AutomateCoverageReports\Generate_external_reports.py"""
+    ScriptPath = """\\gstt.local\apps\Moka\Files\Software\depthofcoverage\AutomateCoverageReports\Generate_external_reports.py"""
 
     ' Compile arguments to pass to coverage rpt script
     PrimaryPanNo = Replace(Me.Primary_Panel, "Pan", "") 'remove 'Pan' from panel number
@@ -95,7 +95,7 @@ Else
     End If
 
     ' check that pdf has been generated in the holding area. Exit if no pdf present.
-    holdingDir = "P:\Bioinformatics\NGS\depthofcoverage\pdf_holding_area\"
+    holdingDir = "\\gstt.local\Shared\Genetics\Bioinformatics\NGS\depthofcoverage\pdf_holding_area\"
     rptName = PRU & "." & DNANumber & ".cov.pdf"
     'Full path for coverage report
     tempRptPath = holdingDir & rptName
@@ -243,7 +243,7 @@ End Sub
 Private Sub RemoveAll_MouseDown(Button As Integer, Shift As Integer, x As Single, Y As Single)
     If Shift = acCtrlMask Then
         If MsgBox("WARNING: This will remove all variants for this WES test." & vbNewLine & vbNewLine & "Are you sure you REALLY want to proceed??", vbYesNo + vbExclamation, "WARNING") = vbYes Then
-            D = Format(Now(), "dd/mmm/yyyy Hh:Nn:ss")
+            d = Format(Now(), "dd/mmm/yyyy Hh:Nn:ss")
             un = VBA.Environ("USERNAME")
             cn = VBA.Environ("COMPUTERNAME")
             patID = Me.Parent.InternalPatientID
@@ -252,8 +252,8 @@ Private Sub RemoveAll_MouseDown(Button As Integer, Shift As Integer, x As Single
             sqlVarsForDel = "SELECT NGSVariant.NGSVariantID FROM NGSVariant WHERE NGSTestID = " & Me.Parent.NGSTestID
             rsVarsForDel.Open sqlVarsForDel, CurrentProject.Connection, adOpenKeyset
             While Not rsVarsForDel.EOF
-                sqlMemo = "INSERT INTO NGSLogMemo(InternalPatientID, Type, LinkID, LogMemoEntry, [Date], Login, PCName) VALUES(" + CStr(patID) + ", 2, " + CStr(rsVarsForDel.Fields("NGSVariantID")) + ",'Variant deleted.',#" + D + "#,'" + un + "','" + cn + "')"
-                sqlPatLog = "INSERT INTO PatientLog (InternalPatientID, LogEntry, [Date], Login, PCName) VALUES (" & patID & ", 'NGS: Variant deleted. NGSVariantID: " & CStr(rsVarsForDel.Fields("NGSVariantID")) & "', #" + D + "#,'" + un + "','" + cn + "')"
+                sqlMemo = "INSERT INTO NGSLogMemo(InternalPatientID, Type, LinkID, LogMemoEntry, [Date], Login, PCName) VALUES(" + CStr(patID) + ", 2, " + CStr(rsVarsForDel.Fields("NGSVariantID")) + ",'Variant deleted.',#" + d + "#,'" + un + "','" + cn + "')"
+                sqlPatLog = "INSERT INTO PatientLog (InternalPatientID, LogEntry, [Date], Login, PCName) VALUES (" & patID & ", 'NGS: Variant deleted. NGSVariantID: " & CStr(rsVarsForDel.Fields("NGSVariantID")) & "', #" + d + "#,'" + un + "','" + cn + "')"
                 DoCmd.SetWarnings False
                 DoCmd.RunSQL sqlMemo
                 DoCmd.RunSQL sqlPatLog
@@ -266,7 +266,7 @@ Private Sub RemoveAll_MouseDown(Button As Integer, Shift As Integer, x As Single
             sqlFilesForDel = "SELECT NGSTestFile.NGSTestID, NGSTestFile.Description FROM NGSTestFile WHERE NGSTestFile.NGSTestID = " & Me.Parent.NGSTestID & " AND NGSTestFile.VCF_Filter_Import = TRUE"
             rsFilesForDel.Open sqlFilesForDel, CurrentProject.Connection, adOpenKeyset
             While Not rsFilesForDel.EOF
-                sqlPatLog = "INSERT INTO PatientLog (InternalPatientID, LogEntry, [Date], Login, PCName) VALUES (" & patID & ", 'NGS: File removed from NGS test record. (NGSTestFile Description: " & rsFilesForDel.Fields("Description") & ", NGSTestID: " & rsFilesForDel.Fields("NGSTestID") & ")', #" + D + "#,'" + un + "','" + cn + "')"
+                sqlPatLog = "INSERT INTO PatientLog (InternalPatientID, LogEntry, [Date], Login, PCName) VALUES (" & patID & ", 'NGS: File removed from NGS test record. (NGSTestFile Description: " & rsFilesForDel.Fields("Description") & ", NGSTestID: " & rsFilesForDel.Fields("NGSTestID") & ")', #" + d + "#,'" + un + "','" + cn + "')"
                 DoCmd.SetWarnings False
                 DoCmd.RunSQL sqlPatLog
                 DoCmd.SetWarnings True
@@ -302,7 +302,7 @@ Private Sub VCFImport_Click()
     Dim NGSTestID As Integer
     Dim PRU As String
     Dim filename As String
-    Dim filepath As String
+    Dim FilePath As String
     Dim errReport As String
     Dim desBaseDir As String
     Dim newNGSTestFile As ADODB.Recordset
@@ -328,7 +328,7 @@ Private Sub VCFImport_Click()
         Set vcfDict = CreateObject("scripting.dictionary")
         vcfFilename = Dir(basePath) 'Returns recordset of each matching filename
         Do While vcfFilename <> "" 'Loop until no more files
-            PanelType = Split(vcfFilename, "-")(1) 'Retrieve the panel type from current file (between first and second hyphen)
+            PanelType = LCase(Split(vcfFilename, "-")(1)) 'Retrieve the panel type from current file (between first and second hyphen)
             'add 'panel type: filename' to dictionary. If the panel type is already in dictionary display an error message and exit.
             If Not vcfDict.exists(PanelType) Then
                 vcfDict.Add PanelType, vcfFilename
@@ -345,27 +345,27 @@ Private Sub VCFImport_Click()
             "3. Saved in the following directory: " & vcfBaseDir, vbExclamation, "No VCF Files Found"
         Else 'Build a string to show user which files will be imported if they continue
             filesStr = "The files below will be imported." & vbNewLine & vbNewLine & "Primary panel:" & vbNewLine & vbNewLine & vbTab
-            If vcfDict.exists("Primarypanel") Then
-                filesStr = filesStr & vcfDict("Primarypanel")
+            If vcfDict.exists("primarypanel") Then
+                filesStr = filesStr & vcfDict("primarypanel")
             Else
                 filesStr = filesStr & "None"
             End If
             filesStr = filesStr & vbNewLine & vbNewLine & "Secondary panel:" & vbNewLine & vbNewLine & vbTab
-            If vcfDict.exists("Secondarypanel") Then
-                filesStr = filesStr & vcfDict("Secondarypanel")
+            If vcfDict.exists("secondarypanel") Then
+                filesStr = filesStr & vcfDict("secondarypanel")
             Else
                 filesStr = filesStr & "None"
             End If
             filesStr = filesStr & vbNewLine & vbNewLine & "Phenotype panel:" & vbNewLine & vbNewLine & vbTab
-            If vcfDict.exists("Phenotype") Then
-                filesStr = filesStr & vcfDict("Phenotype")
+            If vcfDict.exists("phenotype") Then
+                filesStr = filesStr & vcfDict("phenotype")
             Else
                 filesStr = filesStr & "None"
             End If
             filesStr = filesStr & vbNewLine & vbNewLine & "Additional panels:" & vbNewLine
             otheVCFcount = 0
             For Each strKey In vcfDict.keys()
-                If strKey <> "Primarypanel" And strKey <> "Secondarypanel" And strKey <> "Phenotype" Then
+                If strKey <> "primarypanel" And strKey <> "secondarypanel" And strKey <> "phenotype" Then
                     filesStr = filesStr & vbNewLine & vbTab & vcfDict(strKey)
                     otherVCFcount = otherVCFcount + 1
                 End If
@@ -389,7 +389,7 @@ Private Sub VCFImport_Click()
                 Dim wsh As Object
                 Set wsh = CreateObject("WScript.Shell")
                 pythonPath = "\\gstt.local\Shared\Genetics_Data2\Array\Software\Python\python.exe"
-                ScriptPath = "\\gstt.local\Apps\Moka\Files\Software\VCFImport\VCFImport.py"
+                ScriptPath = "\\gstt.local\Apps\Moka\Files\Software\VCFImport\VCFImport_case-insensitive.py"
                 'Execute python script with required arguments. "2>&1" at the end redirects StdErr (2) to StdOut (1)
                 Set wshexec = wsh.Exec("cmd.exe /S /C " & pythonPath & " " & ScriptPath & " """ & csFileLst & """ " & patID & " " & NGSTestID & " 2>&1")
                 'DoEvents pauses VBA until python script has finished running. wshexec.status is 0 while running and 1 when finished
@@ -411,12 +411,12 @@ Private Sub VCFImport_Click()
                     'Loop through dictionary of VCFs, and move files to F: drive
                     For Each strKey In vcfDict.keys()
                         filename = vcfDict(strKey)
-                        filepath = vcfBaseDir & filename
+                        FilePath = vcfBaseDir & filename
                         'Get the panelType from dictionary key. If Primarypanel or Secondarypanel, change to 'Primary' or 'Secondary'
                         PanelType = strKey
-                        If PanelType = "Primarypanel" Then
+                        If PanelType = "primarypanel" Then
                             PanelType = "Primary"
-                        ElseIf PanelType = "Secondarypanel" Then
+                        ElseIf PanelType = "secondarypanel" Then
                             PanelType = "Secondary"
                         End If
                         'Copy file to F: drive, add to the NGSTestFiles table, and remove original file from S: drive
@@ -432,7 +432,7 @@ Private Sub VCFImport_Click()
                         filenameNoExt = Left(filename, dotIndx - 1) 'Original filename without extension
                         fileExt = Right(filename, Len(filename) - (dotIndx - 1)) 'File extension including dot
                         newFileName = filenameNoExt & "_" & NGSTestFileID & fileExt
-                        FileCopy filepath, newDir & newFileName 'Copy file to the F: drive
+                        FileCopy FilePath, newDir & newFileName 'Copy file to the F: drive
                         SetAttr newDir & newFileName, vbReadOnly 'Make copied file read only
                         Set rsAddCat = Nothing
                         'Update the NGSTestFile record with the file path of the copied file, and record in patient log
@@ -447,7 +447,7 @@ Private Sub VCFImport_Click()
                         DoCmd.RunSQL sqlPatLogVCF
                         DoCmd.SetWarnings True
                         'Remove original file
-                        Kill filepath
+                        Kill FilePath
                     Next
                     'Find number of other variants within +/- 2bp and add to NGSVariant table so it can be displayed in subform
                     'Have to do it this way because calculating the count on the fly in subform recordsource query makes the subform read only, so classifcation, comments etc. can't be updated
@@ -484,7 +484,7 @@ Private Sub FilterImport_Click()
     Dim NGSTestID As Integer
     Dim PRU As String
     Dim filename As String
-    Dim filepath As String
+    Dim FilePath As String
     Dim desBaseDir As String
     Dim newNGSTestFile As ADODB.Recordset
     Dim TodayDate As String
@@ -508,8 +508,8 @@ Private Sub FilterImport_Click()
         matchFile = Dir(filtBasePath)
         If matchFile <> "" Then
             'Display filename and confirm user wants to proceed.
-            filepath = filtSrcDir & matchFile
-            proceed = MsgBox("The following filter settings file will be attached to this NGS Test:" & vbNewLine & vbNewLine & filepath & vbNewLine & vbNewLine & "Click OK to proceed.", vbOKCancel + vbInformation, "Confirm Correct File")
+            FilePath = filtSrcDir & matchFile
+            proceed = MsgBox("The following filter settings file will be attached to this NGS Test:" & vbNewLine & vbNewLine & FilePath & vbNewLine & vbNewLine & "Click OK to proceed.", vbOKCancel + vbInformation, "Confirm Correct File")
             If proceed = vbOK Then
                 newDir = month_dir 'Files will be copied to folder on F: drive
                 If Len(Dir(year_dir, vbDirectory)) = 0 Then
@@ -530,7 +530,7 @@ Private Sub FilterImport_Click()
                 filenameNoExt = Left(matchFile, dotIndx - 1) 'Original filename without extension
                 fileExt = Right(matchFile, Len(matchFile) - (dotIndx - 1)) 'File extension including dot
                 newFileName = filenameNoExt & "_" & NGSTestFileID & fileExt
-                FileCopy filepath, newDir & newFileName 'Copy file to the F: drive
+                FileCopy FilePath, newDir & newFileName 'Copy file to the F: drive
                 SetAttr newDir & newFileName, vbReadOnly 'Make copied file read only
                 Set rsAddCat = Nothing
                 'Update the NGSTestFile record with the file path of the copied file
@@ -539,15 +539,15 @@ Private Sub FilterImport_Click()
                 DoCmd.RunSQL sqlAddFilePath
                 DoCmd.SetWarnings True
                 Me.Requery
-                D = Format(Now(), "dd/mmm/yyyy Hh:Nn:ss")
+                d = Format(Now(), "dd/mmm/yyyy Hh:Nn:ss")
                 un = VBA.Environ("USERNAME")
                 cn = VBA.Environ("COMPUTERNAME")
-                sqlPatLogFil = "INSERT INTO PatientLog (InternalPatientID, LogEntry, [Date], Login, PCName) VALUES (" & patID & ", 'NGS: Ingenuity Filter Settings file attached. (NGSTestFile ID: " & NGSTestFileID & ")', #" + D + "#,'" + un + "','" + cn + "')"
+                sqlPatLogFil = "INSERT INTO PatientLog (InternalPatientID, LogEntry, [Date], Login, PCName) VALUES (" & patID & ", 'NGS: Ingenuity Filter Settings file attached. (NGSTestFile ID: " & NGSTestFileID & ")', #" + d + "#,'" + un + "','" + cn + "')"
                 DoCmd.SetWarnings False
                 DoCmd.RunSQL sqlPatLogFil
                 DoCmd.SetWarnings True
                 'If all processing above has completed without errors, remove the original file.
-                Kill filepath
+                Kill FilePath
             End If
         Else
             MsgBox "No filter settings file found that matches test details. Filter settings file must be:" & vbNewLine & vbNewLine & _
@@ -798,34 +798,71 @@ Private Sub Checker2_AfterUpdate()
         MsgBox "Unable to confirm check of variant interpretation until 'Assigned to' initials and associated date are entered", , "No Record For Checker1 Entered"
                    Me![Checker2] = Null
            Me![Checker2].Requery
-           Me![txt_Check2Date] = Null
-           Me![txt_Check2Date].Requery
+'           Me![txt_Check2Date] = Null
+'           Me![txt_Check2Date].Requery
     
 'checks checker 1 ID and checker 2 id are not the same
     ElseIf Me.[Checker2] = Me.[Checker1] Then
            MsgBox "Checked by ID cannot be the same as 'Assigned to'  ", vbOKOnly Or vbExclamation, "Attention"
            Me![Checker2] = Null
            Me![Checker2].Requery
-           Me![txt_Check2Date] = Null
-           Me![txt_Check2Date].Requery
+'           Me![txt_Check2Date] = Null
+'           Me![txt_Check2Date].Requery
     
     Else
 'logs if checker 2 ID is deleated
         If IsNull([Checker2]) Then
             plSQL = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + ",'NGS WES test: Initials for checking result page removed for NGS test " + CStr(Me![NGSTestID]) + " requested " + CStr(Me![DateRequested]) + "',#" + dt + "#,'" + usr + "','" + cmp + "')"
-            Me![txt_Check2Date] = Null
-            Me![txt_Check2Date].Requery
+'            Me![txt_Check2Date] = Null
+'            Me![txt_Check2Date].Requery
             
         Else 'logs if checker 2 ID entry
-            plSQL = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + ",'NGS WES test: Result page (variant interpretation) checked by  " + Me![Checker2].Column(1) + " for test " + CStr(Me![NGSTestID]) + " requested " + CStr(Me![DateRequested]) + "',#" + dt + "#,'" + usr + "','" + cmp + "')"
-            Me![txt_Check2Date] = Now()
-            Me.[txt_Check2Date].Requery
+            plSQL = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + ",'NGS WES test: Result page (variant interpretation) checking assigned to  " + Me![Checker2].Column(1) + " for test " + CStr(Me![NGSTestID]) + " requested " + CStr(Me![DateRequested]) + "',#" + dt + "#,'" + usr + "','" + cmp + "')"
+'            Me![txt_Check2Date] = Now()
+'            Me.[txt_Check2Date].Requery
             'Me.Parent.[SafetyCheck].Value = True
             
         End If
         rs.Open plSQL, CurrentProject.Connection
     End If
     Set rs = Nothing
+End Sub
+
+Private Sub txt_Check2Date_DblClick(Cancel As Integer)
+    Dim rs As ADODB.Recordset
+    Dim plSQL As String
+    Dim dt As String
+    Dim usr As String
+    Dim cmp As String
+    
+    Set rs = New ADODB.Recordset
+    dt = Format(Now, "dd/mmm/yyyy Hh:Nn:ss")
+    usr = VBA.Environ("USERNAME")
+    cmp = VBA.Environ("COMPUTERNAME")
+    
+'prevent check 2 date being updated after a check
+If Not IsNull(Checker3) Then
+    MsgBox "Report already has been marked as Reported. Unable to update this feild", , "Update not permitted"
+    Exit Sub
+    
+ElseIf IsNull(Checker1) Then
+    MsgBox "Analyst not assigned. Unable to update this feild", , "Update not permitted"
+    Exit Sub
+    
+ElseIf Not IsNull([Checker2]) Then
+          plSQL = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + ",'NGS WES test: Variant interpretation checked by " + Me![Checker1].Column(1) + " for test " + CStr(Me![NGSTestID]) + " requested " + CStr(Me![DateRequested]) + "',#" + dt + "#,'" + usr + "','" + cmp + "')"
+        Me![txt_Check2Date] = Now()
+        Me.[txt_Check2Date].Requery
+        rs.Open plSQL, CurrentProject.Connection
+
+Else
+    MsgBox "Enter initials into 'Checked by' field to proceed", , "No Record For Checker2 Entered"
+End If
+
+    Set rs = Nothing
+    'Refresh fromatting on the page
+    Me.Parent.Requery
+
 End Sub
 
 

@@ -8,6 +8,8 @@ Private referrerID
 Private referrerInitials
 Private save As Boolean
 
+
+
 Private Sub Form_Open(Cancel As Integer)
     'save boolean will only be set to True when user clicks 'Submit' button,
     'record won't be created if user exits window any other way.
@@ -386,6 +388,14 @@ Private Sub PanelAppLaunchB_Click()
     Call firefoxurl("https://bioinfo.extge.co.uk/crowdsourcing/PanelApp/")
 End Sub
 
+Private Sub CoverageLaunchA_Click()
+    Call firefoxurl("https://mokaguys.shinyapps.io/covapp/")
+End Sub
+
+Private Sub CoverageLaunchB_Click()
+    Call firefoxurl("https://mokaguys.shinyapps.io/covapp/")
+End Sub
+
 Private Sub SubpanelA_NotInList(NewData As String, Response As Integer)
     'Replaces default error message if gene panel not in list
     MsgBox "Gene panel not recognised. Please select from the dropdown list", vbExclamation, "Select Gene Panel"
@@ -402,6 +412,8 @@ End Sub
 
 Private Sub SubmitButton_Click()
     Dim ans As String
+    Dim rsCovGenes As ADODB.Recordset
+    Dim rsAuthorised As ADODB.Recordset
     Dim rs As ADODB.Recordset
     Dim rs2 As ADODB.Recordset
     Dim sqlSelectionA As String
@@ -416,7 +428,7 @@ Private Sub SubmitButton_Click()
     Dim sqlChangeStatus As String
     Dim sqlPatLogTest As String
     Dim sqlPatLogStatus As String
-    Dim D As String
+    Dim d As String
     Dim un As String
     Dim cn As String
     Dim rsInfo As ADODB.Recordset
@@ -433,7 +445,48 @@ Private Sub SubmitButton_Click()
     If Not IsNull(Me![SubpanelA]) Or Not IsNull(Me![GeneSymbolA]) Or Not IsNull(Me![SubpanelB]) Or Not IsNull(Me![GeneSymbolB]) Then
         ans = MsgBox("There are panels or genes selected in the dropdown lists that have not been added to the analysis panel(s)." & vbNewLine & vbNewLine & "Are you sure you want to sumbit exome test request?", vbYesNo + vbExclamation, "WARNING")
     Else
-        ans = MsgBox("You are about to submit exome test request." & vbNewLine & vbNewLine & "Are you sure you want to continue?", vbYesNo + vbInformation, "Submit WES Request")
+        threshold = 92 'Also need to update threshold in low cov gene popup!!!
+        'Find genes in primary and secondary panels that are below the coverage threshold
+        'Get primary panel genes
+        Set rsCovGenes = New ADODB.Recordset
+        sqlCovGenes = "SELECT DISTINCT GenesHGNC_current.ApprovedSymbol, NGSWESCoverageByGene.median_20x " _
+            & "FROM ((NGSTestPanelSelection INNER JOIN NGSPanelGenes ON cInt(NGSTestPanelSelection.SelectionID) = NGSPanelGenes.NGSPanelID) INNER JOIN GenesHGNC_current ON NGSPanelGenes.HGNCID = GenesHGNC_current.HGNCID) INNER JOIN NGSWESCoverageByGene ON GenesHGNC_current.HGNCID = NGSWESCoverageByGene.HGNCID " _
+            & "WHERE NGSTestPanelSelection.SelectionType = 1 AND NGSTestPanelSelection.NGSTestID = " & NGSTestID & " AND NGSWESCoverageByGene.median_20x < " & threshold _
+            & " UNION SELECT DISTINCT GenesHGNC_current.ApprovedSymbol, NGSWESCoverageByGene.median_20x " _
+            & "FROM (NGSTestPanelSelection INNER JOIN GenesHGNC_current ON NGSTestPanelSelection.SelectionID = GenesHGNC_current.HGNCID) INNER JOIN NGSWESCoverageByGene ON GenesHGNC_current.HGNCID = NGSWESCoverageByGene.HGNCID " _
+            & "WHERE NGSTestPanelSelection.SelectionType = 2 AND NGSTestPanelSelection.NGSTestID = " & NGSTestID & " AND NGSWESCoverageByGene.median_20x < " & threshold
+        rsCovGenes.Open sqlCovGenes, CurrentProject.Connection, adOpenKeyset
+        numLowCov = rsCovGenes.RecordCount
+        Set rsCovGenes = Nothing
+        If numLowCov <> 0 Then
+            'open popup, make sure rest of code is stalled while that happens
+            Dim stLinkCritera As String
+            stLinkCriteria = "[NGSTestID] = " & NGSTestID
+            DoCmd.OpenForm "s87014_ExomeLowCovGenes", , , stLinkCriteria, , acDialog 'acDialog so code pauses
+            'Check if authorised
+            Set rsAuthorised = New ADODB.Recordset
+            sqlAuthorised = "SELECT BookingAuthorisedByID FROM NGSTest WHERE NGSTestID = " & NGSTestID
+            rsAuthorised.Open sqlAuthorised, CurrentProject.Connection, adOpenKeyset
+            If rsAuthorised.Fields("BookingAuthorisedByID") <> "" Then
+            'If lowGeneApproved Then
+                ans = vbYes
+            Else
+                ans = vbNo
+            End If
+            Set rsAuthorised = Nothing
+
+        Else
+            ans = MsgBox("You are about to submit exome test request." & vbNewLine & vbNewLine & "Are you sure you want to continue?", vbYesNo + vbInformation, "Submit WES Request")
+            If ans = vbYes Then
+                d = Format(Now(), "dd/mmm/yyyy Hh:Nn:ss")
+                cn = VBA.Environ("COMPUTERNAME")
+                un = VBA.Environ("USERNAME")
+                sqlAuthorised = "UPDATE NGSTest SET BookingAuthorisedByID = " & referrerID & ", BookingAuthorisedDate = #" & d & "# WHERE NGSTestID = " & NGSTestID
+                DoCmd.SetWarnings False
+                DoCmd.RunSQL sqlAuthorised
+                DoCmd.SetWarnings True
+            End If
+        End If
     End If
     If ans = vbYes Then
         newPanel = True
@@ -553,24 +606,24 @@ Private Sub SubmitButton_Click()
     
             'NEW CODE FOR SKIPPING SEPARATE AUTHORISATION STEP
             '#####################################
-            'Change patient status to NGS, set authorised by to NA and add date
-            D = Format(Now(), "dd/mmm/yyyy Hh:Nn:ss")
+            'Change patient status to NGS
+            d = Format(Now(), "dd/mmm/yyyy Hh:Nn:ss")
             sqlChangeStatus = "UPDATE Patients SET s_StatusOverall = 1202218798 WHERE InternalPatientID = " & internalPatID
-            sqlApprovedBy = "UPDATE NGSTest SET BookingAuthorisedByID = 1201865434 WHERE  NGSTestID = " & NGSTestID
-            sqpApprovedDate = "UPDATE NGSTest SET BookingAuthorisedDate = #" + D + "# WHERE NGSTestID = " & NGSTestID
+'            sqlApprovedBy = "UPDATE NGSTest SET BookingAuthorisedByID = " & referrerID & " WHERE  NGSTestID = " & NGSTestID
+'            sqpApprovedDate = "UPDATE NGSTest SET BookingAuthorisedDate = #" + d + "# WHERE NGSTestID = " & NGSTestID
             DoCmd.SetWarnings False
             DoCmd.RunSQL sqlChangeStatus
-            DoCmd.RunSQL sqlApprovedBy
-            DoCmd.RunSQL sqpApprovedDate
+'            DoCmd.RunSQL sqlApprovedBy
+'            DoCmd.RunSQL sqpApprovedDate
             DoCmd.SetWarnings True
             
 
             'Insert record of Exome test request and status change into patient and NGSmemo logs
             un = VBA.Environ("USERNAME")
             cn = VBA.Environ("COMPUTERNAME")
-            sqlPatLogTest = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" & internalPatID & ", 'NGS: " & Referral & " test request added. Primary panel: " & panelID_A & ". Secondary panel: " & panelID_B & "',#" + D + "#,'" + un + "','" + cn + "')"
-            sqlPatLogStatus = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" & internalPatID & ", 'Patients: Status changed to NGS ',#" + D + "#,'" + un + "','" + cn + "')"
-            sqlMemo = "INSERT INTO NGSLogMemo(InternalPatientID, Type, LinkID, LogMemoEntry, [Date], Login, PCName) VALUES(" & internalPatID & ", 1, " & NGSTestID & ",'NGS WES test status updated to: DNA QC.' ,#" + D + "#,'" + un + "','" + cn + "')"
+            sqlPatLogTest = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" & internalPatID & ", 'NGS: " & Referral & " test request added. Primary panel: " & panelID_A & ". Secondary panel: " & panelID_B & "',#" + d + "#,'" + un + "','" + cn + "')"
+            sqlPatLogStatus = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" & internalPatID & ", 'Patients: Status changed to NGS ',#" + d + "#,'" + un + "','" + cn + "')"
+            sqlMemo = "INSERT INTO NGSLogMemo(InternalPatientID, Type, LinkID, LogMemoEntry, [Date], Login, PCName) VALUES(" & internalPatID & ", 1, " & NGSTestID & ",'NGS WES test status updated to: DNA QC.' ,#" + d + "#,'" + un + "','" + cn + "')"
             DoCmd.SetWarnings False
             DoCmd.RunSQL sqlPatLogTest
             DoCmd.RunSQL sqlPatLogStatus
@@ -605,7 +658,7 @@ Private Sub SubmitButton_Click()
                     Set Q = Nothing
                     'Update patient log
                     Set Q = New ADODB.Recordset
-                    S = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" & internalPatID & ",'DNA: New DNA number [" & rsDNAs.Fields("DNANo") & "] added',#" + D + "#,'" + un + "','" + cn + "')"
+                    S = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" & internalPatID & ",'DNA: New DNA number [" & rsDNAs.Fields("DNANo") & "] added',#" + d + "#,'" + un + "','" + cn + "')"
                     Q.Open S, CurrentProject.Connection
                     Set Q = Nothing
                 Set rsDNAinMoka = Nothing
@@ -633,7 +686,7 @@ Private Sub SubmitButton_Click()
                     Q.Open sqlUpdate, CurrentProject.Connection
                     Set Q = Nothing
                     'Update patient log
-                    sqlPatLog = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" & internalPatID & ",'DNA: Active status changed for DNA number [" & rsNewestDNA.Fields("DNANumber") & "]',#" + D + "#,'" + un + "','" + cn + "')"
+                    sqlPatLog = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" & internalPatID & ",'DNA: Active status changed for DNA number [" & rsNewestDNA.Fields("DNANumber") & "]',#" + d + "#,'" + un + "','" + cn + "')"
                     DoCmd.SetWarnings False
                     DoCmd.RunSQL sqlPatLog
                     DoCmd.SetWarnings True

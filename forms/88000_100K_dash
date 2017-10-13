@@ -1,0 +1,34 @@
+Private Sub update_main_case_status_Click()
+On Error GoTo Err_update_main_case_status_Click
+
+    Dim stDocName As String
+    Dim stLinkCriteria As String
+
+    stDocName = "88001_update_status_main"
+    DoCmd.OpenForm stDocName, acFormDS, , stLinkCriteria
+
+Exit_update_main_case_status_Click:
+    Exit Sub
+
+Err_update_main_case_status_Click:
+    MsgBox Err.Description
+    Resume Exit_update_main_case_status_Click
+    
+End Sub
+Private Sub update_pilot_case_status_Click()
+On Error GoTo Err_update_pilot_case_status_Click
+
+    Dim stDocName As String
+    Dim stLinkCriteria As String
+
+    stDocName = "88002_update_status_pilot"
+    DoCmd.OpenForm stDocName, acFormDS, , stLinkCriteria
+
+Exit_update_pilot_case_status_Click:
+    Exit Sub
+
+Err_update_pilot_case_status_Click:
+    MsgBox Err.Description
+    Resume Exit_update_pilot_case_status_Click
+    
+End Sub

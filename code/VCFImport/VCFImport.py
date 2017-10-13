@@ -1,9 +1,9 @@
 '''
-v1.5 - AB 2017/08/09
+v1.6 - AB 2017/09/29
 
 ###
-Changes from v1.4:
-Can handle samples with no genotype quality
+Changes from v1.5:
+Panel type in filename is now case insensitive
 ###
 
 Usage:
@@ -79,11 +79,11 @@ class MokaVCF(object):
             #else if WES sample
             else:
                 panelName = os.path.basename(vcf).split("-")[1]
-                if panelName == "Primarypanel":
+                if panelName.lower() == "primarypanel":
                     self.vcfPaths[(1, "Primary")] = vcf
-                elif panelName == "Secondarypanel":
+                elif panelName.lower() == "secondarypanel":
                     self.vcfPaths[(2, "Secondary")] = vcf
-                elif panelName == "Phenotype":
+                elif panelName.lower() == "phenotype":
                     self.vcfPaths[(3, "Phenotype")] = vcf
                 else:
                     self.vcfPaths[(4, panelName)] = vcf
