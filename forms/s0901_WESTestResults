@@ -34,7 +34,7 @@ Else
     PRU = Replace(Me.PatientID, ":", "")
     
     ' Check if coverage report already exists in the destination directory on S: drive
-    destDir = "S:\Genetics\DNA LAB\R&D\New Tests\WES\Results\Coverage reports\"
+    destDir = "\\gstt.local\Shared\Genetics\DNA LAB\R&D\New Tests\WES\Results\Coverage reports\"
     rptName = PRU & "." & DNANumber & ".cov.pdf"
     'Full path for coverage report
     rptPath = destDir & rptName
@@ -62,7 +62,7 @@ Else
 
     'set path to python exe and script
     PyPath = "\\gstt.local\Shared\Genetics_Data2\Array\Software\Python\python.exe"
-    ScriptPath = """F:\Moka\Files\Software\depthofcoverage\AutomateCoverageReports\Generate_external_reports.py"""
+    ScriptPath = """\\gstt.local\apps\Moka\Files\Software\depthofcoverage\AutomateCoverageReports\Generate_external_reports.py"""
 
     ' Compile arguments to pass to coverage rpt script
     PrimaryPanNo = Replace(Me.Primary_Panel, "Pan", "") 'remove 'Pan' from panel number
@@ -95,7 +95,7 @@ Else
     End If
 
     ' check that pdf has been generated in the holding area. Exit if no pdf present.
-    holdingDir = "P:\Bioinformatics\NGS\depthofcoverage\pdf_holding_area\"
+    holdingDir = "\\gstt.local\Shared\Genetics\Bioinformatics\NGS\depthofcoverage\pdf_holding_area\"
     rptName = PRU & "." & DNANumber & ".cov.pdf"
     'Full path for coverage report
     tempRptPath = holdingDir & rptName
