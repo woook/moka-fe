@@ -4,7 +4,7 @@ Examples of completed requirements docs can be found in subfolders of this direc
 
 The requirements doc may require a few rounds of iteration before it is finalised and in particular the scope of the project should be agreed.
 
-
+You may wish to conduct user research prior to creating this requirements doc - https://github.com/woook/moka-fe/blob/master/projects/user_research.md
 
 # _TITLE_
 ## Participants
