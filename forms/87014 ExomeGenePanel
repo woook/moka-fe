@@ -467,7 +467,7 @@ Private Sub SubmitButton_Click()
             Set rsAuthorised = New ADODB.Recordset
             sqlAuthorised = "SELECT BookingAuthorisedByID FROM NGSTest WHERE NGSTestID = " & NGSTestID
             rsAuthorised.Open sqlAuthorised, CurrentProject.Connection, adOpenKeyset
-            If rsAuthorised.Fields("BookingAuthorisedByID") <> "" Then
+            If rsAuthorised.Fields("BookingAuthorisedByID") <> 0 Then
             'If lowGeneApproved Then
                 ans = vbYes
             Else
