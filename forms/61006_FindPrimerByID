@@ -1,0 +1,13 @@
+
+Private Sub PrimerSearch_Click()
+
+Dim QRY As String
+QRY = "SELECT DISTINCT PrimerAmplicon.AmpliconID, Chromosome.Chr, PrimerAmplicon.Start, PrimerAmplicon.Stop, PrimerAmplicon.GenomeBuild, PrimerTags.Name AS ForwardTag, dbo_PrimerTags_1.Name AS ReverseTag, PrimerAmplicon.Notes, PrimerAmplicon.ForwardSeq, PrimerAmplicon.ReverseSeq, PrimerAmplicon.TestResultNotes" & _
+" FROM PrimerTags AS dbo_PrimerTags_1 INNER JOIN (PrimerTags INNER JOIN (Chromosome INNER JOIN PrimerAmplicon ON Chromosome.ChrID = PrimerAmplicon.ChromosomeID) ON PrimerTags.PrimerTagsID = PrimerAmplicon.FTag) ON dbo_PrimerTags_1.PrimerTagsID = PrimerAmplicon.RTag" & _
+" WHERE PrimerAmplicon.AmpliconID = " & [Forms]![61006_FindPrimerByID]![FindAmpliconID] & " AND PrimerAmplicon.Status=1202218832;"
+
+[Form_s61006_FindPrimerByID].Form.RecordSource = QRY
+[Form_s61006_FindPrimerByID].Form.Requery
+
+End Sub
+
