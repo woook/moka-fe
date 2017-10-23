@@ -1,0 +1,15 @@
+
+
+Private Sub TestResult_AfterUpdate()
+
+If Me.TestResult = 1202218774 Then
+    Me.TestingTimestamp = Now()
+    Me.Status = 1202218832
+ElseIf Me.TestResult = -1128799521 Then
+    Me.Status = 1202218833
+    Me.TestingTimestamp = Now()
+End If
+Debug.Print Me.Status
+Debug.Print Me.TestResult
+End Sub
+
