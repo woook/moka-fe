@@ -1,0 +1,35 @@
+Option Compare Database
+
+Private Sub Save_Click()
+On Error GoTo Err_Save_Click
+
+    Me.Status = 1202218830
+    Me.Purification = 4
+    Me.ScaleOfSynth = 0.025
+       
+    DoCmd.DoMenuItem acFormBar, acRecordsMenu, acSaveRecord, , acMenuVer70
+    DoCmd.Close
+    
+Exit_Save_Click:
+    Exit Sub
+
+Err_Save_Click:
+    MsgBox Err.Description
+    Resume Exit_Save_Click
+    
+End Sub
+Private Sub Cancel_Click()
+On Error GoTo Err_Cancel_Click
+
+    Me.Undo
+
+    DoCmd.Close
+
+Exit_Cancel_Click:
+    Exit Sub
+
+Err_Cancel_Click:
+    MsgBox Err.Description
+    Resume Exit_Cancel_Click
+    
+End Sub
