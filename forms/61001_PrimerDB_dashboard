@@ -1,0 +1,175 @@
+Option Compare Database
+
+
+Private Sub AutomaticImport_Click()
+    ''Call Import script
+    ' settings to have cmd box visible while running
+    Dim waitOnReturn As Boolean: waitOnReturn = True
+    Dim windowStyle As Integer: windowStyle = 1
+    
+    'allow capture of error code
+    Dim ErrorCode As Integer
+    
+    Dim PrimerImportPath As String
+    Dim TotalCMD As String
+    
+    'set path to python script
+    PrimerImportPath = """\\gstt.local\Apps\Moka\Files\Software\PrimerDB\ImportPrimer.py"""
+    
+    'combine all to make totalCmd NB /K can be used for the cmd line window to remain after it has run - good for debugging - but may cause it to hang
+    ' note 2>&1 which combines stderr and stdout
+    TotalCMD = "cmd.exe /S /C \\gstt.local\shared\Genetics_Data2\Array\Software\Python\python.exe " & PrimerImportPath & " 2>&1"
+    
+    'Create shell object
+    Dim wsh As Object
+    Set wsh = CreateObject("WScript.Shell")
+    ' use .Exec not .Run so can access the stdout
+    Set wshexec = wsh.Exec(TotalCMD)
+    'DoEvents pauses VB script until import script has finished running. wshexec.status is 0 while running 1 when finished
+    ' and 2 when errored so could use a if statement but have combined stderr and stdout above so no need.
+    Do While wshexec.Status = 0
+        DoEvents
+    Loop
+    
+    'report captures stdout
+    Dim Report As String
+    Report = wshexec.StdOut.ReadAll()
+    
+    'display in MsgBox
+    MsgBox Report
+End Sub
+
+Private Sub Command15_Click()
+
+Dim stDocName As String
+    Dim stLinkCriteria As String
+
+    stDocName = "61007_EnterNewPrimer"
+    DoCmd.OpenForm stDocName, , , stLinkCriteria
+
+Exit_CoordinateSearchForm_Click:
+    Exit Sub
+
+End Sub
+
+Private Sub Command17_Click()
+Dim stDocName As String
+    Dim stLinkCriteria As String
+
+    stDocName = "61008_EnterNewTag"
+    DoCmd.OpenForm stDocName, , , stLinkCriteria
+
+Exit_CoordinateSearchForm_Click:
+    Exit Sub
+End Sub
+
+ 
+
+
+Private Sub Command18_Click()
+
+End Sub
+
+Private Sub Command20_Click()
+Dim stDocName As String
+    Dim stLinkCriteria As String
+
+    stDocName = "61010_FindPrimerByGene"
+    DoCmd.OpenForm stDocName, , , stLinkCriteria
+
+Exit_CoordinateSearchForm_Click:
+    Exit Sub
+End Sub
+
+Private Sub Command8_Click()
+Dim stDocName As String
+    Dim stLinkCriteria As String
+
+    stDocName = "61006_FindPrimerByID"
+    DoCmd.OpenForm stDocName, , , stLinkCriteria
+
+Exit_CoordinateSearchForm_Click:
+    Exit Sub
+End Sub
+
+Private Sub CoordinateSearchForm_Click()
+
+On Error GoTo Err_CoordinateSearchForm_Click
+
+    Dim stDocName As String
+    Dim stLinkCriteria As String
+
+    stDocName = "61002_FindPrimerByCoord"
+    DoCmd.OpenForm stDocName, , , stLinkCriteria
+
+Exit_CoordinateSearchForm_Click:
+    Exit Sub
+
+Err_CoordinateSearchForm_Click:
+    MsgBox Err.Description
+    Resume Exit_CoordinateSearchForm_Click
+    
+End Sub
+
+Private Sub UpdateFreezerLocation_Click()
+Dim stDocName As String
+    Dim stLinkCriteria As String
+
+    stDocName = "61009_UpdateFreezerLocation"
+    DoCmd.OpenForm stDocName, acFormDS, , stLinkCriteria
+
+Exit_CoordinateSearchForm_Click:
+    Exit Sub
+End Sub
+
+Private Sub ViewAllApproved_Click()
+On Error GoTo Err_ViewAllApproved_Click
+
+    Dim stDocName As String
+    Dim stLinkCriteria As String
+
+    stDocName = "61005_ViewAllApproved"
+    DoCmd.OpenForm stDocName, , , stLinkCriteria
+
+Exit_ViewAllApproved_Click:
+    Exit Sub
+
+Err_ViewAllApproved_Click:
+    MsgBox Err.Description
+    Resume Exit_ViewAllApproved_Click
+    
+End Sub
+
+Private Sub ViewAllAwaitingOrdering_Click()
+On Error GoTo Err_ViewAllAwaitingOrdering_Click
+
+    Dim stDocName As String
+    Dim stLinkCriteria As String
+
+    stDocName = "61003_ViewAllAwaitingOrdering"
+    DoCmd.OpenForm stDocName, , , stLinkCriteria
+
+ViewAllAwaitingOrdering_Click:
+    Exit Sub
+
+Err_ViewAllAwaitingOrdering_Click:
+    MsgBox Err.Description
+    Resume ViewAllAwaitingOrdering_Click
+End Sub
+
+Private Sub ViewAllAwaitingTesting_Click()
+On Error GoTo Err_ViewAllAwaitingTesting_Click
+
+    Dim stDocName As String
+    Dim stLinkCriteria As String
+
+    stDocName = "61004_ViewAllAwaitingTesting"
+    DoCmd.OpenForm stDocName, , , stLinkCriteria
+
+ViewAllAwaitingTesting_Click:
+    Exit Sub
+
+Err_ViewAllAwaitingTesting_Click:
+    MsgBox Err.Description
+    Resume ViewAllAwaitingTesting_Click
+End Sub
