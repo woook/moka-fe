@@ -5,7 +5,7 @@ On Error GoTo Err_Save_Click
 
     Me.Status = 1202218830
     Me.Purification = 4
-    Me.ScaleOfSynth = 0.025
+    Me.ScaleOfSynth = 5
        
     DoCmd.DoMenuItem acFormBar, acRecordsMenu, acSaveRecord, , acMenuVer70
     DoCmd.Close
