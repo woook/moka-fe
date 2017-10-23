@@ -1,0 +1,64 @@
+
+Private Sub ID_DblClick(Cancel As Integer)
+On Error GoTo Err_ID_DblClick
+    ' define some variables
+    Dim stDocName As String
+    Dim stLinkCriteria As String
+    Dim outputfile As String
+    Dim cleandate As String
+    Dim file As String
+    Dim filepath As String
+    Dim UpdateStatusSQL As String
+    Dim awaitingOrdering As String
+    Dim ordered As String
+    
+    
+    
+    ' open the subform
+    DoCmd.OpenForm "s61003_OrderPrimersDatasheet", acFormDS, , stLinkCriteria
+    
+    ' capture various parts of todays date
+    Yr = Format(Now(), "yyyy")
+    Mnth = Format(Now(), "m")
+    Dy = Format(Now(), "dd")
+    
+    ' build date
+    cleandate = Str(Yr) & "_" & Str(Mnth) & "_" & Str(Dy)
+    ' Debug.Print cleandate
+    
+    ' set file name
+    file = "_PrimerOrderForm.xls"
+    
+    ' set filepath for output file
+    filepath = "\\gstt.local\Shared\Genetics\DNA LAB\Primers\PrimerDesignDatabase\"
+    
+    'remove any spaces from clean date
+    cleandate = Replace(cleandate, " ", "")
+    
+    ' build full filepath for output file
+    outputfilepath = filepath & cleandate & file
+    'Debug.Print outputfilepath
+    
+    ' export the result of the query to the spreadsheet
+    DoCmd.TransferSpreadsheet acExport, , "s61003_PrimerOrderSequence", outputfilepath
+    
+    ' state the file location in message box
+    MsgBox "Primer design file saved to" & outputfilepath, vbOKOnly, "Primer ordering form exported"
+    
+    ' set the status values to update in table.
+    awaitingOrdering = 1202218830
+    ordered = 1202218831
+    
+    ' Build sql update to change status to ordered
+    UpdateStatusSQL = "Update PrimerAmplicon Set Status = " & ordered & ", DateOrdered = '" & Now() & "' where status = " & awaitingOrdering
+    
+    Debug.Print UpdateStatusSQL
+    DoCmd.RunSQL (UpdateStatusSQL)
+    
+Exit_ID_DblClick:
+    Exit Sub
+
+Err_ID_DblClick:
+    MsgBox Err.Description
+    Resume Exit_ID_DblClick
+End Sub
