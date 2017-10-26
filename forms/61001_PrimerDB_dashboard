@@ -111,6 +111,23 @@ Err_CoordinateSearchForm_Click:
     
 End Sub
 
+Private Sub resetstatus_Click()
+On Error GoTo Err_resetstatus_Click
+
+    Dim stDocName As String
+    Dim stLinkCriteria As String
+
+    stDocName = "61011_reset_status"
+    DoCmd.OpenForm stDocName, acFormDS, , stLinkCriteria
+
+Exit_resetstatus_Click:
+    Exit Sub
+
+Err_resetstatus_Click:
+    MsgBox Err.Description
+    Resume Exit_resetstatus_Click
+End Sub
+
 Private Sub UpdateFreezerLocation_Click()
 Dim stDocName As String
     Dim stLinkCriteria As String
