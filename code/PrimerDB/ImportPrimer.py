@@ -45,10 +45,7 @@ class ImportPrimer():
 		self.genome_build_text="\'"+genome_build_text+"\'"
 		# variable to hold the lookup value returned
 		self.genome_build_id=""
-		
-		#HighestPrimerName
-		self.highest_primer_name=0
-		
+				
 		# variables to hold queries and exceptions
 		self.insert_query = ""
 	
@@ -106,108 +103,138 @@ class ImportPrimer():
 		
 	def parse_input(self):
 		"""
-		
+		Primer designs are read from files within a specific folder.
+		This function captures all the required information needed to insert the primer into the database and passes this information to a function which executes the insert query, one primer at a time.
 		"""
-		#count files parsed and primers imported
+		# count files parsed and primers imported to be reported at the end
 		file_count=0
 		primer_count=0
 		
-		# for each file in the directory
+		# for each file in the directory of primer designs
 		for file in os.listdir(primer_design_files):
+			# look for all the text files
 			if file.endswith('.txt'):
+				# add to the file count
 				file_count+=1
-				#open file and loop through
+				# open file as read only
 				with open(primer_design_files+"//"+file,'r') as primer_designs:
+					# loop through line by line, using enumerate so the first line can be skipped
 					for line_number, line in enumerate(primer_designs):
-						# for each primer:
+						# skipping first line, and making sure the line isn't empty:
 						if line_number > 0 and len(line) >3:
+							# split the line on tabs into a list 
 							splitline=line.split("\t")
-							#first element is in format chr16_70534805-70535059
+							# take the first column in the file, which is genomic coordinates in the format chr16_70534805-70535059
+							# everything before the underscore is the chromosome
 							chr=splitline[0].split("_")[0]
+							# everything after the underscore, but before the dash is the start position
 							primer_start=splitline[0].split("_")[1].split("-")[0]
+							# everything after the underscore, and after the dash is the stop position
 							primer_stop=splitline[0].split("_")[1].split("-")[1]
 							
-							#second element is the variant id to go into notes
+							# second column in the file is the variant id  - this is to go into notes column
 							variant_id=splitline[1]
 							
-							#capture primer sequences
+							# capture forward and reverse primer sequences from column 7 and 8
 							forward_sequence=splitline[6]
 							reverse_sequence=splitline[7]
 							
-							#convert the chromosome to numeric form, without 'chr' 
+							# to enable a join with the chromosome table convert the sex chromosomes to numeric form, and remove 'chr' 
+							# change X to 23 and remove chr
 							if chr=='chrX':
 								cleaned_chromosome_number=23
+							# change Y to 24 and remove chr
 							elif chr=='chrY':
 								cleaned_chromosome_number=24
+							# remove 'chr' from all autosomes
 							else:
 								cleaned_chromosome_number=chr.replace('chr','')
 							
-							#empty EntrezGeneID variable
+							# create an empty EntrezGeneID variable
 							entrez_gene_id_mapped=''
 							
 							# loop through the bedfile dictionary to match the primer to an entrez id 
 							for gene in self.bedfile_dict:
-								#use chr rather than the cleaned values as the bedfile uses X and Y
+								# The bedfile contains chromosome names in the format 'X' and 'Y' so we must convert the chromosome names from the design file to match this
+								# each gene in the bedfile dict has a tuple key of (chr,start,stop), the entrez gene id is the value
+								# for each gene in Pan493 look if the primer overlaps with the gene 
 								if gene[0]==chr.replace("chr","") and gene[1]<primer_stop and gene[2]>primer_start:
+									# capture the entrez gene id
 									entrez_gene_id_mapped=self.bedfile_dict[gene]
+							# NB if a primer overlaps with multiple genes only one will be captured
 							
-							#create a dict of all variables and pass to self.build_insert module
+							
+							#create a dict of all variables to be inserted to the database and pass to self.build_insert module
 							primer_values_to_insert_dict={"chr":str(cleaned_chromosome_number),"start":str(primer_start),"stop":str(primer_stop),"gene":str(entrez_gene_id_mapped),"FSeq":forward_sequence,"RSeq":reverse_sequence,"FTag":f_tag,"RTag":r_tag,"status":self.status_id,"purification":self.purification_id,"SoS":self.scale_of_synth_id,"GenomeBuild":self.genome_build_id,"notes":variant_id}
 							
+							# pass dictionary to insert query
 							self.build_insert(primer_values_to_insert_dict)
+							# add to count of inserted primers
 							primer_count+=1
 				
-				# move the file into an archive folder
+				# move the file design file into an archive folder
 				os.rename(primer_design_files+"//"+file, archived_primer_design_files+"//"+file)
-				#print "archiving file"
+				# NB errors may occur if a file with the same name already exists in the archive - but this shouldn't happen routinely
 		
-		# report progress to message box
+		# when all files  have been read report progress (this should be displayed in a moka message box)
 		if file_count == 0:
+			# if no files were found to be imported 
 			print "no files found to import. Please ensure that files are in " + primer_design_files
 		else:
-			# report progress to message box
+			# return the file and primer counts
 			print str(primer_count) + " primers imported from " + str(file_count) + " files"
 
 	
 	def build_insert(self,dict):
-		# HighestGeneName
+		"""
+		A dictionary of values to be inserted is recieved and a SQL insert statement built and executed
+		"""
+		# The primer name is an autoincrementing number. A select query (ordered by primer name descending) returns the current highest number. this is a union query returning 0 should this be the first import
 		query="select PrimerName from PrimerAmplicon union select '0' as PrimerName from dbo.PrimerLookup order by PrimerName desc"
+		# execute and capture the query result
 		result=self.fetchone(query)
-		highest_primer_name= result[0]+1
-		self.highest_primer_name=highest_primer_name
-		
-		#build sql insert statement
+		# add one to create the primer name
+		highest_primer_name = result[0]+1
+				
+		# build sql insert statement
 		self.insert_query='INSERT INTO "dbo"."PrimerAmplicon" ("EntrezGeneIDmapped", "ForwardSeq", "ReverseSeq", "ChromosomeID", "Start", "Stop","status","FTag","RTag","ScaleOfSynth","Purification","GenomeBuild", "notes","PrimerName") VALUES ('+dict['gene']+',\''+dict['FSeq']+'\',\''+dict['RSeq']+'\','+dict['chr']+','+dict['start']+','+dict['stop']+','+dict['status']+','+dict['FTag']+','+dict['RTag']+','+dict['SoS']+','+dict['purification']+','+dict['GenomeBuild']+',\''+dict['notes']+'\','+str(highest_primer_name)+')'
-		print self.insert_query
-		# call module to execure insert query
+		# print self.insert_query
+		
+		# call module to execute insert query
 		self.insert_query_function()
 
 	
 	def insert_query_function(self):
-		'''This function executes an insert query'''
+		"""This function executes an insert query"""
 		# execute the insert query
 		self.cursor.execute(self.insert_query)
+		# commits to database
 		self.cursor.commit()
-		#print "bosh"
-	
+			
 	
 	def fetchone(self, query):
-		'''perform select query but return single result'''
-		#perform query
+		"""perform select query but returns a single result"""
+		# perform query
 		self.cursor.execute(query)
-		#capture result
+		# capture result using fetchone to return only the top result
 		result = self.cursor.fetchone()
-		
-		#yield result
+		# if there was a result 
 		if result:
+			# return result
 			return result
+		# if no result
 		else:
+			# print the query to aid troubleshooting
 			print "unable to return result for query " + query
 
 def main():
+	# create instance of class
 	a=ImportPrimer()
+	# read pan493 to populate the dictionary of all gene coordinates
 	a.get_gene()
+	# read the look up values from moka
 	a.get_moka_lookup_values()
+	# parse the 
 	a.parse_input()
 
 	
