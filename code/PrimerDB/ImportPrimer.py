@@ -21,8 +21,8 @@ from ImportPrimerconfig import *
 class ImportPrimer():
 	def __init__(self):
 		# using pyodbc specify database connection details
-		#self.cnxn = pyodbc.connect(mokadata_connection) # use the mokadata database connection details specified in the config file
-		self.cnxn = pyodbc.connect(dev_database_connection) # use the devdatabase database connection details specified in the config file
+		self.cnxn = pyodbc.connect(mokadata_connection) # use the mokadata database connection details specified in the config file
+		#self.cnxn = pyodbc.connect(dev_database_connection) # use the devdatabase database connection details specified in the config file
 		# create a cursor to connect to database 
 		self.cursor = self.cnxn.cursor()
 		
