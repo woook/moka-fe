@@ -234,7 +234,7 @@ def main():
 	a.get_gene()
 	# read the look up values from moka
 	a.get_moka_lookup_values()
-	# parse the 
+	# parse the primer design files to build and execute insert statements
 	a.parse_input()
 
 	
