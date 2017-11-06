@@ -3,9 +3,9 @@ Option Compare Database
 Private Sub PrimerSearch_Click()
 
 Dim QRY As String
-QRY = "SELECT DISTINCT PrimerAmplicon.AmpliconID, Chromosome.Chr, PrimerAmplicon.Start, PrimerAmplicon.Stop, PrimerTags.Name AS ForwardTag, dbo_PrimerTags_1.Name AS ReverseTag, PrimerAmplicon.Notes, PrimerAmplicon.ForwardSeq, PrimerAmplicon.ReverseSeq, PrimerLookup.Name AS GenomeBuild, PrimerAmplicon.Mix, PrimerAmplicon.RTray, PrimerAmplicon.RFreezer, PrimerAmplicon.FGrid, PrimerAmplicon.FTray, PrimerAmplicon.FFreezer, PrimerAmplicon.TestResultNotes, PrimerAmplicon.Status" & _
+QRY = "SELECT DISTINCT PrimerAmplicon.PrimerName, Chromosome.Chr, PrimerAmplicon.Start, PrimerAmplicon.Stop, PrimerTags.Name AS ForwardTag, dbo_PrimerTags_1.Name AS ReverseTag, PrimerAmplicon.Notes, PrimerAmplicon.ForwardSeq, PrimerAmplicon.ReverseSeq, PrimerLookup.Name AS GenomeBuild, PrimerAmplicon.Mix, PrimerAmplicon.RTray, PrimerAmplicon.RFreezer, PrimerAmplicon.FGrid, PrimerAmplicon.FTray, PrimerAmplicon.FFreezer, PrimerAmplicon.TestResultNotes, PrimerAmplicon.Status" & _
 " FROM (((PrimerAmplicon INNER JOIN Chromosome ON PrimerAmplicon.ChromosomeID = Chromosome.ChrID) INNER JOIN PrimerTags ON PrimerAmplicon.FTag = PrimerTags.PrimerTagsID) INNER JOIN PrimerTags AS dbo_PrimerTags_1 ON PrimerAmplicon.RTag = dbo_PrimerTags_1.PrimerTagsID) INNER JOIN PrimerLookup ON PrimerAmplicon.GenomeBuild = PrimerLookup.PrimerLookupID" & _
-" WHERE PrimerAmplicon.AmpliconID = " & [Forms]![61006_FindPrimerByID]![FindAmpliconID] & " AND PrimerAmplicon.Status=1202218832;"
+" WHERE PrimerAmplicon.PrimerName = " & [Forms]![61006_FindPrimerByID]![FindAmpliconID] & " AND PrimerAmplicon.Status=1202218832;"
 
 [Form_s61006_FindPrimerByID].Form.RecordSource = QRY
 [Form_s61006_FindPrimerByID].Form.Requery
