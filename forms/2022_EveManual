@@ -14,15 +14,17 @@ Private Sub Run_EvE_Click()
     Cy3Barcode = Me.Cy3_barcode
     Cy3Subarray = Me.Cy3_Subarray
     Cy3Dye = LCase(Me.Cy3_Dye)
+    Cy3ScanNumber = Me.cy3_scan_number
     Cy5Barcode = Me.Cy5_barcode
     Cy5Subarray = Me.Cy5_subarray
     Cy5Dye = LCase(Me.Cy5_Dye)
+    Cy5ScanNumber = Me.cy5_scan_number
     
     'concatenate to write to line and create file name
     Dim LineForFile As String
     Dim InputFilename As String
-    LineForFile = Cy3Barcode & vbTab & Cy3Subarray & vbTab & Cy3Dye & vbTab & Cy5Barcode & vbTab & Cy5Subarray & vbTab & Cy5Dye ' & vbTab & "Test"
-    InputFilename = Cy3Barcode & "_" & Cy3Subarray & "_" & Cy3Dye & "_" & Cy5Barcode & "_" & Cy5Subarray & "_" & Cy5Dye & "_input.txt"
+    LineForFile = Cy3Barcode & vbTab & Cy3Subarray & vbTab & Cy3Dye & vbTab & Cy3ScanNumber & vbTab & Cy5Barcode & vbTab & Cy5Subarray & vbTab & Cy5Dye & vbTab & Cy5ScanNumber  ' & vbTab & "Test"
+    InputFilename = Cy3Barcode & "_" & Cy3Subarray & "_" & Cy3Dye & "_S0" & Cy3ScanNumber & "_" & Cy5Barcode & "_" & Cy5Subarray & "_" & Cy5Dye & "_S0" & Cy5ScanNumber & "_input.txt"
     
     'define variables for files
     'Dim EvEInputFile As String
@@ -36,16 +38,16 @@ Private Sub Run_EvE_Click()
     
     'set the variables to write the file
     Set fs = CreateObject("Scripting.FileSystemObject")
-    Set a = fs.CreateTextFile(EvEInputFilePath, False) 'False will error if the input file has already been created
+    Set A = fs.CreateTextFile(EvEInputFilePath, False) 'False will error if the input file has already been created
     
     'write to file
-    a.WriteLine (LineForFile)
+    A.WriteLine (LineForFile)
     
     ''Call eve
     ' define the variables to feed to EvE
     Dim EvePath As String
     Dim OutputDir As String
-    Dim TotalCmd As String
+    Dim TotalCMD As String
     
     'set path to eve
     EvePath = """F:\Moka\Files\Software\eve\EvE.py"""
@@ -58,7 +60,7 @@ Private Sub Run_EvE_Click()
     
     'combine all to make totalCmd NB /K can be used for the cmd line window to remain after it has run - good for debugging - but may cause it to hang
     ' note 2>&1 which combines stderr and stdout
-    TotalCmd = "cmd.exe /S /C \\gstt.local\shared\Genetics_Data2\Array\Software\Python\python.exe " & EvECmd & " 2>&1"
+    TotalCMD = "cmd.exe /S /C \\gstt.local\shared\Genetics_Data2\Array\Software\Python\python.exe " & EvECmd & " 2>&1"
     
     'Create shell object
     Dim wsh As Object
@@ -69,7 +71,7 @@ Private Sub Run_EvE_Click()
     'Dim windowStyle As Integer: windowStyle = 1
     
     ' use .Exec not .Run so can access the stdout
-    Set wshexec = wsh.Exec(TotalCmd)
+    Set wshexec = wsh.Exec(TotalCMD)
     'DoEvents pauses VB script until EvE has finished running. wshexec.status is 0 while running 1 when finished
     ' and 2 when errored so could use a if statement but have combined stderr and stdout above so no need.
     Do While wshexec.Status = 0
