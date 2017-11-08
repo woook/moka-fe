@@ -16,13 +16,13 @@ import pyodbc
 import os
 
 # import from config file
-from ImportPrimerconfig import *
+import ImportPrimerconfig as config
 
 class ImportPrimer():
 	def __init__(self):
 		# using pyodbc specify database connection details
-		self.cnxn = pyodbc.connect(mokadata_connection) # use the mokadata database connection details specified in the config file
-		#self.cnxn = pyodbc.connect(dev_database_connection) # use the devdatabase database connection details specified in the config file
+		#self.cnxn = pyodbc.connect(config.mokadata_connection) # use the mokadata database connection details specified in the config file
+		self.cnxn = pyodbc.connect(config.dev_database_connection) # use the devdatabase database connection details specified in the config file
 		# create a cursor to connect to database 
 		self.cursor = self.cnxn.cursor()
 		
@@ -30,19 +30,19 @@ class ImportPrimer():
 		self.bedfile_dict={}
 		
 		# build string to search primerlookup table using value in config file
-		self.status_string="\'"+status_string+"\'" 
+		self.status_string="\'"+config.status_string+"\'" 
 		# variable to hold the lookup value returned
 		self.status_id=""
 		# build string to search primerlookup table using value in config file
-		self.purification_text="\'"+purification_text+"\'"
+		self.purification_text="\'"+config.purification_text+"\'"
 		# variable to hold the lookup value returned
 		self.purification_id=""
 		# build string to search primerlookup table using value in config file
-		self.scale_of_synth_text="\'"+scale_of_synth_text+"\'"
+		self.scale_of_synth_text="\'"+config.scale_of_synth_text+"\'"
 		# variable to hold the lookup value returned
 		self.scale_of_synth_id=""
 		# build string to search primerlookup table using value in config file
-		self.genome_build_text="\'"+genome_build_text+"\'"
+		self.genome_build_text="\'"+config.genome_build_text+"\'"
 		# variable to hold the lookup value returned
 		self.genome_build_id=""
 				
@@ -57,7 +57,7 @@ class ImportPrimer():
 		This is entered into a dictionary so if the primer overlaps with a gene the gene can be recorded.
 		"""
 		# open the bedfile as read only using the file path from the config file
-		with open(pan493_bedfile,'r') as bedfile:
+		with open(config.pan493_bedfile,'r') as bedfile:
 			# loop through each line
 			for line in bedfile:
 				#split the line on tab
@@ -111,13 +111,13 @@ class ImportPrimer():
 		primer_count=0
 		
 		# for each file in the directory of primer designs
-		for file in os.listdir(primer_design_files):
+		for file in os.listdir(config.primer_design_files):
 			# look for all the text files
 			if file.endswith('.txt'):
 				# add to the file count
 				file_count+=1
 				# open file as read only
-				with open(primer_design_files+"//"+file,'r') as primer_designs:
+				with open(config.primer_design_files+"//"+file,'r') as primer_designs:
 					# loop through line by line, using enumerate so the first line can be skipped
 					for line_number, line in enumerate(primer_designs):
 						# skipping first line, and making sure the line isn't empty:
@@ -165,7 +165,7 @@ class ImportPrimer():
 							
 							
 							#create a dict of all variables to be inserted to the database and pass to self.build_insert module
-							primer_values_to_insert_dict={"chr":str(cleaned_chromosome_number),"start":str(primer_start),"stop":str(primer_stop),"gene":str(entrez_gene_id_mapped),"FSeq":forward_sequence,"RSeq":reverse_sequence,"FTag":f_tag,"RTag":r_tag,"status":self.status_id,"purification":self.purification_id,"SoS":self.scale_of_synth_id,"GenomeBuild":self.genome_build_id,"notes":variant_id}
+							primer_values_to_insert_dict={"chr":str(cleaned_chromosome_number),"start":str(primer_start),"stop":str(primer_stop),"gene":str(entrez_gene_id_mapped),"FSeq":forward_sequence,"RSeq":reverse_sequence,"FTag":config.f_tag,"RTag":config.r_tag,"status":self.status_id,"purification":self.purification_id,"SoS":self.scale_of_synth_id,"GenomeBuild":self.genome_build_id,"notes":variant_id}
 							
 							# pass dictionary to insert query
 							self.build_insert(primer_values_to_insert_dict)
@@ -173,13 +173,13 @@ class ImportPrimer():
 							primer_count+=1
 				
 				# move the file design file into an archive folder
-				os.rename(primer_design_files+"//"+file, archived_primer_design_files+"//"+file)
+				os.rename(config.primer_design_files+"//"+file, config.archived_primer_design_files+"//"+file)
 				# NB errors may occur if a file with the same name already exists in the archive - but this shouldn't happen routinely
 		
 		# when all files  have been read report progress (this should be displayed in a moka message box)
 		if file_count == 0:
 			# if no files were found to be imported 
-			print "no files found to import. Please ensure that files are in " + primer_design_files
+			print "no files found to import. Please ensure that files are in " + config.primer_design_files
 		else:
 			# return the file and primer counts
 			print str(primer_count) + " primers imported from " + str(file_count) + " files"
