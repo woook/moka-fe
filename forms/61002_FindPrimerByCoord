@@ -1,19 +1,24 @@
 Option Compare Database
 
 Private Sub PrimerSearch_Click()
+' this script takes a genomic position as a search term and refreshes the subform filtering primers based on the search term
 
-Dim QRY As String
-Dim search_chr As String
-Dim search_pos As String
+'define varaiable
+Dim QRY As String ' to store the SQL
+Dim search_chr As String ' the chromosome from search term
+Dim search_pos As String ' the position from search term
 
+' print the searchpos for debugging
 Debug.Print [SearchPos]
+' if no search term produce a message box
 If IsNull([SearchPos]) Then
-MsgBox "please enter a coordinate"
+    MsgBox "please enter a coordinate"
 Else
 
 ' split the input box into chromosome and position
 ' for chromosome remove chr if it was added but then add it incase it wasn't added- this enables X and Y to be queried
 search_chr = "chr" & Replace(Split([SearchPos], ":", -1)(0), "Chr", "")
+
 'take position
 search_pos = Split([SearchPos], ":", -1)(1)
 
