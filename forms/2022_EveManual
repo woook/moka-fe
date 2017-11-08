@@ -44,7 +44,7 @@ Private Sub Run_EvE_Click()
     
     'set the variables to write the file
     Set fs = CreateObject("Scripting.FileSystemObject")
-    'create the tet file using filepath created above
+    'create the text file using filepath created above
     Set A = fs.CreateTextFile(EvEInputFilePath, False) 'False will error if the input file has already been created
     
     'write the tab delimited line to file
@@ -79,7 +79,7 @@ Private Sub Run_EvE_Click()
     'Dim waitOnReturn As Boolean: waitOnReturn = True
     'Dim windowStyle As Integer: windowStyle = 1
     
-    ' use .Exec not .Run so can access the stdout and capture the
+    ' use .Exec not .Run so can access the stdout and capture the status
     Set wshexec = wsh.Exec(TotalCMD)
     'DoEvents pauses VB script until EvE has finished running. wshexec.status is 0 while running 1 when finished
     ' and 2 when errored so could use a if statement but have combined stderr and stdout above so no need.
