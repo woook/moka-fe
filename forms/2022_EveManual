@@ -1,46 +1,53 @@
 Option Compare Database
 
 Private Sub Run_EvE_Click()
-
-    'define the entry boxes
+    ' This function takes input from a form and creates a text file which is passed to a python script
+    
+    ' define variable to hold values from entry boxes
     Dim Cy3Barcode As String
     Dim Cy3Subarray As Integer
     Dim Cy3Dye As String
+    Dim Cy3ScanNumber As Integer
     Dim Cy5Barcode As String
     Dim Cy5Subarray As Integer
     Dim Cy5Dye As String
+    Dim Cy5ScanNumber As Integer
     
-    'set variables to entered values
-    Cy3Barcode = Me.Cy3_barcode
-    Cy3Subarray = Me.Cy3_Subarray
-    Cy3Dye = LCase(Me.Cy3_Dye)
-    Cy3ScanNumber = Me.cy3_scan_number
-    Cy5Barcode = Me.Cy5_barcode
-    Cy5Subarray = Me.Cy5_subarray
-    Cy5Dye = LCase(Me.Cy5_Dye)
-    Cy5ScanNumber = Me.cy5_scan_number
-    
-    'concatenate to write to line and create file name
+    ' define some variables to hold strings used to name and populate text file
     Dim LineForFile As String
     Dim InputFilename As String
-    LineForFile = Cy3Barcode & vbTab & Cy3Subarray & vbTab & Cy3Dye & vbTab & Cy3ScanNumber & vbTab & Cy5Barcode & vbTab & Cy5Subarray & vbTab & Cy5Dye & vbTab & Cy5ScanNumber  ' & vbTab & "Test"
-    InputFilename = Cy3Barcode & "_" & Cy3Subarray & "_" & Cy3Dye & "_S0" & Cy3ScanNumber & "_" & Cy5Barcode & "_" & Cy5Subarray & "_" & Cy5Dye & "_S0" & Cy5ScanNumber & "_input.txt"
     
     'define variables for files
-    'Dim EvEInputFile As String
     Dim EvEinputFileFolder As String
     Dim EvEInputFilePath As String
     
-    'set file variables for EvE
-    'EvEInputFile = InputFilename
+    'assign entered values to variables
+    Cy3Barcode = Me.Cy3_barcode
+    Cy3Subarray = Me.Cy3_Subarray
+    Cy3Dye = LCase(Me.Cy3_Dye) ' convert to lowercase so can deal with Cy,cy or CY
+    Cy3ScanNumber = Me.cy3_scan_number
+    Cy5Barcode = Me.Cy5_barcode
+    Cy5Subarray = Me.Cy5_subarray
+    Cy5Dye = LCase(Me.Cy5_Dye) ' convert to lowercase so can deal with Cy,cy or CY
+    Cy5ScanNumber = Me.cy5_scan_number
+    
+    'concatenate variables to create tab delimited file contents and write to line and create file name
+    LineForFile = Cy3Barcode & vbTab & Cy3Subarray & vbTab & Cy3Dye & vbTab & Cy3ScanNumber & vbTab & Cy5Barcode & vbTab & Cy5Subarray & vbTab & Cy5Dye & vbTab & Cy5ScanNumber  ' & vbTab & "Test"
+    'concatenate variables to create underscore delimited file name
+    InputFilename = Cy3Barcode & "_" & Cy3Subarray & "_" & Cy3Dye & "_S0" & Cy3ScanNumber & "_" & Cy5Barcode & "_" & Cy5Subarray & "_" & Cy5Dye & "_S0" & Cy5ScanNumber & "_input.txt"
+    
+    
+    'set folder path to create text file
     EvEinputFileFolder = "\\gstt.local\shared\Genetics_Data2\Array\FeatureExtraction\eve\input"
+    'concatenate the folder with the file name to build the full file path
     EvEInputFilePath = EvEinputFileFolder & "\" & InputFilename
     
     'set the variables to write the file
     Set fs = CreateObject("Scripting.FileSystemObject")
+    'create the text file using filepath created above
     Set A = fs.CreateTextFile(EvEInputFilePath, False) 'False will error if the input file has already been created
     
-    'write to file
+    'write the tab delimited line to file
     A.WriteLine (LineForFile)
     
     ''Call eve
@@ -60,17 +67,19 @@ Private Sub Run_EvE_Click()
     
     'combine all to make totalCmd NB /K can be used for the cmd line window to remain after it has run - good for debugging - but may cause it to hang
     ' note 2>&1 which combines stderr and stdout
+    '/C means "execute this command as if I had typed it at the prompt, then quit"
+    '/S means you don't have to worry about quotes, removing first and last quotes, but leaving all others untouched.
     TotalCMD = "cmd.exe /S /C \\gstt.local\shared\Genetics_Data2\Array\Software\Python\python.exe " & EvECmd & " 2>&1"
     
     'Create shell object
     Dim wsh As Object
     Set wsh = CreateObject("WScript.Shell")
-    
+        
     ' settings to have cmd box visible while running
     'Dim waitOnReturn As Boolean: waitOnReturn = True
     'Dim windowStyle As Integer: windowStyle = 1
     
-    ' use .Exec not .Run so can access the stdout
+    ' use .Exec not .Run so can access the stdout and capture the status
     Set wshexec = wsh.Exec(TotalCMD)
     'DoEvents pauses VB script until EvE has finished running. wshexec.status is 0 while running 1 when finished
     ' and 2 when errored so could use a if statement but have combined stderr and stdout above so no need.
