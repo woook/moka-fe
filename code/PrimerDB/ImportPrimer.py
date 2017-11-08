@@ -21,8 +21,8 @@ import ImportPrimerconfig as config
 class ImportPrimer():
 	def __init__(self):
 		# using pyodbc specify database connection details
-		#self.cnxn = pyodbc.connect(config.mokadata_connection) # use the mokadata database connection details specified in the config file
-		self.cnxn = pyodbc.connect(config.dev_database_connection) # use the devdatabase database connection details specified in the config file
+		self.cnxn = pyodbc.connect(config.mokadata_connection) # use the mokadata database connection details specified in the config file
+		#self.cnxn = pyodbc.connect(config.dev_database_connection) # use the devdatabase database connection details specified in the config file
 		# create a cursor to connect to database 
 		self.cursor = self.cnxn.cursor()
 		
@@ -165,7 +165,9 @@ class ImportPrimer():
 							
 							
 							#create a dict of all variables to be inserted to the database and pass to self.build_insert module
-							primer_values_to_insert_dict={"chr":str(cleaned_chromosome_number),"start":str(primer_start),"stop":str(primer_stop),"gene":str(entrez_gene_id_mapped),"FSeq":forward_sequence,"RSeq":reverse_sequence,"FTag":config.f_tag,"RTag":config.r_tag,"status":self.status_id,"purification":self.purification_id,"SoS":self.scale_of_synth_id,"GenomeBuild":self.genome_build_id,"notes":variant_id}
+							primer_values_to_insert_dict={"chr":str(cleaned_chromosome_number),"start":str(primer_start),"stop":str(primer_stop),"gene":str(entrez_gene_id_mapped),
+								"FSeq":forward_sequence,"RSeq":reverse_sequence,"FTag":config.f_tag,"RTag":config.r_tag,"status":self.status_id,"purification":self.purification_id,
+								"SoS":self.scale_of_synth_id,"GenomeBuild":self.genome_build_id,"notes":variant_id}
 							
 							# pass dictionary to insert query
 							self.build_insert(primer_values_to_insert_dict)
@@ -189,7 +191,8 @@ class ImportPrimer():
 		"""
 		A dictionary of values to be inserted is recieved and a SQL insert statement built and executed
 		"""
-		# The primer name is an autoincrementing number. A select query (ordered by primer name descending) returns the current highest number. this is a union query returning 0 should this be the first import
+		# The primer name is an autoincrementing number. A select query (ordered by primer name descending) returns the current highest number. 
+		# if this table is empty the query will not return anything so a union query is used to return a value of 0 (sql requires a different table to the first half of the query)
 		query="select PrimerName from PrimerAmplicon union select '0' as PrimerName from dbo.PrimerLookup order by PrimerName desc"
 		# execute and capture the query result
 		result=self.fetchone(query)
@@ -197,7 +200,9 @@ class ImportPrimer():
 		highest_primer_name = result[0]+1
 				
 		# build sql insert statement
-		self.insert_query='INSERT INTO "dbo"."PrimerAmplicon" ("EntrezGeneIDmapped", "ForwardSeq", "ReverseSeq", "ChromosomeID", "Start", "Stop","status","FTag","RTag","ScaleOfSynth","Purification","GenomeBuild", "notes","PrimerName") VALUES ('+dict['gene']+',\''+dict['FSeq']+'\',\''+dict['RSeq']+'\','+dict['chr']+','+dict['start']+','+dict['stop']+','+dict['status']+','+dict['FTag']+','+dict['RTag']+','+dict['SoS']+','+dict['purification']+','+dict['GenomeBuild']+',\''+dict['notes']+'\','+str(highest_primer_name)+')'
+		self.insert_query='INSERT INTO "dbo"."PrimerAmplicon" ("EntrezGeneIDmapped", "ForwardSeq", "ReverseSeq", "ChromosomeID", "Start", "Stop","status","FTag","RTag","ScaleOfSynth","Purification","GenomeBuild", \
+			"notes","PrimerName") VALUES ('+dict['gene']+',\''+dict['FSeq']+'\',\''+dict['RSeq']+'\','+dict['chr']+','+dict['start']+','+dict['stop'] \
+			+','+dict['status']+','+dict['FTag']+','+dict['RTag']+','+dict['SoS']+','+dict['purification']+','+dict['GenomeBuild']+',\''+dict['notes']+'\','+str(highest_primer_name)+')'
 		# print self.insert_query
 		
 		# call module to execute insert query
