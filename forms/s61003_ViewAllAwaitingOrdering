@@ -1,6 +1,12 @@
+Option Compare Database
 
 Private Sub ID_DblClick(Cancel As Integer)
+' this function is run when doubleclicking the ID column
+' the function takes all primers which are awaiting ordering and creates a text file which can be used to upload to the primer ordering website
+
+'define what to do if any errors
 On Error GoTo Err_ID_DblClick
+    
     ' define some variables
     Dim stDocName As String
     Dim stLinkCriteria As String
@@ -12,9 +18,8 @@ On Error GoTo Err_ID_DblClick
     Dim awaitingOrdering As String
     Dim ordered As String
     
-    
-    
-    ' open the subform
+       
+    ' open the subform in datasheet view
     DoCmd.OpenForm "s61003_OrderPrimersDatasheet", acFormDS, , stLinkCriteria
     
     ' capture various parts of todays date
@@ -22,20 +27,20 @@ On Error GoTo Err_ID_DblClick
     Mnth = Format(Now(), "m")
     Dy = Format(Now(), "dd")
     
-    ' build date
+    ' rebuild date in specific format
     cleandate = Str(Yr) & "_" & Str(Mnth) & "_" & Str(Dy)
+    'remove any spaces from clean date
+    cleandate = Replace(cleandate, " ", "")
+    
     ' Debug.Print cleandate
     
-    ' set file name
+    ' set file name for the output excel sheet
     file = "_PrimerOrderForm.xls"
     
     ' set filepath for output file
     filepath = "\\gstt.local\Shared\Genetics\DNA LAB\Primers\PrimerDesignDatabase\"
     
-    'remove any spaces from clean date
-    cleandate = Replace(cleandate, " ", "")
-    
-    ' build full filepath for output file
+    ' concatenate these variables to build full filepath for output file
     outputfilepath = filepath & cleandate & file
     'Debug.Print outputfilepath
     
@@ -46,18 +51,22 @@ On Error GoTo Err_ID_DblClick
     MsgBox "Primer design file saved to" & outputfilepath, vbOKOnly, "Primer ordering form exported"
     
     ' set the status values to update in table.
-    awaitingOrdering = 1202218830
-    ordered = 1202218831
+    awaitingOrdering = 1202218830 'statuses which should be updated
+    ordered = 1202218831 ' what status should be updated to.
     
-    ' Build sql update to change status to ordered
+    ' Build sql update to change status from awaiting ordering to ordered
     UpdateStatusSQL = "Update PrimerAmplicon Set Status = " & ordered & ", DateOrdered = '" & Now() & "' where status = " & awaitingOrdering
     
+    'print the sql query for debugging
     Debug.Print UpdateStatusSQL
+    
+    ' run sql query to update status
     DoCmd.RunSQL (UpdateStatusSQL)
     
 Exit_ID_DblClick:
     Exit Sub
 
+'describe error message in message box
 Err_ID_DblClick:
     MsgBox Err.Description
     Resume Exit_ID_DblClick
