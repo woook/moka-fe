@@ -1,13 +1,16 @@
-Option Compare Database
 
 Private Sub PrimerSearch_Click()
-
+' this form takes a amplicon id as a search term and uses this to refresh the subform
+'define variable to hold the search term
 Dim QRY As String
+'build sql query, using the amplicon id from the box [Forms]![61006_FindPrimerByID]![FindAmpliconID] on the form
 QRY = "SELECT DISTINCT PrimerAmplicon.PrimerName, Chromosome.Chr, PrimerAmplicon.Start, PrimerAmplicon.Stop, PrimerTags.Name AS ForwardTag, dbo_PrimerTags_1.Name AS ReverseTag, PrimerAmplicon.Notes, PrimerAmplicon.ForwardSeq, PrimerAmplicon.ReverseSeq, PrimerLookup.Name AS GenomeBuild, PrimerAmplicon.Mix, PrimerAmplicon.RTray, PrimerAmplicon.RFreezer, PrimerAmplicon.FGrid, PrimerAmplicon.FTray, PrimerAmplicon.FFreezer, PrimerAmplicon.TestResultNotes, PrimerAmplicon.Status" & _
 " FROM (((PrimerAmplicon INNER JOIN Chromosome ON PrimerAmplicon.ChromosomeID = Chromosome.ChrID) INNER JOIN PrimerTags ON PrimerAmplicon.FTag = PrimerTags.PrimerTagsID) INNER JOIN PrimerTags AS dbo_PrimerTags_1 ON PrimerAmplicon.RTag = dbo_PrimerTags_1.PrimerTagsID) INNER JOIN PrimerLookup ON PrimerAmplicon.GenomeBuild = PrimerLookup.PrimerLookupID" & _
 " WHERE PrimerAmplicon.PrimerName = " & [Forms]![61006_FindPrimerByID]![FindAmpliconID] & " AND PrimerAmplicon.Status=1202218832;"
 
+' set new record source for subform
 [Form_s61006_FindPrimerByID].Form.RecordSource = QRY
+' requery the subform
 [Form_s61006_FindPrimerByID].Form.Requery
 
 End Sub
