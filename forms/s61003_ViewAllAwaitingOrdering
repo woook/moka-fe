@@ -22,26 +22,18 @@ On Error GoTo Err_ID_DblClick
     ' open the subform in datasheet view
     DoCmd.OpenForm "s61003_OrderPrimersDatasheet", acFormDS, , stLinkCriteria
     
-    ' capture various parts of todays date
-    Yr = Format(Now(), "yyyy")
-    Mnth = Format(Now(), "m")
-    Dy = Format(Now(), "dd")
-    
-    ' rebuild date in specific format
-    cleandate = Str(Yr) & "_" & Str(Mnth) & "_" & Str(Dy)
-    'remove any spaces from clean date
-    cleandate = Replace(cleandate, " ", "")
-    
-    ' Debug.Print cleandate
+    ' create a timestamp to name the file
+    timestamp = Format(Now(), "yyyymdd_hhnnss")
+    'Debug.Print timestamp
     
     ' set file name for the output excel sheet
-    file = "_PrimerOrderForm.xls"
+    file = timestamp & "_PrimerOrderForm.xls"
     
     ' set filepath for output file
-    filepath = "\\gstt.local\Shared\Genetics\DNA LAB\Primers\PrimerDesignDatabase\"
+    folder = "\\gstt.local\Shared\Genetics\DNA LAB\Primers\PrimerDesignDatabase\"
     
-    ' concatenate these variables to build full filepath for output file
-    outputfilepath = filepath & cleandate & file
+    ' concatenate folder ande file to create filepath for output file
+    outputfilepath = folder & file
     'Debug.Print outputfilepath
     
     ' export the result of the query to the spreadsheet
