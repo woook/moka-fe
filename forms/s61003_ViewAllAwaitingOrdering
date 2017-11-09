@@ -2,7 +2,7 @@ Option Compare Database
 
 Private Sub ID_DblClick(Cancel As Integer)
 ' this function is run when doubleclicking the ID column
-' the function takes all primers which are awaiting ordering and creates a text file which can be used to upload to the primer ordering website
+' the function takes all primers which are awaiting ordering and creates a file which can be used to upload to the primer ordering website
 
 'define what to do if any errors
 On Error GoTo Err_ID_DblClick
