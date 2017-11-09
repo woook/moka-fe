@@ -1,0 +1,45 @@
+Option Compare Database
+
+Private Sub Save_Click()
+' This form isn't currently in use
+' define what is done on error
+On Error GoTo Err_Save_Click
+    ' define status as awaiting ordering
+    Me.Status = 1202218830
+    
+    ' set the lookup values for the purification and scale of synthesis
+    Me.Purification = 4
+    Me.ScaleOfSynth = 5
+       
+    ' perform the save, inserting values into the bound fields
+    DoCmd.DoMenuItem acFormBar, acRecordsMenu, acSaveRecord, , acMenuVer70
+    DoCmd.Close
+    
+Exit_Save_Click:
+    Exit Sub
+'describe the error
+Err_Save_Click:
+    MsgBox Err.Description
+    Resume Exit_Save_Click
+    
+End Sub
+Private Sub Cancel_Click()
+' This form isn't currently in use
+' the cancel button exists without saving
+
+'define what is done on error
+On Error GoTo Err_Cancel_Click
+    
+    ' remove any changes made without saving
+    Me.Undo
+    'close command
+    DoCmd.Close
+
+Exit_Cancel_Click:
+    Exit Sub
+' if error describe it.
+Err_Cancel_Click:
+    MsgBox Err.Description
+    Resume Exit_Cancel_Click
+    
+End Sub

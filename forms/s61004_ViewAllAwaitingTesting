@@ -1,0 +1,8 @@
+Option Compare Database
+
+Private Sub TestResult_AfterUpdate()
+' this function adds a timestamp to the 'date tested' field whenever the test result is updated
+    'set value of field to current timestamp
+    Me.TestingTimestamp = Now()
+End Sub
+
