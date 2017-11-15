@@ -32,7 +32,7 @@ Save time for Clinical Scientists and technical staff when:
 
 ### Technical
 * Incorporated into Moka
-* Usable by all users on Trust windows XP computers.
+* Usable by all users on Trust windows computers.
 
 ### Usability
 * Easy to use
