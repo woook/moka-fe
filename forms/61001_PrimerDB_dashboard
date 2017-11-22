@@ -1,7 +1,7 @@
 Option Compare Database
 
 
-Private Sub AutomaticImport_Click()
+Private Sub Form_Open(Cancel As Integer)
     ''Call ImportPrimer.py script which reads primer design files from a folder and inserts these into a database
     ' settings to have cmd box visible while running
     Dim waitOnReturn As Boolean: waitOnReturn = True
@@ -23,11 +23,14 @@ Private Sub AutomaticImport_Click()
     '/S means you don't have to worry about quotes, removing first and last quotes, but leaving all others untouched.
     TotalCMD = "cmd.exe /S /C \\gstt.local\shared\Genetics_Data2\Array\Software\Python\python.exe " & PrimerImportPath & " 2>&1"
     
+    Debug.Print TotalCMD
+    
     'Create shell object
     Dim wsh As Object
     Set wsh = CreateObject("WScript.Shell")
     ' use .Exec not .Run so can access the stdout
     Set wshexec = wsh.Exec(TotalCMD)
+    'Debug.Print wshexec.Stdout.readall()
     'DoEvents pauses VB script until import script has finished running. wshexec.status is 0 while running 1 when finished
     ' and 2 when errored so could use a if statement but have combined stderr and stdout above so no need.
     Do While wshexec.Status = 0
@@ -36,173 +39,30 @@ Private Sub AutomaticImport_Click()
     
     'report captures stdout
     Dim Report As String
-    Report = wshexec.StdOut.ReadAll()
+    Report = wshexec.Stdout.readall()
+    
+    Debug.Print Report
     
     'display in MsgBox
-    MsgBox Report
-End Sub
-
-
-Private Sub add_tag_form_Click() 'not currently in use
-    'open form which will enable tags to be entered
-    ' define variables
-    Dim stDocName As String
-    Dim stLinkCriteria As String
-    ' assign form name
-    stDocName = "61008_EnterNewTag"
-    ' open form (don't specify the view)
-    DoCmd.OpenForm stDocName, , , stLinkCriteria
-
-Exit_CoordinateSearchForm_Click:
-    Exit Sub
-End Sub
-
-
-Private Sub gene_symbol_search_form_Click()
-' not currently in use
+    MsgBox CStr(Report)
     
-    ' define variables
-    Dim stDocName As String
-    Dim stLinkCriteria As String
-    
-    ' assign form name
-    stDocName = "61010_FindPrimerByGene"
-    ' open form (don't specify the view)
-    DoCmd.OpenForm stDocName, , , stLinkCriteria
-
-Exit_CoordinateSearchForm_Click:
-    Exit Sub
-End Sub
-
-Private Sub id_search_form_Click()
-    ' open form which enables primers to be serached by amplicon id (aka primer name)
-    ' define variables
-    Dim stDocName As String
-    Dim stLinkCriteria As String
-    
-    ' define form name
-    stDocName = "61006_FindPrimerByID"
-    ' open form (don't specify the view)
-    DoCmd.OpenForm stDocName, , , stLinkCriteria
-
-Exit_CoordinateSearchForm_Click:
-    Exit Sub
-End Sub
-
-Private Sub CoordinateSearchForm_Click()
-    ' open form which enables primers to be queried using genomic coord
-    
-    ' define what to do on error
-    On Error GoTo Err_CoordinateSearchForm_Click
-    
-    ' define variables
+    'open form which displays all primers awating ordering
     Dim stDocName As String
     Dim stLinkCriteria As String
 
-    ' define form name
-    stDocName = "61002_FindPrimerByCoord"
-    ' open form (don't specify the view)
-    DoCmd.OpenForm stDocName, , , stLinkCriteria
-
-
-Exit_CoordinateSearchForm_Click:
-    Exit Sub
-
-'if error
-Err_CoordinateSearchForm_Click:
-    ' describe error in message box
-    MsgBox Err.Description
-    Resume Exit_CoordinateSearchForm_Click
-    
-End Sub
-
-Private Sub Manual_primer_entry_Click()
-    ' not currently in use
-    ' define variables
-    Dim stDocName As String
-    Dim stLinkCriteria As String
-    ' define form name
-    stDocName = "61007_EnterNewPrimer"
-    ' open form (don't specify the view)
-    DoCmd.OpenForm stDocName, , , stLinkCriteria
-
-Exit_CoordinateSearchForm_Click:
-    Exit Sub
-End Sub
-
-Private Sub resetstatus_Click()
-' opens form which allows the primer status to be changed
-
-'define what to do on error
-On Error GoTo Err_resetstatus_Click
-    ' define variables
-    Dim stDocName As String
-    Dim stLinkCriteria As String
-    
-    ' define form name
-    stDocName = "61011_reset_status"
-    ' open form (specifing datasheet view)
-    DoCmd.OpenForm stDocName, acFormDS, , stLinkCriteria
-
-Exit_resetstatus_Click:
-    Exit Sub
-
-'if error report error description is message box
-Err_resetstatus_Click:
-    MsgBox Err.Description
-    Resume Exit_resetstatus_Click
-End Sub
-
-Private Sub UpdateFreezerLocation_Click()
-    ' not currently in use
-    ' define variables
-    Dim stDocName As String
-    Dim stLinkCriteria As String
-    
-    ' define form name
-    stDocName = "61009_UpdateFreezerLocation"
-    ' open form (specifing datasheet view)
-    DoCmd.OpenForm stDocName, acFormDS, , stLinkCriteria
-
-Exit_CoordinateSearchForm_Click:
-    Exit Sub
-End Sub
-
-Private Sub ViewAllApproved_Click()
-' open form which displays all approved primer
-
-'define what to do if error
-On Error GoTo Err_ViewAllApproved_Click
-    ' define variables
-    Dim stDocName As String
-    Dim stLinkCriteria As String
-    'define form to open
-    stDocName = "61005_ViewAllApproved"
-    ' open form (don't specify the view)
-    DoCmd.OpenForm stDocName, , , stLinkCriteria
-
-Exit_ViewAllApproved_Click:
-    Exit Sub
-
-'if error report error description is message box
-Err_ViewAllApproved_Click:
-    MsgBox Err.Description
-    Resume Exit_ViewAllApproved_Click
-    
-End Sub
-
-Private Sub ViewAllAwaitingOrdering_Click()
-'open form which displays all primers awating ordering
-
-'define what to do if error
-On Error GoTo Err_ViewAllAwaitingOrdering_Click
-    ' define variables
-    Dim stDocName As String
-    Dim stLinkCriteria As String
     'define form to open
     stDocName = "61003_ViewAllAwaitingOrdering"
     ' open form (don't specify the view)
     DoCmd.OpenForm stDocName, , , stLinkCriteria
+    
+    'open form which displays all primers awating ordering
+    Dim stDocName2 As String
+    Dim stLinkCriteria2 As String
+
+    'define form to open
+    stDocName2 = "61001_ImportPrimers"
+    ' open form (don't specify the view)
+    DoCmd.Close acForm, stDocName2
 
 ViewAllAwaitingOrdering_Click:
     Exit Sub
@@ -213,23 +73,3 @@ Err_ViewAllAwaitingOrdering_Click:
     Resume ViewAllAwaitingOrdering_Click
 End Sub
 
-Private Sub ViewAllAwaitingTesting_Click()
-'opens form displaying all primers awaiting testing
-
-'define what to do if error
-On Error GoTo Err_ViewAllAwaitingTesting_Click
-    ' define variables
-    Dim stDocName As String
-    Dim stLinkCriteria As String
-    'define form to open
-    stDocName = "61004_ViewAllAwaitingTesting"
-    ' open form (don't specify the view)
-    DoCmd.OpenForm stDocName, , , stLinkCriteria
-
-ViewAllAwaitingTesting_Click:
-    Exit Sub
-'if error report error description is message box
-Err_ViewAllAwaitingTesting_Click:
-    MsgBox Err.Description
-    Resume ViewAllAwaitingTesting_Click
-End Sub
