@@ -55,13 +55,13 @@ Private Sub Form_Open(Cancel As Integer)
     ' open form (don't specify the view)
     DoCmd.OpenForm stDocName, , , stLinkCriteria
     
-    'open form which displays all primers awating ordering
+    'close the form which opened in order to run the primer import
     Dim stDocName2 As String
     Dim stLinkCriteria2 As String
 
-    'define form to open
+    'define form to close
     stDocName2 = "61001_ImportPrimers"
-    ' open form (don't specify the view)
+    ' close form
     DoCmd.Close acForm, stDocName2
 
 ViewAllAwaitingOrdering_Click:
