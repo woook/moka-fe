@@ -44,7 +44,7 @@ class ImportPrimer():
 				# add to the file count
 				file_count += 1
 				# open file as read only
-				with open(config.primer_design_files + "//" + file , 'r') as primer_designs:
+				with open(config.primer_design_files + "//" + file, 'r') as primer_designs:
 					# loop through line by line, using enumerate so the first line can be skipped
 					for line_number, line in enumerate(primer_designs):
 						# skipping first line, and making sure the line isn't empty:
@@ -67,17 +67,17 @@ class ImportPrimer():
 							reverse_sequence = splitline[7]
 							
 							# take the chromosome, and remove 'chr' incase it was present.
-							chromosome_lookup = chr.replace('chr','')
+							chromosome_lookup = chr.replace('chr', '')
 							# use the chromosome value without the chr to query the chromosome look up table to return key for the chromosome
 							query = "select ChrID from Chromosome where Chr='" + chromosome_lookup + "'"
 							# pass query to function to query the database
 							chromosome_lookup = self.fetchone(query)[0]
 							
 							# create a dict of all variables to be inserted to the database and pass to self.build_insert module
-							primer_values_to_insert_dict = {"chr" : str(chromosome_lookup) , "start" : str(primer_start) , "stop" : str(primer_stop) ,
-								"FSeq" : forward_sequence , "RSeq" : reverse_sequence , "f_tag_name" : config.f_tag_name_id , "f_tag_seq" : config.f_tag_seq_id , "f_tag_order_name" : config.tag_ordering_name_id,
-								"r_tag_name" : config.r_tag_name_id , "r_tag_seq" : config.r_tag_seq_id , "r_tag_order_name" : config.tag_ordering_name_id , "status" : config.status_id,
-								"purification" : config.purification_id , "SoS" : config.scale_of_synth_id , "GenomeBuild" : config.genome_build_id , "notes" : variant_id}						
+							primer_values_to_insert_dict = {"chr": str(chromosome_lookup), "start": str(primer_start), "stop": str(primer_stop),
+								"FSeq": forward_sequence, "RSeq": reverse_sequence, "f_tag_name": config.f_tag_name_id, "f_tag_seq": config.f_tag_seq_id, "f_tag_order_name": config.tag_ordering_name_id,
+								"r_tag_name": config.r_tag_name_id, "r_tag_seq": config.r_tag_seq_id, "r_tag_order_name": config.tag_ordering_name_id, "status": config.status_id,
+								"purification": config.purification_id, "SoS": config.scale_of_synth_id, "GenomeBuild": config.genome_build_id, "notes": variant_id}						
 							
 							# pass dictionary to insert query
 							self.build_insert(primer_values_to_insert_dict)
