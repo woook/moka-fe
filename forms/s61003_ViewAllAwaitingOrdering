@@ -30,7 +30,7 @@ On Error GoTo Err_ID_DblClick
     file = timestamp & "_PrimerOrderForm.xls"
     
     ' set filepath for output file
-    folder = "\\gstt.local\Shared\Genetics\DNA LAB\Primers\PrimerDesignDatabase\"
+    folder = "\\gstt.local\Shared\Genetics\DNA LAB\Primers\MokaPrimerDatabase\ordersheets\"
     
     ' concatenate folder ande file to create filepath for output file
     outputfilepath = folder & file
