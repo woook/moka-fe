@@ -1,5 +1,5 @@
 # location of primer design files to import
-primer_design_files = "\\\\gstt.local\\shared\\Genetics\\DNA LAB\\Primers\\MokaPrimerDatabase\\primer_designs"
+primer_design_files = r"\\gstt.local\shared\Genetics\DNA LAB\Primers\MokaPrimerDatabase\primer_designs"
 # location of imported design files 
 archived_primer_design_files = primer_design_files + "\\imported_primers\\"
 
