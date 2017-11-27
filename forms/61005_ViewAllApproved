@@ -1,0 +1,18 @@
+Option Compare Database
+
+Private Sub refresh_subform_Click()
+' what do do on error
+On Error GoTo Err_refresh_subform_Click
+    'add a refresh button which requeries the subform
+    Me.s_ViewAllApproved.Form.Requery
+
+'close
+Exit_refresh_subform_Click:
+    Exit Sub
+    
+' if errort display message
+Err_refresh_subform_Click:
+    MsgBox Err.Description
+    Resume Exit_refresh_subform_Click
+    
+End Sub
