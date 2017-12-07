@@ -146,7 +146,7 @@ Private Function newGenePanel(panelSuffix As String) As Integer
     todayLongDate = Format(Now(), "dd/mmm/yyyy Hh:Nn:ss")
     Category = referrerInitials
     SubCategory = patientID_PRU & "_" & TodayDate & "_" & panelSuffix
-    newPanelName = Category & " - " & SubCategory
+    newPanelName = Category & ": " & SubCategory
     
     'Check if referring clinician Initials already in Item table. If not, add them. Get catgeory ID.
     Set rsCheckCat = New ADODB.Recordset
