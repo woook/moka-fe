@@ -6,7 +6,7 @@ If Not IsNull(Me!RunNumber) Then
 
     Dim h As String
     Dim Y As String
-    Dim p As String
+    Dim P As String
     Dim d As String
     Dim S As String
     Dim t As String
@@ -14,7 +14,7 @@ If Not IsNull(Me!RunNumber) Then
     Set wsh = VBA.CreateObject("WScript.Shell")
     Dim waitOnReturn As Boolean: waitOnReturn = True
     Dim windowStyle As Integer: windowStyle = 1
-    Dim errorCode As Integer
+    Dim ErrorCode As Integer
     
     ''take hybid from form
     h = Me.RunNumber
@@ -22,20 +22,21 @@ If Not IsNull(Me!RunNumber) Then
     ''run python script providing the run number as the argument
     'Call shell("cmd.exe /S /C" & "F:\Moka\Files\Analysis\IntervalsToMoka\IntervalsToMoka.py " & h, vbNormalFocus)
     ''added wait function
-    wsh.Run "cmd.exe /S /C" & "F:\Moka\Files\Analysis\IntervalsToMoka\IntervalsToMoka.py " & h, windowStyle, waitOnReturn
+    'Script requires an older version of pandas so use python executable in the MOKAintervales conda environment
+    wsh.Run "cmd.exe /S /C" & " \\gstt.local\shared\Genetics_Data2\Array\Software\Python\envs\MOKAintervales_env\python.exe F:\Moka\Files\Analysis\IntervalsToMoka\IntervalsToMoka.py " & h, windowStyle, waitOnReturn
     
     ''year
     Y = "20" & Left(h, 2)
     
     ''use hybid to inform filename
-    p = "F:\Moka\Files\Analysis\" & Y & "\" & h & "\" & h & "_IFM.csv"
+    P = "F:\Moka\Files\Analysis\" & Y & "\" & h & "\" & h & "_IFM.csv"
     
     ''testing
     'MsgBox p
     
     ''import file
     'DoCmd.TransferText acImportDelim, "IFM_spec", "Intervals_" & h, p, yes
-    DoCmd.TransferText acImportDelim, "IFM_spec", "ArrayIntervals", p, Yes
+    DoCmd.TransferText acImportDelim, "IFM_spec", "ArrayIntervals", P, yes
     
     ''timestamp
     d = Format(Now, "dd/mm/yyyy Hh:Nn:ss")
@@ -77,7 +78,7 @@ If Not IsNull(Me!RunNumber) Then
     "OR (ArrayIntervals.Chr19 = 32 AND ArrayIntervals.Start19 = 7303186 AND ArrayIntervals.Stop19 = 7752586) OR (ArrayIntervals.Chr19 = 32 AND ArrayIntervals.Start19 = 7371629 AND ArrayIntervals.Stop19 = 7752586) " & _
     "OR (ArrayIntervals.Chr19 = 38 AND ArrayIntervals.Start19 = 19520706 AND ArrayIntervals.Stop19 = 20253798) OR (ArrayIntervals.Chr19 = 38 AND ArrayIntervals.Start19 = 19520706 AND ArrayIntervals.Stop19 = 20295270) " & _
     "OR (ArrayIntervals.Chr19 = 38 AND ArrayIntervals.Start19 = 19695336 AND ArrayIntervals.Stop19 = 20295270) OR (ArrayIntervals.Chr19 = 39 AND ArrayIntervals.Start19 = 20849109 AND ArrayIntervals.Stop19 = 22509254) " & _
-    "OR (ArrayIntervals.Chr19 = 40 AND ArrayIntervals.Start19 = 32300741 AND ArrayIntervals.Stop19 = 33382166) OR (ArrayIntervals.Chr19 = 40 AND ArrayIntervals.Start19 = 32300741 AND ArrayIntervals.Stop19 = 33604468) " & _
+    "OR (ArrayIntervals.Chr19 = 40 AND ArrayIntervals.Start19 = 32300740 AND ArrayIntervals.Stop19 = 33382166) OR (ArrayIntervals.Chr19 = 40 AND ArrayIntervals.Start19 = 32300740 AND ArrayIntervals.Stop19 = 33604468) " & _
     "OR (ArrayIntervals.Chr19 = 40 AND ArrayIntervals.Start19 = 32840847 AND ArrayIntervals.Stop19 = 33604468) OR (ArrayIntervals.Chr19 = 41 AND ArrayIntervals.Start19 = 44210762 AND ArrayIntervals.Stop19 = 44268753) " & _
     "OR (ArrayIntervals.Chr19 = 41 AND ArrayIntervals.Start19 = 44210762 AND ArrayIntervals.Stop19 = 44268753) OR (ArrayIntervals.Chr19 = 41 AND ArrayIntervals.Start19 = 44210762 AND ArrayIntervals.Stop19 = 44345038) " & _
     "OR (ArrayIntervals.Chr19 = 41 AND ArrayIntervals.Start19 = 44210762 AND ArrayIntervals.Stop19 = 44351152) OR (ArrayIntervals.Chr19 = 41 AND ArrayIntervals.Start19 = 44231945 AND ArrayIntervals.Stop19 = 44345038) " & _
