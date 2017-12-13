@@ -40,7 +40,7 @@ class ImportPrimer():
 		# for each file in the directory of primer designs
 		for file in os.listdir(config.primer_design_files):
 			# look for all the text files
-			if file.endswith('.txt'):
+			if file.endswith('.tsv'):
 				# add to the file count
 				file_count += 1
 				# open file as read only
@@ -91,7 +91,7 @@ class ImportPrimer():
 		# when all files  have been read report progress (this should be displayed in a moka message box)
 		if file_count == 0:
 			# if no files were found to be imported 
-			print "no files found to import. Please ensure that files are in " + config.primer_design_files
+			print "no tsv files found to import. Please check file extension is .tsv and that files are in " + config.primer_design_files
 		else:
 			# return the file and primer counts
 			print str(primer_count) + " primers imported from " + str(file_count) + " files"
