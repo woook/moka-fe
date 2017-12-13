@@ -6,10 +6,12 @@ Public Function firefoxurl(url As String)
     'Initially set path of executable to chrome on Windows 10
     v = "C:\Program Files (x86)\Google\Chrome\Application\chrome.exe"
     'On XP the path to chrome will not exist, so if it doesn't exist, change to firefox path on XP
+    'Dir will return an empty string if the file doesn't exist, so if the length of the string is 0, use firefox instead
     If Len(Dir(v)) = 0 Then
         v = "C:\Program Files\Mozilla Firefox\firefox.exe"
     End If
     Set objShell = CreateObject("Wscript.Shell")
+    'Surround path in quotes because contains spaces. Needs 4 quotes wither side to work.
     objShell.Run ("""" & v & """" & " -new-tab " & url)
 End Function
 
