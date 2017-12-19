@@ -29,6 +29,6 @@ Private Function PrintZebraLabel(StringToPrint As String)
 
     Dim ZebraFormat As String
     ZebraFormat = "^XA^FO27,36^A0,38,38^FD" & DNANumber & "^FS^FO30,72^A0,25,25^FD" & LastName & "^FS^FO30,95^A0,20,20^FD" & FirstName & "^FS^XZ"
-    WindowsPrintWrapper.SendStringToZebraPrinter ZebraFormat, "Zebra TLP3844-Z"
+    WindowsPrintWrapper.SendStringToZebraPrinter ZebraFormat, "ZDesigner TLP 3844-Z"
     
 End Function
