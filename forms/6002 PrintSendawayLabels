@@ -1,0 +1,45 @@
+Option Compare Database
+
+Private Function PrintZebraLabel(StringToPrint As String)
+    
+'    Do While Not Recordset.EOF
+ 
+    Dim ZebraFormat As String
+        ZebraFormat = "^XA^FO0,25^A0,40,40^FD" & LastName & "^FS^FO0,70^A0,30,30^FD" & FirstName & "^FS^FO0,100^A0,25,25^FD" & DoB & "^FS^XZ"
+    WindowsPrintWrapper.SendStringToZebraPrinter ZebraFormat, "ZDesigner TLP 3844-Z"
+    
+'    MsgBox "DNA number" & DNANo, , "Don't be a dummy"
+    
+'    Recordset.MoveNext
+'
+'    Loop
+        
+End Function
+
+Private Sub Form_DblClick(Cancel As Integer)
+    PrintZebraLabel "HELLO!MELLO!COWSGOHOME"
+    
+    Dim msg, Style, Title, Response
+    msg = "Do you want to do another?"
+    Style = vbOKCancel + vbCritical + vbDefaultButton1
+    Title = "Don't be a dummy"
+    Response = MsgBox(msg, Style, Title)
+    If (Response = vbOK) Then
+        Me.Requery
+        Else: DoCmd.Close acForm, "6002 PrintSendawayLabels"
+        End If
+End Sub
+
+Private Sub LastName_DblClick(Cancel As Integer)
+    PrintZebraLabel "HELLO!MELLO!COWSGOHOME"
+    
+    Dim msg, Style, Title, Response
+    msg = "Do you want to do another?"
+    Style = vbOKCancel + vbCritical + vbDefaultButton1
+    Title = "Don't be a dummy"
+    Response = MsgBox(msg, Style, Title)
+    If (Response = vbOK) Then
+        Me.Requery
+        Else: DoCmd.Close acForm, "6002 PrintSendawayLabels"
+        End If
+End Sub

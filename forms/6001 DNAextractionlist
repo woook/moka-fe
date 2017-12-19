@@ -1,0 +1,26 @@
+Option Compare Database
+Option Explicit
+
+Private Function PrintZebraLabel(StringToPrint As String)
+    
+    Do While Not Recordset.EOF
+ 
+    Dim ZebraFormat As String
+        ZebraFormat = "^XA^FO0,25^A0,40,40^FD" & DNANo & "^FS^FO120,25^A0,30,30^FD" & SpecimenNo & "^FS^FO0,70^A0,30,30^FD" & LastName & "^FS^FO0,100^A0,25,25^FD" & FirstName & "^FS^XZ"
+    WindowsPrintWrapper.SendStringToZebraPrinter ZebraFormat, "ZDesigner TLP 3844-Z"
+    
+'    MsgBox "DNA number" & DNANo, , "Don't be a dummy"
+    
+    Recordset.MoveNext
+    
+    Loop
+        
+End Function
+
+Private Sub DNANo_DblClick(Cancel As Integer)
+        PrintZebraLabel "HELLO!MELLO!COWSGOHOME"
+End Sub
+
+Private Sub Form_DblClick(Cancel As Integer)
+        PrintZebraLabel "HELLO!MELLO!COWSGOHOME"
+End Sub
