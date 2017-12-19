@@ -1,0 +1,60 @@
+Option Compare Database
+Option Explicit
+
+Dim linecount As Integer
+Dim rowcount As Integer
+
+'Private Sub Reset()
+'    linecount = 0
+'    rowcount = 0
+'End Sub
+
+Private Sub Form_Open(Cancel As Integer)
+'    Reset
+    
+    linecount = 1
+    rowcount = 2
+    
+    CleanupID.Caption = "A"
+    RowID.Caption = "01"
+    
+End Sub
+
+
+Private Sub Command19_Click()
+
+'    PrintZebraLabel "HELLO!MELLO!COWSGOHOME"
+
+    linecount = linecount + 1
+    rowcount = rowcount + 2
+    
+    If linecount = 97 Then
+        linecount = 1
+    End If
+
+    If rowcount = 26 Then
+        rowcount = 2
+    End If
+    
+    CleanupID.Caption = Mid("AAAAAAAAAAAABBBBBBBBBBBBCCCCCCCCCCCCDDDDDDDDDDDDEEEEEEEEEEEEFFFFFFFFFFFFGGGGGGGGGGGGHHHHHHHHHHHH", linecount, 1)
+    RowID.Caption = Mid("0010203040506070809101112", rowcount, 2)
+    
+End Sub
+
+Private Function PrintZebraLabel(StringToPrint As String)
+    
+    Dim ZebraFormat As String
+    
+    'ZebraFormat = "^XA^FO40,40^A0,40,40^FD" & Cy5 & "^FS^XZ"
+    ZebraFormat = "^XA^FO40,40^A0,40,40^FD C: " & CleanupID.Caption & RowID.Caption & " L: " & Cy5 & "^FS^FO40,85^A0,30,30^FD Lab'ed " & Cy3La & "^FS^FO40,120^A0,25,25^FD To hyb " & ArrayRunNumber & "^FS^XZ"
+    
+    WindowsPrintWrapper.SendStringToZebraPrinter ZebraFormat, "ZDesigner TLP 3844-Z"
+    
+    'ZebraFormat = "^XA^FO40,40^A0,40,40^FD" & Cy3 & "^FS^XZ"
+    ZebraFormat = "^XA^FO40,40^A0,40,40^FD" & Cy3 & "^FS^FO40,85^A0,30,30^FD Lab'ed " & Cy3La & "^FS^FO40,120^A0,25,25^FD To hyb " & ArrayRunNumber & "^FS^XZ"
+    
+    WindowsPrintWrapper.SendStringToZebraPrinter ZebraFormat, "ZDesigner TLP 3844-Z"
+    
+End Function
+
+
