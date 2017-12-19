@@ -1,0 +1,20 @@
+Option Compare Database
+
+Private Sub Command2_Click()
+    
+    PrintZebraLabel "HELLO!MELLO!COWSGOHOME"
+  
+End Sub
+
+Private Function PrintZebraLabel(StringToPrint As String)
+    
+    Dim ZebraFormat As String
+    
+    'ZebraFormat = "^XA^FO40,40^A0,40,40^FD" & Text1 & "^FS^FO40,85^A0,30,30^FD" & Text3 & "^FS^FO40,120^A0,25,25^FD" & Text5 & "^FS^XZ"
+    ZebraFormat = "^XA^FO40,40^A0,40,40^FD" & " " & "^FS^FO40,85^A0,30,30^FD" & " " & "^FS^FO40,120^A0,25,25^FD" & Label & " " & LabellingRunNo & "^FS^XZ"
+    
+    WindowsPrintWrapper.SendStringToZebraPrinter ZebraFormat, "ZDesigner TLP 3844-Z"
+    
+End Function
+
+

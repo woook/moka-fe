@@ -12,10 +12,10 @@ Private Function PrintZebraLabel(StringToPrint As String)
     
     ZebraFormat = "^XA^FO27,40^A0,40,40^FD" & Cy5 & " " & Cy5Run & "^FS^XZ"
     
-    WindowsPrintWrapper.SendStringToZebraPrinter ZebraFormat, "Zebra TLP3844-Z"
+    WindowsPrintWrapper.SendStringToZebraPrinter ZebraFormat, "ZDesigner TLP 3844-Z"
     
     ZebraFormat = "^XA^FO27,40^A0,40,40^FD" & Cy3 & " " & Cy3Run & "^FS^XZ"
     
-    WindowsPrintWrapper.SendStringToZebraPrinter ZebraFormat, "Zebra TLP3844-Z"
+    WindowsPrintWrapper.SendStringToZebraPrinter ZebraFormat, "ZDesigner TLP 3844-Z"
     
 End Function
