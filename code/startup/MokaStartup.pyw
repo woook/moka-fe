@@ -1,6 +1,5 @@
 '''
-v1.1 - AB 2017/11/28
-Updated to open Access file in runtime mode
+v1.0 - AB 2017/09/13
 
 Usage:
 	This script is run when a user starts Moka. It updates and opens the selected front end.
@@ -10,7 +9,6 @@ Usage:
 import os
 import datetime
 import shutil
-import subprocess
 import threading
 from Tkinter import *
 import ttk
@@ -149,12 +147,8 @@ class OpenMoka(object):
 		#If local copy is not latest version, copy latest from server
 		if not self.latestVersion():
 			self.retrieveFile()
-		# Open local copy of front end (locFE) in MSAccess runtime mode. (Runtime hides Access home ribbon etc.)
-		# Get the filepath for the selected front end (i.e. master, clinical or admin) 
-		filepath = self.locFE[self.selection]
-		# Use subprocess to execute command to launch MSACCESS with runtime flag, replacing {filepath} with the 
-		# filepath to local copy of front end
-		subprocess.call(r'start MSACCESS /runtime "{filepath}"'.format(filepath=filepath), shell=True)
+		#open local copy
+		os.startfile(self.locFE[self.selection])
 		exit() # Exit script so thread with messagebox also closes. 
 
 if __name__ == "__main__":
