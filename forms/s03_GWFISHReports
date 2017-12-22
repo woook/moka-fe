@@ -1,0 +1,33 @@
+Option Compare Database
+
+Private Sub Report_DblClick(Cancel As Integer)
+
+    If Not IsNull(Form_s03_GWFISHReports.Report) Then
+        Dim Q As ADODB.Recordset
+        Set Q = New ADODB.Recordset
+
+        Set mstream = New ADODB.Stream
+        mstream.Type = adTypeBinary
+        mstream.Open
+        mstream.Write Form_s03_GWFISHReports.Report.Value
+        mstream.SaveToFile "H:\tempreport.doc", adSaveCreateOverWrite
+        Set Q = Nothing
+        
+        Dim LWordDoc As String
+        Dim oApp As Object
+        'Path to the word document
+        LWordDoc = "H:\tempreport.doc"
+        If Dir(LWordDoc) = "" Then
+            MsgBox "Document not found."
+            Else
+            'Create an instance of MS Word
+            Set oApp = CreateObject(Class:="Word.Application")
+            oApp.Visible = True
+            'Open the Document
+            oApp.Documents.Open filename:=LWordDoc
+            End If
+        Else
+            MsgBox "Document not found."
+        End If
+
+End Sub
