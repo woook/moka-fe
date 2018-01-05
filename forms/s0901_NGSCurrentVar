@@ -44,18 +44,36 @@ End Sub
 
 Private Sub commentShort_DblClick(Cancel As Integer)
     Dim stDocName As String
-    stDocName = "s0901_NGSVarComment"
-    'If a comment exists, but form is locked following test completion, open the comment window in READ ONLY mode so comment can be viewed but not edited
-    If Not IsNull(Me.NGSVariantCommentID) And Me.AllowEdits = False Then
-        stLinkCriteria = "[NGSVariantCommentID] = " & Me.NGSVariantCommentID
-        DoCmd.OpenForm stDocName, , , stLinkCriteria, acFormReadOnly, , Me.NGSVariantID & "," & Me.InternalPatientID
-    'If a comment exists and the form is not locked, open the comment window in EDIT mode
-    ElseIf Not IsNull(Me.NGSVariantCommentID) Then
-        stLinkCriteria = "[NGSVariantCommentID] = " & Me.NGSVariantCommentID
-        DoCmd.OpenForm stDocName, , , stLinkCriteria, acFormEdit, , Me.NGSVariantID & "," & Me.InternalPatientID
-    'If no comment exists and the form is not locked, open the comment window in ADD mode so new comment is created
-    ElseIf Me.AllowEdits = True Then
-        DoCmd.OpenForm stDocName, , , , acFormAdd, , Me.NGSVariantID & "," & Me.InternalPatientID
+    Dim rsAddComment As ADODB.Recordset
+    Dim sqlAddComment As String
+    
+    'If there isn't a comment, create an empty one.
+    If IsNull(Me.NGSVariantCommentID) Then
+        Set rsAddComment = New ADODB.Recordset
+        sqlAddComment = "INSERT INTO NGSVariantComment(Comment) VALUES ('')"
+        rsAddComment.Open sqlAddComment, CurrentProject.Connection, adOpenKeyset
+        rsAddComment.Open "SELECT @@identity", CurrentProject.Connection, adOpenKeyset 'Get ID of new entry
+        commentID = rsAddComment.Fields(0).Value
+        Set rsAddComment = Nothing
+        Me.NGSVariantCommentID = commentID
+    End If
+    
+    'If there isn't an existing ACMG record for the variant, create an empty one
+    If IsNull(Me.NGSVariantACMGID) Then
+        Set rsAddACMG = New ADODB.Recordset
+        sqlAddACMG = "INSERT INTO NGSVariantACMG(NGSVariantID) VALUES (" & Me.NGSVariantID & ")"
+        rsAddACMG.Open sqlAddACMG, CurrentProject.Connection, adOpenKeyset
+        Set rsAddACMG = Nothing
+    End If
+    
+    stDocName = "s0901_NGSVariantACMGPopup"
+    stLinkCriteria = "[NGSVariantID] = " & Me.NGSVariantID
+    'If form is locked following test completion, open the ACMG window in READ ONLY mode
+    If Me.AllowEdits = False Then
+        DoCmd.OpenForm stDocName, , , stLinkCriteria, acFormReadOnly
+    'If form is not locked, open the comment window in EDIT mode
+    Else
+        DoCmd.OpenForm stDocName, , , stLinkCriteria, acFormEdit
     End If
 End Sub
 
@@ -69,3 +87,5 @@ Private Sub CommentShort_MouseDown(Button As Integer, Shift As Integer, x As Sin
         DoCmd.OpenForm stDocName, acFormDS, , stLinkCriteria
     End If
 End Sub
+
+
