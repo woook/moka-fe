@@ -1,0 +1,2 @@
+SELECT NGSVariant.*, Chromosome.Chr, Patients.PatientID, NGSVariantComment.Comment, NGSVariantACMG.NGSVariantACMGID
+FROM (((NGSVariant INNER JOIN Chromosome ON NGSVariant.ChrID = Chromosome.ChrID) INNER JOIN Patients ON NGSVariant.InternalPatientID = Patients.InternalPatientID) LEFT JOIN NGSVariantComment ON NGSVariant.NGSVariantCommentID = NGSVariantComment.NGSVariantCommentID) LEFT JOIN NGSVariantACMG ON NGSVariant.NGSVariantID = NGSVariantACMG.NGSVariantID;
