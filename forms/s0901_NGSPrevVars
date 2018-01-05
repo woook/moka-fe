@@ -8,8 +8,31 @@ End Sub
 
 Private Sub commentShort_DblClick(Cancel As Integer)
     Dim stDocName As String
-    stDocName = "s0901_NGSVarComment"
+    Dim rsAddComment As ADODB.Recordset
+    Dim sqlAddComment As String
+    
+    'If there isn't a comment, create an empty one.
+    If IsNull(Me.NGSVariantCommentID) Then
+        Set rsAddComment = New ADODB.Recordset
+        sqlAddComment = "INSERT INTO NGSVariantComment(Comment) VALUES ('')"
+        rsAddComment.Open sqlAddComment, CurrentProject.Connection, adOpenKeyset
+        rsAddComment.Open "SELECT @@identity", CurrentProject.Connection, adOpenKeyset 'Get ID of new entry
+        commentID = rsAddComment.Fields(0).Value
+        Set rsAddComment = Nothing
+        Me.NGSVariantCommentID = commentID
+    End If
+    
+    'If there isn't an existing ACMG record for the variant, create an empty one
+    If IsNull(Me.NGSVariantACMGID) Then
+        Set rsAddACMG = New ADODB.Recordset
+        sqlAddACMG = "INSERT INTO NGSVariantACMG(NGSVariantID) VALUES (" & Me.NGSVariantID & ")"
+        rsAddACMG.Open sqlAddACMG, CurrentProject.Connection, adOpenKeyset
+        Set rsAddACMG = Nothing
+    End If
+    
+    stDocName = "s0901_NGSVariantACMGPopup"
     stLinkCriteria = "[NGSVariantID] = " & Me.NGSVariantID
+    'Open the ACMG window in READ ONLY mode
     DoCmd.OpenForm stDocName, , , stLinkCriteria, acFormReadOnly
 End Sub
 
