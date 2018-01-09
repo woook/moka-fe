@@ -55,9 +55,10 @@ Private Sub Calculate_Click()
     Dim StatusID As Long
     
     'Query to get the 5 classifications from the Status table.
-    Set status_classification = New ADODB.Recordset
+    Set status_classification = New ADODB.Recordset 'Create recordset
+    'sql to extract the 5 classifications from the status table
     sql_status_classification = "SELECT TOP 5 Status.StatusID, Status.Status, Status.Pathogenic FROM Status WHERE Status.Pathogenic = 1 ORDER BY Status.SortingPathogenic;"
-    status_classification.Open sql_status_classification, CurrentProject.Connection, adOpenKeyset
+    status_classification.Open sql_status_classification, CurrentProject.Connection, adOpenKeyset 'populate recordset with the classification
     
     'Create dictionaries to link from classification 1-5, statusID and status (separate dictionaries because nested dictionaries in VBA don't seem straightforward)
     Set path_status = CreateObject("scripting.dictionary") 'Key: pathogencity class (e.g. 1), Value: Status (e.g. 'Benign (class 1)')
@@ -372,7 +373,7 @@ Private Sub Calculate_Click()
         acmg_classification = 2
         rule_applied = "Likely benign (ii) >=2 Supporting (BP1–BP7)"
     Else
-        MsgBox "ERROR"
+        MsgBox "Unable to calculate pathogencity. Please speak to the bioinformatics team.", vbOKOnly + vbCritical, "ERROR"
     End If
      
     'Populate count text boxes on form
