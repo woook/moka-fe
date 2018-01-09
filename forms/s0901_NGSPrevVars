@@ -13,36 +13,37 @@ Private Sub commentShort_DblClick(Cancel As Integer)
     
     'If there isn't a comment, create an empty one.
     If IsNull(Me.NGSVariantCommentID) Then
-        Set rsAddComment = New ADODB.Recordset
-        sqlAddComment = "INSERT INTO NGSVariantComment(Comment) VALUES ('')"
-        rsAddComment.Open sqlAddComment, CurrentProject.Connection, adOpenKeyset
-        rsAddComment.Open "SELECT @@identity", CurrentProject.Connection, adOpenKeyset 'Get ID of new entry
+        Set rsAddComment = New ADODB.Recordset ' create empty recordset to add new comment
+        sqlAddComment = "INSERT INTO NGSVariantComment(Comment) VALUES ('')" ' SQL query to insert an empty comment into NGSVariantComment table
+        rsAddComment.Open sqlAddComment, CurrentProject.Connection, adOpenKeyset ' execute the query to add empty comment
+        ' capture the NGSVariantCommentID for the newly created empty comment. Store in commentID variable.
+        rsAddComment.Open "SELECT @@identity", CurrentProject.Connection, adOpenKeyset
         commentID = rsAddComment.Fields(0).Value
-        Set rsAddComment = Nothing
-        Me.NGSVariantCommentID = commentID
+        Set rsAddComment = Nothing ' Close the recordset to close database connection
+        Me.NGSVariantCommentID = commentID ' set the commentID for this record to the key for the newly created empty comment
     End If
     
     'If there isn't an existing ACMG record for the variant, create an empty one
     If IsNull(Me.NGSVariantACMGID) Then
-        Set rsAddACMG = New ADODB.Recordset
+        Set rsAddACMG = New ADODB.Recordset ' create new recordset
+        ' sql query to insert NGSVariantID into NGSVariantACMG table
         sqlAddACMG = "INSERT INTO NGSVariantACMG(NGSVariantID) VALUES (" & Me.NGSVariantID & ")"
-        rsAddACMG.Open sqlAddACMG, CurrentProject.Connection, adOpenKeyset
-        Set rsAddACMG = Nothing
+        rsAddACMG.Open sqlAddACMG, CurrentProject.Connection, adOpenKeyset 'execute the query
+        Set rsAddACMG = Nothing ' Close the recordset to close database connection
     End If
     
-    stDocName = "s0901_NGSVariantACMGPopup"
-    stLinkCriteria = "[NGSVariantID] = " & Me.NGSVariantID
+    stDocName = "s0901_NGSVariantACMGPopup" ' define name of the form to open
+    stLinkCriteria = "[NGSVariantID] = " & Me.NGSVariantID ' Link the two forms on NGSVariantID
     'Open the ACMG window in READ ONLY mode
     DoCmd.OpenForm stDocName, , , stLinkCriteria, acFormReadOnly
 End Sub
 
-Private Sub CommentShort_MouseDown(Button As Integer, Shift As Integer, x As Single, Y As Single)
-    If Shift = acCtrlMask Then
-        ' Ctrl + click will view log history for Variant
-        Me.Dirty = False 'Forces any changes to be saved
-        Dim stDocName As String
-        stDocName = "s0901_NGSLogMemo"
-        stLinkCriteria = "[Type] = 2 AND [LinkID] = " & Me.NGSVariantID
-        DoCmd.OpenForm stDocName, acFormDS, , stLinkCriteria
-    End If
+Private Sub DateAdded_DblClick(Cancel As Integer)
+    'View log history for Variant
+    Me.Dirty = False 'Forces any changes to be saved
+    Dim stDocName As String
+    stDocName = "s0901_NGSLogMemo" 'Form to be opened
+    ' Type = 2 just retrieves records relating the variant, LinkID links the two forms on NGSVariantID
+    stLinkCriteria = "[Type] = 2 AND [LinkID] = " & Me.NGSVariantID
+    DoCmd.OpenForm stDocName, acFormDS, , stLinkCriteria 'Open the form
 End Sub
