@@ -89,7 +89,7 @@ Else
         DoEvents
     Loop
     'Capture any error messages from python script (StdErr has been redirected to StdOut, see above)
-    errReport = wshexec.StdOut.ReadAll()
+    errReport = wshexec.Stdout.readall()
     If errReport <> "" Then
     MsgBox "The following output was observed when generating coverage report: " & vbNewLine & vbNewLine & errReport, vbInformation, "Script Output"
     End If
@@ -145,7 +145,7 @@ Else
             DoCmd.RunSQL sqlMemo
             DoCmd.RunSQL sqlPatLog
             DoCmd.SetWarnings True
-        Forms![0901 ExomeNGSResults].refresh 'Refresh so that result comments field is updated
+        Forms![0901 ExomeNGSResults].Refresh 'Refresh so that result comments field is updated
         
     ' open pdf so user can check PID and gene panels
     Set objShell = CreateObject("Wscript.Shell")
@@ -241,49 +241,84 @@ End Sub
 
 
 Private Sub RemoveAll_MouseDown(Button As Integer, Shift As Integer, x As Single, Y As Single)
-    If Shift = acCtrlMask Then
+    'To make it hard to accidentally press the button, have to hold down ctrl whilst clicking
+    If Shift = acCtrlMask Then 'Code will only execute if ctrl key is pressed
+        'Display warning message box and get confirmation from user that they want to proceed
         If MsgBox("WARNING: This will remove all variants for this WES test." & vbNewLine & vbNewLine & "Are you sure you REALLY want to proceed??", vbYesNo + vbExclamation, "WARNING") = vbYes Then
+            'Capture variables for log updates
+            'date
             d = Format(Now(), "dd/mmm/yyyy Hh:Nn:ss")
+            'username
             un = VBA.Environ("USERNAME")
+            'computername
             cn = VBA.Environ("COMPUTERNAME")
+            'patientID
             patID = Me.Parent.InternalPatientID
+            'Create empty recordset
             Dim rsVarsForDel As ADODB.Recordset
             Set rsVarsForDel = New ADODB.Recordset
+            'SQL to pull out all variants for that NGSTest
             sqlVarsForDel = "SELECT NGSVariant.NGSVariantID FROM NGSVariant WHERE NGSTestID = " & Me.Parent.NGSTestID
+            'Execute query
             rsVarsForDel.Open sqlVarsForDel, CurrentProject.Connection, adOpenKeyset
+            'Loop through variants and update the patient and NGSlog memo tables to say the variant has been deleted
             While Not rsVarsForDel.EOF
+                'SQL to update logs
                 sqlMemo = "INSERT INTO NGSLogMemo(InternalPatientID, Type, LinkID, LogMemoEntry, [Date], Login, PCName) VALUES(" + CStr(patID) + ", 2, " + CStr(rsVarsForDel.Fields("NGSVariantID")) + ",'Variant deleted.',#" + d + "#,'" + un + "','" + cn + "')"
                 sqlPatLog = "INSERT INTO PatientLog (InternalPatientID, LogEntry, [Date], Login, PCName) VALUES (" & patID & ", 'NGS: Variant deleted. NGSVariantID: " & CStr(rsVarsForDel.Fields("NGSVariantID")) & "', #" + d + "#,'" + un + "','" + cn + "')"
+                'Temporarily turn off warnings so logs are updated without needing user confirmation
                 DoCmd.SetWarnings False
+                'Execute sql
                 DoCmd.RunSQL sqlMemo
                 DoCmd.RunSQL sqlPatLog
+                'Turn warnings back on
                 DoCmd.SetWarnings True
+                'Move to next variant in recordset
                 rsVarsForDel.MoveNext
             Wend
+            'Delete recordset to close connection
             Set rsVarsForDel = Nothing
+            'Create empty recordset to hold the attached files that need to be deleted (i.e. VCFs and filter settings)
             Dim rsFilesForDel As ADODB.Recordset
             Set rsFilesForDel = New ADODB.Recordset
+            'SQL to find files. VCFs and filter settings files will have NGSTestFile.VCF_Filter_Import = TRUE.
             sqlFilesForDel = "SELECT NGSTestFile.NGSTestID, NGSTestFile.Description FROM NGSTestFile WHERE NGSTestFile.NGSTestID = " & Me.Parent.NGSTestID & " AND NGSTestFile.VCF_Filter_Import = TRUE"
+            'Execute query
             rsFilesForDel.Open sqlFilesForDel, CurrentProject.Connection, adOpenKeyset
+            'Loop through files and update the patient log table to say the file has been deleted
             While Not rsFilesForDel.EOF
+                'SQL to update patient log
                 sqlPatLog = "INSERT INTO PatientLog (InternalPatientID, LogEntry, [Date], Login, PCName) VALUES (" & patID & ", 'NGS: File removed from NGS test record. (NGSTestFile Description: " & rsFilesForDel.Fields("Description") & ", NGSTestID: " & rsFilesForDel.Fields("NGSTestID") & ")', #" + d + "#,'" + un + "','" + cn + "')"
+                'Temporarily turn off warnings so logs are updated without needing user confirmation
                 DoCmd.SetWarnings False
+                'Execute sql
                 DoCmd.RunSQL sqlPatLog
+                'Turn warnings back on
                 DoCmd.SetWarnings True
+                'Move to next file in recordset
                 rsFilesForDel.MoveNext
             Wend
             Set rsFilesForDel = Nothing
+            'Delete recordset to close connection
+            'Create SQL queries to delete records from the NGSVariant, NGSVariantAnnotations, NGSTestFile and NGSVariantACMG tables
             sqlRemoveAnnot = "DELETE FROM NGSVariantAnnotations WHERE NGSVariantAnnotations.NGSVariantAnnotationsID IN (SELECT NGSVariantAnnotations.NGSVariantAnnotationsID FROM NGSVariant INNER JOIN NGSVariantAnnotations ON NGSVariant.NGSVariantID = NGSVariantAnnotations.NGSVariantID WHERE NGSVariant.NGSTestID = " & Me.Parent.NGSTestID & ")"
             sqlRemoveVars = "DELETE FROM NGSVariant WHERE NGSVariant.NGSTestID = " & Me.Parent.NGSTestID
             sqlRemoveFiles = "DELETE FROM NGSTestFile WHERE NGSTestFile.NGSTestID = " & Me.Parent.NGSTestID & " AND NGSTestFile.VCF_Filter_Import = TRUE"
+            sqlRemoveACMG = "DELETE FROM NGSVariantACMG WHERE NGSVariantACMG.NGSVariantID IN (" & sqlVarsForDel & ")"
+            'Temporarily turn off warnings so logs are updated without needing user confirmation
             DoCmd.SetWarnings False
+            'Execute sql
+            DoCmd.RunSQL sqlRemoveACMG
             DoCmd.RunSQL sqlRemoveAnnot
             DoCmd.RunSQL sqlRemoveVars
             DoCmd.RunSQL sqlRemoveFiles
+            'Turn warnings back on
             DoCmd.SetWarnings True
+            'Requery the form so deleted variants are not displayed
             Me.Requery
         End If
     Else
+        'Message to tell user on click that they need to press Ctrl if they want to remove variants
         MsgBox "If you REALLY want to delete all variants, you must press Ctrl when clicking the button", vbExclamation, ""
     End If
 End Sub
@@ -302,7 +337,7 @@ Private Sub VCFImport_Click()
     Dim NGSTestID As Integer
     Dim PRU As String
     Dim filename As String
-    Dim FilePath As String
+    Dim filepath As String
     Dim errReport As String
     Dim desBaseDir As String
     Dim newNGSTestFile As ADODB.Recordset
@@ -397,7 +432,7 @@ Private Sub VCFImport_Click()
                     DoEvents
                 Loop
                 'Capture any error messages from python script (StdErr has been redirected to StdOut, see above)
-                errReport = wshexec.StdOut.ReadAll()
+                errReport = wshexec.Stdout.readall()
                 If errReport <> "" Then
                     MsgBox "The following error was encountered when attempting to import variants from VCF: " & vbNewLine & vbNewLine & errReport, vbCritical, "ERROR"
                 Else
@@ -411,7 +446,7 @@ Private Sub VCFImport_Click()
                     'Loop through dictionary of VCFs, and move files to F: drive
                     For Each strKey In vcfDict.keys()
                         filename = vcfDict(strKey)
-                        FilePath = vcfBaseDir & filename
+                        filepath = vcfBaseDir & filename
                         'Get the panelType from dictionary key. If Primarypanel or Secondarypanel, change to 'Primary' or 'Secondary'
                         PanelType = strKey
                         If PanelType = "primarypanel" Then
@@ -432,7 +467,7 @@ Private Sub VCFImport_Click()
                         filenameNoExt = Left(filename, dotIndx - 1) 'Original filename without extension
                         fileExt = Right(filename, Len(filename) - (dotIndx - 1)) 'File extension including dot
                         newFileName = filenameNoExt & "_" & NGSTestFileID & fileExt
-                        FileCopy FilePath, newDir & newFileName 'Copy file to the F: drive
+                        FileCopy filepath, newDir & newFileName 'Copy file to the F: drive
                         SetAttr newDir & newFileName, vbReadOnly 'Make copied file read only
                         Set rsAddCat = Nothing
                         'Update the NGSTestFile record with the file path of the copied file, and record in patient log
@@ -447,12 +482,12 @@ Private Sub VCFImport_Click()
                         DoCmd.RunSQL sqlPatLogVCF
                         DoCmd.SetWarnings True
                         'Remove original file
-                        Kill FilePath
+                        Kill filepath
                     Next
                     'Find number of other variants within +/- 2bp and add to NGSVariant table so it can be displayed in subform
                     'Have to do it this way because calculating the count on the fly in subform recordsource query makes the subform read only, so classifcation, comments etc. can't be updated
                     'This is recalculated every time the results form is opened, so up to date number is always displayed to user.
-                    Me.refresh 'Refresh is required to sync imported variants from Python script
+                    Me.Refresh 'Refresh is required to sync imported variants from Python script
                     Dim sqlPrevVars As String
                     Dim rsPrevVars As ADODB.Recordset
                     'Query below returns the variant ID and number of previous records for each variant associated with this test.
@@ -484,7 +519,7 @@ Private Sub FilterImport_Click()
     Dim NGSTestID As Integer
     Dim PRU As String
     Dim filename As String
-    Dim FilePath As String
+    Dim filepath As String
     Dim desBaseDir As String
     Dim newNGSTestFile As ADODB.Recordset
     Dim TodayDate As String
@@ -508,8 +543,8 @@ Private Sub FilterImport_Click()
         matchFile = Dir(filtBasePath)
         If matchFile <> "" Then
             'Display filename and confirm user wants to proceed.
-            FilePath = filtSrcDir & matchFile
-            proceed = MsgBox("The following filter settings file will be attached to this NGS Test:" & vbNewLine & vbNewLine & FilePath & vbNewLine & vbNewLine & "Click OK to proceed.", vbOKCancel + vbInformation, "Confirm Correct File")
+            filepath = filtSrcDir & matchFile
+            proceed = MsgBox("The following filter settings file will be attached to this NGS Test:" & vbNewLine & vbNewLine & filepath & vbNewLine & vbNewLine & "Click OK to proceed.", vbOKCancel + vbInformation, "Confirm Correct File")
             If proceed = vbOK Then
                 newDir = month_dir 'Files will be copied to folder on F: drive
                 If Len(Dir(year_dir, vbDirectory)) = 0 Then
@@ -530,7 +565,7 @@ Private Sub FilterImport_Click()
                 filenameNoExt = Left(matchFile, dotIndx - 1) 'Original filename without extension
                 fileExt = Right(matchFile, Len(matchFile) - (dotIndx - 1)) 'File extension including dot
                 newFileName = filenameNoExt & "_" & NGSTestFileID & fileExt
-                FileCopy FilePath, newDir & newFileName 'Copy file to the F: drive
+                FileCopy filepath, newDir & newFileName 'Copy file to the F: drive
                 SetAttr newDir & newFileName, vbReadOnly 'Make copied file read only
                 Set rsAddCat = Nothing
                 'Update the NGSTestFile record with the file path of the copied file
@@ -547,7 +582,7 @@ Private Sub FilterImport_Click()
                 DoCmd.RunSQL sqlPatLogFil
                 DoCmd.SetWarnings True
                 'If all processing above has completed without errors, remove the original file.
-                Kill FilePath
+                Kill filepath
             End If
         Else
             MsgBox "No filter settings file found that matches test details. Filter settings file must be:" & vbNewLine & vbNewLine & _
@@ -1218,3 +1253,7 @@ Dim stDocName As String
     stLinkCriteria = "[Type] = 3 AND [LinkID] = " & Me![NGSTestID]
     DoCmd.OpenForm stDocName, acFormDS, , stLinkCriteria
 End Sub
+
+
+
+
