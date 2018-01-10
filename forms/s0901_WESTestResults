@@ -241,8 +241,8 @@ End Sub
 
 
 Private Sub RemoveAll_MouseDown(Button As Integer, Shift As Integer, x As Single, Y As Single)
-    'To make it hard to accidentally press the button, have to hold down Shift whilst clicking
-    If Shift = acCtrlMask Then 'Code will only execute if shift key is pressed
+    'To make it hard to accidentally press the button, have to hold down ctrl whilst clicking
+    If Shift = acCtrlMask Then 'Code will only execute if ctrl key is pressed
         'Display warning message box and get confirmation from user that they want to proceed
         If MsgBox("WARNING: This will remove all variants for this WES test." & vbNewLine & vbNewLine & "Are you sure you REALLY want to proceed??", vbYesNo + vbExclamation, "WARNING") = vbYes Then
             'Capture variables for log updates
