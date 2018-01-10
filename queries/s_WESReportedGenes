@@ -1,0 +1,4 @@
+SELECT DISTINCT GenesHGNC_current.ApprovedSymbol AS Gene
+FROM (((NGSVariantAnnotations INNER JOIN NGSVariant ON NGSVariantAnnotations.NGSVariantID = NGSVariant.NGSVariantID) INNER JOIN NGSTest ON NGSVariant.NGSTestID = NGSTest.NGSTestID) INNER JOIN Referral ON NGSTest.ReferralID = Referral.ReferralID) INNER JOIN GenesHGNC_current ON NGSVariantAnnotations.HGNCID = GenesHGNC_current.HGNCID
+WHERE (((NGSVariantAnnotations.Reported)=-1) AND ((Referral.GroupTypeID)=14) AND ((NGSVariant.Classification) Is Not Null))
+ORDER BY GenesHGNC_current.ApprovedSymbol;

@@ -20,19 +20,38 @@ End Sub
 
 Private Sub commentShort_DblClick(Cancel As Integer)
     Dim stDocName As String
-    Me.Dirty = False 'Force any changes to be saved
-    stDocName = "s0901_NGSVarComment"
-    'If a comment exists, but form is locked following test completion, open the comment window in READ ONLY mode so comment can be viewed but not edited
-    If Not IsNull(Me.NGSVariantCommentID) And Me.AllowEdits = False Then
-        stLinkCriteria = "[NGSVariantCommentID] = " & Me.NGSVariantCommentID
-        DoCmd.OpenForm stDocName, , , stLinkCriteria, acFormReadOnly, , Me.NGSVariantID & "," & Me.InternalPatientID
-    'If a comment exists and the form is not locked, open the comment window in EDIT mode
-    ElseIf Not IsNull(Me.NGSVariantCommentID) Then
-        stLinkCriteria = "[NGSVariantCommentID] = " & Me.NGSVariantCommentID
-        DoCmd.OpenForm stDocName, , , stLinkCriteria, acFormEdit, , Me.NGSVariantID & "," & Me.InternalPatientID
-    'If no comment exists and the form is not locked, open the comment window in ADD mode so new comment is created
-    ElseIf Me.AllowEdits = True Then
-        DoCmd.OpenForm stDocName, , , , acFormAdd, , Me.NGSVariantID & "," & Me.InternalPatientID
+    Dim rsAddComment As ADODB.Recordset
+    Dim sqlAddComment As String
+    
+    'If there isn't a comment, create an empty one.
+    If IsNull(Me.NGSVariantCommentID) Then
+        Set rsAddComment = New ADODB.Recordset ' create empty recordset to add new comment
+        sqlAddComment = "INSERT INTO NGSVariantComment(Comment) VALUES ('')" ' SQL query to insert an empty comment into NGSVariantComment table
+        rsAddComment.Open sqlAddComment, CurrentProject.Connection, adOpenKeyset ' execute the query to add empty comment
+        ' capture the NGSVariantCommentID for the newly created empty comment. Store in commentID variable.
+        rsAddComment.Open "SELECT @@identity", CurrentProject.Connection, adOpenKeyset
+        commentID = rsAddComment.Fields(0).Value
+        Set rsAddComment = Nothing ' Close the recordset to close database connection
+        Me.NGSVariantCommentID = commentID ' set the commentID for this record to the key for the newly created empty comment
+    End If
+    
+    'If there isn't an existing ACMG record for the variant, create an empty one
+    If IsNull(Me.NGSVariantACMGID) Then
+        Set rsAddACMG = New ADODB.Recordset ' create new recordset
+        ' sql query to insert NGSVariantID into NGSVariantACMG table
+        sqlAddACMG = "INSERT INTO NGSVariantACMG(NGSVariantID) VALUES (" & Me.NGSVariantID & ")"
+        rsAddACMG.Open sqlAddACMG, CurrentProject.Connection, adOpenKeyset 'execute the query
+        Set rsAddACMG = Nothing ' Close the recordset to close database connection
+    End If
+    
+    stDocName = "s0901_NGSVariantACMGPopup" ' define name of the form to open
+    stLinkCriteria = "[NGSVariantID] = " & Me.NGSVariantID ' Link the two forms on NGSVariantID
+    'If form is locked following test completion, open the ACMG window in READ ONLY mode
+    If Me.AllowEdits = False Then
+        DoCmd.OpenForm stDocName, , , stLinkCriteria, acFormReadOnly
+    'If form is not locked, open the comment window in EDIT mode
+    Else
+        DoCmd.OpenForm stDocName, , , stLinkCriteria, acFormEdit
     End If
 End Sub
 

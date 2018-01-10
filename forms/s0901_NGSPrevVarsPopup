@@ -9,16 +9,7 @@ Private Sub Form_Load()
     
     'Clear any previous row source queries from prev vars phenotype listbox
     Me.ListboxPhenoPrev.RowSource = "SELECT Null"
-    
-    'Full comments cannot be displayed in subform due to length, so abridged version is displayed and full comments are viewed/edited in popup window by double clicking
-    'The statement below creates a max 30 char abridged comment, with line breaks removed, and "..." added if text has been removed to indicate more text can be viewed/edited by double clicking
-    sqlGetAbridgedComment = "IIf(NGSVariantComment.Comment Is Null,NGSVariantComment.Comment,IIf(Len(Replace(NGSVariantComment.Comment,Chr(13) & Chr(10),' '))>30,Mid((Replace(NGSVariantComment.Comment,Chr(13) & Chr(10),' ')),1,27) & '...',Replace(NGSVariantComment.Comment,Chr(13) & Chr(10),' '))) AS commentShort"
-    'Update record source of NGSCurrentVar subform
-    sqlCurrentVar = "SELECT NGSVariant.*, Chromosome.Chr, Patients.PatientID, " & sqlGetAbridgedComment & " FROM ((NGSVariant INNER JOIN Chromosome ON NGSVariant.ChrID = Chromosome.ChrID) INNER JOIN Patients ON NGSVariant.InternalPatientID = Patients.InternalPatientID) LEFT JOIN NGSVariantComment ON NGSVariant.NGSVariantCommentID = NGSVariantComment.NGSVariantCommentID WHERE NGSVariant.NGSVariantID = " & Me.NGSVariantID
-    
-    [Form_s0901_NGSCurrentVar].RecordSource = sqlCurrentVar
-    [Form_s0901_NGSCurrentVar].Requery 'Reports that occassionally wrong variant is displayed. Not been able to recreate problem so trying a requery here to see if it fixes it??
-    
+       
     'Create recordset of each transcript and HGVS protein change for the current variant
     sqlTranHGVS = "SELECT NGSVariantAnnotations.TRANSCRIPT_ID, NGSVariantAnnotations.HGVS_Protein FROM NGSVariant INNER JOIN NGSVariantAnnotations ON NGSVariant.NGSVariantID = NGSVariantAnnotations.NGSVariantID WHERE NGSVariant.NGSVariantID = " & Me.NGSVariantID & " AND NGSVariantAnnotations.TRANSCRIPT_ID IS NOT NULL AND NGSVariantAnnotations.HGVS_Protein IS NOT NULL"
     Set rsTranHGVS = New ADODB.Recordset
@@ -44,7 +35,7 @@ Private Sub Form_Load()
     
     'build record source query for prevVars subform
     'First fields to be pulled in
-    sqlPrevVars = "SELECT NGSVariant.*, Chromosome.Chr, Patients.PatientID, " & sqlGetAbridgedComment
+    sqlPrevVars = "SELECT NGSVariant.*, Chromosome.Chr, Patients.PatientID, NGSVariantComment.Comment, NGSVariantACMG.NGSVariantACMGID"
     'Next, determine whether each variant pulled in is a 'match' (i.e. exactly the same variant or causes the same protein change in any of the transcripts)
     'Following line checks if variant is an exact match (regardless of whether it's protein coding)
     sqlPrevVars = sqlPrevVars & ", IIF((NGSVariant.ChrID = " & Me.ChrID & " AND NGSVariant.Position_hg19 = " & Me.Position_hg19 & " AND NGSVariant.ref = '" & Me.ref & "' AND NGSVariant.alt = '" & Me.Alt & "')"
@@ -53,7 +44,7 @@ Private Sub Form_Load()
         sqlPrevVars = sqlPrevVars + " OR NGSVariant.NGSVariantID IN (" & sqlProtMatchVars & ")"
     End If
     'If either of the above conditions are met, add 'yes' to the exact match column, else, add 'no'.
-    sqlPrevVars = sqlPrevVars + ", 'Yes', 'No') As matchVar FROM ((NGSVariant INNER JOIN Chromosome ON NGSVariant.ChrID = Chromosome.ChrID) INNER JOIN Patients ON NGSVariant.InternalPatientID = Patients.InternalPatientID) LEFT JOIN NGSVariantComment ON NGSVariant.NGSVariantCommentID = NGSVariantComment.NGSVariantCommentID WHERE NGSVariant.NGSVariantID <> " & Me.NGSVariantID & " AND NGSVariant.ChrID = " & Me.ChrID & " AND NGSVariant.Position_hg19 BETWEEN " & pos2us & " AND " & pos2ds & " ORDER BY 1, ABS(NGSVariant.Position_hg19 - " & Me.Position_hg19 & "), NGSVariant.alt"
+    sqlPrevVars = sqlPrevVars + ", 'Yes', 'No') As matchVar FROM (((NGSVariant INNER JOIN Chromosome ON NGSVariant.ChrID = Chromosome.ChrID) INNER JOIN Patients ON NGSVariant.InternalPatientID = Patients.InternalPatientID) LEFT JOIN NGSVariantComment ON NGSVariant.NGSVariantCommentID = NGSVariantComment.NGSVariantCommentID) LEFT JOIN NGSVariantACMG ON NGSVariant.NGSVariantID = NGSVariantACMG.NGSVariantID WHERE NGSVariant.NGSVariantID <> " & Me.NGSVariantID & " AND NGSVariant.ChrID = " & Me.ChrID & " AND NGSVariant.Position_hg19 BETWEEN " & pos2us & " AND " & pos2ds & " ORDER BY 1, ABS(NGSVariant.Position_hg19 - " & Me.Position_hg19 & "), NGSVariant.alt"
   
     'Update record source of NGSPrevVar subform
     [Form_s0901_NGSPrevVars].RecordSource = sqlPrevVars
