@@ -1,0 +1,4 @@
+SELECT DISTINCT Chromosome.Chr AS [#CHROM], NGSVariant.Position_hg19 AS POS, '.' AS ID, NGSVariant.ref AS REF, NGSVariant.alt AS ALT, 1000 AS QUAL, '.' AS FILTER, '.' AS INFO, 'GT' AS FORMAT, '1/1' AS 1, Chromosome.ChrID AS [DELETE]
+FROM ((((Chromosome INNER JOIN NGSVariant ON Chromosome.ChrID = NGSVariant.ChrID) INNER JOIN NGSTest ON NGSVariant.NGSTestID = NGSTest.NGSTestID) INNER JOIN NGSVariantAnnotations ON NGSVariant.NGSVariantID = NGSVariantAnnotations.NGSVariantID) INNER JOIN Status ON NGSVariant.Classification = Status.StatusID) INNER JOIN Referral ON NGSTest.ReferralID = Referral.ReferralID
+WHERE (((NGSVariantAnnotations.Reported)=-1) AND ((Referral.GroupTypeID)=14) AND ((Status.StatusID)=1202218783 Or (Status.StatusID)=1202218788))
+ORDER BY Chromosome.ChrID, NGSVariant.Position_hg19;
