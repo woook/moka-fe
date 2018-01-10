@@ -716,7 +716,7 @@ Private Sub SubmitButton_Click()
                     .Fields.Update
                 End With
     
-                emailto = "dnadutyscientist@viapath.co.uk"
+                emailto = "WES@viapath.co.uk"
                 subjectline = "WES test order for patient " & patientID_PRU
                 emailbody = "<font face='arial' size='3'><br />" _
                             & "New WES test ordered. <br /><br />" _
@@ -828,4 +828,5 @@ Private Sub Form_Unload(Cancel As Integer)
         End If
     End If
 End Sub
+
 
