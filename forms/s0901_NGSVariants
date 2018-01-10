@@ -1,17 +1,17 @@
 Option Compare Database
 
 Private Sub Classification_AfterUpdate()
-    Dim D As String
+    Dim d As String
     Dim un As String
     Dim cn As String
     Dim Classification As String
-    D = Format(Now(), "dd/mmm/yyyy Hh:Nn:ss")
+    d = Format(Now(), "dd/mmm/yyyy Hh:Nn:ss")
     un = VBA.Environ("USERNAME")
     cn = VBA.Environ("COMPUTERNAME")
     patID = Me.Parent.InternalPatientID
     Classification = Me.Classification.Column(1)
-    sqlMemo = "INSERT INTO NGSLogMemo(InternalPatientID, Type, LinkID, LogMemoEntry, [Date], Login, PCName) VALUES(" + CStr(patID) + ", 2, " + CStr(Me.NGSVariantID) + ",'Variant classification updated to: " + Classification + "',#" + D + "#,'" + un + "','" + cn + "')"
-    sqlPatLogVar = "INSERT INTO PatientLog (InternalPatientID, LogEntry, [Date], Login, PCName) VALUES (" & patID & ", 'NGS: Variant classification for NGSVariantID " & Me.NGSVariantID & " updated to: " & Classification & "', #" + D + "#,'" + un + "','" + cn + "')"
+    sqlMemo = "INSERT INTO NGSLogMemo(InternalPatientID, Type, LinkID, LogMemoEntry, [Date], Login, PCName) VALUES(" + CStr(patID) + ", 2, " + CStr(Me.NGSVariantID) + ",'Variant classification updated to: " + Classification + "',#" + d + "#,'" + un + "','" + cn + "')"
+    sqlPatLogVar = "INSERT INTO PatientLog (InternalPatientID, LogEntry, [Date], Login, PCName) VALUES (" & patID & ", 'NGS: Variant classification for NGSVariantID " & Me.NGSVariantID & " updated to: " & Classification & "', #" + d + "#,'" + un + "','" + cn + "')"
     DoCmd.SetWarnings False
     DoCmd.RunSQL sqlMemo
     DoCmd.RunSQL sqlPatLogVar
@@ -43,7 +43,8 @@ Private Sub commentShort_DblClick(Cancel As Integer)
         rsAddACMG.Open sqlAddACMG, CurrentProject.Connection, adOpenKeyset 'execute the query
         Set rsAddACMG = Nothing ' Close the recordset to close database connection
     End If
-    
+    'Needs a refresh for newly inserted comment/ACMG records to be found
+    Me.Refresh
     stDocName = "s0901_NGSVariantACMGPopup" ' define name of the form to open
     stLinkCriteria = "[NGSVariantID] = " & Me.NGSVariantID ' Link the two forms on NGSVariantID
     'If form is locked following test completion, open the ACMG window in READ ONLY mode
@@ -77,17 +78,17 @@ Private Sub DateAdded_DblClick(Cancel As Integer)
 End Sub
 
 Private Sub Inheritance_AfterUpdate()
-    Dim D As String
+    Dim d As String
     Dim un As String
     Dim cn As String
     Dim Inheritance As String
-    D = Format(Now(), "dd/mmm/yyyy Hh:Nn:ss")
+    d = Format(Now(), "dd/mmm/yyyy Hh:Nn:ss")
     un = VBA.Environ("USERNAME")
     cn = VBA.Environ("COMPUTERNAME")
     patID = Me.Parent.InternalPatientID
     Inheritance = Me.Inheritance.Column(1)
-    sqlMemo = "INSERT INTO NGSLogMemo(InternalPatientID, Type, LinkID, LogMemoEntry, [Date], Login, PCName) VALUES(" + CStr(patID) + ", 2, " + CStr(Me.NGSVariantID) + ",'Variant inheritance updated to: " + Inheritance + "',#" + D + "#,'" + un + "','" + cn + "')"
-    sqlPatLogVar = "INSERT INTO PatientLog (InternalPatientID, LogEntry, [Date], Login, PCName) VALUES (" & patID & ", 'NGS: Variant inheritance for NGSVariantID " & Me.NGSVariantID & " updated to: " & Inheritance & "', #" + D + "#,'" + un + "','" + cn + "')"
+    sqlMemo = "INSERT INTO NGSLogMemo(InternalPatientID, Type, LinkID, LogMemoEntry, [Date], Login, PCName) VALUES(" + CStr(patID) + ", 2, " + CStr(Me.NGSVariantID) + ",'Variant inheritance updated to: " + Inheritance + "',#" + d + "#,'" + un + "','" + cn + "')"
+    sqlPatLogVar = "INSERT INTO PatientLog (InternalPatientID, LogEntry, [Date], Login, PCName) VALUES (" & patID & ", 'NGS: Variant inheritance for NGSVariantID " & Me.NGSVariantID & " updated to: " & Inheritance & "', #" + d + "#,'" + un + "','" + cn + "')"
     DoCmd.SetWarnings False
     DoCmd.RunSQL sqlMemo
     DoCmd.RunSQL sqlPatLogVar
@@ -95,24 +96,24 @@ Private Sub Inheritance_AfterUpdate()
 End Sub
 
 Private Sub SangerConf_Click()
-    Dim D As String
+    Dim d As String
     Dim un As String
     Dim cn As String
     Dim RC As String
     Dim sqlMemo As String
     Dim sqlPatLog As String
-    D = Format(Now(), "dd/mmm/yyyy Hh:Nn:ss")
+    d = Format(Now(), "dd/mmm/yyyy Hh:Nn:ss")
     un = VBA.Environ("USERNAME")
     cn = VBA.Environ("COMPUTERNAME")
     patID = Me.Parent.InternalPatientID
 
     'Add record to log when user ticks or unticks Sanger conf box
     If Me![SangerConf] Then
-        sqlMemo = "INSERT INTO NGSLogMemo(InternalPatientID, Type, LinkID, LogMemoEntry, [Date], Login, PCName) VALUES(" + CStr(patID) + ", 2, " + CStr(Me.NGSVariantID) + ",'Sanger confirmation box TICKED.',#" + D + "#,'" + un + "','" + cn + "')"
-        sqlPatLog = "INSERT INTO PatientLog (InternalPatientID, LogEntry, [Date], Login, PCName) VALUES (" & patID & ", 'NGS: Sanger confirmation box for NGSVariantID " & Me.NGSVariantID & " TICKED.', #" + D + "#,'" + un + "','" + cn + "')"
+        sqlMemo = "INSERT INTO NGSLogMemo(InternalPatientID, Type, LinkID, LogMemoEntry, [Date], Login, PCName) VALUES(" + CStr(patID) + ", 2, " + CStr(Me.NGSVariantID) + ",'Sanger confirmation box TICKED.',#" + d + "#,'" + un + "','" + cn + "')"
+        sqlPatLog = "INSERT INTO PatientLog (InternalPatientID, LogEntry, [Date], Login, PCName) VALUES (" & patID & ", 'NGS: Sanger confirmation box for NGSVariantID " & Me.NGSVariantID & " TICKED.', #" + d + "#,'" + un + "','" + cn + "')"
     Else
-        sqlMemo = "INSERT INTO NGSLogMemo(InternalPatientID, Type, LinkID, LogMemoEntry, [Date], Login, PCName) VALUES(" + CStr(patID) + ", 2, " + CStr(Me.NGSVariantID) + ",'Sanger confirmation box UNTICKED.',#" + D + "#,'" + un + "','" + cn + "')"
-        sqlPatLog = "INSERT INTO PatientLog (InternalPatientID, LogEntry, [Date], Login, PCName) VALUES (" & patID & ", 'NGS: Sanger confirmation box for NGSVariantID " & Me.NGSVariantID & " UNTICKED.', #" + D + "#,'" + un + "','" + cn + "')"
+        sqlMemo = "INSERT INTO NGSLogMemo(InternalPatientID, Type, LinkID, LogMemoEntry, [Date], Login, PCName) VALUES(" + CStr(patID) + ", 2, " + CStr(Me.NGSVariantID) + ",'Sanger confirmation box UNTICKED.',#" + d + "#,'" + un + "','" + cn + "')"
+        sqlPatLog = "INSERT INTO PatientLog (InternalPatientID, LogEntry, [Date], Login, PCName) VALUES (" & patID & ", 'NGS: Sanger confirmation box for NGSVariantID " & Me.NGSVariantID & " UNTICKED.', #" + d + "#,'" + un + "','" + cn + "')"
     End If
     DoCmd.SetWarnings False
     DoCmd.RunSQL sqlMemo
