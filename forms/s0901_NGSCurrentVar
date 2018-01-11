@@ -1,16 +1,16 @@
 
 Private Sub Classification_AfterUpdate()
-    Dim D As String
+    Dim d As String
     Dim un As String
     Dim cn As String
     Dim Classification As String
-    D = Format(Now(), "dd/mmm/yyyy Hh:Nn:ss")
+    d = Format(Now(), "dd/mmm/yyyy Hh:Nn:ss")
     un = VBA.Environ("USERNAME")
     cn = VBA.Environ("COMPUTERNAME")
     patID = Me.InternalPatientID
     Classification = Me.Classification.Column(1)
-    sqlMemo = "INSERT INTO NGSLogMemo(InternalPatientID, Type, LinkID, LogMemoEntry, [Date], Login, PCName) VALUES(" + CStr(patID) + ", 2, " + CStr(Me.NGSVariantID) + ",'Variant classification updated to: " + Classification + "',#" + D + "#,'" + un + "','" + cn + "')"
-    sqlPatLogVar = "INSERT INTO PatientLog (InternalPatientID, LogEntry, [Date], Login, PCName) VALUES (" & patID & ", 'NGS: Variant classification for NGSVariantID " & Me.NGSVariantID & " updated to: " & Classification & "', #" + D + "#,'" + un + "','" + cn + "')"
+    sqlMemo = "INSERT INTO NGSLogMemo(InternalPatientID, Type, LinkID, LogMemoEntry, [Date], Login, PCName) VALUES(" + CStr(patID) + ", 2, " + CStr(Me.NGSVariantID) + ",'Variant classification updated to: " + Classification + "',#" + d + "#,'" + un + "','" + cn + "')"
+    sqlPatLogVar = "INSERT INTO PatientLog (InternalPatientID, LogEntry, [Date], Login, PCName) VALUES (" & patID & ", 'NGS: Variant classification for NGSVariantID " & Me.NGSVariantID & " updated to: " & Classification & "', #" + d + "#,'" + un + "','" + cn + "')"
     DoCmd.SetWarnings False
     DoCmd.RunSQL sqlMemo
     DoCmd.RunSQL sqlPatLogVar
@@ -21,17 +21,17 @@ Private Sub Classification_AfterUpdate()
 End Sub
 
 Private Sub Inheritance_AfterUpdate()
-    Dim D As String
+    Dim d As String
     Dim un As String
     Dim cn As String
     Dim Inheritance As String
-    D = Format(Now(), "dd/mmm/yyyy Hh:Nn:ss")
+    d = Format(Now(), "dd/mmm/yyyy Hh:Nn:ss")
     un = VBA.Environ("USERNAME")
     cn = VBA.Environ("COMPUTERNAME")
     patID = Me.InternalPatientID
     Inheritance = Me.Inheritance.Column(1)
-    sqlMemo = "INSERT INTO NGSLogMemo(InternalPatientID, Type, LinkID, LogMemoEntry, [Date], Login, PCName) VALUES(" + CStr(patID) + ", 2, " + CStr(Me.NGSVariantID) + ",'Variant inheritance updated to: " + Inheritance + "',#" + D + "#,'" + un + "','" + cn + "')"
-    sqlPatLogVar = "INSERT INTO PatientLog (InternalPatientID, LogEntry, [Date], Login, PCName) VALUES (" & patID & ", 'NGS: Variant inheritance for NGSVariantID " & Me.NGSVariantID & " updated to: " & Inheritance & "', #" + D + "#,'" + un + "','" + cn + "')"
+    sqlMemo = "INSERT INTO NGSLogMemo(InternalPatientID, Type, LinkID, LogMemoEntry, [Date], Login, PCName) VALUES(" + CStr(patID) + ", 2, " + CStr(Me.NGSVariantID) + ",'Variant inheritance updated to: " + Inheritance + "',#" + d + "#,'" + un + "','" + cn + "')"
+    sqlPatLogVar = "INSERT INTO PatientLog (InternalPatientID, LogEntry, [Date], Login, PCName) VALUES (" & patID & ", 'NGS: Variant inheritance for NGSVariantID " & Me.NGSVariantID & " updated to: " & Inheritance & "', #" + d + "#,'" + un + "','" + cn + "')"
     DoCmd.SetWarnings False
     DoCmd.RunSQL sqlMemo
     DoCmd.RunSQL sqlPatLogVar
@@ -46,7 +46,12 @@ Private Sub commentShort_DblClick(Cancel As Integer)
     Dim stDocName As String
     Dim rsAddComment As ADODB.Recordset
     Dim sqlAddComment As String
+    Dim requiresRequery As Boolean
     
+    'Initialise requiresRequery to False. If a new comment/acmg record is created, a requery of the form is needed to pull in the new records
+    'However this has to be done at the end otherwise the form resets to the first record and the wrong variant is opened in the ACMG form
+    requiresRequery = False
+        
     'If there isn't a comment, create an empty one.
     If IsNull(Me.NGSVariantCommentID) Then
         Set rsAddComment = New ADODB.Recordset ' create empty recordset to add new comment
@@ -57,6 +62,7 @@ Private Sub commentShort_DblClick(Cancel As Integer)
         commentID = rsAddComment.Fields(0).Value
         Set rsAddComment = Nothing ' Close the recordset to close database connection
         Me.NGSVariantCommentID = commentID ' set the commentID for this record to the key for the newly created empty comment
+        requiresRequery = True 'Set requiresRequery to True so requery is performed at end
     End If
     
     'If there isn't an existing ACMG record for the variant, create an empty one
@@ -66,8 +72,10 @@ Private Sub commentShort_DblClick(Cancel As Integer)
         sqlAddACMG = "INSERT INTO NGSVariantACMG(NGSVariantID) VALUES (" & Me.NGSVariantID & ")"
         rsAddACMG.Open sqlAddACMG, CurrentProject.Connection, adOpenKeyset 'execute the query
         Set rsAddACMG = Nothing ' Close the recordset to close database connection
+        requiresRequery = True 'Set requiresRequery to True so requery is performed at end
     End If
-    
+    'Needs a refresh for newly inserted comment/ACMG records to be found
+    Me.Refresh
     stDocName = "s0901_NGSVariantACMGPopup" ' define name of the form to open
     stLinkCriteria = "[NGSVariantID] = " & Me.NGSVariantID ' Link the two forms on NGSVariantID
     'If form is locked following test completion, open the ACMG window in READ ONLY mode
@@ -76,6 +84,10 @@ Private Sub commentShort_DblClick(Cancel As Integer)
     'If form is not locked, open the comment window in EDIT mode
     Else
         DoCmd.OpenForm stDocName, , , stLinkCriteria, acFormEdit
+    End If
+    'Requery only if required (to prevent unnecessarily reseting to first record
+    If requiresRequery Then
+        Me.Requery
     End If
 End Sub
 
