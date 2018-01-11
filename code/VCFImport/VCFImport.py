@@ -1,9 +1,9 @@
 '''
-v1.6 - AB 2017/09/29
+v1.7 - AB 2018/01/10
 
 ###
-Changes from v1.5:
-Panel type in filename is now case insensitive
+Changes from v1.6:
+Can handle more missing fields. This allows it to be used for Ingenuity verfication where a minimal VCF is used that misses some of usual fields.
 ###
 
 Usage:
@@ -145,16 +145,32 @@ class MokaVCF(object):
                 # Only continue if variant is not already associated with this test in Moka.
                 if (mokaChrID, position, ref, alt) not in self.prevVars:
                     gt = "'{}'".format(row.samples[0]['GT']) # Genotype
-                    rd = str(row.samples[0]['DP']) # Read depth
+                    #If read depth is present, capture it, otherwise set to 'Null'
+                    if row.samples[0]['DP'] is not None:
+                        rd = str(row.samples[0]['DP']) # Read depth
+                    else:
+                        rd = 'Null'
+                    #If QUAL is present, capture it, otherwise set to 'Null'    
                     if row.QUAL is not None:
                         cq = str(row.QUAL) # Call quality
                     else:
                         cq = 'Null'
+                    #Capture the allele fraction
                     af = row.samples[0]['ING_AF'] # Ingenuity inferred allele fraction (percentage).
-                    ref_ad = row.samples[0]['AD'][0] # Reference Allele Depth
-                    alt_ad = row.samples[0]['AD'][1] # Alt Allele Depth
+                    #Sometimes allele fraction has an NaN value rather than None, so check for this and record as 'Null' if present.
                     if not af or math.isnan(af):
                         af = 'Null' # Adds Null value to SQL statement
+                    #If allele depth for ref allele is present, capture it, otherwise set to 'Null'
+                    if row.samples[0]['AD'][0] is not None:
+                        ref_ad = row.samples[0]['AD'][0] # Reference Allele Depth
+                    else:
+                        ref_ad = 'Null'
+                    #If allele depth for alt allele is present, capture it, otherwise set to 'Null'
+                    if row.samples[0]['AD'][1] is not None:
+                        alt_ad = row.samples[0]['AD'][1] # Alt Allele Depth
+                    else:
+                        alt_ad = 'Null'
+                    #If genotype quality is present, capture it, otherwise set to 'Null'
                     if row.samples[0]['GQ'] is not None:
                         gq = row.samples[0]['GQ'] # Genotype quality
                     else:
