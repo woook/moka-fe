@@ -22,6 +22,11 @@ Private Sub commentShort_DblClick(Cancel As Integer)
     Dim stDocName As String
     Dim rsAddComment As ADODB.Recordset
     Dim sqlAddComment As String
+    Dim requiresRequery As Boolean
+    
+    'Initialise requiresRequery to False. If a new comment/acmg record is created, a requery of the form is needed to pull in the new records
+    'However this has to be done at the end otherwise the form resets to the first record and the wrong variant is opened in the ACMG form
+    requiresRequery = False
     
     'If there isn't a comment, create an empty one.
     If IsNull(Me.NGSVariantCommentID) Then
@@ -33,6 +38,7 @@ Private Sub commentShort_DblClick(Cancel As Integer)
         commentID = rsAddComment.Fields(0).Value
         Set rsAddComment = Nothing ' Close the recordset to close database connection
         Me.NGSVariantCommentID = commentID ' set the commentID for this record to the key for the newly created empty comment
+        requiresRequery = True 'Set requiresRequery to True so requery is performed at end
     End If
     
     'If there isn't an existing ACMG record for the variant, create an empty one
@@ -42,6 +48,7 @@ Private Sub commentShort_DblClick(Cancel As Integer)
         sqlAddACMG = "INSERT INTO NGSVariantACMG(NGSVariantID) VALUES (" & Me.NGSVariantID & ")"
         rsAddACMG.Open sqlAddACMG, CurrentProject.Connection, adOpenKeyset 'execute the query
         Set rsAddACMG = Nothing ' Close the recordset to close database connection
+        requiresRequery = True 'Set requiresRequery to True so requery is performed at end
     End If
     'Needs a refresh for newly inserted comment/ACMG records to be found
     Me.Refresh
@@ -53,6 +60,10 @@ Private Sub commentShort_DblClick(Cancel As Integer)
     'If form is not locked, open the comment window in EDIT mode
     Else
         DoCmd.OpenForm stDocName, , , stLinkCriteria, acFormEdit
+    End If
+    'Requery only if required (to prevent unnecessarily reseting to first record
+    If requiresRequery Then
+        Me.Requery
     End If
 End Sub
 
