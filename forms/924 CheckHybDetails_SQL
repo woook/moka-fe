@@ -1,0 +1,4 @@
+SELECT ArrayLabelling.DNALabellingID, ArrayLabelling.ArrayRunNumber, Arrays.ArrayBarCode, ArrayLabelling.Subarray, Group.Group, ArrayLabelling.PercentNonUnifFeat, ArrayLabelling.DSLR AS DLRS, ArrayLabelling.g_Signal2Noise, ArrayLabelling.g_SignalIntensity, ArrayLabelling.r_Signal2Noise, ArrayLabelling.r_SignalIntensity, ArrayLabelling.g_Repro, ArrayLabelling.r_Repro, ArrayLabelling.FailCountID, ArrayLabelling.FailReason, ArrayQCReport.ArrayQCReportID, ArrayQCReport.DNALabellingID AS AQCDLID, ArrayQCReport.ArrayQCReport
+FROM ((ArrayLabelling INNER JOIN Arrays ON ArrayLabelling.ArrayID = Arrays.ArrayID) LEFT JOIN ArrayQCReport ON ArrayLabelling.DNALabellingID = ArrayQCReport.DNALabellingID) INNER JOIN [Group] ON Arrays.GroupID = Group.GroupID
+WHERE (((ArrayLabelling.ArrayRunNumber)=[Hyb run number?]))
+ORDER BY Arrays.ArrayBarCode, ArrayLabelling.Subarray;

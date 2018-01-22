@@ -1,0 +1,91 @@
+Option Compare Database
+
+Private Sub ArrayQCReport_DblClick(Cancel As Integer)
+    DoCmd.DoMenuItem acFormBar, acRecordsMenu, acSaveRecord, , acMenuVer70
+
+    Dim stDocName As String
+    Dim stLinkCriteria As String
+    stDocName = "s04_QCReportLarge"
+    stLinkCriteria = "[DNALabellingID]=" & Me![DNALabellingID]
+    DoCmd.OpenForm stDocName, , , stLinkCriteria
+End Sub
+
+Private Sub Cy3_DblClick(Cancel As Integer)
+    Dim stDocName As String
+    Dim stLinkCriteria As String
+    stDocName = "02 Patient Details"
+    stLinkCriteria = "[InternalPatientID]=" & Me![Cy3PID]
+    DoCmd.OpenForm stDocName, , , stLinkCriteria
+End Sub
+
+Private Sub Cy5_DblClick(Cancel As Integer)
+    Dim stDocName As String
+    Dim stLinkCriteria As String
+    stDocName = "02 Patient Details"
+    stLinkCriteria = "[InternalPatientID]=" & Me![Cy5PID]
+    DoCmd.OpenForm stDocName, , , stLinkCriteria
+End Sub
+
+'Private Sub Form_AfterUpdate()
+'    Dim q As ADODB.Recordset
+'    Set q = New ADODB.Recordset
+'    Dim S As String
+'    Dim d As String
+'    Dim cn As String
+'    Dim un As String
+'    un = VBA.Environ("USERNAME")
+'    cn = VBA.Environ("COMPUTERNAME")
+'    d = Format(Now, "dd/mmm/yyyy Hh:Nn:ss")
+'
+'    Dim aa As String
+'    aa = CStr(Me!ArrayID)
+'    MsgBox aa
+'
+'    If (Not IsNull([ArrayID]) And Not IsNull([ArrayRunNumber]) And Not IsNull([Subarray])) Then
+'        S = "INSERT INTO PatientLog(ArrayID, LogEntry, [Date], Login, PCName) VALUES (" + CStr(Me![ArrayID]) + ",'Arrays: Subarray " + CStr(Me![Subarray]) + " QC details entered for run " + CStr(Me![ArrayRunNumber]) + "',#" + d + "#,'" + un + "','" + cn + "')"
+'        q.Open S, CurrentProject.Connection
+'        Set q = Nothing
+'    End If
+'End Sub
+
+Private Sub ArrayRunNumber_DblClick(Cancel As Integer)
+    'This functions passes the directory containing fe_files to a python script which parses the files and imports QC data into Moka
+    Dim year As String
+    Dim base_directory As String
+    Dim hybID_year As String
+    Dim python_path As String
+    Dim script_path As String
+    Dim wsh As Object
+    
+    'Base directory that contains each hyb folder, grouped by year i.e. \\gstt.local\apps\Moka\Files\Analysis\{year}\{HybID}\
+    base_directory = "\\gstt.local\apps\Moka\Files\Analysis"
+    'HybID is the date of the run in format YYMMDD.
+    'Use Left function to capture first two characters of ArrayRunNumber (HybID) to determine the year and therefore which subfolder to look in.
+    hybID_year = "20" & Left(Me.ArrayRunNumber, 2)
+    'Construct full path to HybID folder
+    hybID_path = base_directory & "\" & hybID_year & "\" & Me.ArrayRunNumber
+    'Path to the python executable and script
+    python_path = "\\gstt.local\Shared\Genetics_Data2\Array\Software\Python\python.exe"
+    script_path = "\\gstt.local\Apps\Moka\Files\Software\hyb_qc_import\hyb_qc_import.py"
+    'Get user confirmation before proceeding
+    If vbYes = MsgBox("This will import QC data from feature extraction files in: " & vbNewLine & hybID_path & vbNewLine & vbNewLine & "Do you want to proceed?", vbYesNo + vbQuestion, "Proceed?") Then
+        'Create shell object
+        Set wsh = CreateObject("WScript.Shell")
+        'Execute command.
+        '2>&1 combines stderr and stdout
+        '/C means "execute this command as if I had typed it at the prompt, then quit"
+        '/S means you don't have to worry about quotes, removing first and last quotes, but leaving all others untouched.
+        Set wshexec = wsh.Exec("cmd.exe /S /C " & python_path & " " & script_path & " -i """ & hybID_path & """ 2>&1")
+        'DoEvents pauses VB script until import script has finished running. wshexec.status is 0 while running 1 when finished
+        Do While wshexec.Status = 0
+            DoEvents
+        Loop
+        'Capture and display any error messages printed (If script runs without errors nothing will be printed to stdout/stderr)
+        error_message = wshexec.Stdout.readall()
+        If error_message <> "" Then
+            MsgBox "The following error was encountered: " & vbNewLine & vbNewLine & error_message, vbCritical, "ERROR"
+        End If
+        'Refresh form so updated data is displayed
+        Me.Refresh
+    End If
+End Sub
