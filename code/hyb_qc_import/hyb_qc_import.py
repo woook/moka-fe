@@ -76,7 +76,7 @@ class FEParser(object):
         # List to store QC metric dictionaries for each fe_file found for the run
         self.all_QC_metrics = []
         # Create connection to Moka
-        self.cnxn = pyodbc.connect('DRIVER={SQL Server}; SERVER=GSTTV-MOKA; DATABASE=devdatabase;', autocommit=True)
+        self.cnxn = pyodbc.connect('DRIVER={SQL Server}; SERVER=GSTTV-MOKA; DATABASE=mokadata;', autocommit=True)
         # Create cursor for executing queries
         self.cursor = self.cnxn.cursor()
 
