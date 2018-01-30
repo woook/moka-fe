@@ -1,5 +1,5 @@
 """
-v1.0 - AB 2018/01/18
+v1.1 - AB 2018/01/18
 
 Requirements:
     ODBC connection to Moka
