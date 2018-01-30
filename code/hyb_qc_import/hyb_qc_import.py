@@ -51,7 +51,7 @@ def process_arguments():
 
 class FEParser(object):
     """
-    Parses all fe_files in a directory and inserts the QC records into Moka. Takes a directory as argument.
+    Parses all fe_files in a directory and inserts the QC records into Moka. Takes a directory and hyb ID as arguments.
     """
     def __init__(self, directory, hyb_run):
         # Store user supplied directory
@@ -146,7 +146,7 @@ class FEParser(object):
                         # Capture the headers from line 2
                         headers_line2 = line.split('\t')
                     elif line_num == 2:
-                        # Capture barcode/subbarray field, (which contains the barcode and subarray number in format: barcode_group_id 
+                        # Capture barcode/subarray field, which contains the barcode and 2 digit representation of subarray separated by underscores 
                         # e.g. subarray 8 for barcode 12345678 would be: 12345678_2_4)
                         # Use line 2 headers to find correct index for 'FeatureExtractor_Barcode' field
                         # Split on underscores to separate barcode, subarray group and subarray id
