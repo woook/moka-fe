@@ -6,7 +6,7 @@ Requirements:
     Python 2.7
     pyodbc
 
-usage: feature_extraction.py [-h] -i INPUT_FOLDER
+usage: hyb_qc_import.py [-h] -i INPUT_FOLDER --hyb HYB_RUN_NUMBER
 
 Import QC data into Moka from Array feature extraction files
 
@@ -15,11 +15,11 @@ optional arguments:
   -i INPUT_FOLDER, --input_folder INPUT_FOLDER
                         folder containing feature extraction files to be
                         imported
+  --hyb HYB_RUN_NUMBER  the hyb run number for the batch to be imported
 """
 
 import argparse
 import os
-import shutil
 import Tkinter
 import tkMessageBox
 import pyodbc
@@ -42,8 +42,10 @@ def process_arguments():
     # Create ArgumentParser object. Description message will be displayed as part of help message if script is run with -h flag
     parser = argparse.ArgumentParser(description='Import QC data into Moka from Array feature extraction files')
     # Define the arguments that will be taken.
-    # This script takes one required argument, a directory containing fe files. Execute the check_directory function to validate that the supplied folder exists 
+    # The first required argument is the directory containing the fe files. Execute the check_directory function to validate that the supplied folder exists 
     parser.add_argument('-i', '--input_folder', required=True, type=check_directory, help='folder containing feature extraction files to be imported')
+    # The second required argument is the Hyb run number. This will be used to identify which fe files to import data from.
+    parser.add_argument('--hyb', dest='hyb_run_number', required=True, help='the hyb run number for the batch to be imported')
     # Return the arguments
     return parser.parse_args()
 
@@ -51,58 +53,95 @@ class FEParser(object):
     """
     Parses all fe_files in a directory and inserts the QC records into Moka. Takes a directory as argument.
     """
-    def __init__(self, directory):
+    def __init__(self, directory, hyb_run):
         # Store user supplied directory
         self.directory = directory
-        # List to store fe_filepaths
-        self.fe_filepaths = []
-        # List to store QC metric dictionaries for each fe_file
+        # Store hyb run number
+        self.hyb_run = hyb_run
+        # Subarray lookup dictionary. Convert 1 digit subarray number to 2 digit representation used in fe filename.
+        self.subarray_lookup = {
+            1: '1_1', 
+            2: '1_2', 
+            3: '1_3', 
+            4: '1_4', 
+            5: '2_1', 
+            6: '2_2', 
+            7: '2_3', 
+            8: '2_4'
+            }
+        # Create the template filepath for fe files
+        self.fe_filepath_template = os.path.join(directory, '{barcode}_S01_Guys121919_CGH_1100_Jul11_2_{subarray}.txt')
+        # List to store dictionaries containing info from Moka for every hyb in the hyb run
+        self.moka_details = []
+        # List to store QC metric dictionaries for each fe_file found for the run
         self.all_QC_metrics = []
         # Create connection to Moka
-        self.cnxn = pyodbc.connect('DRIVER={SQL Server}; SERVER=GSTTV-MOKA; DATABASE=mokadata;', autocommit=True)
+        self.cnxn = pyodbc.connect('DRIVER={SQL Server}; SERVER=GSTTV-MOKA; DATABASE=devdatabase;', autocommit=True)
         # Create cursor for executing queries
         self.cursor = self.cnxn.cursor()
 
+    def moka_lookup(self):
+        """
+        Retrieves records from Moka for user supplied HybID
+        """
+        # SQL to retrieve DNALabellingID, Barcode and Subarray number for each pair in run
+        moka_select_sql = (
+            "SELECT ArrayLabelling.DNALabellingID, ArrayLabelling.Subarray, Arrays.ArrayBarCode FROM ArrayLabelling INNER JOIN Arrays ON ArrayLabelling.ArrayID = Arrays.ArrayID "
+            "WHERE ArrayLabelling.ArrayRunNumber = '{hyb_run}'".format(hyb_run=self.hyb_run)
+            )
+        # Execute query and store results
+        records = self.cursor.execute(moka_select_sql).fetchall()
+        # Add query results to dictionary and store dictionary in all_QC_metrics list
+        for record in records:
+            self.moka_details.append({
+                'DNALabellingID': int(record.DNALabellingID),
+                'subarray': int(record.Subarray),
+                'barcode': record.ArrayBarCode
+            })
+
     def get_fe_filepaths(self):
         """
-        Loops through folder, identifies fe_files and adds to list.
+        Loops through moka_details dictionary, constructs expected filepath and, if it exists, adds filepath to dictionary.
         """
-        # Loop through file names (not paths) in the directory
-        for fe_file in os.listdir(self.directory):
-            # fe files should have .txt extension and should have 9 fields in the filename, spearated by underscores. 
-            # If file meets these criteria, add full filepath to self.fe_filepaths list
-            if fe_file.endswith('.txt') and len(fe_file.split('_')) == 9:
-                # Store full path, use os.path.join to concatenate directory with filename
-                self.fe_filepaths.append(os.path.join(self.directory, fe_file))
+        # Loop through each hyb in the moka_details dictionary 
+        for hyb in self.moka_details:
+            # Construct the expected filepath by adding the barcode and subarray to the fe_filepath_template attribute.
+            # The subarray must be converted to the 2 digit representation using the subarray_lookup dictionary
+            expected_filepath = self.fe_filepath_template.format(barcode=hyb['barcode'], subarray=self.subarray_lookup[hyb['subarray']])
+            # Use basename to extract the filename from the filepath
+            filename = os.path.basename(expected_filepath)
+            # If the file exists, store the filepath in the dictionary and add the dictionary to all_QC_metrics list
+            if os.path.isfile(expected_filepath):
+                hyb['filepath'] = expected_filepath
+                self.all_QC_metrics.append(hyb)
 
-    def get_subarray_number(self, group, id):
+
+    def confirm_proceed(self):
         """
-        Returns subarray number (1-8) from the 2 number code used in filename
+        Get user confirmation to proceed. Returns True if they say yes, False if they say no.
         """
-        # Subarrays split into two groups (1 & 2), with 4 subarrays in each group (1 - 4)
-        # e.g. subarray 1 = group 1, id 1; subarray 8 = group 2, id 4 
-        if group == 2:
-            # If the group is 2, add 4 to the id to get the subarray number and return it
-            return 4 + id
-        elif group == 1:
-            # Else if the the group is 1, subarray number is same as id, so return it
-            return id
+        # Remove the root window so that only the messagebox is displayed
+        Tkinter.Tk().withdraw()
+        # Display the messagebox. Returns True if user clicks Yes (to proceed), returns False if user clicks No.
+        return tkMessageBox.askyesno(
+            'Import Array QC Metrics', '{num_files} feature extraction files found for run {hyb_run}.\n\nDo you want to import QC metrics?'.format(
+                hyb_run=self.hyb_run,
+                num_files=len(self.all_QC_metrics)
+                )
+            )
+
 
     def parse_files(self):
         """
         Extracts QC data from fe_files and stores in dictionary 
         """
-        # Call self.get_fe_filepaths method to generate a list of filepaths for all fe files in the directory
-        self.get_fe_filepaths()
-        # Loop through the fe filepaths in self.fe_filepaths list
-        for fe_filepath in self.fe_filepaths:
-            # Create an empty dictionary to hold QC data for this file
-            fe_file_dict = {}
+        # Loop through the hybs in all_QC_metrics dictionary
+        for hyb in self.all_QC_metrics:
             # Parse file to extract required information
-            with open(fe_filepath, 'r') as fe_file:
+            with open(hyb['filepath'], 'r') as fe_file:
                 # Files are large so read line by line using enumerate
                 for line_num, line in enumerate(fe_file):
-                    # enumerate returns 0-based line numbers, so need to subtract 1 from 
+                    # enumerate returns 0-based line numbers, so need to subtract 1 from actual line number in file
                     if line_num == 1:
                         # Capture the headers from line 2
                         headers_line2 = line.split('\t')
@@ -113,27 +152,25 @@ class FEParser(object):
                         # Split on underscores to separate barcode, subarray group and subarray id
                         barcode_subarray = line.split('\t')[headers_line2.index('FeatureExtractor_Barcode')].split('_')
                         # Capture barcode and subarray id
-                        barcode = long(barcode_subarray[0])
-                        subarray = self.get_subarray_number(group=int(barcode_subarray[-2]), id=int(barcode_subarray[-1]))
-                        # Store barcode and subarray number in dictionary
-                        fe_file_dict['barcode'] = barcode
-                        fe_file_dict['subarray'] = subarray
+                        barcode = barcode_subarray[0]
+                        subarray = barcode_subarray[1] + '_' + barcode_subarray[2]
+                        # Check that the barcode and subarray within the file match those in the filename.
+                        # The subarray stored int the dictionary will be in single digit format, so use subarray_lookup dict to convert to 2 digit representation 
+                        assert barcode == hyb['barcode'] and subarray == self.subarray_lookup[hyb['subarray']], 'Barcode/subarray in file does not match filename'
                     elif line_num == 5:
                         # Capture the headers from line 6
                         headers_line6 = line.split('\t')
                     elif line_num == 6:
                         # Capture the data for each of the QC fields. Use headers from line 6 row to get correct indexes.
-                        # Store values in fe_file_dict. NU% and DLRS fields are rounded to 2dp, all other fields are rounded to integers
+                        # Store values in hyb. NU% and DLRS fields are rounded to 2dp, all other fields are rounded to integers
                         # Move to next line containing the QC data and split on tabs
                         data = line.split('\t')
-                        fe_file_dict['nu'] = round(float(data[headers_line6.index('Metric_AnyColorPrcntFeatNonUnifOL')]), 2)
-                        fe_file_dict['dlrs'] = round(float(data[headers_line6.index('Metric_DerivativeLR_Spread')]), 2)
-                        fe_file_dict['cy3_s2n'] = int(round(float(data[headers_line6.index('Metric_g_Signal2Noise')])))
-                        fe_file_dict['cy3_si'] = int(round(float(data[headers_line6.index('Metric_g_SignalIntensity')])))
-                        fe_file_dict['cy5_s2n'] = int(round(float(data[headers_line6.index('Metric_r_Signal2Noise')])))
-                        fe_file_dict['cy5_si'] = int(round(float(data[headers_line6.index('Metric_r_SignalIntensity')])))
-                        # Add the dictionary to the all_QC_metrics list
-                        self.all_QC_metrics.append(fe_file_dict)
+                        hyb['nu'] = round(float(data[headers_line6.index('Metric_AnyColorPrcntFeatNonUnifOL')]), 2)
+                        hyb['dlrs'] = round(float(data[headers_line6.index('Metric_DerivativeLR_Spread')]), 2)
+                        hyb['cy3_s2n'] = int(round(float(data[headers_line6.index('Metric_g_Signal2Noise')])))
+                        hyb['cy3_si'] = int(round(float(data[headers_line6.index('Metric_g_SignalIntensity')])))
+                        hyb['cy5_s2n'] = int(round(float(data[headers_line6.index('Metric_r_Signal2Noise')])))
+                        hyb['cy5_si'] = int(round(float(data[headers_line6.index('Metric_r_SignalIntensity')])))
                         # No need to read rest of file so break out of for loop
                         break
 
@@ -141,58 +178,41 @@ class FEParser(object):
         """
         Updates Moka with QC data extracted from fe files.
         """
-        # For each set of data in the all_QC_metrics list, use the barcode and subarray to pull out the DNALabellingID from Moka
-        for fe_file_dict in self.all_QC_metrics:
-            # SQL to get the DNALabellingID 
-            dna_labelling_id_sql = (
-                "SELECT ArrayLabelling.DNALabellingID FROM ArrayLabelling INNER JOIN Arrays ON ArrayLabelling.ArrayID = Arrays.ArrayID "
-                "WHERE Arrays.ArrayBarCode = '{barcode}' and ArrayLabelling.Subarray = '{subarray}';".format(**fe_file_dict)
-                )
-            # Execute the SQL and store results in the fe_file_dict dictionary
-            fe_file_dict['DNALabellingID'] = self.cursor.execute(dna_labelling_id_sql).fetchone().DNALabellingID
         # For each set of data in the all_QC_metrics list, update the ArrayLabelling table with the QC metrics from fe_file
-        for fe_file_dict in self.all_QC_metrics:
-            # SQL to update the ArrayLabelling table with QC data
+        for hyb in self.all_QC_metrics:
+            # SQL to update the ArrayLabelling table with QC data. Populate the fields using the hyb dictionary
             update_sql = (
                 "UPDATE ArrayLabelling SET DSLR = {dlrs}, PercentNonUnifFeat = {nu}, g_Signal2Noise = {cy3_s2n}, g_SignalIntensity = {cy3_si}, r_Signal2Noise = {cy5_s2n}, r_SignalIntensity = {cy5_si} "
-                "WHERE DNALabellingID = {DNALabellingID};".format(**fe_file_dict)
+                "WHERE DNALabellingID = {DNALabellingID};".format(**hyb)
             )
             # Execute the SQL to update ArrayLabelling table with the QC metrics from fe file
             self.cursor.execute(update_sql)
     
-    def move_to_subfolder(self):
-        """
-        Moves imported fe_files to a subfolder
-        """
-        # Build path for destination folder
-        dest_folder = '{parent_directory}\imported_to_moka'.format(parent_directory = self.directory)
-        # Create folder to move imported files to, if it doesnt already exist
-        if not os.path.isdir(dest_folder):
-            os.mkdir(dest_folder)
-        # Move all files in fe_filepaths list to the subfolder
-        # os.path.basename gets the filename from the full source filepath.
-        [shutil.move(fe_filepath, os.path.join(dest_folder, os.path.basename(fe_filepath))) for fe_filepath in self.fe_filepaths]
-    
     def dispay_complete_message(self):
         """
-        Displays messagebox telling user the script is complete and states the number of files that were imported.
+        Displays messagebox telling user the script is complete.
         """
         # Remove the root window so that only the messagebox is displayed
         Tkinter.Tk().withdraw()
         # Display the messagebox
-        tkMessageBox.showinfo('Complete', 'QC data from {num_files} feature extraction files imported into Moka'.format(num_files=len(self.fe_filepaths)))
+        tkMessageBox.showinfo('Complete', 'Import complete')
 
 def main():
+    args = process_arguments()
     # Create FEParser obeject, passing in the user supplied directory from command line
-    f = FEParser(process_arguments().input_folder)
-    # Extract required information from fe files in the directory
-    f.parse_files()
-    # Add the extracted QC data into Moka 
-    f.update_moka()
-    # Move fe_files into subdirectory to prevent them being reimported
-    f.move_to_subfolder()
-    # Display a message stating 
-    f.dispay_complete_message()
+    f = FEParser(args.input_folder, args.hyb_run_number)
+    # Find each hyb in Moka for the run and store details in dictionary
+    f.moka_lookup()
+    # Check if the files exist and store the filepaths in dictionary
+    f.get_fe_filepaths()
+    # Display files found and not found to user, and ask if they're happy to proceed. Function will return True if they click Yes.
+    if f.confirm_proceed():
+        # Extract required information from fe files in the directory
+        f.parse_files()
+        # Add the extracted QC data into Moka 
+        f.update_moka()
+        # Display a complete message stating number of files imported 
+        f.dispay_complete_message()
 
 if __name__ == '__main__':
     main()
