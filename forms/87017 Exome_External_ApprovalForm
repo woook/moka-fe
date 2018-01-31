@@ -1,13 +1,13 @@
 Option Compare Database
 Private save As Boolean
 
-Private WESAprov As DAO.Recordset
+Private WESAprov As dao.Recordset
 Private db As Database
 Private strAprovSQL As String
 
 
 Private Sub Form_Open(Cancel As Integer)
-Dim rsUSR As DAO.Recordset
+Dim rsUSR As dao.Recordset
 Dim usr As String
 
 save = False
@@ -42,14 +42,14 @@ Private Sub btnApprove_Click()
 ' Update NGSTest status = DNA QC, set approver ID and date to MOKA ID number and current date
 ' Up date patientLog Audit with user ID number and approval info
 
-Dim WESAprov As DAO.Recordset
-Dim rsUSR As DAO.Recordset
+Dim WESAprov As dao.Recordset
+Dim rsUSR As dao.Recordset
 Dim usr As String
 Dim dt As String
 Dim comp As String
 Dim strUpd8Pat As String
 Dim strUpd8Exn As String
-Dim strLogmemo As String
+Dim strLogMemo As String
 Dim strLogSQL As String
 
 '//// EMAIL ////
@@ -64,7 +64,7 @@ dt = Format(Now, "dd/mmm/yyyy Hh:Nn:ss")
 cmp = VBA.Environ("COMPUTERNAME")
 usr = VBA.Environ("USERNAME")
 
-strAprovSQL = "SELECT NGSTest.InternalPatientID, Patients.PatientID, Patients.s_StatusOverall, NGSTest.StatusID, dbo_PatientLinked.LastName, dbo_PatientLinked.FirstName, dbo_PatientLinked.DoB, Patients.BookinSex AS Gender, Referral.Referral, NGSTest.NGSTestID, NGSTest.DateRequested, Checker.Check1ID, Checker.Active, Checker.Name AS [Referring Clinician], NGSTest.BookingAuthorisedByID, NGSTest.BookingAuthorisedDate, Checker.UserName AS ReferrerLogin, NGSTest.StatusID " & _
+strAprovSQL = "SELECT NGSTest.InternalPatientID, Patients.PatientID, dbo_Patient_table.LastName, dbo_Patient_table.FirstName, dbo_Patient_table.DoB, NGSTest.NGSTestID, Patients.BookinSex AS Gender, Referral.Referral, NGSTest.DateRequested, NGSTest.BookingAuthorisedByID, NGSTest.BookingAuthorisedDate, Checker.UserName AS ReferrerLogin " & _
               "FROM dbo_Patient_table INNER JOIN (((Status INNER JOIN (Patients INNER JOIN NGSTest ON Patients.InternalPatientID = NGSTest.InternalPatientID) ON Status.StatusID = Patients.s_StatusOverall) INNER JOIN Referral ON NGSTest.ReferralID = Referral.ReferralID) INNER JOIN Checker ON NGSTest.BookBy = Checker.Check1ID) ON dbo_Patient_table.PatientTrustID = Patients.PatientID " & _
               "WHERE (((NGSTest.StatusID)=1202218801) AND ((Patients.s_StatusOverall)=1202218799) AND ((Checker.Active)=3))"
 
@@ -112,13 +112,14 @@ If num > 0 Then
 
         'Update patient log with change
                 strLogSQL = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" & WESAprov!InternalPatientID & ", 'NGS: APPROVED WES order - External Referral. Patients: status updated to NGS. NGSTest: status updated to DNA QC. ',#" + dt + "#,'" + usr + "','" + cmp + "')"
-                 strLogmemo = "INSERT INTO NGSLogMemo(InternalPatientID, Type, LinkID, LogMemoEntry, [Date], Login, PCName) VALUES(" & WESAprov!InternalPatientID & ", 1, " + CStr(WESAprov![NGSTestID]) + ",'NGS WES test approved. NGS test status updated to: DNA QC ' ,#" + dt + "#,'" + usr + "','" + cn + "')"
+                strLogMemo = "INSERT INTO NGSLogMemo(InternalPatientID, Type, LinkID, LogMemoEntry, [Date], Login, PCName) VALUES(" & WESAprov!InternalPatientID & ", 1, " + CStr(WESAprov![NGSTestID]) + ",'NGS WES test approved. NGS test status updated to: DNA QC ' ,#" + dt + "#,'" + usr + "','" + cmp + "')"
+
 
                 'Debug.Print strLogSQL
                 DoCmd.RunSQL strLogSQL
-                DoCmd.RunSQL strLogmemo
+                DoCmd.RunSQL strLogMemo
                 DoCmd.SetWarnings True
-
+        
         'Send confirmation email to duty scientist
                 Set iCfg = New CDO.Configuration
                     With iCfg
@@ -129,7 +130,8 @@ If num > 0 Then
                         .Fields.Update
                     End With
 
-                    emailto = "dnadutyscientist@viapath.co.uk"
+
+                    emailto = "wes@viapath.co.uk"
                     PRU = WESAprov!PatientID
                     subjectline = "WES test order has been APPROVED for patient " & PRU & " - External Referral"
                     emailbody = "<font face='arial' size='3'><br />" _
@@ -153,8 +155,8 @@ If num > 0 Then
 
                                 .Send
                         End With
-
-
+                                                          
+                                                          
                 'Move to next record
                 WESAprov.MoveNext
             Else
@@ -188,8 +190,8 @@ Private Sub btnReject_Click()
 ' Update NGSTest status = 'Not required', set approver ID and date to MOKA ID number and current date
 ' Up date patientLog Audit with user ID number and rejection info
 
-Dim WESAprov As DAO.Recordset
-Dim rsUSR As DAO.Recordset
+Dim WESAprov As dao.Recordset
+Dim rsUSR As dao.Recordset
 Dim usr As String
 Dim dt As String
 Dim comp As String
@@ -198,10 +200,10 @@ dt = Format(Now, "dd/mmm/yyyy Hh:Nn:ss")
 cmp = VBA.Environ("COMPUTERNAME")
 usr = VBA.Environ("USERNAME")
 
-strAprovSQL = "SELECT NGSTest.InternalPatientID, Patients.PatientID, dbo_Patient_table.LastName, dbo_Patient_table.FirstName, dbo_Patient_table.DoB, Patients.BookinSex AS Gender, Referral.Referral, NGSTest.DateRequested, NGSTest.BookingAuthorisedByID, NGSTest.BookingAuthorisedDate, Checker.UserName AS ReferrerLogin " & _
+strAprovSQL = "SELECT NGSTest.InternalPatientID, NGSTest.NGSTestID, Patients.PatientID, dbo_Patient_table.LastName, dbo_Patient_table.FirstName, dbo_Patient_table.DoB, Patients.BookinSex AS Gender, Referral.Referral, NGSTest.DateRequested, NGSTest.BookingAuthorisedByID, NGSTest.BookingAuthorisedDate, Checker.UserName AS ReferrerLogin " & _
               "FROM dbo_Patient_table INNER JOIN (((Status INNER JOIN (Patients INNER JOIN NGSTest ON Patients.InternalPatientID = NGSTest.InternalPatientID) ON Status.StatusID = Patients.s_StatusOverall) INNER JOIN Referral ON NGSTest.ReferralID = Referral.ReferralID) INNER JOIN Checker ON NGSTest.BookBy = Checker.Check1ID) ON dbo_Patient_table.PatientTrustID = Patients.PatientID " & _
               "WHERE (((NGSTest.StatusID)=1202218801) AND ((Patients.s_StatusOverall)=1202218799) AND ((Checker.Active)=3))"
-
+              
 ' SQL to get MOKA user ID number
 strUSRSQL = "SELECT Checker.Check1ID, checker.name FROM Checker WHERE Checker.Username = '" + usr + "'"
 'Debug.Print strUSRSQL
@@ -242,13 +244,13 @@ If num > 0 Then
                 DoCmd.SetWarnings False
                 DoCmd.RunSQL strUpd8Pat
                 DoCmd.RunSQL strUpd8Exn
-
+                
             'Update patient log with change
                 strLogSQL = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" & WESAprov!InternalPatientID & ", 'NGS: REJECTED WES order - External referal. Patients and NGSTest tables: status updated to Not required. ',#" + dt + "#,'" + usr + "','" + cmp + "')"
                 'Debug.Print strLogSQL
                 DoCmd.RunSQL strLogSQL
                 DoCmd.SetWarnings True
-
+                
                 'Move to next record
                 WESAprov.MoveNext
             Else
@@ -290,7 +292,7 @@ Private Sub Form_Unload(Cancel As Integer)
         strAprovSQL = "SELECT NGSTest.InternalPatientID, Patients.PatientID, dbo_Patient_table.LastName, dbo_Patient_table.FirstName, dbo_Patient_table.DoB, Patients.BookinSex AS Gender, Referral.Referral, NGSTest.DateRequested, NGSTest.BookingAuthorisedByID, NGSTest.BookingAuthorisedDate, Checker.UserName AS ReferrerLogin " & _
               "FROM dbo_Patient_table INNER JOIN (((Status INNER JOIN (Patients INNER JOIN NGSTest ON Patients.InternalPatientID = NGSTest.InternalPatientID) ON Status.StatusID = Patients.s_StatusOverall) INNER JOIN Referral ON NGSTest.ReferralID = Referral.ReferralID) INNER JOIN Checker ON NGSTest.BookBy = Checker.Check1ID) ON dbo_Patient_table.PatientTrustID = Patients.PatientID " & _
               "WHERE (((NGSTest.StatusID)=1202218801) AND ((Patients.s_StatusOverall)=1202218799) AND ((Checker.Active)=3))"
-
+              
         Set WESAprov = db.OpenRecordset(strAprovSQL, dbOpenDynaset, dbSeeChanges)
         With WESAprov
          If Not .BOF And Not .EOF Then
@@ -309,7 +311,7 @@ Private Sub Form_Unload(Cancel As Integer)
                 End If
             Wend
           End If
-
+          
           End With
     End If
     End If
@@ -327,3 +329,4 @@ ErrHandler:
     If Err.Number = 2501 Then 'Do nothing. Error indicates close was cancelled by user.
     End If
 End Sub
+

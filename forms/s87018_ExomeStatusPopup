@@ -1,11 +1,11 @@
 Option Compare Database
 
-Private Sub Close_Click()
+Private Sub close_Click()
     DoCmd.Close
 End Sub
 
 Private Sub Email_Click()
-    Application.FollowHyperlink "mailto:dnadutyscientist@viapath.co.uk?subject=WES enquiry for " & Me![PRUNum]
+    Application.FollowHyperlink "mailto:wes@viapath.co.uk?subject=WES enquiry for " & Me![PRUNum]
 End Sub
 
 Private Sub PanelA_DblClick(Cancel As Integer)
@@ -21,3 +21,4 @@ Private Sub PanelB_DblClick(Cancel As Integer)
         DoCmd.OpenForm "s87014_ExomeGenePanelPopup", , , , , , Me![PanelB].Column(2) & ", " & Me![PanelB].Column(3) & ", " & Me![PanelB].Column(0)
     End If
 End Sub
+

@@ -7,7 +7,7 @@ End Sub
 Private Sub btnFindPatient_Click()
     Me![ListPatientFound].Requery
     If Me![ListPatientFound].ListCount = 0 Then
-    msga = MsgBox("Patient or specimen not found." & vbNewLine & "Please search for another patient or contact lab.", 0, "Not found")
+    msga = MsgBox("PRU not found." & vbNewLine & "Please search for another patient.", 0, "PRU not found")
     End If
     Me![txFamilyTrustID].SetFocus
     
@@ -72,7 +72,7 @@ Private Sub ListPatientFound_DblClick(Cancel As Integer)
         msgb = MsgBox("You are about to order WES for:" & vbNewLine & vbNewLine & Me.ListPatientFound.Value & " " & gwks!FirstName & " " & gwks!LastName & vbNewLine & vbNewLine & "Do you wish to continue?", VbMsgBoxStyle.vbYesNo Or VbMsgBoxStyle.vbInformation, "Do you wish to proceed?")
         If msgb = vbYes Then
             strAddPatientSQL = "INSERT INTO patients (PatientID, s_StatusOverall, MokaCreated, MokaCreatedBy, MokaCreatedPC, NHSNumber, BookinLastname, BookinFirstName, BookinDoB, BookinCreatedBy, BookinCreatedDate, BookinSex)" & _
-                               "VALUES ('" & Me.ListPatientFound.Value & "', 1202218787,'" & dt & "','" & usr & "','" & cmp & "','" & gwks!NHSno & "','" & gwks!LastName & "','" & gwks!FirstName & "','" & gwks!DOB & "','" & gwks!CreatedbyID & "','" & gwks!CreatedDate & "','" & gwks!GenderShort & "')"
+                               "VALUES ('" & Me.ListPatientFound.Value & "', 1202218787,'" & dt & "','" & usr & "','" & cmp & "','" & gwks!NHSNo & "','" & gwks!LastName & "','" & gwks!FirstName & "','" & gwks!DOB & "','" & gwks!CreatedByID & "','" & gwks!CreatedDate & "','" & gwks!GenderShort & "')"
              DoCmd.SetWarnings False
              DoCmd.RunSQL strAddPatientSQL
              DoCmd.SetWarnings True
@@ -122,7 +122,7 @@ Private Sub ListPatientFound_DblClick(Cancel As Integer)
     ElseIf moka.RecordCount > 0 And moka!s_StatusOverall = 1202218799 Then
             msgd = MsgBox("WES has already been ordered for " & vbNewLine & vbNewLine & moka!PatientID & " " & gwks!FirstName & " " & gwks!LastName & vbNewLine & vbNewLine & "Would you like to email the lab duty scientist regarding this patient?", VbMsgBoxStyle.vbYesNo Or VbMsgBoxStyle.vbExclamation, "ATTENTION!")
              If msgd = vbYes Then
-                Application.FollowHyperlink "mailto:dnadutyscientist@viapath.co.uk?subject=WES enquiry for " & moka!PatientID
+                Application.FollowHyperlink "mailto:wes@viapath.co.uk?subject=WES enquiry for " & moka!PatientID
              Else
                 Exit Sub
             End If
@@ -132,7 +132,7 @@ Private Sub ListPatientFound_DblClick(Cancel As Integer)
             ' Exit Sub
             msgd = MsgBox("WES has already been ordered for " & vbNewLine & vbNewLine & moka!PatientID & " " & gwks!FirstName & " " & gwks!LastName & vbNewLine & vbNewLine & "Would you like to email the lab duty scientist regarding this patient?", VbMsgBoxStyle.vbYesNo Or VbMsgBoxStyle.vbExclamation, "ATTENTION!")
              If msgd = vbYes Then
-                Application.FollowHyperlink "mailto:dnadutyscientist@viapath.co.uk?subject=WES enquiry for " & moka!PatientID
+                Application.FollowHyperlink "mailto:wes@viapath.co.uk?subject=WES enquiry for " & moka!PatientID
              Else
                 Exit Sub
             End If
