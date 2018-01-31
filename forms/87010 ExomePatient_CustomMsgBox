@@ -1,16 +1,18 @@
 Option Compare Database
 
+
 Private Sub Cancel_Click()
 Unload Me
 End Sub
 
+
 Private Sub Email_Duty_Scientist_Click()
 Dim oLook As Object
-Dim oMail As Object
+ Dim oMail As Object
  Set oLook = CreateObject("Outlook.Application")
  Set oMail = oLook.CreateItem(0)
  With oMail
- .TO = "dnadutyscientist@viapath.co.uk"
+ .to = "wes@viapath.co.uk"
  .Subject = "WES enquiry for " & Form_ExomePatients.ListPatientFound.Value & ""
    .Display
 End With
