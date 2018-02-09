@@ -34,7 +34,7 @@ Else
     PRU = Replace(Me.PatientID, ":", "")
     
     ' Check if coverage report already exists in the destination directory on S: drive
-    destDir = "\\gstt.local\Shared\Genetics\DNA LAB\R&D\New Tests\WES\Results\Coverage reports\"
+    destDir = "\\gstt.local\Shared\Genetics\DNA LAB\Current\WES\Coverage reports\"
     rptName = PRU & "." & DNANumber & ".cov.pdf"
     'Full path for coverage report
     rptPath = destDir & rptName
