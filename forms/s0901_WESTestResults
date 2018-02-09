@@ -240,6 +240,114 @@ End If
 End Sub
 
 
+Private Sub Primary_Panel_DblClick(Cancel As Integer)
+    If Not IsNull(Me.PrimaryPanelID) Then
+        'Export a text file containing panel genes. This file is used to import the panel to Ingenuity.
+        Dim DestFile As String
+        Dim DestFolder As String
+        Dim PanID As String
+        Dim datetime As String
+        'Set destination. (Me.[Primary Panel] = panel code PanXXXX)
+        DestFile = Me.[Primary Panel] & "_genes.txt"
+        DestFolder = "\\gstt.local\shared\Genetics\DNA LAB\Current\WES\Panels\Moka Panels"
+        DestFile = DestFolder & "\" & DestFile
+        'Capture the panel ID
+        PanID = Me.PrimaryPanelID
+        datetime = Format(Now, "dd/mmm/yyyy Hh:Nn:ss")
+        'Create filesytem object and create text file in destination
+        Set fs = CreateObject("Scripting.FileSystemObject")
+        Set txtfile = fs.CreateTextFile(DestFile, False)
+        'Write header line to text file
+        txtfile.WriteLine ("#Created by Moka " & datetime)
+        'Pull out panel genes into recordset (rst)
+        Dim Rst As dao.Recordset
+        Set Rst = CurrentDb.OpenRecordset("SELECT NGSPanelGenes.Symbol, NGSPanelGenes.NGSPanelID From NGSPanelGenes WHERE NGSPanelGenes.NGSPanelID=" + PanID, dbOpenSnapshot)
+        'Loop through the genes and write the gene symbol to the text file
+        Do While Not Rst.EOF
+            txtfile.WriteLine (Rst!Symbol)
+            Rst.MoveNext
+        Loop
+        'Close the connection to database
+        Rst.Close
+        Set Rst = Nothing
+        
+    'Open folder containing file
+        Shell "explorer.exe """ & DestFolder & "", vbNormalFocus
+    End If
+End Sub
+
+Private Sub Secondary_Panel_DblClick(Cancel As Integer)
+    If Not IsNull(Me.SecondaryPanelID) Then
+        'Export a text file containing panel genes. This file is used to import the panel to Ingenuity.
+        Dim DestFile As String
+        Dim DestFolder As String
+        Dim PanID As String
+        Dim datetime As String
+        'Set destination. (Me.[Secondary Panel] = panel code PanXXXX)
+        DestFile = Me.[Secondary Panel] & "_genes.txt"
+        DestFolder = "\\gstt.local\shared\Genetics\DNA LAB\Current\WES\Panels\Moka Panels"
+        DestFile = DestFolder & "\" & DestFile
+        'Capture the panel ID
+        PanID = Me.SecondaryPanelID
+        datetime = Format(Now, "dd/mmm/yyyy Hh:Nn:ss")
+        'Create filesytem object and create text file in destination
+        Set fs = CreateObject("Scripting.FileSystemObject")
+        Set txtfile = fs.CreateTextFile(DestFile, False)
+        'Write header line to text file
+        txtfile.WriteLine ("#Created by Moka " & datetime)
+        'Pull out panel genes into recordset (rst)
+        Dim Rst As dao.Recordset
+        Set Rst = CurrentDb.OpenRecordset("SELECT NGSPanelGenes.Symbol, NGSPanelGenes.NGSPanelID From NGSPanelGenes WHERE NGSPanelGenes.NGSPanelID=" + PanID, dbOpenSnapshot)
+        'Loop through the genes and write the gene symbol to the text file
+        Do While Not Rst.EOF
+            txtfile.WriteLine (Rst!Symbol)
+            Rst.MoveNext
+        Loop
+        'Close the connection to database
+        Rst.Close
+        Set Rst = Nothing
+        
+    'Open folder containing file
+        Shell "explorer.exe """ & DestFolder & "", vbNormalFocus
+    End If
+End Sub
+
+Private Sub TertiaryPanel_DblClick(Cancel As Integer)
+    If Not IsNull(Me.NGSPanelID_C) Then
+    'Export a text file containing panel genes. This file is used to import the panel to Ingenuity.
+        Dim DestFile As String
+        Dim DestFolder As String
+        Dim PanID As String
+        Dim datetime As String
+        'Set destination. (Me.TertiaryPanel.Column(1) = panel code PanXXXX)
+        DestFile = Me.TertiaryPanel.Column(1) & "_genes.txt"
+        DestFolder = "\\gstt.local\shared\Genetics\DNA LAB\Current\WES\Panels\Moka Panels"
+        DestFile = DestFolder & "\" & DestFile
+        'Capture the panel ID (stored in
+        PanID = Me.NGSPanelID_C
+        datetime = Format(Now, "dd/mmm/yyyy Hh:Nn:ss")
+        'Create filesytem object and create text file in destination
+        Set fs = CreateObject("Scripting.FileSystemObject")
+        Set txtfile = fs.CreateTextFile(DestFile, False)
+        'Write header line to text file
+        txtfile.WriteLine ("#Created by Moka " & datetime)
+        'Pull out panel genes into recordset (rst)
+        Dim Rst As dao.Recordset
+        Set Rst = CurrentDb.OpenRecordset("SELECT NGSPanelGenes.Symbol, NGSPanelGenes.NGSPanelID From NGSPanelGenes WHERE NGSPanelGenes.NGSPanelID=" + PanID, dbOpenSnapshot)
+        'Loop through the genes and write the gene symbol to the text file
+        Do While Not Rst.EOF
+            txtfile.WriteLine (Rst!Symbol)
+            Rst.MoveNext
+        Loop
+        'Close the connection to database
+        Rst.Close
+        Set Rst = Nothing
+        
+    'Open folder containing file
+        Shell "explorer.exe """ & DestFolder & "", vbNormalFocus
+    End If
+End Sub
+
 Private Sub RemoveAll_MouseDown(Button As Integer, Shift As Integer, x As Single, Y As Single)
     'To make it hard to accidentally press the button, have to hold down ctrl whilst clicking
     If Shift = acCtrlMask Then 'Code will only execute if ctrl key is pressed
@@ -322,8 +430,6 @@ Private Sub RemoveAll_MouseDown(Button As Integer, Shift As Integer, x As Single
         MsgBox "If you REALLY want to delete all variants, you must press Ctrl when clicking the button", vbExclamation, ""
     End If
 End Sub
-
-
 
 Private Sub txt_Resultcmt_GotFocus()
     Me.txt_Resultcmt.SelLength = 0
