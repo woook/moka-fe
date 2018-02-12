@@ -319,7 +319,7 @@ Private Sub TertiaryPanel_DblClick(Cancel As Integer)
         Dim DestFolder As String
         Dim PanID As String
         Dim datetime As String
-        'Set destination. (Me.TertiaryPanel.Column(1) = panel code PanXXXX)
+        'Set destination. Me.TertiaryPanel is a combo box. Column 0 is NGSPanelID. Column 1 is panel code. (Me.TertiaryPanel.Column(1) = panel code PanXXXX)
         DestFile = Me.TertiaryPanel.Column(1) & "_genes.txt"
         DestFolder = "\\gstt.local\shared\Genetics\DNA LAB\Current\WES\Panels\Moka Panels"
         DestFile = DestFolder & "\" & DestFile
