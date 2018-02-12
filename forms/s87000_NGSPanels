@@ -38,30 +38,32 @@ Private Sub PanelCode_DblClick(Cancel As Integer)
     Dim DestFile As String
     Dim DestFolder As String
     Dim PanID As String
-    Dim DateTime As String
+    Dim datetime As String
     
     DestFile = Me.PanelCode & "_genes.txt"
     'ForTesting DestFolder = "C:\Array\TMP"
-    DestFolder = "\\SV-PR-FS13\Genetics\DNA LAB\R&D\New Tests\WES\Ingenuity\Moka Panels"
+    'DestFolder = "\\SV-PR-FS13\Genetics\DNA LAB\R&D\New Tests\WES\Ingenuity\Moka Panels" ''this file path no longer valid following Trust IT infrastructure changes
+    'Trying alternative file path
+    DestFolder = "\\gstt.local\shared\Genetics\DNA LAB\Current\WES\Panels\Moka Panels"
     DestFile = DestFolder & "\" & DestFile
     PanID = Me.NGSPanelID
-    DateTime = Format(Now, "dd/mmm/yyyy Hh:Nn:ss")
+    datetime = Format(Now, "dd/mmm/yyyy Hh:Nn:ss")
     
     Set fs = CreateObject("Scripting.FileSystemObject")
-    Set a = fs.CreateTextFile(DestFile, False)
-    a.WriteLine ("#Created by Moka " & DateTime)
-    Dim rst As DAO.Recordset
-    Set rst = CurrentDb.OpenRecordset("SELECT NGSPanelGenes.Symbol, NGSPanelGenes.NGSPanelID From NGSPanelGenes WHERE NGSPanelGenes.NGSPanelID=" + PanID, dbOpenSnapshot)
-    Do While Not rst.EOF
-        a.WriteLine (rst!Symbol)
-        rst.MoveNext
+    Set A = fs.CreateTextFile(DestFile, False)
+    A.WriteLine ("#Created by Moka " & datetime)
+    Dim Rst As dao.Recordset
+    Set Rst = CurrentDb.OpenRecordset("SELECT NGSPanelGenes.Symbol, NGSPanelGenes.NGSPanelID From NGSPanelGenes WHERE NGSPanelGenes.NGSPanelID=" + PanID, dbOpenSnapshot)
+    Do While Not Rst.EOF
+        A.WriteLine (Rst!Symbol)
+        Rst.MoveNext
     Loop
-    rst.Close
-    Set rst = Nothing
+    Rst.Close
+    Set Rst = Nothing
     
 ''Open folder containing file
     ''normal way of opening and showing the directory doesn't want to work so switching to an alternative method
     'Set objShell = CreateObject("Wscript.Shell")
     'objShell.Run (DestFolder)
-    shell "explorer.exe """ & DestFolder & "", vbNormalFocus
+    Shell "explorer.exe """ & DestFolder & "", vbNormalFocus
 End Sub
