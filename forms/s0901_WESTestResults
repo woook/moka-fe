@@ -730,7 +730,8 @@ Private Sub StatusID_BeforeUpdate(Cancel As Integer)
 If IsNull(Me.StatusID) Then
     msga = MsgBox("No test status selected." & vbNewLine & "To continue please select a test status.", vbOKOnly Or vbExclamation, "ATTENTION")
     Cancel = True
-ElseIf Me.StatusID = 4 Or Me.StatusID = 1202218816 Then
+' stop the status being updated to complete
+ElseIf Me.StatusID = 4 Then
     msgb = MsgBox("Sorry you cannot presently update this tests status to " & vbNewLine + Me![StatusID].Column(1) + vbNewLine & "Please select another status, or update the status using the NGS Dashboard", vbOKOnly Or vbInformation, "Status update")
     Cancel = True
 ElseIf (Me.StatusID = 1202218814 Or Me.StatusID = 1202218815) And IsNull(Me.Checker3) Then
@@ -1359,6 +1360,8 @@ Dim stDocName As String
     stLinkCriteria = "[Type] = 3 AND [LinkID] = " & Me![NGSTestID]
     DoCmd.OpenForm stDocName, acFormDS, , stLinkCriteria
 End Sub
+
+
 
 
 
