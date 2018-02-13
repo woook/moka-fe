@@ -789,6 +789,20 @@ Private Sub StatusID_AfterUpdate()
                 Set rs = Nothing
             End If
         End If
+    ' if the status == test failed
+    ElseIf Me.StatusID = 1202218816 Then
+        ' set query to change patient status to complete
+        update_query = "Update Patients Set s_StatusOverall = 4 where InternalPatientID = " & CStr(Me![InternalPatientID])
+        ' create recordset for the update query
+        Set rs = New ADODB.Recordset
+        ' execute the update query
+        rs.Open update_query, CurrentProject.Connection
+        ' empty recordset
+        Set rs = Nothing
+        ' set insert queries for PatientLog and NGSLogMemo
+        l = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + ",'NGS WES test: Status updated to " + Me![StatusID].Column(1) + " for test requested " + CStr(Me![DateRequested]) + ". Patient Status set to Complete',#" + dt + "#,'" + usr + "','" + cn + "')"
+        v = "INSERT INTO NGSLogMemo(InternalPatientID, Type, LinkID, LogMemoEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + ", 1, " + CStr(Me![NGSTestID]) + ",'NGS WES test status updated to: " + Me![StatusID].Column(1) + ". Patient Status set to Complete' ,#" + dt + "#,'" + usr + "','" + cn + "')"
+    
     Else
     l = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + ",'NGS WES test: Status updated to " + Me![StatusID].Column(1) + " for test requested " + CStr(Me![DateRequested]) + "',#" + dt + "#,'" + usr + "','" + cn + "')"
     v = "INSERT INTO NGSLogMemo(InternalPatientID, Type, LinkID, LogMemoEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + ", 1, " + CStr(Me![NGSTestID]) + ",'NGS WES test status updated to: " + Me![StatusID].Column(1) + "' ,#" + dt + "#,'" + usr + "','" + cn + "')"
