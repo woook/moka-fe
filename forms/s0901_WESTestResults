@@ -35,7 +35,7 @@ Else
     
     ' Check if coverage report already exists in the destination directory on S: drive
     destDir = "\\gstt.local\Shared\Genetics\DNA LAB\Current\WES\Coverage reports\"
-    rptName = PRU & "." & DNANumber & ".cov.pdf"
+    rptName = PRU & "." & DNANumber & ".NGSTestID_" & NGStest & ".cov.pdf"
     'Full path for coverage report
     rptPath = destDir & rptName
     ' Loop through coverage reports
@@ -96,7 +96,7 @@ Else
 
     ' check that pdf has been generated in the holding area. Exit if no pdf present.
     holdingDir = "\\gstt.local\Shared\Genetics\Bioinformatics\NGS\depthofcoverage\pdf_holding_area\"
-    rptName = PRU & "." & DNANumber & ".cov.pdf"
+    'rptName = PRU & "." & DNANumber & ".cov.pdf"
     'Full path for coverage report
     tempRptPath = holdingDir & rptName
     ' Loop through coverage reports
@@ -1374,6 +1374,7 @@ Dim stDocName As String
     stLinkCriteria = "[Type] = 3 AND [LinkID] = " & Me![NGSTestID]
     DoCmd.OpenForm stDocName, acFormDS, , stLinkCriteria
 End Sub
+
 
 
 
