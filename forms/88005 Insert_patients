@@ -5,14 +5,20 @@ Private Sub btnClose_Click()
 End Sub
 
 Private Sub btnFindPatient_Click()
+    ' when click the find patient button requery the ListPatientFound list box
     Me![ListPatientFound].Requery
+    ' this box searches for geneworks records which match that family ID
+    ' If there are no records
     If Me![ListPatientFound].ListCount = 0 Then
-    msga = MsgBox("PRU not found in Geneworks.", 0, "PRU not found")
+    ' display a message box saying there were no records identified in GW
+    msga = MsgBox("No records in Geneworks matching that family ID", 0, "No records found")
     End If
+    ' reset focus on the box to enter next family id
     Me![txFamilyTrustID].SetFocus
 End Sub
 
 Private Sub Form_Open(Cancel As Integer)
+    ' when the form opens set the focus in the box to enter the family id
     Me![txFamilyTrustID].SetFocus
 End Sub
 
@@ -54,7 +60,7 @@ Private Sub ListPatientFound_DblClick(Cancel As Integer)
     
     ' Test that a patient has been selected
     If Not IsNull(Me.ListPatientFound.Value) Then
-        ' If there is no record in patients
+        ' If there are no record in patients
         If moka_patients.RecordCount = 0 Then
             ' insert to moka
             strAddPatientSQL = "INSERT INTO Patients(PatientID, s_StatusOverall, MokaCreated, MokaCreatedBy, MokaCreatedPC, NHSNumber, BookinLastname, BookinFirstName, BookinDoB, BookinCreatedBy, BookinCreatedDate, BookinSex) SELECT '" & Me.ListPatientFound.Value & "', 1202218839, now(),'" & usr & "','" & cmp & "', dbo_patientlinked.NHSNo, dbo_patientlinked.LastName, dbo_patientlinked.FirstName, dbo_patientlinked.DOB, dbo_patientlinked.CreatedByID, dbo_patientlinked.CreatedDate, dbo_patientlinked.Gender from dbo_patientlinked where patienttrustid = '" & Me.ListPatientFound.Value & "'"
