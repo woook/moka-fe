@@ -1,6 +1,10 @@
 Option Compare Database
 Private excludeReferrals As String
 
+Private Sub btn_ExomeStatus_Click()
+    DoCmd.OpenForm "87018 ExomeStatus"
+End Sub
+
 Private Sub Form_Load()
 txt_SelectionCount.Value = 0
 Me.Check_selectAll.Value = 0
