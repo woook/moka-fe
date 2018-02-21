@@ -1,0 +1,22 @@
+Option Compare Database
+
+Private Sub Form_Open(Cancel As Integer)
+' Add in check so that only approved users may access this Danger Danger form
+Dim rsUSR As dao.Recordset
+Dim usr As String
+
+' Access granted to Arry duty scientists (Checker:Authoriser Col = 4) and Binfx Adimins (Checker:Authoriser Col = 1)
+' identify user
+usr = VBA.Environ("USERNAME")
+' Query checker table to link user with authoriser status
+strUSRSQL = "SELECT Checker.Name, Checker.Authoriser FROM Checker WHERE Checker.Username = '" + usr + "'"
+Set db = CurrentDb
+Set rsUSR = db.OpenRecordset(strUSRSQL, dbOpenDynaset, dbSeeChanges)
+
+' Validate that user is authorised. Display alert if not authorised.
+If rsUSR!Authoriser <> 1 And rsUSR!Authoriser <> 4 Then
+MsgBox "You do not have authorisation to view this page.", vbExclamation, "ATTENTION"
+DoCmd.Close acForm, "4752 DeletePatientRecords"
+End If
+
+End Sub
