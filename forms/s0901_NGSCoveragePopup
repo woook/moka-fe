@@ -1,0 +1,247 @@
+Private Sub Form_Load()
+' On load, set unboud NGS test ID feild to the NGStestId. This feild is unbound to allow NGStest ID to be edited in the case of a WES re-analysis
+Me.txtbxNGStestID = Me.NGSTestID
+' Grey out and lock selection box if no NGS panelID is available for primary panel
+If IsNull(PrimaryPanel_ID) Then
+Me.Checkbx_Panel1 = 0
+Me.Checkbx_Panel1.Enabled = False
+End If
+
+' Grey out and lock selection box if no NGS panelID is available for secondary panel
+If IsNull(SecondaryPanel_ID) Then
+Me.Checkbx_Panel2 = 0
+Me.Checkbx_Panel2.Enabled = False
+End If
+
+' Grey out and lock selection box if no NGS panelID is available for tertiary panel
+If IsNull(TertiaryPanel_ID) Then
+Me.Checkbx_Panel3 = 0
+Me.Checkbx_Panel3.Enabled = False
+End If
+
+
+End Sub
+
+Private Sub Check_reanalysis_Click()
+Dim yellow As Long
+' set background colour as veriable using RGB
+white = RGB(255, 255, 255)
+yellow = RGB(254, 243, 196)
+
+' Coverage data is linked to the first NGS test a patient has had. in the event of a re-analysis a new NGS test is created but no additioanl coverage data is generated.
+' set permissions so the user may edit the NGS test to direct script to use the coverage data linked to the orriginal NGS test
+If Me.Check_reanalysis = -1 Then
+Me.txtbxNGStestID.Locked = False
+Me.txtbxNGStestID.BackColor = white
+Me.txtbxNGStestID.SetFocus
+
+Else ' if unchecked return test ID to original input
+Me.txtbxNGStestID.Locked = True
+Me.txtbxNGStestID.BackColor = yellow
+Me.txtbxNGStestID = Me.NGSTestID
+End If
+
+End Sub
+
+Private Sub btn_CoverageRpt_Click()
+
+
+' If reanalysis check box is selected issue warning for user to check manual NGStest ID is correct
+If Me.Check_reanalysis = -1 Then
+    If MsgBox("Please double check that the manually entered NGS Test ID " & Me.txtbxNGStestID & " is correct for sample PRU " & Me.PatientID & ", DNA number " & Me.DNA & vbNewLine & _
+    "Do you wish you to generate a coverage report using this NGS Test ID?", vbYesNo + vbExclamation, "Warning") = vbNo Then
+    Me.txtbxNGStestID.SetFocus
+    Exit Sub
+    End If
+End If
+
+' Check that PRU, DNAnumer, NGStest ID, and at least 1 panel is selected
+If IsNull(Me.PatientID) Or IsNull(Me.DNA) Or IsNull(Me.txtbxNGStestID) Or (Me.Checkbx_Panel1 = 0 And Me.Checkbx_Panel2 = 0 And Me.Checkbx_Panel3 = 0) Then
+    MsgBox "Error!" & vbNewLine & "Please ensure PRU, DNA, NGS Test ID are correct." & vbNewLine & "Please ensure at least one gene panel has been selected", vbExclamation, "Assign NGStestID/GenePanel"
+Else
+    'call python script and pass through arguments
+    ' define the variables to feed to script
+    Dim destDir As String
+    Dim holdingDir As String
+    Dim rptPath As String
+    Dim tempRptPath As String
+    Dim origRptPath As String
+    Dim PyPath As String
+    Dim ScriptPath As String
+    Dim finalrptName As String
+    Dim temprptName As String
+    Dim Cmd As String
+    Dim DNANumber As String
+    Dim PRU As String
+    Dim inputNGSTest As String
+    Dim actualNGStest As String
+    Dim covArgs As String
+    Dim PrimaryPanNo As String
+    Dim SecondPanNo As String
+    Dim TertiaryPanNo As String
+    Dim errReport As String
+    Dim dt As String
+    Dim usr As String
+    Dim cn As String
+
+    dt = Format(Now, "dd/mmm/yyyy Hh:Nn:ss")
+    DNANumber = CStr(Me.DNA)
+    inputNGSTest = CStr(Me.txtbxNGStestID) 'call script using the NGSTestID textbox so coverage for reanalysis can be specifed by user.
+    actualNGStest = CStr(Me.NGSTestID) 'use the ensure file is named using the current NGS-test ID
+    PRU = Replace(Me.PatientID, ":", "") ' remove colon (illegal charater) so from file name
+
+    ' Check if coverage report already exists in the destination directory on S: drive
+    destDir = "\\gstt.local\Shared\Genetics\DNA LAB\Current\WES\Coverage reports\"
+    'Identify the final report name using the actual NGSTestID
+    finalrptName = PRU & "." & DNANumber & ".NGSTestID_" & actualNGStest & ".cov.pdf"
+    ' Temp reeport name using the editable NGSTest ID - required so that re-analysis reports can be found and correctly named
+    temprptName = PRU & "." & DNANumber & ".NGSTestID_" & inputNGSTest & ".cov.pdf"
+    'Full path for coverage report
+    rptPath = destDir & finalrptName
+
+    
+    ' Loop through final coverage reports
+    CovFilename = Dir(rptPath) 'Returns recordset of each matching filename
+    dest_tally = 0
+    Do While CovFilename <> "" 'Loop until no more files, counting any files matching.
+        dest_tally = dest_tally + 1
+        CovFilename = Dir 'Moves to next filename in record
+    Loop
+    ' if an existing coverage report is detected for this NGS test, offer user a chance to escape.
+    If dest_tally > 0 Then
+        If MsgBox("A Coverage report already exists for NGS test ID: " & actualNGStest & vbNewLine & vbNewLine & _
+        "Generating a new coverage report will over write the existing file." & vbNewLine & _
+        "Do you wish to continue?", vbYesNo + vbExclamation, "Existing Coverage report Found") = vbNo Then
+        Exit Sub
+        End If
+    End If
+    
+    ' Notify users that the coverage report will take a few minutes to run. Offer option to exit.
+     If MsgBox("Generating a coverage report will take a few minutes to run." & vbNewLine & _
+    "Please wait for script to complete before continuing using MOKA." & vbNewLine & vbNewLine & _
+    "Do you wish to continue?", vbYesNo + vbExclamation, "Generate coverage report") = vbNo Then
+        Exit Sub
+    End If
+    
+    ' set path to python exe and script
+    PyPath = "\\gstt.local\Shared\Genetics_Data2\Array\Software\Python\python.exe"
+    ScriptPath = """\\gstt.local\apps\Moka\Files\Software\depthofcoverage\AutomateCoverageReports\Generate_external_reports.py"""
+
+    ' Compile arguments to pass to coverage rpt script,
+    covArgs = "-t " & inputNGSTest
+    ' Get primary panel number if selected
+    If Me.Checkbx_Panel1 = -1 Then
+        PrimaryPanNo = Replace(Me.PrimaryPanel_ID, "Pan", "") 'remove 'Pan' from panel number
+        covArgs = covArgs & " -p " & PrimaryPanNo
+    End If
+    ' Get secondary panel number if selected
+    If Me.Checkbx_Panel2 = -1 Then
+        SecondPanNo = Replace(Me.SecondaryPanel_ID, "Pan", "") 'remove 'Pan' from panel number
+        covArgs = covArgs & " -q " & SecondPanNo
+    End If
+    ' Get tertiary panel number if selected
+    If Me.Checkbx_Panel3 = -1 Then
+        TertiaryPanNo = Replace(Me.TertiaryPanel_ID, "Pan", "") 'remove 'Pan' from panel number
+        covArgs = covArgs & " -q " & TertiaryPanNo
+    End If
+    
+     'Compile full coverage cmd to be run
+    Cmd = PyPath & " " & ScriptPath & " " & covArgs
+    ' Debug.Print actualNGStest
+    ' Debug.Print Cmd
+    
+    ' Execute python script with required arguments "2>&1" at the end redirects StdErr (2) to StdOut (1)
+    Dim wsh As Object
+    Set wsh = CreateObject("WScript.Shell")
+    Set wshexec = wsh.Exec("cmd.exe /S /C " & Cmd & " 2>&1")
+    'DoEvents pauses VBA until python script has finished running. wshexec.status is 0 while running and 1 when finished
+    Do While wshexec.Status = 0
+        DoEvents
+    Loop
+    'Capture any error messages from python script (StdErr has been redirected to StdOut, see above)
+    errReport = wshexec.Stdout.readall()
+    If errReport <> "" Then
+    MsgBox "The following output was observed when generating coverage report: " & vbNewLine & vbNewLine & errReport, vbInformation, "Script Output"
+    End If
+
+    ' check that temp coverage pdf has been generated in the holding area. Exit if no pdf present.
+    holdingDir = "\\gstt.local\Shared\Genetics\Bioinformatics\NGS\depthofcoverage\pdf_holding_area\"
+    'rptName = PRU & "." & DNANumber & ".cov.pdf"
+    'Full path for coverage report
+
+    
+    ' For re-anlysis, if NGStest Id has been edited, rename coverage reprt to inculde the actual NGSTest ID in title
+    If inputNGSID <> actualNGSID Then
+        ' rename report to use the actual NGStestID
+         origRptPath = holdingDir & temprptName
+         tempRptPath = holdingDir & finalrptName
+        Name origRptPath As tempRptPath
+        Print "Hello"
+    Else
+        tempRptPath = holdingDir & temprptName
+    End If
+
+    ' Loop through coverage reports in the holding area
+    tempCovFilename = Dir(tempRptPath) 'Returns recordset of each matching filename
+    hold_tally = 0
+    Do While tempCovFilename <> "" 'Loop until no more files counting matching files.
+        hold_tally = tally + 1
+        tempCovFilename = Dir 'Moves to next filename in record
+    Loop
+    ' if pfd not identified in the holding area, inform users to contact the binfx team. Suggests report was not generated.
+    If hold_tally = 0 Then
+    MsgBox "No coverage report matching:" & vbNewLine & rptName & " found in pfd holding area. Please contact the bioinformatics team", vbExclamation, ""
+        ' Close popup
+            DoCmd.Close acForm, "s0901_NGSCoveragePopup"
+        Exit Sub
+    End If
+    
+    ' if coverage report has been generated move pdf from holding area to final location on the s drive
+    If dest_tally > 0 Then 'remove existing coverage report before replacing with new coverage report
+        'Debug.Print rptPath
+        Kill rptPath
+    End If
+    'copy coverage report then remove temp cov report from holding area
+    FileCopy tempRptPath, rptPath 'Copy new file to the S: drive
+    Kill tempRptPath
+    
+    'Add comment to results comment box and logs
+     Dim commentStr As String
+     
+    'Retrieve exsiting result comments so coverage comment can be added
+    Set rsGetComment = New ADODB.Recordset
+    sqlGetComment = "SELECT NGSTest.ResultComment FROM NGSTest WHERE NGSTest.NGSTestID = " & actualNGStest
+    rsGetComment.Open sqlGetComment, CurrentProject.Connection, adOpenKeyset
+    'Get any existing comments/ notes
+    newComment = rsGetComment.Fields("ResultComment")
+    ' add coverage report generated time stamp
+    commentStr = "Coverage report generated " & dt & vbNewLine
+    newComment = commentStr & newComment
+    newComment = Replace(newComment, "'", "''") 'Escape any apostrophes to prevent SQL error
+    sqlUpdate = "UPDATE NGSTest SET NGSTest.ResultComment = '" & newComment & "' WHERE NGSTest.NGSTestID = " & actualNGStest
+    
+    'Retrieve details and update logs
+    patID = Me.InternalPatientID
+    dateReq = Me.DateRequested
+    un = VBA.Environ("USERNAME")
+    cn = VBA.Environ("COMPUTERNAME")
+    'SQL statements for NGSmemolog and patient log
+    sqlMemo = "INSERT INTO NGSLogMemo(InternalPatientID, Type, LinkID, LogMemoEntry, [Date], Login, PCName) VALUES(" + CStr(patID) + ", 3, " + CStr(actualNGStest) + ",'NGS WES test:Coverage report generated for WES test requested " + CStr(dateReq) + "',#" + dt + "#,'" + un + "','" + cn + "')"
+    sqlPatLog = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" + CStr(patID) + ",'NGS WES test: Coverage report generated for WES test requested " + CStr(dateReq) + "',#" + dt + "#,'" + un + "','" + cn + "')"
+    'Execute SQL statements
+    DoCmd.SetWarnings False
+    DoCmd.RunSQL sqlUpdate
+    DoCmd.RunSQL sqlMemo
+    DoCmd.RunSQL sqlPatLog
+    DoCmd.SetWarnings True
+    'Refresh NGS results form so that result comments field is updated
+    Forms![0901 ExomeNGSResults].Refresh
+    
+    ' open coverage report pdf so user can check PID and gene panels
+    Set objShell = CreateObject("Wscript.Shell")
+    objShell.Run ("""" & rptPath & """")
+    
+    ' Close popup
+    DoCmd.Close acForm, "s0901_NGSCoveragePopup"
+End If
+End Sub
