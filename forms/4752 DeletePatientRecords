@@ -5,7 +5,7 @@ Private Sub Form_Open(Cancel As Integer)
 Dim rsUSR As dao.Recordset
 Dim usr As String
 
-' Access granted to Arry duty scientists (Checker:Authoriser Col = 4) and Binfx Adimins (Checker:Authoriser Col = 1)
+' Access granted to Array(Checker:Authoriser Col = 4) and Binfx Adimins (Checker:Authoriser Col = 1)
 ' identify user
 usr = VBA.Environ("USERNAME")
 ' Query checker table to link user with authoriser status
