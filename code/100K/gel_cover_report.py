@@ -17,6 +17,7 @@ optional arguments:
   -n NGSTestID, --ngstestid NGSTestID
                         Moka NGSTestID from NGSTest table
 """
+import sys
 import os
 import io
 import argparse
@@ -61,8 +62,9 @@ def get_moka_demographics(ngs_test_id):
     row = cursor.execute(demographics_sql).fetchone()
     # If there is a missing record in an inner joined table, e.g. no clinician address or title, no results will be returned from query.
     # Check a row has been returned and raise error if not.
-    assert row, 'No results returned from Moka query for NGSTestID {ngs_test_id}. Check there are records in all inner joined tables.'.format(ngs_test_id=ngs_test_id)
-    # Populate demographics dictionaries with values returned by query
+    if not row:
+		sys.exit('No results returned from Moka query for NGSTestID {ngs_test_id}. Check there are records in all inner joined tables.'.format(ngs_test_id=ngs_test_id))
+	# Populate demographics dictionaries with values returned by query
     demographics = {
         'clinician': '{title} {name}'.format(title=row.clinician_title, name=row.clinician_name),
         'clinician_address': row.clinician_address,
@@ -149,7 +151,7 @@ def main():
         print 'Report has been generated: {gel_combined_report}'.format(gel_combined_report=gel_combined_report)
     else:
         # If the original GeL report is not found, print an error message
-        print 'Original GeL report not found. Please ensure it has been saved as PDF with the following filepath: {gel_original_report}'.format(gel_original_report=gel_original_report)
+        sys.exit('Original GeL report not found. Please ensure it has been saved as PDF with the following filepath: {gel_original_report}'.format(gel_original_report=gel_original_report))
 
 if __name__ == '__main__':
     main()
