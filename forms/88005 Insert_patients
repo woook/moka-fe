@@ -5,36 +5,45 @@ Private Sub btnClose_Click()
 End Sub
 
 Private Sub btnFindPatient_Click()
-    ' when click the find patient button requery the ListPatientFound list box
+On Error GoTo Err_btnFindPatient_Click
+' when click the find patient button requery the ListPatientFound list box
     Me![ListPatientFound].Requery
     ' this box searches for geneworks records which match that family ID
     ' If there are no records
     If Me![ListPatientFound].ListCount = 0 Then
     ' display a message box saying there were no records identified in GW
-    msga = MsgBox("No records in Geneworks matching that family ID", 0, "No records found")
+    MsgBox "No records in Geneworks matching that family ID", 0, "No records found"
     End If
-    ' reset focus on the box to enter next family id
-    Me![txFamilyTrustID].SetFocus
+' This is run when the sub routine finishes
+Exit_btnFindPatient_Click:
+    ' exit the sub
+    Exit Sub
+' if there is an error when running this form
+Err_btnFindPatient_Click:
+    ' describe the error in a messagebox
+    MsgBox Err.Description
+    ' when msgbox is closed call the Exit_btnFindPatient_Click sub routine
+    Resume Exit_btnFindPatient_Click
 End Sub
 
-Private Sub Form_Open(Cancel As Integer)
-    ' when the form opens set the focus in the box to enter the family id
-    Me![txFamilyTrustID].SetFocus
-End Sub
 
 Private Sub ListPatientFound_DblClick(Cancel As Integer)
+On Error GoTo Err_ListPatientFound_DblClick
     'Declare variables
-    Dim moka_patients As ADODB.Recordset
-    Set moka_patients = New ADODB.Recordset
+    Dim rsMokaPatients As ADODB.Recordset
+    Set rsMokaPatients = New ADODB.Recordset
     Dim rsAddPatient As ADODB.Recordset
     Set rsAddPatient = New ADODB.Recordset
+    Dim strLookupNGSTest As String
+    Dim rsLookupNGSTest As ADODB.Recordset
+    Set rsLookupNGSTest = New ADODB.Recordset
     Dim rsAddNGSTest As ADODB.Recordset
     Set rsAddNGSTest = New ADODB.Recordset
     Dim usr As String
     Dim dt As String
     Dim cmp As String
     Dim strReadMoka As String
-    Dim internal_patient_id As String
+    Dim strInternalPatientID As String
     Dim strAddPatientSQL As String
     Dim strAddNGSTest As String
     
@@ -43,77 +52,93 @@ Private Sub ListPatientFound_DblClick(Cancel As Integer)
     usr = VBA.Environ("USERNAME")
     cmp = VBA.Environ("COMPUTERNAME")
     
-    ' This list box lists any patients in GW with this family ID. This code is run when a single family member is clicked
-    ' Me.ListPatientFound.Value is the PRU for that individual
-    ' Step 1. Check if already in patients table - get internal patient id
-    ' Step 2. If not insert to patients table from geneworks- get internal patient id
-    ' Step 3. Create NGS test with internal patient id
-    ' Step 4. Display the relevant info for the NGSTest in subform
-    
-    
-    ' Step 1. Check if already in patients table - get internal patient id
-    ' pull out InternalPatientID from patients table
-    strReadMoka = "SELECT Patients.InternalPatientID, Patients.PatientID From Patients where Patients.PatientID = '" & Me.ListPatientFound.Value & "'"
-    
-    ' Recordset with any existing entries in patients
-    moka_patients.Open strReadMoka, CurrentProject.Connection, adOpenKeyset
-    
     ' Test that a patient has been selected
     If Not IsNull(Me.ListPatientFound.Value) Then
+    
+        ' This list box lists any patients in GW with this family ID. This code is run when a single family member is clicked
+        ' Me.ListPatientFound.Value is the PRU for that individual
+        ' Step 1. Check if already in patients table - get internal patient id
+        ' Step 2. If not insert to patients table from geneworks- get internal patient id
+        ' Step 3. Create NGS test with internal patient id
+        ' Step 4. Display the relevant info for the NGSTest in subform
+        
+        
+        ' Step 1. Check if already in patients table - get internal patient id
+        ' pull out InternalPatientID from patients table
+        strReadMoka = "SELECT Patients.InternalPatientID, Patients.PatientID From Patients where Patients.PatientID = '" & Me.ListPatientFound.Value & "'"
+        
+        ' Recordset with any existing entries in patients
+        rsMokaPatients.Open strReadMoka, CurrentProject.Connection, adOpenKeyset
+    
         ' If there are no record in patients
-        If moka_patients.RecordCount = 0 Then
+        If rsMokaPatients.RecordCount = 0 Then
             ' insert to moka
-            strAddPatientSQL = "INSERT INTO Patients(PatientID, s_StatusOverall, MokaCreated, MokaCreatedBy, MokaCreatedPC, NHSNumber, BookinLastname, BookinFirstName, BookinDoB, BookinCreatedBy, BookinCreatedDate, BookinSex) SELECT '" & Me.ListPatientFound.Value & "', 1202218839, now(),'" & usr & "','" & cmp & "', dbo_patientlinked.NHSNo, dbo_patientlinked.LastName, dbo_patientlinked.FirstName, dbo_patientlinked.DOB, dbo_patientlinked.CreatedByID, dbo_patientlinked.CreatedDate, dbo_patientlinked.Gender from dbo_patientlinked where patienttrustid = '" & Me.ListPatientFound.Value & "'"
-            Debug.Print strAddPatientSQL
+            strAddPatientSQL = "INSERT INTO Patients(PatientID, s_StatusOverall, MokaCreated, MokaCreatedBy, MokaCreatedPC, NHSNumber, BookinLastname, BookinFirstName, BookinDoB, " & _
+            "BookinCreatedBy, BookinCreatedDate, BookinSex) SELECT '" & Me.ListPatientFound.Value & "', 1202218839, now(),'" & usr & "','" & cmp & "', dbo_patientlinked.NHSNo, " & _
+            "dbo_patientlinked.LastName, dbo_patientlinked.FirstName, dbo_patientlinked.DOB, dbo_patientlinked.CreatedByID, dbo_patientlinked.CreatedDate, dbo_patientlinked.Gender " & _
+            "from dbo_patientlinked where patienttrustid = '" & Me.ListPatientFound.Value & "'"
+            
+            'Debug.Print strAddPatientSQL
             
             'execute the query
             rsAddPatient.Open strAddPatientSQL, CurrentProject.Connection, adOpenKeyset
             ' select the internal patient id created from the insert
             rsAddPatient.Open "SELECT @@identity", CurrentProject.Connection, adOpenKeyset
             ' assign to variable
-            internal_patient_id = rsAddPatient.Fields(0).Value
+            strInternalPatientID = rsAddPatient.Fields(0).Value
             ' update status box on form
             Me.what_has_happened.Value = "Patient record inserted into Patients table"
         ' if there are multiple records for that PRU
-        ElseIf moka_patients.RecordCount > 1 Then
+        ElseIf rsMokaPatients.RecordCount > 1 Then
             ' open a message box warning of this
-            'msgbx = MsgBox("Error - more than one records in patients table for PRU " & Me.ListPatientFound.Value, "Error")
+            'MsgBox "Error - more than one records in patients table for PRU " & Me.ListPatientFound.Value, "Error"
             ' update status box on form
-            Me.what_has_happened.Value = "Error - more than one record (" & moka_patients.RecordCount & ")in patients table for PRU " & Me.ListPatientFound.Value
+            Me.what_has_happened.Value = "Error - more than one record (" & rsMokaPatients.RecordCount & ")in patients table for PRU " & Me.ListPatientFound.Value
             'STOP code from running any further
             Exit Sub
         ' If there is a matching record in Moka
         Else
-        ' capture the internal_patient_id  ready to insert to NGSTest
-        internal_patient_id = moka_patients!InternalPatientID
+        ' capture the strInternalPatientID ready to insert to NGSTest
+        strInternalPatientID = rsMokaPatients!InternalPatientID
         ' update status box on form
         Me.what_has_happened.Value = "Patient record found in Patients table"
-    End If
+        End If
     End If
     
     
-    ' Now we have the internal_patient_id  we can insert to the NGSTestTable
-    ' only want to create a ngstest once = need to check if it has already been added - use service and internal patient id
-    strAddNGSTest = "select * from NGSTest where service = 0 and InternalPatientID = " & internal_patient_id
+    ' Now we have the InternalPatientID we can insert to the NGSTestTable
+    ' only want to create a ngstest once = need to check if it has already been added - use referralID and internal patient id
+    strLookupNGSTest = "select * from NGSTest where referralid = 1199901218 and InternalPatientID = " & strInternalPatientID
     ' execute the select query
-    rsAddNGSTest.Open strAddNGSTest, CurrentProject.Connection, adOpenKeyset
+    rsLookupNGSTest.Open strLookupNGSTest, CurrentProject.Connection, adOpenKeyset
     ' if there is no results
-    If rsAddNGSTest.RecordCount = 0 Then
-        ' empty the record set
-        Set rsAddNGSTest = Nothing
+    If rsLookupNGSTest.RecordCount = 0 Then
         ' reset as recordset
         Set rsAddNGSTest = New ADODB.Recordset
         ' referralID and statusID = 100K from status and referral tables, bookby and BookingAuthorisedByID = NA - these will be assigned in the subform
-        strAddNGSTest = "insert into NGSTest (InternalPatientID,ReferralID,StatusID,DateRequested,BookBy,BookingAuthorisedByID,Service) Values (" & internal_patient_id & ",1199901218,1202218839, now(),1201865434,1201865434,0)"
+        strAddNGSTest = "insert into NGSTest (InternalPatientID,ReferralID,StatusID,DateRequested,BookBy,BookingAuthorisedByID,Service) Values (" & strInternalPatientID & ",1199901218,1202218839, now(),1201865434,1201865434,0)"
         ' execute insert statement
         rsAddNGSTest.Open strAddNGSTest, CurrentProject.Connection, adOpenKeyset
         Me.what_has_happened.Value = Me.what_has_happened.Value & vbNewLine & "NGStest created"
+    Else
+        ' if a 100K NGSTest already exists for that internal patient ID state that hasn't been added
+        Me.what_has_happened.Value = Me.what_has_happened.Value & vbNewLine & "NGStest already present"
     End If
-    Me.what_has_happened.Value = Me.what_has_happened.Value & vbNewLine & "NGStest already present"
     ' populate the subform record source
-    Me.s88005_subform.Form.RecordSource = "SELECT NGSTest.NGSTestID, Patients.BookinLastName, Patients.BookinFirstName, Patients.BookinSex, Patients.BookinDOB, GELProbandID, IRID, BookBy, BookingAuthorisedByID FROM NGSTest INNER JOIN Patients ON NGSTest.InternalPatientID = Patients.InternalPatientID where Patients.InternalPatientID = " & internal_patient_id
+    Me.s88005_updateNGSTest.Form.RecordSource = "SELECT NGSTest.NGSTestID, Patients.BookinLastName, Patients.BookinFirstName, Patients.BookinSex, Patients.BookinDOB, GELProbandID, IRID, BookBy, BookingAuthorisedByID FROM NGSTest INNER JOIN Patients ON NGSTest.InternalPatientID = Patients.InternalPatientID where Patients.InternalPatientID = " & strInternalPatientID
     ' requery the subform
-    Me.s88005_subform.Requery
+    Me.s88005_updateNGSTest.Requery
+    
+' This is run when the sub routine finishes
+Exit_ListPatientFound_DblClick:
+    ' exit the sub
+    Exit Sub
+' if there is an error when running this form
+Err_ListPatientFound_DblClick:
+    ' describe the error in a messagebox
+    MsgBox Err.Description
+    ' when msgbox is closed call the Exit_ListPatientFound_DblClick sub routine
+    Resume Exit_ListPatientFound_DblClick
 End Sub
 Private Sub refresh_form_Click()
 On Error GoTo Err_refresh_form_Click
@@ -122,17 +147,21 @@ On Error GoTo Err_refresh_form_Click
     Me![ListPatientFound].Requery
     Me.what_has_happened.Value = Nothing
     ' reset recordsource using giving an internalpatientid of 0 to give an empty form
-    Me.s88005_subform.Form.RecordSource = "SELECT NGSTest.NGSTestID, Patients.BookinLastName, Patients.BookinFirstName, Patients.BookinSex, Patients.BookinDOB, GELProbandID, IRID, BookBy, BookingAuthorisedByID FROM NGSTest INNER JOIN Patients ON NGSTest.InternalPatientID = Patients.InternalPatientID where Patients.InternalPatientID = 0"
+    Me.s88005_updateNGSTest.Form.RecordSource = "SELECT NGSTest.NGSTestID, Patients.BookinLastName, Patients.BookinFirstName, Patients.BookinSex, Patients.BookinDOB, GELProbandID, IRID, BookBy, BookingAuthorisedByID FROM NGSTest INNER JOIN Patients ON NGSTest.InternalPatientID = Patients.InternalPatientID where Patients.InternalPatientID = 0"
     ' refresh form
     Me.Refresh
     'set focus ready for next sample
     Me![txFamilyTrustID].SetFocus
 
+' This is run when the sub routine finishes
 Exit_refresh_form_Click:
+    ' exit the sub
     Exit Sub
-
+' if there is an error when running this form
 Err_refresh_form_Click:
+    ' describe the error in a messagebox
     MsgBox Err.Description
+    ' when msgbox is closed call the Exit_refresh_form_Click sub routine
     Resume Exit_refresh_form_Click
     
 End Sub
