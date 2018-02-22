@@ -24,6 +24,7 @@ End Sub
 
 Private Sub Check_reanalysis_Click()
 Dim yellow As Long
+Dim white As Long
 ' set background colour as veriable using RGB
 white = RGB(255, 255, 255)
 yellow = RGB(254, 243, 196)
@@ -57,7 +58,7 @@ End If
 
 ' Check that PRU, DNAnumer, NGStest ID, and at least 1 panel is selected
 If IsNull(Me.PatientID) Or IsNull(Me.DNA) Or IsNull(Me.txtbxNGStestID) Or (Me.Checkbx_Panel1 = 0 And Me.Checkbx_Panel2 = 0 And Me.Checkbx_Panel3 = 0) Then
-    MsgBox "Error!" & vbNewLine & "Please ensure PRU, DNA, NGS Test ID are correct." & vbNewLine & "Please ensure at least one gene panel has been selected", vbExclamation, "Assign NGStestID/GenePanel"
+    MsgBox "Error!" & vbNewLine & "Please check DNA number and NGS Test ID are assigned to sample." & vbNewLine & "Please ensure at least one gene panel has been selected", vbExclamation, "Assign NGStestID/GenePanel"
 Else
     'call python script and pass through arguments
     ' define the variables to feed to script
@@ -87,7 +88,7 @@ Else
     dt = Format(Now, "dd/mmm/yyyy Hh:Nn:ss")
     DNANumber = CStr(Me.DNA)
     inputNGSTest = CStr(Me.txtbxNGStestID) 'call script using the NGSTestID textbox so coverage for reanalysis can be specifed by user.
-    actualNGStest = CStr(Me.NGSTestID) 'use the ensure file is named using the current NGS-test ID
+    actualNGStest = CStr(Me.NGSTestID) 'use to ensure file is named using the current NGS-test ID
     PRU = Replace(Me.PatientID, ":", "") ' remove colon (illegal charater) so from file name
 
     ' Check if coverage report already exists in the destination directory on S: drive
@@ -175,8 +176,8 @@ Else
         ' rename report to use the actual NGStestID
          origRptPath = holdingDir & temprptName
          tempRptPath = holdingDir & finalrptName
+         ' VBA function to rename files.
         Name origRptPath As tempRptPath
-        Print "Hello"
     Else
         tempRptPath = holdingDir & temprptName
     End If
@@ -199,10 +200,12 @@ Else
     ' if coverage report has been generated move pdf from holding area to final location on the s drive
     If dest_tally > 0 Then 'remove existing coverage report before replacing with new coverage report
         'Debug.Print rptPath
+        ' Deletes existing coverage report in the final coverage dir.
         Kill rptPath
     End If
     'copy coverage report then remove temp cov report from holding area
     FileCopy tempRptPath, rptPath 'Copy new file to the S: drive
+   ' Deletes coverage report in the holding area dir.
     Kill tempRptPath
     
     'Add comment to results comment box and logs
