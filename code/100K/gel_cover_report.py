@@ -131,13 +131,13 @@ def main():
     # Create the cover pdf
     g.create_cover_pdf(demographics, r'\\gstt.local\apps\Moka\Files\Software\100K\gel_cover_report_template.html')
     # Specify the path to the original GeL report, based on the GeL participant ID and the intertpretation request ID retrieved from Moka
-    gel_original_report = r'\\gstt.local\shared\Genetics\Bioinformatics\NGS\GeL\GeL_PDFs_originals\ClinicalReport_{proband_id}_{ir_id}.pdf'.format(
+    gel_original_report = r'\\gstt.local\shared\Genetics\Bioinformatics\GeL\technical_reports\ClinicalReport_{proband_id}_{ir_id}.pdf'.format(
                 proband_id=demographics['GELID'],
                 ir_id=demographics['IRID']
                 )
     print type(demographics['date_reported'])
     # Specify the output path for the combined report, based on the GeL participant ID and the intertpretation request ID retrieved from Moka
-    gel_combined_report = r'\\gstt.local\shared\Genetics\Bioinformatics\NGS\GeL\GeL_PDFs_combined\{date}_GeLReport_{pru}_{proband_id}_{ir_id}.pdf'.format(
+    gel_combined_report = r'\\gstt.local\shared\Genetics\Bioinformatics\GeL\reports_to_send\{date}_GeLReport_{pru}_{proband_id}_{ir_id}.pdf'.format(
             pru=demographics['PRU'].replace(':', ''),
             date=datetime.datetime.now().strftime(r'%y%m%d'),
             proband_id=demographics['GELID'],
