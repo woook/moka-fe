@@ -1,0 +1,63 @@
+Option Compare Database
+
+Private Sub NGSTestID_DblClick(Cancel As Integer)
+On Error GoTo Err_NGSTestID_DblClick
+    ''Call python script which will create the gel report
+    ' settings to have cmd box visible while running
+    Dim waitOnReturn As Boolean: waitOnReturn = True
+    Dim windowStyle As Integer: windowStyle = 1
+    
+    'allow capture of error code
+    Dim ErrorCode As Integer
+    
+    ' variables to hold strings which will be passed to the python command
+    Dim strScriptPath As String ' used to capture the python script path
+    Dim strTotalCMD As String ' string which is used to build the command which executes the python script
+    ' report to hold stderr/out when running cmd
+    Dim strReport As String
+    
+    'set path to python script
+    strScriptPath = "\\gstt.local\Apps\Moka\Files\Software\100K\gel_cover_report.py"
+    
+    'combine all to make totalCmd NB /K can be used for the cmd line window to remain after it has run - good for debugging - but may cause it to hang
+    ' note 2>&1 which combines stderr and stdout
+    '/C means "execute this command as if I had typed it at the prompt, then quit"
+    '/S means you don't have to worry about quotes, removing first and last quotes, but leaving all others untouched.
+    strTotalCMD = "cmd.exe /S /C \\gstt.local\shared\Genetics_Data2\Array\Software\Python\python.exe " & strScriptPath & " -n " & Me.NGSTestID & " 2>&1"
+    
+    Debug.Print strTotalCMD
+    
+    'Create shell object
+    Dim wsh As Object
+    Set wsh = CreateObject("WScript.Shell")
+    
+    ' use .Exec not .Run so can access the stdout
+    Set wshexec = wsh.Exec(strTotalCMD)
+    
+    'Debug.Print wshexec.Stdout.readall()
+    
+    'DoEvents pauses VB script until import script has finished running. wshexec.status is 0 while running 1 when finished
+    ' and 2 when errored so could use a if statement but have combined stderr and stdout above so no need.
+    Do While wshexec.Status = 0
+        DoEvents
+    Loop
+    
+    'strReport captures stdout and stderr from executing python script (err is redirected to out in cmd)
+    strReport = wshexec.Stdout.readall()
+    Debug.Print strReport
+    ' display in message box
+    MsgBox strReport
+    
+
+' This is run when the sub routine finishes
+Exit_NGSTestID_DblClick:
+    ' exit the sub
+    Exit Sub
+'if error report error description is message box
+Err_NGSTestID_DblClick:
+    ' put error message in msgbox
+    MsgBox Err.Description
+    ' go to sub which will exit the routine
+    Resume Exit_NGSTestID_DblClick
+End Sub
+
