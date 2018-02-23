@@ -42,10 +42,13 @@ On Error GoTo Err_ListPatientFound_DblClick
     Dim usr As String
     Dim dt As String
     Dim cmp As String
+    Dim strPatLog As String
     Dim strReadMoka As String
     Dim strInternalPatientID As String
     Dim strAddPatientSQL As String
     Dim strAddNGSTest As String
+    Dim strPatLogTest As String
+    Dim strMemo As String
     
     ' set time, user and computer names for logs
     dt = Format(Now, "dd/mmm/yyyy Hh:Nn:ss")
@@ -84,6 +87,14 @@ On Error GoTo Err_ListPatientFound_DblClick
             rsAddPatient.Open "SELECT @@identity", CurrentProject.Connection, adOpenKeyset
             ' assign to variable
             strInternalPatientID = rsAddPatient.Fields(0).Value
+            
+            ' Add record of insert to patient log
+            strPatLog = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" & strInternalPatientID & ", 'Patients: Patient added to Moka. ',#" + dt + "#,'" + usr + "','" + cmp + "')"
+            DoCmd.SetWarnings False
+            DoCmd.RunSQL strPatLog
+            DoCmd.SetWarnings True
+
+            
             ' update status box on form
             Me.what_has_happened.Value = "Patient record inserted into Patients table"
         ' if there are multiple records for that PRU
@@ -117,7 +128,22 @@ On Error GoTo Err_ListPatientFound_DblClick
         strAddNGSTest = "insert into NGSTest (InternalPatientID,ReferralID,StatusID,DateRequested,BookBy,BookingAuthorisedByID,Service) Values (" & strInternalPatientID & ",1199901218,1202218839, now(),1201865434,1201865434,0)"
         ' execute insert statement
         rsAddNGSTest.Open strAddNGSTest, CurrentProject.Connection, adOpenKeyset
+        ' Capture NGSTestID
+        rsAddNGSTest.Open "SELECT @@identity", CurrentProject.Connection, adOpenKeyset
+        ' assign to variable
+        strNSGTestID = rsAddPatient.Fields(0).Value
+        
         Me.what_has_happened.Value = Me.what_has_happened.Value & vbNewLine & "NGStest created"
+        
+        'Record logs of NGSTest creation
+        strPatLogTest = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" & strInternalPatientID & ", 'NGS: GeL test request added.',#" + dt + "#,'" + usr + "','" + cmp + "')"
+        strMemo = "INSERT INTO NGSLogMemo(InternalPatientID, Type, LinkID, LogMemoEntry, [Date], Login, PCName) VALUES(" & strInternalPatientID & ", 3, " & strNSGTestID & ",'GeL NGS test created.' ,#" + dt + "#,'" + usr + "','" + cmp + "')"
+        DoCmd.SetWarnings False
+        DoCmd.RunSQL strPatLogTest
+        DoCmd.RunSQL strMemo
+        DoCmd.SetWarnings True
+
+        
     Else
         ' if a 100K NGSTest already exists for that internal patient ID state that hasn't been added
         Me.what_has_happened.Value = Me.what_has_happened.Value & vbNewLine & "NGStest already present"
