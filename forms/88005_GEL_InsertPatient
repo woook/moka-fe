@@ -109,6 +109,13 @@ On Error GoTo Err_ListPatientFound_DblClick
         Else
         ' capture the strInternalPatientID ready to insert to NGSTest
         strInternalPatientID = rsMokaPatients!InternalPatientID
+        'Update patient status to 100K
+        strPatStatus = "UPDATE Patients SET s_StatusOverall = 1202218839 WHERE InternalPatientID = " & strInternalPatientID
+        'Record status update in log
+        strPatLogStatus = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" & strInternalPatientID & ", 'Patients: Status changed to 100K ',#" + dt + "#,'" + usr + "','" + cmp + "')"
+        DoCmd.SetWarnings False
+        DoCmd.RunSQL strPatLogStatus
+        DoCmd.SetWarnings True
         ' update status box on form
         Me.what_has_happened.Value = "Patient record found in Patients table"
         End If
