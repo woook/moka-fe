@@ -1,0 +1,4 @@
+SELECT DISTINCT Patients.PatientID, Checker.Initials AS Analysed, Checker_1.Initials AS Checked, ArrayTest.Check1Date AS [Check Date], Referral.Referral
+FROM (((ArrayTest INNER JOIN Checker ON ArrayTest.Check1ID = Checker.Check1ID) LEFT JOIN Checker AS Checker_1 ON ArrayTest.Check2ID = Checker_1.Check1ID) INNER JOIN Referral ON ArrayTest.ReferralID = Referral.ReferralID) INNER JOIN Patients ON ArrayTest.InternalPatientID = Patients.InternalPatientID
+WHERE (((Checker.Initials)=[Initials?]) AND ((Referral.ReferralID)=1199901190))
+ORDER BY ArrayTest.Check1Date DESC;
