@@ -156,7 +156,9 @@ On Error GoTo Err_ListPatientFound_DblClick
         Me.what_has_happened.Value = Me.what_has_happened.Value & vbNewLine & "NGStest already present"
     End If
     ' populate the subform record source
-    Me.s88005_updateNGSTest.Form.RecordSource = "SELECT NGSTest.InternalPatientID,NGSTest.NGSTestID, Patients.BookinLastName, Patients.BookinFirstName, Patients.BookinSex, Patients.BookinDOB, GELProbandID, IRID, BookBy, BookingAuthorisedByID FROM NGSTest INNER JOIN Patients ON NGSTest.InternalPatientID = Patients.InternalPatientID where Patients.InternalPatientID = " & strInternalPatientID
+    Me.s88005_updateNGSTest.Form.RecordSource = "SELECT NGSTest.InternalPatientID, NGSTest.NGSTestID, NGSTest.GELProbandID, NGSTest.IRID, NGSTest.BookBy, Patients.InternalPatientID, dbo_patientlinked.FirstName, dbo_patientlinked.LastName, dbo_patientlinked.DoB, gw_GenderTable.GenderShort " & _
+    "FROM ((NGSTest INNER JOIN Patients ON NGSTest.InternalPatientID = Patients.InternalPatientID) INNER JOIN dbo_patientlinked ON Patients.PatientID = dbo_patientlinked.PatientTrustID) LEFT JOIN gw_GenderTable ON dbo_patientlinked.GenderID = gw_GenderTable.GenderID " & _
+    "WHERE Patients.InternalPatientID = " & strInternalPatientID
     ' requery the subform
     Me.s88005_updateNGSTest.Requery
     
