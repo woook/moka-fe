@@ -1,5 +1,77 @@
 Option Compare Database
 
+Private Sub BookBy_AfterUpdate()
+    Dim dt As String
+    Dim un As String
+    Dim cn As String
+    ' set date, username and computer name as required by log tables
+    dt = Format(Now, "dd/mmm/yyyy Hh:Nn:ss")
+    un = VBA.Environ("USERNAME")
+    cn = VBA.Environ("COMPUTERNAME")
+    
+    'SQL statement for NGSLogMemo
+    sqlMemo = "INSERT INTO NGSLogMemo(InternalPatientID, Type, LinkID, LogMemoEntry, [Date], Login, PCName) VALUES(" + CStr(Me.InternalPatientID) + ", 3, " + CStr(Me.NGSTestID) & _
+    ",'GEL NGS Test: referring clinician updated to " + CStr(Me.BookBy) + " ',#" + dt + "#,'" + un + "','" + cn + "')"
+    'SQL statement for PatientLog
+    sqlPatLog = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" + CStr(Me.InternalPatientID) + ",'GEL NGS Test: referring clinician updated to " + CStr(Me.BookBy) & _
+    "',#" + dt + "#,'" + un + "','" + cn + "')"
+    
+    'Execute SQL statements
+    DoCmd.SetWarnings False
+    DoCmd.RunSQL sqlPatLog
+    DoCmd.RunSQL sqlMemo
+    DoCmd.SetWarnings True
+
+End Sub
+
+
+Private Sub GELProbandID_AfterUpdate()
+    Dim dt As String
+    Dim un As String
+    Dim cn As String
+    ' set date, username and computer name as required by log tables
+    dt = Format(Now, "dd/mmm/yyyy Hh:Nn:ss")
+    un = VBA.Environ("USERNAME")
+    cn = VBA.Environ("COMPUTERNAME")
+    
+    'SQL statement for NGSLogMemo
+    sqlMemo = "INSERT INTO NGSLogMemo(InternalPatientID, Type, LinkID, LogMemoEntry, [Date], Login, PCName) VALUES(" + CStr(Me.InternalPatientID) + ", 3, " + CStr(Me.NGSTestID) & _
+    ",'GEL NGS Test: GELProbandID updated to " + CStr(Me.GELProbandID) + " ',#" + dt + "#,'" + un + "','" + cn + "')"
+    'SQL statement for PatientLog
+    sqlPatLog = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" + CStr(Me.InternalPatientID) + ",'GEL NGS Test: GELProbandID updated to " + CStr(Me.GELProbandID) & _
+    "',#" + dt + "#,'" + un + "','" + cn + "')"
+    
+    'Execute SQL statements
+    DoCmd.SetWarnings False
+    DoCmd.RunSQL sqlPatLog
+    DoCmd.RunSQL sqlMemo
+    DoCmd.SetWarnings True
+End Sub
+Private Sub IRID_AfterUpdate()
+    Dim dt As String
+    Dim un As String
+    Dim cn As String
+    ' set date, username and computer name as required by log tables
+    dt = Format(Now, "dd/mmm/yyyy Hh:Nn:ss")
+    un = VBA.Environ("USERNAME")
+    cn = VBA.Environ("COMPUTERNAME")
+    
+    'SQL statement for NGSLogMemo
+    sqlMemo = "INSERT INTO NGSLogMemo(InternalPatientID, Type, LinkID, LogMemoEntry, [Date], Login, PCName) VALUES(" + CStr(Me.InternalPatientID) + ", 3, " + CStr(Me.NGSTestID) & _
+    ",'GEL NGS Test: IR-ID updated to " + CStr(Me.IRID) + " ',#" + dt + "#,'" + un + "','" + cn + "')"
+    'SQL statement for PatientLog
+    sqlPatLog = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" + CStr(Me.InternalPatientID) + ",'GEL NGS Test: IR-ID updated to " + CStr(Me.IRID) & _
+    "',#" + dt + "#,'" + un + "','" + cn + "')"
+    
+    'Execute SQL statements
+    DoCmd.SetWarnings False
+    DoCmd.RunSQL sqlPatLog
+    DoCmd.RunSQL sqlMemo
+    DoCmd.SetWarnings True
+
+End Sub
+
+
 Private Sub NGSTestID_DblClick(Cancel As Integer)
 On Error GoTo Err_NGSTestID_DblClick
     ''Call python script which will create the gel report
