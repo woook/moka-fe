@@ -75,10 +75,8 @@ On Error GoTo Err_ListPatientFound_DblClick
             ' insert to moka
             strAddPatientSQL = "INSERT INTO Patients(PatientID, s_StatusOverall, MokaCreated, MokaCreatedBy, MokaCreatedPC, NHSNumber, BookinLastname, BookinFirstName, BookinDoB, " & _
             "BookinCreatedBy, BookinCreatedDate, BookinSex) SELECT '" & Me.ListPatientFound.Value & "', 1202218839, now(),'" & usr & "','" & cmp & "', dbo_patientlinked.NHSNo, " & _
-            "dbo_patientlinked.LastName, dbo_patientlinked.FirstName, dbo_patientlinked.DOB, dbo_patientlinked.CreatedByID, dbo_patientlinked.CreatedDate, dbo_patientlinked.Gender " & _
-            "from dbo_patientlinked where patienttrustid = '" & Me.ListPatientFound.Value & "'"
-            
-            'Debug.Print strAddPatientSQL
+            "dbo_patientlinked.LastName, dbo_patientlinked.FirstName, dbo_patientlinked.DOB, dbo_patientlinked.CreatedByID, dbo_patientlinked.CreatedDate, gw_GenderTable.GenderShort " & _
+            "from dbo_patientlinked LEFT JOIN gw_GenderTable ON dbo_patientlinked.GenderID gw_GenderTable.GenderID = where patienttrustid = '" & Me.ListPatientFound.Value & "'"
             
             'execute the query
             rsAddPatient.Open strAddPatientSQL, CurrentProject.Connection, adOpenKeyset
@@ -125,7 +123,7 @@ On Error GoTo Err_ListPatientFound_DblClick
         Me.what_has_happened.Value = Me.what_has_happened.Value & vbNewLine & "NGStest already present"
     End If
     ' populate the subform record source
-    Me.s88005_updateNGSTest.Form.RecordSource = "SELECT NGSTest.NGSTestID, Patients.BookinLastName, Patients.BookinFirstName, Patients.BookinSex, Patients.BookinDOB, GELProbandID, IRID, BookBy, BookingAuthorisedByID FROM NGSTest INNER JOIN Patients ON NGSTest.InternalPatientID = Patients.InternalPatientID where Patients.InternalPatientID = " & strInternalPatientID
+    Me.s88005_updateNGSTest.Form.RecordSource = "SELECT NGSTest.InternalPatientID,NGSTest.NGSTestID, Patients.BookinLastName, Patients.BookinFirstName, Patients.BookinSex, Patients.BookinDOB, GELProbandID, IRID, BookBy, BookingAuthorisedByID FROM NGSTest INNER JOIN Patients ON NGSTest.InternalPatientID = Patients.InternalPatientID where Patients.InternalPatientID = " & strInternalPatientID
     ' requery the subform
     Me.s88005_updateNGSTest.Requery
     
