@@ -70,13 +70,20 @@ End Sub
 Private Sub countPrev_DblClick(Cancel As Integer)
     Me.Dirty = False 'Force any changes to be saved
     stLinkCriteria = "[NGSVariantID] = " & Me.NGSVariantID
-    If Me.AllowEdits = False Then
-        'If form is locked following test completion, open prev vars popup in READ ONLY mode so no updates can be made
-        DoCmd.OpenForm "s0901_NGSPrevVarsPopup", , , stLinkCriteria, acFormReadOnly
-    Else
-        'If form is not locked, open prev vars popup in EDIT mode so no updates can be made
-        DoCmd.OpenForm "s0901_NGSPrevVarsPopup", , , stLinkCriteria, acFormEdit
-    End If
+''''''''''
+'    If Me.AllowEdits = False Then
+'        'If form is locked following test completion, open prev vars popup in READ ONLY mode so no updates can be made
+'        DoCmd.OpenForm "s0901_NGSPrevVarsPopup", , , stLinkCriteria, acFormReadOnly
+'    Else
+'        'If form is not locked, open prev vars popup in EDIT mode so no updates can be made
+'        DoCmd.OpenForm "s0901_NGSPrevVarsPopup", , , stLinkCriteria, acFormEdit
+'    End If
+''''''''''
+    ' Feb 2018 - Updated to always open in read only mode. The WES team don't update information in this form anyway and this
+    ' Want to open the form in a non-blocking way (i.e. turn off modal),
+    ' but this would risk data becoming out of sync if it was updated on e.g. the results page whilst this window is open
+    ' The WES team say they never edit information in this form anyway so simplest solution is to always open in read only mode
+    DoCmd.OpenForm "s0901_NGSPrevVarsPopup", , , stLinkCriteria, acFormReadOnly
 End Sub
 
 Private Sub DateAdded_DblClick(Cancel As Integer)
