@@ -54,7 +54,7 @@ def get_moka_demographics(ngs_test_id):
         '"gwv-patientlinked".PatientTrustID, NGSTest.GELProbandID, NGSTest.IRID '
         'FROM (((((NGSTest INNER JOIN Patients ON NGSTest.InternalPatientID = Patients.InternalPatientID) '
         'INNER JOIN "gwv-patientlinked" ON "gwv-patientlinked".PatientTrustID = Patients.PatientID) INNER JOIN Checker ON NGSTest.BookBy = Checker.Check1ID) '
-        'INNER JOIN Item AS Item_Title ON Checker.Title = Item_Title.ItemID) INNER JOIN Item AS Item_Address ON Checker.Address = Item_Address.ItemID) '
+        'LEFT JOIN Item AS Item_Title ON Checker.Title = Item_Title.ItemID) INNER JOIN Item AS Item_Address ON Checker.Address = Item_Address.ItemID) '
         'LEFT JOIN gw_GenderTable ON "gwv-patientlinked".GenderID = gw_GenderTable.GenderID '
         'WHERE NGSTestID = {ngs_test_id};'
         ).format(ngs_test_id=ngs_test_id)
@@ -66,7 +66,7 @@ def get_moka_demographics(ngs_test_id):
 		sys.exit('No results returned from Moka query for NGSTestID {ngs_test_id}. Check there are records in all inner joined tables.'.format(ngs_test_id=ngs_test_id))
 	# Populate demographics dictionaries with values returned by query
     demographics = {
-        'clinician': '{title} {name}'.format(title=row.clinician_title, name=row.clinician_name),
+        'clinician': row.clinician_name,
         'clinician_address': row.clinician_address,
         'patient_name': '{first_name} {last_name}'.format(first_name=row.FirstName, last_name=row.LastName),
         'sex': row.Gender,
@@ -77,6 +77,9 @@ def get_moka_demographics(ngs_test_id):
         'IRID': row.IRID,
         'date_reported': datetime.datetime.now().strftime(r'%d/%m/%Y') # Current date in format dd/mm/yyyy
     }
+    # If clinician has a title (e.g. Dr.), update the clinician name to include it
+    if row.clinician_title:
+        demographics['clinician'] = '{title} {name}'.format(title=row.clinician_title, name=demographics['clinician'])
     # If None has been returned for gender (because there isn't one in geneworks) change value to 'Unknown'
     if not demographics['sex']: 
         demographics['sex'] = 'Unknown'
