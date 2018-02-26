@@ -127,6 +127,7 @@ On Error GoTo Err_ListPatientFound_DblClick
     strLookupNGSTest = "select * from NGSTest where referralid = 1199901218 and InternalPatientID = " & strInternalPatientID
     ' execute the select query
     rsLookupNGSTest.Open strLookupNGSTest, CurrentProject.Connection, adOpenKeyset
+    
     ' if there is no results
     If rsLookupNGSTest.RecordCount = 0 Then
         ' reset as recordset
@@ -138,8 +139,7 @@ On Error GoTo Err_ListPatientFound_DblClick
         ' Capture NGSTestID
         rsAddNGSTest.Open "SELECT @@identity", CurrentProject.Connection, adOpenKeyset
         ' assign to variable
-        strNSGTestID = rsAddPatient.Fields(0).Value
-        
+        strNSGTestID = rsAddNGSTest.Fields(0).Value
         Me.what_has_happened.Value = Me.what_has_happened.Value & vbNewLine & "NGStest created"
         
         'Record logs of NGSTest creation
