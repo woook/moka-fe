@@ -88,6 +88,9 @@ On Error GoTo Err_NGSTestID_DblClick
     ' report to hold stderr/out when running cmd
     Dim strReport As String
     
+    ' requery the form to ensure that changes propogate to database and report script can run without reloading form
+    Me.Requery
+    
     'set path to python script
     strScriptPath = "\\gstt.local\Apps\Moka\Files\Software\100K\gel_cover_report.py"
     
