@@ -1,0 +1,1 @@
+TRANSFORM Count(s46004_ArrayAnalysesNormal.Check2ID) AS CountOfCheck2ID SELECT s_OPMS_98010_Months.Month FROM s_OPMS_98010_Months INNER JOIN s46004_ArrayAnalysesNormal ON s_OPMS_98010_Months.Month = s46004_ArrayAnalysesNormal.Month GROUP BY s_OPMS_98010_Months.Month ORDER BY s_OPMS_98010_Months.Month DESC  PIVOT s46004_ArrayAnalysesNormal.Initials;
