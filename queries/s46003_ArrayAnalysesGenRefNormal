@@ -1,0 +1,3 @@
+SELECT Format([ArrayTest].[ArrayResultDate],"yyyy") & "-" & Format(Format([ArrayTest].[ArrayResultDate],"mm"),"00") AS [Month], Checker.Initials, ArrayTest.Check2ID
+FROM (ResultCode INNER JOIN ArrayTest ON ResultCode.ResultCodeID = ArrayTest.ArrayResultCodeID) INNER JOIN Checker ON ArrayTest.Check1ID = Checker.Check1ID
+WHERE (((ArrayTest.Service)=True) AND ((ArrayTest.ReferralID)=2) AND ((ArrayTest.ArrayResultCodeID)=1) AND ((ArrayTest.RequestedDate)>Now()-740));
