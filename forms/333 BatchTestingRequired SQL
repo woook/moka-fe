@@ -1,0 +1,4 @@
+SELECT Consumable.Consumable, Company.Company, Consumable.CatalogueNo, ConsumableStock.DateOrdered, ConsumableStock.QuantityOrdered, ConsumableStock.LotNo, ConsumableStock.DateReceived, ConsumableBatchTesting.DateTested, ConsumableBatchTesting.SampleTested, ConsumableStock.SectionID, ConsumableBatchTesting.ConsumableBatchTestingID, ConsumableBatchTesting.ConsumableStockID, Consumable.ConsumableID, ConsumableStock.AuthorisedForUseBy
+FROM ((Consumable LEFT JOIN ConsumableStock ON Consumable.ConsumableID = ConsumableStock.ConsumableID) LEFT JOIN ConsumableBatchTesting ON ConsumableStock.ConsumableStockID = ConsumableBatchTesting.ConsumableStockID) LEFT JOIN Company ON Consumable.CompanyID = Company.CompanyID
+WHERE (((ConsumableStock.DateReceived)>#2/7/2012#) AND ((ConsumableBatchTesting.DateTested) Is Null) AND ((ConsumableStock.SectionID)=156))
+ORDER BY ConsumableStock.DateReceived DESC;
