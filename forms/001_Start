@@ -80,7 +80,7 @@ End Sub
 
 Private Sub Command32_Click()
     Dim stDocName As String
-    stDocName = "s_expiredConsumables1"
+    stDocName = "336_expiredConsumables"
     DoCmd.OpenForm stDocName
 End Sub
 
