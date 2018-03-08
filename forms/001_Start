@@ -1,0 +1,158 @@
+Option Compare Database
+
+Private Sub Command11_Click()
+    Dim stDocName As String
+    stDocName = "471 TemperatureLog"
+    DoCmd.OpenForm stDocName, acFormDS
+End Sub
+
+Private Sub Command13_Click()
+    Dim stDocName As String
+    stDocName = "905 LabelPrinting"
+    DoCmd.OpenForm stDocName
+End Sub
+
+Private Sub Command15_Click()
+    Dim stDocName As String
+    stDocName = "5000 ITInventory"
+    DoCmd.OpenForm stDocName, acFormDS
+End Sub
+
+Private Sub Command16_Click()
+    Dim stDocName As String
+    stDocName = "332 Orders"
+    DoCmd.OpenForm stDocName, acFormDS
+End Sub
+
+Private Sub Command21_Click()
+    Dim stDocName As String
+    stDocName = "333 BatchTestingRequired"
+    DoCmd.OpenForm stDocName, acFormDS
+End Sub
+
+Private Sub Command23_Click()
+    Dim stDocName As String
+    stDocName = "334 BatchTestingComplete"
+    DoCmd.OpenForm stDocName, acFormDS
+End Sub
+
+Private Sub Command25_Click()
+    Dim stDocName As String
+    stDocName = "6101 FRAXList"
+    DoCmd.OpenForm stDocName
+End Sub
+
+Private Sub Command26_Click()
+    Dim stDocName As String
+    stDocName = "6102 FRAXListRepeats"
+    DoCmd.OpenForm stDocName
+End Sub
+
+Private Sub Command27_Click()
+    Dim stDocName As String
+    stDocName = "6110 WorksheetFrax"
+    DoCmd.OpenForm stDocName, acFormDS
+End Sub
+
+Private Sub Command28_Click()
+    Dim stDocName As String
+    stDocName = "6120 FraxIn"
+    DoCmd.OpenForm stDocName, acFormDS
+End Sub
+
+Private Sub Command29_Click()
+    Dim stDocName As String
+    stDocName = "6130 NoFRAX"
+    DoCmd.OpenForm stDocName, acFormDS
+End Sub
+
+Private Sub Command30_Click()
+    Dim stDocName As String
+    stDocName = "6003 ExportDNAs"
+    DoCmd.OpenForm stDocName, acFormDS
+End Sub
+
+Private Sub Command31_Click()
+    Dim stDocName As String
+    stDocName = "335 Inventory Consumables Active Inactive"
+    DoCmd.OpenForm stDocName
+End Sub
+
+Private Sub Command32_Click()
+    Dim stDocName As String
+    stDocName = "336 expiredConsumables"
+    DoCmd.OpenForm stDocName
+End Sub
+
+Private Sub Command5_Click()
+    Dim stDocName As String
+    stDocName = "33 Inventory Consumables"
+    DoCmd.OpenForm stDocName
+End Sub
+
+Private Sub Command6_Click()
+    Dim stDocName As String
+    stDocName = "331 OutstandingOrders"
+    DoCmd.OpenForm stDocName, acFormDS
+End Sub
+
+Private Sub Command7_Click()
+    Dim stDocName As String
+    stDocName = "30 Inventory Arrays"
+    DoCmd.OpenForm stDocName, acFormDS
+End Sub
+
+Private Sub Command9_Click()
+    Dim stDocName As String
+    stDocName = "476 Firefox"
+    DoCmd.OpenForm stDocName
+End Sub
+
+Private Sub open_010_Click()
+On Error GoTo Err_open_010_Click
+
+    Dim stDocName As String
+    Dim stLinkCriteria As String
+
+    stDocName = "010_PatientsActive"
+    DoCmd.OpenForm stDocName, acFormDS, , stLinkCriteria
+
+Exit_open_010_Click:
+    Exit Sub
+
+Err_open_010_Click:
+    MsgBox Err.Description
+    Resume Exit_open_010_Click
+    
+End Sub
+Private Sub Command17_Click()
+    Dim stDocName As String
+    Dim stLinkCriteria As String
+    stDocName = "011_PatientStatusReport"
+    DoCmd.OpenForm stDocName, acFormDS, , stLinkCriteria
+End Sub
+
+Private Sub Print_sendaway_labels_Click()
+    Dim stDocName As String
+    Dim stLinkCriteria As String
+    stDocName = "6002 PrintSendawayLabels"
+    DoCmd.OpenForm stDocName, acFormDS, , stLinkCriteria
+End Sub
+
+Private Sub View_extraction_lists_Click()
+On Error GoTo Err_View_extraction_lists_Click
+
+    Dim stDocName As String
+    Dim stLinkCriteria As String
+
+    stDocName = "6000 DNAExtractions"
+    DoCmd.OpenForm stDocName, acFormDS, , stLinkCriteria
+
+Exit_View_extraction_lists_Click:
+    Exit Sub
+
+Err_View_extraction_lists_Click:
+    MsgBox Err.Description
+    Resume Exit_View_extraction_lists_Click
+    
+End Sub
