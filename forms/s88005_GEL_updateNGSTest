@@ -24,28 +24,6 @@ Private Sub BookBy_AfterUpdate()
 
 End Sub
 
-'Private Sub Check1ID_Change()
-'    Dim usr As String
-'    Dim dt As String
-'    Dim cmp As String
-'    Dim strPatLogTest As String
-'    Dim strmemo As String
-'
-'    ' set time, user and computer names for logs
-'    dt = Format(Now, "dd/mmm/yyyy Hh:Nn:ss")
-'    usr = VBA.Environ("USERNAME")
-'    cmp = VBA.Environ("COMPUTERNAME")
-'    ' create sql to insert into patient log and NGS log
-'    strPatLogTest = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" & Me.InternalPatientID & ", 'NGS: GeL responsible scientist changed to " & Me.Check1ID.Column(1) & ".',#" + dt + "#,'" + usr + "','" + cmp + "')"
-'    strmemo = "INSERT INTO NGSLogMemo(InternalPatientID, Type, LinkID, LogMemoEntry, [Date], Login, PCName) VALUES(" & Me.InternalPatientID & ", 3, " & Me.NGSTestID & ",'NGS: GeL responsible scientist changed to " & Me.Check1ID.Column(1) & ".',#" + dt + "#,'" + usr + "','" + cmp + "')"
-'
-'    DoCmd.SetWarnings False
-'    DoCmd.RunSQL strPatLogTest
-'    DoCmd.RunSQL strmemo
-'    DoCmd.SetWarnings True
-'End Sub
-
-
 Private Sub GELProbandID_AfterUpdate()
     Dim dt As String
     Dim un As String
