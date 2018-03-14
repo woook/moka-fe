@@ -48,7 +48,7 @@ On Error GoTo Err_ListPatientFound_DblClick
     Dim strAddPatientSQL As String
     Dim strAddNGSTest As String
     Dim strPatLogTest As String
-    Dim strMemo As String
+    Dim strmemo As String
     
     ' set time, user and computer names for logs
     dt = Format(Now, "dd/mmm/yyyy Hh:Nn:ss")
@@ -94,15 +94,10 @@ On Error GoTo Err_ListPatientFound_DblClick
             DoCmd.RunSQL strPatLog
             DoCmd.SetWarnings True
 
-            
-            ' update status box on form
-            Me.what_has_happened.Value = "Patient record inserted into Patients table"
         ' if there are multiple records for that PRU
         ElseIf rsMokaPatients.RecordCount > 1 Then
             ' open a message box warning of this
-            'MsgBox "Error - more than one records in patients table for PRU " & Me.ListPatientFound.Value, "Error"
-            ' update status box on form
-            Me.what_has_happened.Value = "Error - more than one record (" & rsMokaPatients.RecordCount & ")in patients table for PRU " & Me.ListPatientFound.Value
+            MsgBox "Error - more than one records in patients table for PRU " & Me.ListPatientFound.Value, "Error"
             'STOP code from running any further
             Exit Sub
         ' If there is a matching record in Moka
@@ -116,8 +111,7 @@ On Error GoTo Err_ListPatientFound_DblClick
         DoCmd.SetWarnings False
         DoCmd.RunSQL strPatLogStatus
         DoCmd.SetWarnings True
-        ' update status box on form
-        Me.what_has_happened.Value = "Patient record found in Patients table"
+
         End If
     End If
     
@@ -140,25 +134,20 @@ On Error GoTo Err_ListPatientFound_DblClick
         rsAddNGSTest.Open "SELECT @@identity", CurrentProject.Connection, adOpenKeyset
         ' assign to variable
         strNSGTestID = rsAddNGSTest.Fields(0).Value
-        Me.what_has_happened.Value = Me.what_has_happened.Value & vbNewLine & "NGStest created"
         
         'Record logs of NGSTest creation
         strPatLogTest = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" & strInternalPatientID & ", 'NGS: GeL test request added.',#" + dt + "#,'" + usr + "','" + cmp + "')"
-        strMemo = "INSERT INTO NGSLogMemo(InternalPatientID, Type, LinkID, LogMemoEntry, [Date], Login, PCName) VALUES(" & strInternalPatientID & ", 3, " & strNSGTestID & ",'GeL NGS test created.' ,#" + dt + "#,'" + usr + "','" + cmp + "')"
+        strmemo = "INSERT INTO NGSLogMemo(InternalPatientID, Type, LinkID, LogMemoEntry, [Date], Login, PCName) VALUES(" & strInternalPatientID & ", 3, " & strNSGTestID & ",'GeL NGS test created.' ,#" + dt + "#,'" + usr + "','" + cmp + "')"
         DoCmd.SetWarnings False
         DoCmd.RunSQL strPatLogTest
-        DoCmd.RunSQL strMemo
+        DoCmd.RunSQL strmemo
         DoCmd.SetWarnings True
 
-        
-    Else
-        ' if a 100K NGSTest already exists for that internal patient ID state that hasn't been added
-        Me.what_has_happened.Value = Me.what_has_happened.Value & vbNewLine & "NGStest already present"
     End If
     ' populate the subform record source
     Me.s88005_updateNGSTest.Form.RecordSource = "SELECT NGSTest.InternalPatientID, NGSTest.NGSTestID, NGSTest.GELProbandID, NGSTest.IRID, NGSTest.BookBy, Patients.InternalPatientID, dbo_patientlinked.FirstName, dbo_patientlinked.LastName, dbo_patientlinked.DoB, gw_GenderTable.GenderShort " & _
     "FROM ((NGSTest INNER JOIN Patients ON NGSTest.InternalPatientID = Patients.InternalPatientID) INNER JOIN dbo_patientlinked ON Patients.PatientID = dbo_patientlinked.PatientTrustID) LEFT JOIN gw_GenderTable ON dbo_patientlinked.GenderID = gw_GenderTable.GenderID " & _
-    "WHERE referralid = 1199901218 and Patients.InternalPatientID = " & strInternalPatientID
+    "WHERE NGSTest.referralid = 1199901218 and Patients.InternalPatientID = " & strInternalPatientID
     ' requery the subform
     Me.s88005_updateNGSTest.Requery
     
@@ -178,7 +167,6 @@ On Error GoTo Err_refresh_form_Click
     ' reset all the recordsources/values to nothing ane then refresh the form
     Me![txFamilyTrustID] = Nothing
     Me![ListPatientFound].Requery
-    Me.what_has_happened.Value = Nothing
     ' reset recordsource using giving an internalpatientid of 0 to give an empty form
     Me.s88005_updateNGSTest.Form.RecordSource = "SELECT NGSTest.NGSTestID, Patients.BookinLastName, Patients.BookinFirstName, Patients.BookinSex, Patients.BookinDOB, GELProbandID, IRID, BookBy, BookingAuthorisedByID FROM NGSTest INNER JOIN Patients ON NGSTest.InternalPatientID = Patients.InternalPatientID where Patients.InternalPatientID = 0"
     ' refresh form
