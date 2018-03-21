@@ -365,8 +365,10 @@ Private Sub VCFImport_Click()
             ' if it's an oncology run
             Else
                 ' Add the vcf file to the dictionary (to ensure there aren't dictionary keys), with the vcf filename as the PanelType
-                ' The panel type is overruled in the python script which imports the vcf in any case
-                vcfDict.Add selectedFile, selectedFile
+                ' The panel type is only used in the description of the files added subform
+                ' take the file name after the last slash (ignore filepath)
+                PanelType = Split(selectedFile, "\")(UBound(Split(selectedFile, "\")))
+                vcfDict.Add PanelType, selectedFile
             End If
          Next
                 
