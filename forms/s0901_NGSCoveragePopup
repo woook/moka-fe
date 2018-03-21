@@ -143,7 +143,7 @@ Else
     ' Get tertiary panel number if selected
     If Me.Checkbx_Panel3 = -1 Then
         TertiaryPanNo = Replace(Me.TertiaryPanel_ID, "Pan", "") 'remove 'Pan' from panel number
-        covArgs = covArgs & " -q " & TertiaryPanNo
+        covArgs = covArgs & " -r " & TertiaryPanNo
     End If
     
      'Compile full coverage cmd to be run
