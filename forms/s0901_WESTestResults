@@ -391,7 +391,7 @@ Private Sub VCFImport_Click()
         ' set path to the python executable
         pythonPath = "\\gstt.local\Shared\Genetics_Data2\Array\Software\Python\python.exe"
         ' set path to the script which will import the variants
-        ScriptPath = "\\gstt.local\Apps\Moka\Files\Software\VCFImport\VCFImport_dev.py"
+        ScriptPath = "\\gstt.local\Apps\Moka\Files\Software\VCFImport\VCFImport.py"
         ' capture the patientID and NGSTestID from the form to pass to python script
         patID = Me.Parent.InternalPatientID
         NGSTestID = Me.Parent.NGSTestID
