@@ -10,8 +10,8 @@ Private Sub BookBy_AfterUpdate()
     cn = VBA.Environ("COMPUTERNAME")
     
     'SQL statement for NGSLogMemo
-    sqlMemo = "INSERT INTO NGSLogMemo(InternalPatientID, Type, LinkID, LogMemoEntry, [Date], Login, PCName) VALUES(" + CStr(Me.InternalPatientID) + ", 3, " + CStr(Me.NGSTestID) & _
-    ",'GEL NGS Test: referring clinician updated to " + CStr(Me.BookBy) + " ',#" + dt + "#,'" + un + "','" + cn + "')"
+    sqlMemo = "INSERT INTO NGSLogMemo(InternalPatientID, Type, LinkID, LogMemoEntry, [Date], Login, PCName) VALUES(" + CStr(InternalPatientID) + ", 3, " + CStr(Me.NGSTestID) & _
+    ",'GEL NGS Test: referring clinician updated to " + Me.BookBy.Column(1) + " ',#" + dt + "#,'" + un + "','" + cn + "')"
     'SQL statement for PatientLog
     sqlPatLog = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" + CStr(Me.InternalPatientID) + ",'GEL NGS Test: referring clinician updated to " + Me.BookBy.Column(1) & _
     "',#" + dt + "#,'" + un + "','" + cn + "')"
