@@ -311,10 +311,7 @@ Private Sub VCFImport_Click()
     Dim sqlPatLogVar As String
     Dim sqlPatLogvcf As String
     
-    
-    
     On Error GoTo ErrHandler
-    
     'Where to find files to this directory (where to open the file picker)
     vcfBaseDir = "\\gstt.local\Shared\Genetics\DNA LAB\Current\WES\Ingenuity_output\Results\"
     
@@ -352,14 +349,24 @@ Private Sub VCFImport_Click()
       If .Show = True Then
          'Loop through each file selected and add it to our list box.
          For Each selectedFile In .SelectedItems
-            'Retrieve the panel type from current file (between first and second hyphen)
-            PanelType = LCase(Split(selectedFile, "-")(1))
-            'add 'panel type: filename' to dictionary. If the panel type is already in dictionary display an error message and exit.
-            If Not vcfDict.exists(PanelType) Then
-                vcfDict.Add PanelType, selectedFile
+            ' identify Oncology runs as filename starting with "ONC"
+            ' if it's an WES run can only have a single VCF for each paneltype
+            ' if it's not an Oncology run (split filepath on "\" and take the last element. take lefthand 3 digits and test if == "ONC"
+            If Left(Split(selectedFile, "\")(UBound(Split(selectedFile, "\"))), 3) <> "ONC" Then
+                'Retrieve the panel type from current file (between first and second hyphen)
+                PanelType = LCase(Split(selectedFile, "-")(1))
+                'add 'panel type: filename' to dictionary. If the panel type is already in dictionary display an error message and exit.
+                If Not vcfDict.exists(PanelType) Then
+                    vcfDict.Add PanelType, selectedFile
+                Else
+                    MsgBox ("Multiple VCF files found of type: " & PanelType & ". Unable to continue with import")
+                    Exit Sub
+                End If
+            ' if it's an oncology run
             Else
-                MsgBox ("Multiple VCF files found of type: " & PanelType & ". Unable to continue with import")
-                Exit Sub
+                ' Add the vcf file to the dictionary (to ensure there aren't dictionary keys), with the vcf filename as the PanelType
+                ' The panel type is overruled in the python script which imports the vcf in any case
+                vcfDict.Add selectedFile, selectedFile
             End If
          Next
                 
@@ -431,6 +438,7 @@ Private Sub VCFImport_Click()
                 
                 ' the full filepath is recorded in the array
                 filenamepath = vcfDict(strKey)
+                ' replace the drive name with the full path
                 filenamepath = Replace(filenamepath, "P:\", "\\gstt.local\Shared\Genetics\")
                 ' split this path on "\" and take the last item (the filename) using ubound to calculate length of list
                 filename = Split(filenamepath, "\")(UBound(Split(filenamepath, "\")))
@@ -439,19 +447,18 @@ Private Sub VCFImport_Click()
                 'Add the auto increment ID to the end of the filename (before file extension) to ensure every file has a unique name, then copy file to F: drive.
                 'Get the position in the file name where the last full stop is (last part of the file extension)
                 dotIndx = InStrRev(filename, ".")
-                
                 ' if the last part of the file is .gz then it is a zipped file so we need to get the extension before this
                 ' get everything to the right, and including, the last fullstop - if this is '.gz'
                 If Right(filename, Len(filename) - (dotIndx - 1)) = ".gz" Then
                     ' repeat to capture filename without '.gz'
-                    ' capture the filename excluding the '.gz'
-                    filenameNogz = Replace(filename, ".gz", "")
+                    ' capture filename without '.gz'
+                    filenameNogz = Left(filename, dotIndx - 1)
                     ' find the index of the last full stop (excluding .gz)
                     dotIndx2 = InStrRev(filenameNogz, ".")
                     ' capture the file name without any extension by taking everything left of the last full stop
                     filenameNoExt = Left(filenameNogz, dotIndx2 - 1)
                     ' rebuild the extension, adding .gz
-                    fileExt = Replace(filename, filenameNoExt, "")
+                    fileExt = Right(filenameNogz, Len(filenameNogz) - (dotIndx2 - 1)) + ".gz"
                     ' combine all into new file name
                     newFileName = filenameNoExt & "_" & NGSTestFileID & fileExt
                 ' if the file does not end with .gz
@@ -485,7 +492,6 @@ Private Sub VCFImport_Click()
                 DoCmd.RunSQL sqlPatLogVar
                 DoCmd.RunSQL sqlPatLogvcf
                 DoCmd.SetWarnings True
-                
                 
                 'Remove original file
                 Kill filenamepath
