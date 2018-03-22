@@ -3,7 +3,7 @@ v1.8 - AJ 2018/03/21
 
 ###
 Changes in this version:
-Ingenuity recently started exporting gzipped VCF files. This script tests if the VCF is compressed and unpacks it if required.
+Ingenuity recently started exporting gzipped VCF files. This script tests if the VCF is compressed and unpacks it if required, creating a unzipped copy of the input which is archived by the form which calls this script.
 ###
 
 Usage:
@@ -16,7 +16,6 @@ Requirements:
 	Python 2.7
 	pyodbc module
 	pyVCF module
-	gzip module
 '''
 import sys
 import os
@@ -75,11 +74,15 @@ class MokaVCF(object):
 
 	def makeVCFdict(self, vcfPathLst):
 		for vcf in vcfPathLst:
+			# pass to the function which will unzip if required and return the new file path
+			vcf = self.unzip_vcf(vcf)
+
 			#if oncology sample
 			if os.path.basename(vcf).startswith("ONC"):
 				self.vcfPaths[(0, "Oncology")] = vcf
 			#else if WES sample split to get the panel name (after a dash) but without any extension (before the dot)
 			else:
+				# remove the file extension from the panel name
 				panelName = os.path.basename(vcf).split("-")[1].split(".")[0]
 				if panelName.lower() == "primarypanel":
 					self.vcfPaths[(1, "Primary")] = vcf
@@ -89,6 +92,25 @@ class MokaVCF(object):
 					self.vcfPaths[(3, "Phenotype")] = vcf
 				else:
 					self.vcfPaths[(4, panelName)] = vcf
+	
+	def unzip_vcf(self,vcfpath):
+		# If the vcf is gzipped unzip and write to an uncompressed file. Return the filepath
+		# if it's not gzipped
+		if not vcfpath.endswith(".gz"):
+			# return the filepath without modification
+			return vcfpath
+		# if it is gzipped
+		else:
+			# create the name of the unzipped file to be created by removing .gz extension
+			new_vcfpath = vcfpath.replace('.gz','')
+			# create and open the unzipped file
+			with open(new_vcfpath,'w') as vcfunzipped_file:
+				# open the gzipped vcf using gzip
+ 				with gzip.open(vcfpath,'r') as vcf_compressed:
+					 # write lines from the compressed file to the uncompressed file
+ 					vcfunzipped_file.writelines(vcf_compressed.readlines())
+			# return the file path
+			return new_vcfpath
 
 	def lookupPrevVars(self):
 		# Find details of any variants already imported into Moka for this test and add to exclusion list to prevent duplication.
@@ -108,15 +130,7 @@ class MokaVCF(object):
 		# Create an HGNCID lookup dictionary from Moka genesHGNC_current table
 		allVCFGenes = set([]) # using set instead of list to prevent gene symbols being added multiple times
 		for vcfFile in self.vcfPaths.itervalues(): # for each vcf...
-			
-			# test if vcf is not compressed.
-			if vcfFile.endswith(".vcf"):
-				vcfReader = vcf.Reader(open(vcfFile, 'r')) # read vcf
-			else:
-				with open(vcfFile.replace('.gz',''),'w') as vcfunzipped_file:
-					with gzip.open(vcfFile,'r') as vcf_compressed:
-						vcfunzipped_file.writelines(vcf_compressed.readlines())
-				vcfReader = vcf.Reader(open(vcfFile.replace('.gz',''),'r')) # read vcf
+			vcfReader = vcf.Reader(open(vcfFile, 'r')) # read vcf
 			for row in vcfReader:
 				# Add gene symbol to set. Will error if no gene symbol present, so use try/except to catch this.
 				try:
@@ -124,11 +138,6 @@ class MokaVCF(object):
 				except KeyError:
 					pass
 			vcfReader = None # Releases file (pyvcf reader object has no .close() method)
-			
-			# if the compressed file was uncompressed delete the uncompressed one
-			if vcfFile.endswith(".gz"):
-				os.remove(vcfFile.replace('.gz',''))
-
 		if allVCFGenes: # Check the list contains at least one gene symbol
 			# Retrieve all HGNCIDs from Moka for the gene symbols in set.
 			sqlGetHGNC = "SELECT ApprovedSymbol, HGNCID FROM GenesHGNC_current WHERE ApprovedSymbol IN ('%s')" % ("', '".join(allVCFGenes))
@@ -147,17 +156,7 @@ class MokaVCF(object):
 			for variant in self.vars.keys():
 				self.prevVars.add(variant[:4])
 			# Create vcfReader object
-			# test if vcf is not compressed.
-			if self.vcfPaths[panel].endswith(".vcf"):
-				#print self.vcfPaths[panel]
-				vcfReader = vcf.Reader(open(self.vcfPaths[panel], 'r')) # read vcf
-			else:
-				with open(self.vcfPaths[panel].replace('.gz',''),'w') as vcfunzipped_file:
-					with gzip.open(self.vcfPaths[panel],'r') as vcf_compressed:
-						vcfunzipped_file.writelines(vcf_compressed.readlines())
-				vcfReader = vcf.Reader(open(self.vcfPaths[panel].replace('.gz',''),'r')) # read vcf
-			
-			#vcfReader = vcf.Reader(open(self.vcfPaths[panel], 'r'))
+			vcfReader = vcf.Reader(open(self.vcfPaths[panel], 'r'))
 			for row in vcfReader:
 				#######
 				# EXTRACT DATA FOR NGSVariant TABLE...
@@ -257,10 +256,6 @@ class MokaVCF(object):
 					# This list is added to each time a new row for that variant is encountered in the VCF.
 					self.vars[varCurrent] = self.vars.setdefault(varCurrent, []) + [annot]
 			vcfReader = None # Releases file (pyvcf reader object has no .close() method)
-			
-			# if the compressed file was uncompressed delete the uncompressed one
-			if self.vcfPaths[panel].endswith(".gz"):
-				os.remove(self.vcfPaths[panel].replace('.gz',''))
 
 	def insertMoka(self):
 		# Loops through variant dictionary and inserts into Moka
