@@ -63,16 +63,16 @@ On Error GoTo Err_GELProbandID_DblClick
     'strReport captures stdout and stderr from executing python script (err is redirected to out in cmd)
     strReport = wshexec.Stdout.readall()
     Dim pos As Integer
-
+    ' check if success statement is in stdout
     pos = InStr(strReport, "Report has been generated")
-    ' if didn't work
+    ' if didn't work pos = 0
     If pos = 0 Then
-        
-        Debug.Print strReport
+        'Debug.Print strReport
         ' display message box with error message
         MsgBox strReport
+    ' if it worked as expected
     Else
-        'query that sets check1, and status
+        'query that sets check1, and updates status
         sqlStatusUpdate = "Update NGSTest, checker set status = 'Authorisation', ngstest.check1ID = checker.check1ID, ngstest.check1date = #" + dt + "#, NGSTest.statusID = 4 where checker.username = '" + usr + "' and NGSTestID = " & Me.NGSTestID.Value
         ' create sql to insert into patient log and NGS log
         strPatLogTest = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" & InternalPatientID & ", 'NGS: 100K report made and GeL test status changed to Authorisation. Assigned scientist changed to " + usr + " and check1date updated with current timestamp',#" + dt + "#,'" + usr + "','" + cmp + "')"
