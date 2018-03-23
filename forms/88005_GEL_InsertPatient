@@ -127,7 +127,7 @@ On Error GoTo Err_ListPatientFound_DblClick
         ' reset as recordset
         Set rsAddNGSTest = New ADODB.Recordset
         ' referralID and statusID = 100K from status and referral tables, bookby and BookingAuthorisedByID = NA - these will be assigned in the subform
-        strAddNGSTest = "insert into NGSTest (InternalPatientID,ReferralID,StatusID,DateRequested,BookBy,BookingAuthorisedByID,Service) Values (" & strInternalPatientID & ",1199901218,1202218839, now(),1201865434,1201865434,0)"
+        strAddNGSTest = "insert into NGSTest (InternalPatientID,ReferralID,StatusID,DateRequested,BookBy,BookingAuthorisedByID,Service) Values (" & strInternalPatientID & ",1199901218,1202218824, now(),1201865434,1201865434,0)"
         ' execute insert statement
         rsAddNGSTest.Open strAddNGSTest, CurrentProject.Connection, adOpenKeyset
         ' Capture NGSTestID
