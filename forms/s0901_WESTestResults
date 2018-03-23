@@ -373,7 +373,11 @@ Private Sub VCFImport_Click()
                 vcfDict.Add PanelType, selectedFile
             End If
          Next
-                
+         
+         Dim dna_mismatch As Boolean
+         ' set variable to denote if the DNA Number isn't present in the filename
+         dna_mismatch = False
+        
         'empty variable to build comma separated string of filepaths to pass to python script
         csFileLst = ""
         ' count looping through the list
@@ -387,8 +391,20 @@ Private Sub VCFImport_Click()
             If loopcount <> vcfDict.count Then 'If not the last file in list
                 csFileLst = csFileLst & ","
             End If
-        Next
+            ' check for mismatched DNA number
 
+            ' if the DNA number can't be found in the filename set DNA_mismatch to true
+            If InStr(vcfDict(strKey), Me.DNA.Value) = 0 Then
+                dna_mismatch = True
+            End If
+            
+        Next
+        ' if the dna number wasn't found in any file open a msgbox which gives the user a chance to cancel or proceed
+        If dna_mismatch = True Then
+            ' if they cancel exit the sub
+            If MsgBox("The sample DNA number can't be found in one or more selected files. Do you want to continue with the import?", vbYesNo) = vbNo Then Exit Sub
+        End If
+        
         'Pass VCF filepath and test details to python script to parse VCF and insert records into Moka NGSVariants table
         Dim wsh As Object
         Set wsh = CreateObject("WScript.Shell")
