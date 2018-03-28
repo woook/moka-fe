@@ -1,3 +1,0 @@
-SELECT dbo_SpecimenCostLinked.TestType, dbo_DNATestRequestLinked.Disorder, dbo_SpecimenCostLinked.DNAUnitsTotal, dbo_SpecimenCostLinked.Cost, NGSTest.NGSTestID
-FROM (NGSTest INNER JOIN Patients ON NGSTest.InternalPatientID = Patients.InternalPatientID) INNER JOIN (((dbo_SpecimenCostLinked RIGHT JOIN dbo_specimenlinked ON dbo_SpecimenCostLinked.SpecimenID = dbo_specimenlinked.SpecimenID) LEFT JOIN dbo_DNATestRequestLinked ON dbo_SpecimenCostLinked.TestID = dbo_DNATestRequestLinked.TestID) RIGHT JOIN dbo_patientlinked ON dbo_specimenlinked.PatientID = dbo_patientlinked.PatientID) ON Patients.PatientID = dbo_patientlinked.PatientTrustID
-WHERE (((dbo_DNATestRequestLinked.DisorderID)=60));
