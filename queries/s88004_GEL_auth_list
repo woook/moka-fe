@@ -1,3 +1,0 @@
-SELECT Checker.Name AS ReferringClinician, NGSTest.GELProbandID AS GELparticipantID, NGSTest.IRID, Patients.BookinSex AS Sex, NGSTest.NGSTestID, NGSTest.Check4Date AS AuthorisedDate, NGSTest.StatusID, NGSTest.InternalPatientID, Patients.PatientID, "https://cipapi.genomicsengland.nhs.uk/interpretationportal/#/participant/" & [NGSTest].[IRID] & "/tiering" AS ReviewVariantsURL, Patients.BookinLastName AS LastName, Patients.BookinFirstName AS FirstName, Patients.BookinDOB AS DOB, NGSTest.Check4ID
-FROM (NGSTest INNER JOIN Patients ON NGSTest.InternalPatientID = Patients.InternalPatientID) LEFT JOIN Checker ON NGSTest.BookBy = Checker.Check1ID
-WHERE (((NGSTest.StatusID)=1202218814) AND ((NGSTest.ReferralID)=1199901218) AND ((NGSTest.ResultCode)=1189679668));
