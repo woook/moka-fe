@@ -1,24 +1,6 @@
 Option Compare Database
 Private excludeReferrals As String
 
-'Private Sub auth_button_Click()
-'On Error GoTo Err_auth_button_Click
-'    ' define the form to be opened and the link criteria
-'    Dim stDocName As String
-'    Dim stLinkCriteria As String
-'    stDocName = "88004_100K_auth"
-'    ' open the subform as a datasheet
-'    DoCmd.OpenForm stDocName, acFormDS, , stLinkCriteria
-'
-'Exit_auth_button_Click:
-'    Exit Sub
-'
-'Err_auth_button_Click:
-'    MsgBox Err.Description
-'    Resume Exit_auth_button_Click
-'
-'End Sub
-
 Private Sub clear_status_filter_Click()
 ' Clear subform filter parameter and all potential filters
 Me.s88006_WES_dashboard.Form.Filter = ""
@@ -34,14 +16,14 @@ Private Sub filter_subform_Click()
 ' create a string variable that is to be assigned as the filter property on the subform
 Dim filter_msg As String
 filter_msg = ""
-' if any of the filters for check1-check4 has been selected:
-' if check1 has been set
+' Check1-check4 hold the assigned scientist for 4 stages (analysis (check1), checking (check2), authorisation (check3) and approval (check4)) if any of the filters for check1-check4 has been selected:
+' if check1 has been set take the check1ID (from checker table) from the combo box
 If Len(check1_filter.Column(0)) > 0 Then
     'build the filter message
     filter_msg = "[Check1ID]=" & check1_filter.Column(0)
 End If
 
-' if the check2 has been set
+' if the check2 has been set take the check1ID (from checker table) from the combo box
 If Len(check2_filter.Column(0)) > 0 Then
     ' if another filter has already been set append to the end with an AND
     If Len(filter_msg) > 0 Then
@@ -51,7 +33,7 @@ If Len(check2_filter.Column(0)) > 0 Then
         filter_msg = "[Check2ID] = " & check2_filter.Column(0)
     End If
 End If
-' if the check3 has been set
+' if the check3 has been set take the check1ID (from checker table) from the combo box
 If Len(check3_filter.Column(0)) > 0 Then
     ' if another filter has already been set append to the end with an AND
     If Len(filter_msg) > 0 Then
@@ -59,9 +41,9 @@ If Len(check3_filter.Column(0)) > 0 Then
     ' if no other filters have been set add check3 filter
     Else
         filter_msg = "[Check3ID]=" & check3_filter.Column(0)
-        End If
+    End If
 End If
-' if the check3 has been set
+' if the check4 has been set take the check1ID (from checker table) from the combo box
 If Len(check4_filter.Column(0)) > 0 Then
     ' if another filter has already been set append to the end with an AND
     If Len(filter_msg) > 0 Then
@@ -69,7 +51,7 @@ If Len(check4_filter.Column(0)) > 0 Then
     ' if no other filters have been set add check4 filter
     Else
         filter_msg = "[Check4ID]=" & check4_filter.Column(0)
-        End If
+     End If
 End If
 
 ' check if the status filter has also been set
@@ -77,9 +59,9 @@ If Len(status_filter.Column(0)) > 0 Then
     ' if another filter has already been set append to the end with an AND
     If Len(filter_msg) > 0 Then
         filter_msg = filter_msg & " AND [StatusID]=" & status_filter.Column(0)
-     ' if no other filters have been set add check3 filter
+     ' if no other filters have been set add status filter
     Else
-        filter_msg = filter_msg & "[StatusID]=" & status_filter.Column(0)
+        filter_msg = "[StatusID]=" & status_filter.Column(0)
     End If
 End If
 'Debug.Print filter_msg
