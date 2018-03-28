@@ -1,1 +1,1 @@
-SELECT [0001 Moka_Menu_Table].Name, [0001 Moka_Menu_Table].Action, [0001 Moka_Menu_Table].Level_Sort, [0001 Moka_Menu_Table].Level, [0001 Moka_Menu_Table].MenuID, [0001 Moka_Menu_Table].Parent_MenuID, [0001 Moka_Menu_Table].Type, [0001 Moka_Menu_Table].AcView FROM [0001 Moka_Menu_Table] WHERE ((([0001 Moka_Menu_Table].Level)=3)) ORDER BY [0001 Moka_Menu_Table].Level_Sort;
+SELECT Menu.MenuID, Menu.Menu_Level, Menu.Name, Menu.Action, Menu.Level_Sort, Menu.Parent_MenuID, Menu.AcView, Menu.Type FROM Menu WHERE (((Menu.Menu_Level)=3)) ORDER BY Menu.Level_Sort;
