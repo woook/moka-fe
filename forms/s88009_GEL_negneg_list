@@ -34,9 +34,7 @@ On Error GoTo Err_GELProbandID_DblClick
     If IsNull(Me.TestType) Or IsNull(Me.Cost) Or IsNull(Me.DNAUnitsTotal) Or IsNull(Me.Disorder) Then
         MsgBox "Naughty Naughty! Report will be made but please ensure all GW fields are complete"
     End If
-    
-    ' requery the form to ensure that changes propogate to database and report script can run without reloading form
-    Me.Requery
+
     
     'set path to python script
     strScriptPath = "\\gstt.local\Apps\Moka\Files\Software\100K\gel_cover_report.py"
@@ -48,7 +46,6 @@ On Error GoTo Err_GELProbandID_DblClick
     strTotalCMD = "cmd.exe /S /C \\gstt.local\shared\Genetics_Data2\Array\Software\Python\python.exe " & strScriptPath & " -n " & Me.NGSTestID & " 2>&1"
     
     'Debug.Print strTotalCMD
-    
 
     Set wsh = CreateObject("WScript.Shell")
     
@@ -88,6 +85,8 @@ On Error GoTo Err_GELProbandID_DblClick
         DoCmd.RunSQL strmemo
         'Debug.Print strmemo
         DoCmd.SetWarnings True
+        ' display message box with python standard out (success message)
+        MsgBox strReport
     End If
     
     
