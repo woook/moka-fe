@@ -1,4 +1,4 @@
-SELECT dbo_Patient.PatientID, [Lastname] & " " & [Firstname] AS Name, Referral.Referral, s_HybIDs_no_QC.HybID, dbo_Patient.FamilyNo, ArrayTest.ArrayTestID, Referral.Sorting, ArrayTest.ArrayResult
-FROM (((Patients INNER JOIN ArrayTest ON Patients.InternalPatientID = ArrayTest.InternalPatientID) INNER JOIN dbo_Patient ON Patients.PatientID = dbo_Patient.PatientID) INNER JOIN Referral ON ArrayTest.ReferralID = Referral.ReferralID) INNER JOIN s_HybIDs_no_QC ON (ArrayTest.DNALabellingID = s_HybIDs_no_QC.DNALabellingID) AND (Patients.InternalPatientID = s_HybIDs_no_QC.InternalPatientID)
+SELECT dbo_Patient.PatientID, [Lastname] & " " & [Firstname] AS Name, Referral.Referral, s_HybIDs_no_QC.HybID, dbo_Patient.FamilyNo, ArrayTest.ArrayTestID, Referral.Sorting, Patients.OverallResultComments
+FROM (((Patients INNER JOIN ArrayTest ON Patients.InternalPatientID = ArrayTest.InternalPatientID) INNER JOIN dbo_Patient ON Patients.PatientID = dbo_Patient.PatientID) INNER JOIN Referral ON ArrayTest.ReferralID = Referral.ReferralID) INNER JOIN s_HybIDs_no_QC ON (Patients.InternalPatientID = s_HybIDs_no_QC.InternalPatientID) AND (ArrayTest.DNALabellingID = s_HybIDs_no_QC.DNALabellingID)
 WHERE (((dbo_Patient.FamilyNo)=[Forms]![09 ArrayResultsByPostition]![FamilyNo]))
 ORDER BY dbo_Patient.PatientID, Referral.Sorting;
