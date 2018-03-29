@@ -127,7 +127,7 @@ End Sub
 
 Private Sub ArrayResultComment_AfterUpdate()
     Dim Q As ADODB.Recordset
-    Dim r As ADODB.Recordset
+    Dim R As ADODB.Recordset
     Dim S As String
     Dim t As String
     Dim d As String
@@ -140,21 +140,21 @@ Private Sub ArrayResultComment_AfterUpdate()
     If IsNull([ArrayResultComment]) Then
         S = "INSERT INTO PatientLogMemo(InternalPatientID, ArrayTestID, LogMemoEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + "," + CStr(Me![ArrayTestID]) + ",'Array test: Result comment deleted for test requested " + CStr(Me![RequestedDate]) + "',#" + d + "#,'" + un + "','" + cn + "')"
     Else
-        Dim rc As String
-        rc = Replace(Me![ArrayResultComment], "'", "''")
-        S = "INSERT INTO PatientLogMemo(InternalPatientID, ArrayTestID, LogMemoEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + "," + CStr(Me![ArrayTestID]) + ",'Array test: Result comment updated for array test requested " + CStr(Me![RequestedDate]) + " - " + rc + "',#" + d + "#,'" + un + "','" + cn + "')"
+        Dim RC As String
+        RC = Replace(Me![ArrayResultComment], "'", "''")
+        S = "INSERT INTO PatientLogMemo(InternalPatientID, ArrayTestID, LogMemoEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + "," + CStr(Me![ArrayTestID]) + ",'Array test: Result comment updated for array test requested " + CStr(Me![RequestedDate]) + " - " + RC + "',#" + d + "#,'" + un + "','" + cn + "')"
     End If
     Q.Open S, CurrentProject.Connection
     Set Q = Nothing
 
-    Set r = New ADODB.Recordset
+    Set R = New ADODB.Recordset
     If IsNull([ArrayResultComment]) Then
         t = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + ",'Array test: Result comment deleted for test requested " + CStr(Me![RequestedDate]) + "',#" + d + "#,'" + un + "','" + cn + "')"
     Else
         t = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + ",'Array test: Result comment updated for array test requested " + CStr(Me![RequestedDate]) + " - see memo log',#" + d + "#,'" + un + "','" + cn + "')"
     End If
-    r.Open t, CurrentProject.Connection
-    Set r = Nothing
+    R.Open t, CurrentProject.Connection
+    Set R = Nothing
 
 End Sub
 
@@ -724,12 +724,12 @@ Private Sub ArrayResult_DblClick(Cancel As Integer)
 
     Dim Q As ADODB.Recordset
     Set Q = New ADODB.Recordset
-    Dim r As String
+    Dim R As String
     Dim S As String
     Dim t As String
-    Dim u As ADODB.Recordset
-    Set u = New ADODB.Recordset
-    Dim V As String
+    Dim U As ADODB.Recordset
+    Set U = New ADODB.Recordset
+    Dim v As String
     Dim x As String
     Dim Y As String
     x = Me.InternalPatientID
@@ -741,8 +741,8 @@ Private Sub ArrayResult_DblClick(Cancel As Integer)
     un = VBA.Environ("USERNAME")
     cn = VBA.Environ("COMPUTERNAME")
 
-    r = "SELECT OverallResultComments FROM Patients WHERE InternalPatientID = " + x + ""
-    Q.Open r, CurrentProject.Connection, adOpenKeyset, adLockOptimistic, adCmdText
+    R = "SELECT OverallResultComments FROM Patients WHERE InternalPatientID = " + x + ""
+    Q.Open R, CurrentProject.Connection, adOpenKeyset, adLockOptimistic, adCmdText
     If Not IsNull(Q!OverallResultComments) Then
         t = Q!OverallResultComments
         S = "" + t + "," + Y + ""
@@ -753,9 +753,9 @@ Private Sub ArrayResult_DblClick(Cancel As Integer)
     Q.Update
     Set Q = Nothing
 
-    V = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + ",'Patient: Result changed to [" + S + "]',#" + d + "#,'" + un + "','" + cn + "')"
-    u.Open V, CurrentProject.Connection
-    Set u = Nothing
+    v = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + ",'Patient: Result changed to [" + S + "]',#" + d + "#,'" + un + "','" + cn + "')"
+    U.Open v, CurrentProject.Connection
+    Set U = Nothing
 
     Me.Parent.Form.Requery
     
@@ -814,9 +814,14 @@ Private Sub Command79_Click()
 
         Dim stDocName As String
         Dim stLinkCriteria As String
-        stDocName = "FamilyResults_Auto_R"
-        stLinkCriteria = "[SpecimenNo]=" & "'" & Me![SpecimenNo] & "'"
-        DoCmd.OpenReport stDocName, acViewNormal, , stLinkCriteria
+        stDocName = "FamilyResults_Auto_R2"
+        'stLinkCriteria = "[SpecimenNo]=" & "'" & Me![SpecimenNo] & "'"
+        stLinkCriteria = "[ArrayTestID]=" & Me![ArrayTestID]
+        ''ORIG
+        ''DoCmd.OpenReport stDocName, acViewNormal, , stLinkCriteria
+        ''Workaround for button timing out 170126
+        DoCmd.OpenReport stDocName
+        
     End If
 End Sub
 
@@ -843,12 +848,12 @@ Err_Command80_Click:
     
 End Sub
 
-''print PGD test sheet
+''print PGD result sheet
 Private Sub Command83_Click()
-    If IsNull(Me!SpecimenNo) Then
-        MsgBox "Specimen number needs to be assigned", , "Don't be a dummy"
+    If IsNull(Me!Check1ID) Then
+        MsgBox "No intials have been entered by analyst", , "Don't be a dummy"
         ElseIf IsNull(Me!Check2ID) Then
-            MsgBox "No intials have been entered for checking", , "Don't be a dummy"
+            MsgBox "No intials have been entered by checker", , "Don't be a dummy"
         Else
             Dim d As String
             Dim un As String
@@ -861,7 +866,9 @@ Private Sub Command83_Click()
             DoCmd.SetWarnings False
             DoCmd.RunSQL S
             DoCmd.SetWarnings True
-            
+            ' I think this next bit just refreshes the form. It depends what option 5 was on the previous list of command argument list, as shown in the Macro window in previous versions of Microsoft Access (count down the list, starting from 0).  taken from https://msdn.microsoft.com/en-us/vba/access-vba/articles/docmd-domenuitem-method-access and http://access.mvps.org/access/RunCommand/domenuitem.htm
+            ' Maybe this this work (UNTESTED!)
+            'DoCmd.RunCommand acCmdRefresh
             DoCmd.DoMenuItem acFormBar, acRecordsMenu, 5, , acMenuVer70
     
             Dim stDocName As String
@@ -870,7 +877,38 @@ Private Sub Command83_Click()
             stLinkCriteria = "[SpecimenNo]=" & "'" & Me![SpecimenNo] & "'"
             DoCmd.OpenReport stDocName, acViewNormal, , stLinkCriteria
             
+        End If
+End Sub
+
+''print PGD test report
+Private Sub Command96_Click()
+    If IsNull(Me!Check1ID) Then
+        MsgBox "No intials have been entered by analyst", , "Don't be a dummy"
+        ElseIf IsNull(Me!Check2ID) Then
+            MsgBox "No intials have been entered by checker", , "Don't be a dummy"
+        Else
+            Dim d As String
+            Dim un As String
+            Dim cn As String
+            Dim S As String
+            d = Format(Now, "dd/mmm/yyyy Hh:Nn:ss")
+            un = VBA.Environ("USERNAME")
+            cn = VBA.Environ("COMPUTERNAME")
+            S = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + ",'Moka PGD report generated for PGD case entered under PatientID " + CStr(Me!FamilyTrustID) + "',#" + d + "#,'" + un + "','" + cn + "')"
+            DoCmd.SetWarnings False
+            DoCmd.RunSQL S
+            DoCmd.SetWarnings True
+            ' I think this next bit just refreshes the form. It depends what option 5 was on the previous list of command argument list, as shown in the Macro window in previous versions of Microsoft Access (count down the list, starting from 0).  taken from https://msdn.microsoft.com/en-us/vba/access-vba/articles/docmd-domenuitem-method-access and http://access.mvps.org/access/RunCommand/domenuitem.htm
+            ' Maybe this this work (UNTESTED!)
+            'DoCmd.RunCommand acCmdRefresh
+            DoCmd.DoMenuItem acFormBar, acRecordsMenu, 5, , acMenuVer70
+    
+            Dim stDocName As String
+            Dim stLinkCriteria As String
+            
             stDocName = "FamilyResults_Auto_PGD_Report"
+            'stLinkCriteria = "[dbo_Patient_Table].[PatientTrustID]=" & "'" & Me![PatientID] & "'"
+            stLinkCriteria = "([dbo_Patient_Table].[PatientTrustID]=" & "'" & Me![PatientID] & "'" & " AND [ePCI1]=" & Me.[ePGDCycleID] & ") OR ([dbo_Patient_Table].[PatientTrustID]=" & "'" & Me![PatientID] & "'" & " AND [ePCI2]=" & Me.[ePGDCycleID] & ")"
             DoCmd.OpenReport stDocName, acViewNormal, , stLinkCriteria
             
         End If
@@ -925,7 +963,7 @@ If Not IsNull(Me.ArrayResult) And (Me.StatusID = 4 Or Me.StatusID = 5) Then
     .ReplyTo = "Prenatal-array@gstt.nhs.uk"
     .Subject = subjectline
     .HTMLBody = emailbody
-    .To = emailto
+    .to = emailto
     .BCC = "moka.alerts@gstt.nhs.uk"
     .Send
     End With
@@ -943,3 +981,19 @@ Else
     
 End Sub
 
+'Private Sub Command93_Click()
+' NOT SURE IF THIS BUTTON EXISTS?
+'On Error GoTo Err_Command93_Click
+'
+'
+'    Screen.PreviousControl.SetFocus
+'    DoCmd.FindNext
+'
+'Exit_Command93_Click:
+'    Exit Sub
+'
+'Err_Command93_Click:
+'    MsgBox Err.Description
+'    Resume Exit_Command93_Click
+'
+'End Sub
