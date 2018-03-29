@@ -1,7 +1,6 @@
 Option Compare Database
 
 Private Sub btn_Coverage_Click()
-
     ' load s0901_NGSCoveragePopup form passing it the NGStest ID. to select coverage report gerneration arguments.
     Dim stLinkCritera As String
     If Not IsNull(Me![NGSTestID]) Then
@@ -10,7 +9,6 @@ Private Sub btn_Coverage_Click()
     End If
 
 End Sub
-
 
 Private Sub Form_Current()
 
@@ -293,185 +291,289 @@ Private Sub txt_Resultcmt_GotFocus()
 End Sub
 
 Private Sub VCFImport_Click()
+    Dim destBaseDir As String
     Dim vcfBaseDir As String
-    Dim batch As String
-    Dim dnaNum As String
-    Dim patID
+    Dim year_dir As String
+    Dim month_dir As String
+    Dim patID As String
     Dim NGSTestID As Integer
-    Dim PRU As String
-    Dim filename As String
-    Dim filepath As String
+    Dim fDialog As Office.FileDialog
+    Dim selectedFile As Variant
+    Dim pythonPath As String
+    Dim ScriptPath As String
+    Dim csFileLst  As String
+    Set vcfDict = CreateObject("scripting.dictionary")
+    Dim loopcount As Integer
     Dim errReport As String
-    Dim desBaseDir As String
-    Dim newNGSTestFile As ADODB.Recordset
-    Dim TodayDate As String
-    Dim vcfDict
-    Dim PanelType As String
+    Dim un As String
+    Dim cn As String
+    Dim sqlAddFilePath As String
+    Dim sqlPatLogVar As String
+    Dim sqlPatLogvcf As String
     
+    On Error GoTo ErrHandler
+    'Where to find files to this directory (where to open the file picker)
     vcfBaseDir = "\\gstt.local\Shared\Genetics\DNA LAB\Current\WES\Ingenuity_output\Results\"
-    destDir = "\\gstt.local\Apps\Moka\Files\ngs\"
-    PRU = Me.Parent.PatientID
-    PRU = Replace(PRU, ":", "")
-    patID = Me.Parent.InternalPatientID
-    NGSTestID = Me.Parent.NGSTestID
-    year_dir = destDir & Year(Now()) & "\"
+        
+    ' Start of path for directory that files are to be moved to
+    destBaseDir = "\\gstt.local\Apps\Moka\Files\ngs\"
+    ' path for year
+    year_dir = destBaseDir & Year(Now()) & "\"
+    ' path for month
     month_dir = year_dir & Month(Now()) & "\"
+
     
-    If IsNull(Me.WESBatch) Or IsNull(Me.txt_DNA) Then
-        MsgBox "Please ensure DNA number and WES batch are assigned to sample before uploading variants", vbExclamation, "Assign DNA/Batch"
-    Else
-        batch = Me.WESBatch
-        dnaNum = Me.txt_DNA
-        basePath = vcfBaseDir & batch & "DNA" & dnaNum & "PRU" & PRU & "-*.vcf" 'VCFs will have variable suffix after hyphen, so wildcard (*) used
-        Set vcfDict = CreateObject("scripting.dictionary")
-        vcfFilename = Dir(basePath) 'Returns recordset of each matching filename
-        Do While vcfFilename <> "" 'Loop until no more files
-            PanelType = LCase(Split(vcfFilename, "-")(1)) 'Retrieve the panel type from current file (between first and second hyphen)
-            'add 'panel type: filename' to dictionary. If the panel type is already in dictionary display an error message and exit.
-            If Not vcfDict.exists(PanelType) Then
-                vcfDict.Add PanelType, vcfFilename
-            Else
-                MsgBox ("Multiple VCF files found of type: " & PanelType & ". Unable to continue with import")
-                Exit Sub
-            End If
-            vcfFilename = Dir 'Moves to next filename in record
-        Loop
-        If vcfDict.count = 0 Then 'If no VCF files found, display error message and exit
-            MsgBox "No VCF files found that match test details. Ingenuity results must be:" & vbNewLine & vbNewLine & _
-            "1. Exported in VCF format" & vbNewLine & _
-            "2. Saved with filename format: " & batch & "DNA" & dnaNum & "PRU" & PRU & "-<panel description>-<numerical suffix>.vcf" & vbNewLine & _
-            "3. Saved in the following directory: " & vcfBaseDir, vbExclamation, "No VCF Files Found"
-        Else 'Build a string to show user which files will be imported if they continue
-            filesStr = "The files below will be imported." & vbNewLine & vbNewLine & "Primary panel:" & vbNewLine & vbNewLine & vbTab
-            If vcfDict.exists("primarypanel") Then
-                filesStr = filesStr & vcfDict("primarypanel")
-            Else
-                filesStr = filesStr & "None"
-            End If
-            filesStr = filesStr & vbNewLine & vbNewLine & "Secondary panel:" & vbNewLine & vbNewLine & vbTab
-            If vcfDict.exists("secondarypanel") Then
-                filesStr = filesStr & vcfDict("secondarypanel")
-            Else
-                filesStr = filesStr & "None"
-            End If
-            filesStr = filesStr & vbNewLine & vbNewLine & "Phenotype panel:" & vbNewLine & vbNewLine & vbTab
-            If vcfDict.exists("phenotype") Then
-                filesStr = filesStr & vcfDict("phenotype")
-            Else
-                filesStr = filesStr & "None"
-            End If
-            filesStr = filesStr & vbNewLine & vbNewLine & "Additional panels:" & vbNewLine
-            otheVCFcount = 0
-            For Each strKey In vcfDict.keys()
-                If strKey <> "primarypanel" And strKey <> "secondarypanel" And strKey <> "phenotype" Then
-                    filesStr = filesStr & vbNewLine & vbTab & vcfDict(strKey)
-                    otherVCFcount = otherVCFcount + 1
-                End If
-            Next
-            If otherVCFcount = 0 Then
-                filesStr = filesStr & vbNewLine & vbTab & "None"
-            End If
-            'Display the list of files that will be imported and give user option to cancel
-            If MsgBox(filesStr & vbNewLine & vbNewLine & "Do you wish to continue?", vbYesNo + vbInformation, "Continue?") = vbYes Then
-                'Create comma separated string of filepaths to pass to python script
-                csFileLst = ""
-                loopCount = 0
-                For Each strKey In vcfDict.keys()
-                loopCount = loopCount + 1
-                    csFileLst = csFileLst & vcfBaseDir & vcfDict(strKey)
-                    If loopCount <> vcfDict.count Then 'If not the last file in list
-                        csFileLst = csFileLst & ","
-                    End If
-                Next
-                'Pass VCF filepath and test details to python script to parse VCF and insert records into Moka NGSVariants table
-                Dim wsh As Object
-                Set wsh = CreateObject("WScript.Shell")
-                pythonPath = "\\gstt.local\Shared\Genetics_Data2\Array\Software\Python\python.exe"
-                ScriptPath = "\\gstt.local\Apps\Moka\Files\Software\VCFImport\VCFImport.py"
-                'Execute python script with required arguments. "2>&1" at the end redirects StdErr (2) to StdOut (1)
-                Set wshexec = wsh.Exec("cmd.exe /S /C " & pythonPath & " " & ScriptPath & " """ & csFileLst & """ " & patID & " " & NGSTestID & " 2>&1")
-                'DoEvents pauses VBA until python script has finished running. wshexec.status is 0 while running and 1 when finished
-                Do While wshexec.Status = 0
-                    DoEvents
-                Loop
-                'Capture any error messages from python script (StdErr has been redirected to StdOut, see above)
-                errReport = wshexec.Stdout.readall()
-                If errReport <> "" Then
-                    MsgBox "The following error was encountered when attempting to import variants from VCF: " & vbNewLine & vbNewLine & errReport, vbCritical, "ERROR"
+    'If year folder doesn't already exist, create it
+    If Len(Dir(year_dir, vbDirectory)) = 0 Then
+        MkDir year_dir
+    End If
+    'If month folder doesn't already exist, create it
+    If Len(Dir(month_dir, vbDirectory)) = 0 Then
+        MkDir month_dir
+    End If
+    
+   ' Set up the File Dialog.
+   Set fDialog = Application.FileDialog(msoFileDialogFilePicker)
+   ' loop through
+   With fDialog
+
+      ' Allow user to make multiple selections in dialog box
+      .AllowMultiSelect = True
+
+      ' Set the title of the dialog box.
+      .Title = "Please select one or more VCF files"
+
+      ' Show the dialog box. If the .Show method returns True, the
+      ' user picked at least one file. If the .Show method returns
+      ' False, the user clicked Cancel.
+      If .Show = True Then
+         'Loop through each file selected and add it to our list box.
+         For Each selectedFile In .SelectedItems
+            ' identify Oncology runs as filename starting with "ONC"
+            ' if it's an WES run can only have a single VCF for each paneltype
+            ' if it's not an Oncology run (split filepath on "\" and take the last element. take lefthand 3 digits and test if == "ONC"
+            If Left(Split(selectedFile, "\")(UBound(Split(selectedFile, "\"))), 3) <> "ONC" Then
+                'Retrieve the panel type from current file (between first and second hyphen) and everything before the first fullstop
+                PanelType = LCase(Split(Split(selectedFile, "-")(1), ".")(0))
+                'add 'panel type: filename' to dictionary. If the panel type is already in dictionary display an error message and exit.
+                If Not vcfDict.exists(PanelType) Then
+                    vcfDict.Add PanelType, selectedFile
                 Else
-                    newDir = month_dir 'Files will be copied to WES batch folder on F: drive
-                    If Len(Dir(year_dir, vbDirectory)) = 0 Then
-                        MkDir year_dir 'If year folder doesn't already exist, create it
-                    End If
-                    If Len(Dir(month_dir, vbDirectory)) = 0 Then
-                        MkDir month_dir 'If month folder doesn't already exist, create it
-                    End If
-                    'Loop through dictionary of VCFs, and move files to F: drive
-                    For Each strKey In vcfDict.keys()
-                        filename = vcfDict(strKey)
-                        filepath = vcfBaseDir & filename
-                        'Get the panelType from dictionary key. If Primarypanel or Secondarypanel, change to 'Primary' or 'Secondary'
-                        PanelType = strKey
-                        If PanelType = "primarypanel" Then
-                            PanelType = "Primary"
-                        ElseIf PanelType = "secondarypanel" Then
-                            PanelType = "Secondary"
-                        End If
-                        'Copy file to F: drive, add to the NGSTestFiles table, and remove original file from S: drive
-                        Set newNGSTestFile = New ADODB.Recordset
-                        TodayDate = Format(Now(), "dd/mmm/yyyy Hh:Nn:ss")
-                        'Create a new record in the NGSTestFile table and retrieve the auto increment ID for newly inserted record
-                        sqlNewNGSFile = "INSERT INTO NGSTestFile (NGSTestID, Description, DateAdded, VCF_Filter_Import) VALUES (" & NGSTestID & ", " & "'Ingenuity VCF Output - " & PanelType & "', #" & TodayDate & "#, -1)"
-                        newNGSTestFile.Open sqlNewNGSFile, CurrentProject.Connection, adOpenKeyset
-                        newNGSTestFile.Open "SELECT @@identity", CurrentProject.Connection, adOpenKeyset 'Get ID of new entry
-                        NGSTestFileID = newNGSTestFile.Fields(0).Value
-                        'Add the auto increment ID to the end of the filename (before file extension) to ensure every file has a unique name, then copy file to F: drive.
-                        dotIndx = InStrRev(filename, ".") 'Index of the start of file extension
-                        filenameNoExt = Left(filename, dotIndx - 1) 'Original filename without extension
-                        fileExt = Right(filename, Len(filename) - (dotIndx - 1)) 'File extension including dot
-                        newFileName = filenameNoExt & "_" & NGSTestFileID & fileExt
-                        FileCopy filepath, newDir & newFileName 'Copy file to the F: drive
-                        SetAttr newDir & newFileName, vbReadOnly 'Make copied file read only
-                        Set rsAddCat = Nothing
-                        'Update the NGSTestFile record with the file path of the copied file, and record in patient log
-                        un = VBA.Environ("USERNAME")
-                        cn = VBA.Environ("COMPUTERNAME")
-                        sqlAddFilePath = "UPDATE NGSTestFile SET NGSTestFile = '" & newDir & newFileName & "' WHERE NGSTestFileID = " & NGSTestFileID
-                        sqlPatLogVar = "INSERT INTO PatientLog (InternalPatientID, LogEntry, [Date], Login, PCName) VALUES (" & patID & ", 'NGS: Variants uploaded to NGSVariants table from Ingenuity VCF Output - " & PanelType & ". (NGSTest ID: " & NGSTestID & ")', #" + TodayDate + "#,'" + un + "','" + cn + "')"
-                        sqlPatLogVCF = "INSERT INTO PatientLog (InternalPatientID, LogEntry, [Date], Login, PCName) VALUES (" & patID & ", 'NGS: Ingenuity VCF Output - " & PanelType & " attached. (NGSTestFile ID: " & NGSTestFileID & ")', #" + TodayDate + "#,'" + un + "','" + cn + "')"
-                        DoCmd.SetWarnings False
-                        DoCmd.RunSQL sqlAddFilePath
-                        DoCmd.RunSQL sqlPatLogVar
-                        DoCmd.RunSQL sqlPatLogVCF
-                        DoCmd.SetWarnings True
-                        'Remove original file
-                        Kill filepath
-                    Next
-                    'Find number of other variants within +/- 2bp and add to NGSVariant table so it can be displayed in subform
-                    'Have to do it this way because calculating the count on the fly in subform recordsource query makes the subform read only, so classifcation, comments etc. can't be updated
-                    'This is recalculated every time the results form is opened, so up to date number is always displayed to user.
-                    Me.Refresh 'Refresh is required to sync imported variants from Python script
-                    Dim sqlPrevVars As String
-                    Dim rsPrevVars As ADODB.Recordset
-                    'Query below returns the variant ID and number of previous records for each variant associated with this test.
-                    sqlPrevVars = "SELECT NGSVariant.NGSVariantID, (SELECT Count(*) FROM NGSVariant WHERE NGSVariant.NGSTestID <> currentVar.NGSTestID AND NGSVariant.ChrID=currentVar.ChrID AND NGSVariant.Position_hg19>=(currentVar.Position_hg19-2) And NGSVariant.Position_hg19<=(currentVar.Position_hg19+Len(currentVar.ref)+1)) AS countPrev FROM NGSVariant AS currentVar INNER JOIN NGSVariant ON currentVar.NGSVariantID = NGSVariant.NGSVariantID WHERE NGSVariant.NGSTestID = " & NGSTestID
-                    Set rsPrevVars = New ADODB.Recordset
-                    rsPrevVars.Open sqlPrevVars, CurrentProject.Connection, adOpenKeyset
-                    'For each variant, update the relVars field of NGSVariant table
-                    While Not rsPrevVars.EOF
-                        sqlUpdate = "UPDATE NGSVariant SET relVars = " & rsPrevVars.Fields("countPrev") & " WHERE NGSVariantID = " & rsPrevVars.Fields("NGSVariantID")
-                        DoCmd.SetWarnings False
-                        DoCmd.RunSQL sqlUpdate
-                        DoCmd.SetWarnings True
-                        rsPrevVars.MoveNext
-                    Wend
-                    Set rsPrevVars = Nothing
-                    Me.Requery 'Requery subform
+                    MsgBox ("Multiple VCF files found of type: " & PanelType & ". Unable to continue with import")
+                    Exit Sub
                 End If
-                Set wsh = Nothing
+            ' if it's an oncology run
+            Else
+                ' Add the vcf file to the dictionary (to ensure there aren't dictionary keys), with the vcf filename as the PanelType
+                ' The panel type is only used in the description of the files added subform
+                ' take the file name after the last slash (ignore filepath)
+                PanelType_with_Ext = Split(selectedFile, "\")(UBound(Split(selectedFile, "\")))
+                ' take the file name without the extenstion
+                PanelType = Split(PanelType_with_Ext, ".")(0)
+                vcfDict.Add PanelType, selectedFile
+            End If
+         Next
+         
+         Dim dna_mismatch As Boolean
+         ' set variable to denote if the DNA Number isn't present in the filename
+         dna_mismatch = False
+        
+        'empty variable to build comma separated string of filepaths to pass to python script
+        csFileLst = ""
+        ' count looping through the list
+        loopcount = 0
+        ' loop through each panel type
+        For Each strKey In vcfDict.keys()
+            ' Count each panel
+            loopcount = loopcount + 1
+            ' append the
+            csFileLst = csFileLst & vcfDict(strKey)
+            If loopcount <> vcfDict.count Then 'If not the last file in list
+                csFileLst = csFileLst & ","
+            End If
+            ' check for mismatched DNA number
+
+            ' if the DNA number can't be found in the filename set DNA_mismatch to true
+            If InStr(vcfDict(strKey), Me.DNA.Value) = 0 Then
+                dna_mismatch = True
+            End If
+            
+        Next
+        ' if the dna number wasn't found in any file open a msgbox which gives the user a chance to cancel or proceed
+        If dna_mismatch = True Then
+            ' if they cancel exit the sub
+            If MsgBox("The sample DNA number can't be found in one or more selected files. Do you want to continue with the import?", vbYesNo) = vbNo Then Exit Sub
+        End If
+        
+        'Pass VCF filepath and test details to python script to parse VCF and insert records into Moka NGSVariants table
+        Dim wsh As Object
+        Set wsh = CreateObject("WScript.Shell")
+        ' set path to the python executable
+        pythonPath = "\\gstt.local\Shared\Genetics_Data2\Array\Software\Python\python.exe"
+        ' set path to the script which will import the variants
+        ScriptPath = "\\gstt.local\Apps\Moka\Files\Software\VCFImport\VCFImport.py"
+        ' capture the patientID and NGSTestID from the form to pass to python script
+        patID = Me.Parent.InternalPatientID
+        NGSTestID = Me.Parent.NGSTestID
+    
+        'Execute python script with required arguments. "2>&1" at the end redirects StdErr (2) to StdOut (1)
+        Set wshexec = wsh.Exec("cmd.exe /S /C " & pythonPath & " " & ScriptPath & " """ & csFileLst & """ " & patID & " " & NGSTestID & " 2>&1")
+        
+        'DoEvents pauses VBA until python script has finished running. wshexec.status is 0 while running and 1 when finished
+        Do While wshexec.Status = 0
+            DoEvents
+        Loop
+
+        'Capture any error messages from python script (StdErr has been redirected to StdOut, see above)
+        errReport = wshexec.Stdout.readall()
+
+        ' Report any standard error in msgbox
+        If errReport <> "" Then
+            MsgBox "The following error was encountered when attempting to import variants from VCF: " & vbNewLine & vbNewLine & errReport, vbCritical, "ERROR"
+        ' if there were no issues archive the files onto the F drive.
+        Else
+            'Files will be copied to a folder with this month WES batch folder on F: drive
+            newDir = month_dir
+            'Loop through dictionary of VCFs, and move files to F: drive
+            For Each strKey In vcfDict.keys()
+                'Get the panelType from dictionary key. If Primarypanel or Secondarypanel, change to 'Primary' or 'Secondary'
+                PanelType = strKey
+                If PanelType = "primarypanel" Then
+                    PanelType = "Primary"
+                ElseIf PanelType = "secondarypanel" Then
+                    PanelType = "Secondary"
+                Else
+                    PanelType = Split(PanelType, ".")(0)
+                End If
+                
+                'Copy file to F: drive, add to the NGSTestFiles table, and remove original file from S: drive
+                Set newNGSTestFile = New ADODB.Recordset
+                'Create timestamp
+                TodayDate = Format(Now(), "dd/mmm/yyyy Hh:Nn:ss")
+                
+                'Create a new record in the NGSTestFile table and retrieve the auto increment ID for newly inserted record
+                sqlNewNGSFile = "INSERT INTO NGSTestFile (NGSTestID, Description, DateAdded, VCF_Filter_Import) VALUES (" & NGSTestID & ", " & "'Ingenuity VCF Output - " & PanelType & "',#" & TodayDate & "#, -1)"
+                newNGSTestFile.Open sqlNewNGSFile, CurrentProject.Connection, adOpenKeyset
+                'Get ID of new entry
+                newNGSTestFile.Open "SELECT @@identity", CurrentProject.Connection, adOpenKeyset
+                NGSTestFileID = newNGSTestFile.Fields(0).Value
+                
+                ' the full filepath is recorded in the array
+                filenamepath = vcfDict(strKey)
+                filenamepath = Replace(filenamepath, "P:\", "\\gstt.local\Shared\Genetics\")
+                ' split this path on "\" and take the last item (the filename) using ubound to calculate length of list
+                filename = Split(filenamepath, "\")(UBound(Split(filenamepath, "\")))
+                
+                
+                'Add the auto increment ID to the end of the filename (before file extension) to ensure every file has a unique name, then copy file to F: drive.
+                'Get the position in the file name where the last full stop is (last part of the file extension)
+                dotIndx = InStrRev(filename, ".")
+                
+                ' if the last part of the file is .gz then it is a zipped file so we need to get the extension before this
+                ' we are going to store the uncompressed VCF file only
+                ' get everything to the right, and including, the last fullstop - if this is '.gz'
+                If Right(filename, Len(filename) - (dotIndx - 1)) = ".gz" Then
+                    ' capture the filename excluding the '.gz'
+                    filenamenogz = Replace(filename, ".gz", "")
+                ' if the file does not end with .gz
+                Else
+                    ' capture the filename as is
+                    filenamenogz = filename
+                End If
+                
+
+                ' find the index of the last full stop (excluding .gz)
+                dotIndx2 = InStrRev(filenamenogz, ".")
+                
+                ' capture the file name without any extension by taking everything left of the last full stop
+                filenameNoExt = Left(filenamenogz, dotIndx2 - 1)
+                filename_Ext = Right(filenamenogz, Len(filenamenogz) - (dotIndx2 - 1))
+                ' combine all into new file name
+                newFileName = filenameNoExt & "_" & NGSTestFileID & filename_Ext
+                    
+                'Copy file to the F: drive
+                FileCopy filenamepath, newDir & newFileName
+                'Make copied file read only
+                SetAttr newDir & newFileName, vbReadOnly
+                
+                'Update the NGSTestFile record with the file path of the copied file, and record in patient log
+                ' set user variables
+                un = VBA.Environ("USERNAME")
+                cn = VBA.Environ("COMPUTERNAME")
+                ' set the query to add the filepath to the NGSTestfile table
+                sqlAddFilePath = "UPDATE NGSTestFile SET NGSTestFile = '" & newDir & newFileName & "' WHERE NGSTestFileID = " & NGSTestFileID
+                ' queries to record what has been done in patient log table
+                sqlPatLogVar = "INSERT INTO PatientLog (InternalPatientID, LogEntry, [Date], Login, PCName) VALUES (" & patID & ", 'NGS: Variants uploaded to NGSVariants table from Ingenuity VCF Output - " & PanelType & ". (NGSTest ID: " & NGSTestID & ")', #" + TodayDate + "#,'" + un + "','" + cn + "')"
+                sqlPatLogvcf = "INSERT INTO PatientLog (InternalPatientID, LogEntry, [Date], Login, PCName) VALUES (" & patID & ", 'NGS: Ingenuity VCF Output - " & PanelType & " attached. (NGSTestFile ID: " & NGSTestFileID & ")', #" + TodayDate + "#,'" + un + "','" + cn + "')"
+                ' execute the queries
+                DoCmd.SetWarnings False
+                DoCmd.RunSQL sqlAddFilePath
+                DoCmd.RunSQL sqlPatLogVar
+                DoCmd.RunSQL sqlPatLogvcf
+                DoCmd.SetWarnings True
+                
+                If Right(filename, Len(filename) - (InStrRev(filename, ".") - 1)) = ".gz" Then
+                    'remove the temporary unzipped file
+                    Kill Replace(filenamepath, ".gz", "")
+                    'Remove original file
+                    Kill filenamepath
+                Else
+                    'Remove original file
+                    Kill filenamepath
+                End If
+
+            ' next panel type in the array
+            Next
+
+            'Find number of other variants within +/- 2bp and add to NGSVariant table so it can be displayed in subform
+            'Have to do it this way because calculating the count on the fly in subform recordsource query makes the subform read only, so classifcation, comments etc. can't be updated
+            'This is recalculated every time the results form is opened, so up to date number is always displayed to user.
+            ' Refresh is required to sync imported variants from Python script
+            Me.Refresh
+            Dim sqlPrevVars As String
+            Dim rsPrevVars As ADODB.Recordset
+            'Query below returns the variant ID and number of previous records for each variant associated with this test.
+            sqlPrevVars = "SELECT NGSVariant.NGSVariantID, (SELECT Count(*) FROM NGSVariant WHERE NGSVariant.NGSTestID <> currentVar.NGSTestID AND NGSVariant.ChrID=currentVar.ChrID AND NGSVariant.Position_hg19>=(currentVar.Position_hg19-2) And NGSVariant.Position_hg19<=(currentVar.Position_hg19+Len(currentVar.ref)+1)) AS countPrev FROM NGSVariant AS currentVar INNER JOIN NGSVariant ON currentVar.NGSVariantID = NGSVariant.NGSVariantID WHERE NGSVariant.NGSTestID = " & NGSTestID
+            Set rsPrevVars = New ADODB.Recordset
+            rsPrevVars.Open sqlPrevVars, CurrentProject.Connection, adOpenKeyset
+            'For each variant, update the relVars field of NGSVariant table
+            While Not rsPrevVars.EOF
+                sqlUpdate = "UPDATE NGSVariant SET relVars = " & rsPrevVars.Fields("countPrev") & " WHERE NGSVariantID = " & rsPrevVars.Fields("NGSVariantID")
+                DoCmd.SetWarnings False
+                DoCmd.RunSQL sqlUpdate
+                DoCmd.SetWarnings True
+                rsPrevVars.MoveNext
+            Wend
+            'unset variables
+            Set rsPrevVars = Nothing
+            Set wsh = Nothing
+            'Requery subform
+            Me.Requery
+            End If
+
+    Else
+         MsgBox "You clicked Cancel in the file dialog box."
+    End If
+End With
+
+    'Error HANDLER
+ErrHandler:
+        If Err.Number = -2147024894 Then
+            MsgBox "Unable to open file", vbExclamation, "Error"
+        ElseIf Err.Number <> 0 Then
+            If Err.Number = 75 Then
+                MsgBox "Error copying file. Couldn't access source or destination file path.", vbExclamation, "Error"
+            Else
+                MsgBox "An error has occured. File has not been attached." & vbNewLine & vbNewLine & Err.Number & ": " & Err.Description, vbExclamation, "Error"
+            End If
+            If Not IsNull(NGSTestFileID) Then 'If a record has been created in NGSTestFile table, remove it because it may be incomplete or link to a non-existing file.
+                sqlUndo = "DELETE FROM NGSTestFile WHERE NGSTestFileID = " & NGSTestFileID
+                DoCmd.SetWarnings False
+                DoCmd.RunSQL sqlUndo
+                DoCmd.SetWarnings True
+                Me.Requery 'Remove deleted row from subform
             End If
         End If
-    End If
 End Sub
 
 Private Sub FilterImport_Click()
@@ -486,6 +588,7 @@ Private Sub FilterImport_Click()
     Dim desBaseDir As String
     Dim newNGSTestFile As ADODB.Recordset
     Dim TodayDate As String
+
     
     filtSrcDir = "\\gstt.local\Shared\Genetics\DNA LAB\Current\WES\Ingenuity_output\Filter_settings\"
     destDir = "\\gstt.local\Apps\Moka\Files\ngs\"
