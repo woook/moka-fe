@@ -862,11 +862,13 @@ Private Sub Command83_Click()
             d = Format(Now, "dd/mmm/yyyy Hh:Nn:ss")
             un = VBA.Environ("USERNAME")
             cn = VBA.Environ("COMPUTERNAME")
-            S = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + ",'Moka PGD result sheet and report generated for PGD case entered under PatientID " + CStr(Me!FamilyTrustID) + "',#" + d + "#,'" + un + "','" + cn + "')"
+            S = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + ",'Moka PGD result sheet generated for PGD case entered under PatientID " + CStr(Me!FamilyTrustID) + "',#" + d + "#,'" + un + "','" + cn + "')"
             DoCmd.SetWarnings False
             DoCmd.RunSQL S
             DoCmd.SetWarnings True
-            
+            ' I think this next bit just refreshes the form. It depends what option 5 was on the previous list of command argument list, as shown in the Macro window in previous versions of Microsoft Access (count down the list, starting from 0).  taken from https://msdn.microsoft.com/en-us/vba/access-vba/articles/docmd-domenuitem-method-access and http://access.mvps.org/access/RunCommand/domenuitem.htm
+            ' Maybe this this work (UNTESTED!)
+            'DoCmd.RunCommand acCmdRefresh
             DoCmd.DoMenuItem acFormBar, acRecordsMenu, 5, , acMenuVer70
     
             Dim stDocName As String
@@ -892,11 +894,13 @@ Private Sub Command96_Click()
             d = Format(Now, "dd/mmm/yyyy Hh:Nn:ss")
             un = VBA.Environ("USERNAME")
             cn = VBA.Environ("COMPUTERNAME")
-            S = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + ",'Moka PGD result sheet and report generated for PGD case entered under PatientID " + CStr(Me!FamilyTrustID) + "',#" + d + "#,'" + un + "','" + cn + "')"
+            S = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + ",'Moka PGD report generated for PGD case entered under PatientID " + CStr(Me!FamilyTrustID) + "',#" + d + "#,'" + un + "','" + cn + "')"
             DoCmd.SetWarnings False
             DoCmd.RunSQL S
             DoCmd.SetWarnings True
-            
+            ' I think this next bit just refreshes the form. It depends what option 5 was on the previous list of command argument list, as shown in the Macro window in previous versions of Microsoft Access (count down the list, starting from 0).  taken from https://msdn.microsoft.com/en-us/vba/access-vba/articles/docmd-domenuitem-method-access and http://access.mvps.org/access/RunCommand/domenuitem.htm
+            ' Maybe this this work (UNTESTED!)
+            'DoCmd.RunCommand acCmdRefresh
             DoCmd.DoMenuItem acFormBar, acRecordsMenu, 5, , acMenuVer70
     
             Dim stDocName As String
@@ -977,18 +981,19 @@ Else
     
 End Sub
 
-Private Sub Command93_Click()
-On Error GoTo Err_Command93_Click
-
-
-    Screen.PreviousControl.SetFocus
-    DoCmd.FindNext
-
-Exit_Command93_Click:
-    Exit Sub
-
-Err_Command93_Click:
-    MsgBox Err.Description
-    Resume Exit_Command93_Click
-    
-End Sub
+'Private Sub Command93_Click()
+' NOT SURE IF THIS BUTTON EXISTS?
+'On Error GoTo Err_Command93_Click
+'
+'
+'    Screen.PreviousControl.SetFocus
+'    DoCmd.FindNext
+'
+'Exit_Command93_Click:
+'    Exit Sub
+'
+'Err_Command93_Click:
+'    MsgBox Err.Description
+'    Resume Exit_Command93_Click
+'
+'End Sub
