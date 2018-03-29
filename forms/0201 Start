@@ -4,6 +4,11 @@ Private Sub Form_Open(Cancel As Integer)
     DoCmd.Maximize
 End Sub
 
+Private Sub menu_btn_Click()
+    'Open the menu form
+    DoCmd.OpenForm "0202 MokaMenu"
+End Sub
+
 Private Sub open_9234_Click()
     Dim stDocName As String
     Dim stLinkCriteria As String
