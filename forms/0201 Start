@@ -1,9 +1,5 @@
 Option Compare Database
 
-Private Sub Form_Open(Cancel As Integer)
-    DoCmd.Maximize
-End Sub
-
 Private Sub open_9234_Click()
     Dim stDocName As String
     Dim stLinkCriteria As String

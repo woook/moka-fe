@@ -1,0 +1,1 @@
+SELECT Menu.MenuID, Menu.Menu_Level, Menu.Name, Menu.Action, Menu.Level_Sort, Menu.Parent_MenuID FROM Menu WHERE (((Menu.Menu_Level)=1)) ORDER BY Menu.Level_Sort;

@@ -1,0 +1,28 @@
+Option Compare Database
+
+Private Sub Name_DblClick(Cancel As Integer)
+    ' Double-click a menu item row to open the Form, Report or Query specified in the row's hidden 'Action' field.
+    ' The object type for DoCmd.Open* is defined in the 'Type' field, with the view defined in the 'AcView' field.
+    
+    ' If 'Type' is Form
+    If Me.Type.Value = "Form" Then
+        ' Open Form as Datasheet
+        If Me.AcView.Value = "acFormDS" Then
+            DoCmd.OpenForm Me.Action.Value, acFormDS
+        ' Open Form as Form View
+        ElseIf Me.AcView.Value = "acNormal" Then
+            DoCmd.OpenForm Me.Action.Value, acNormal
+        End If
+        
+    ' Else if 'Type' is Query
+    ElseIf Me.Type.Value = "Query" Then
+        ' Open Query as Normal View
+        DoCmd.OpenQuery Me.Action.Value, acViewNormal
+        
+    ' Else if 'Type' is Report
+    ElseIf Me.Type.Value = "Report" Then
+        ' Open Report as Print Preview View
+        DoCmd.OpenReport Me.Action.Value, acViewPreview
+    End If
+    
+End Sub
