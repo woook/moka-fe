@@ -1,0 +1,270 @@
+Option Compare Database
+
+Private Sub GWWorksheet_AfterUpdate()
+    Dim usr As String
+    Dim dt As String
+    Dim cmp As String
+    Dim strPatLogTest As String
+    Dim strmemo As String
+
+    ' set time, user and computer names for logs
+    dt = Format(Now, "dd/mmm/yyyy Hh:Nn:ss")
+    usr = VBA.Environ("USERNAME")
+    cmp = VBA.Environ("COMPUTERNAME")
+    ' create sql to insert into patient log and NGS log
+    strPatLogTest = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" & Me.InternalPatientID & ", 'NGS: GeL GW worksheet changed to " & Me.GWWorksheet.Value & ".',#" + dt + "#,'" + usr + "','" + cmp + "')"
+    strmemo = "INSERT INTO NGSLogMemo(InternalPatientID, Type, LinkID, LogMemoEntry, [Date], Login, PCName) VALUES(" & Me.InternalPatientID & ", 3, " & Me.NGSTestID & ",'NGS: GeL GW worksheet changed to " & Me.GWWorksheet.Value & ".',#" + dt + "#,'" + usr + "','" + cmp + "')"
+
+    DoCmd.SetWarnings False
+    DoCmd.RunSQL strPatLogTest
+    DoCmd.RunSQL strmemo
+    DoCmd.SetWarnings True
+End Sub
+
+Private Sub MDTdate_AfterUpdate()
+    Dim usr As String
+    Dim dt As String
+    Dim cmp As String
+    Dim strPatLogTest As String
+    Dim strmemo As String
+
+    ' set time, user and computer names for logs
+    dt = Format(Now, "dd/mmm/yyyy Hh:Nn:ss")
+    usr = VBA.Environ("USERNAME")
+    cmp = VBA.Environ("COMPUTERNAME")
+    ' create sql to insert into patient log and NGS log
+    strPatLogTest = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" & Me.InternalPatientID & ", 'NGS: GeL MDTdate changed to #" & Me.MDTdate.Value & "#.',#" + dt + "#,'" + usr + "','" + cmp + "')"
+    strmemo = "INSERT INTO NGSLogMemo(InternalPatientID, Type, LinkID, LogMemoEntry, [Date], Login, PCName) VALUES(" & Me.InternalPatientID & ", 3, " & Me.NGSTestID & ",'NGS: GeL MDTdate changed to #" & Me.MDTdate.Value & "#.',#" + dt + "#,'" + usr + "','" + cmp + "')"
+
+    DoCmd.SetWarnings False
+    DoCmd.RunSQL strPatLogTest
+    DoCmd.RunSQL strmemo
+    DoCmd.SetWarnings True
+End Sub
+
+
+Private Sub PRU_DblClick(Cancel As Integer)
+' This function opens up the patient details page for the specified PRU
+Dim stDocName As String
+Dim stLinkCriteria As String
+ If Not IsNull(Me.[PRU]) Then
+    stDocName = "02 Patient Details"
+    stLinkCriteria = "[PatientID]=" & "'" & Me![PRU] & "'"
+    DoCmd.OpenForm stDocName, , , stLinkCriteria
+End If
+
+End Sub
+
+
+
+Private Sub Check1ID_AfterUpdate()
+    Dim usr As String
+    Dim dt As String
+    Dim cmp As String
+    Dim strPatLogTest As String
+    Dim strmemo As String
+
+    ' set the associated date to current time stamp
+    Me.Check1Date.Value = Now
+    
+    ' set time, user and computer names for logs
+    dt = Format(Now, "dd/mmm/yyyy Hh:Nn:ss")
+    usr = VBA.Environ("USERNAME")
+    cmp = VBA.Environ("COMPUTERNAME")
+    ' create sql to insert into patient log and NGS log
+    strPatLogTest = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" & Me.InternalPatientID & ", 'NGS: GeL responsible scientist changed to " & Me.Check1ID.Column(1) & " and check1date set to current timestamp.',#" + dt + "#,'" + usr + "','" + cmp + "')"
+    strmemo = "INSERT INTO NGSLogMemo(InternalPatientID, Type, LinkID, LogMemoEntry, [Date], Login, PCName) VALUES(" & Me.InternalPatientID & ", 3, " & Me.NGSTestID & ",'NGS: GeL responsible scientist changed to " & Me.Check1ID.Column(1) & " and check1date set to current timestamp.',#" + dt + "#,'" + usr + "','" + cmp + "')"
+
+    DoCmd.SetWarnings False
+    DoCmd.RunSQL strPatLogTest
+    DoCmd.RunSQL strmemo
+    DoCmd.SetWarnings True
+    
+
+End Sub
+
+Private Sub Check2ID_AfterUpdate()
+    Dim usr As String
+    Dim dt As String
+    Dim cmp As String
+    Dim strPatLogTest As String
+    Dim strmemo As String
+
+    ' set the associated date to current time stamp
+    Me.Check2Date.Value = Now
+    ' set time, user and computer names for logs
+    dt = Format(Now, "dd/mmm/yyyy Hh:Nn:ss")
+    usr = VBA.Environ("USERNAME")
+    cmp = VBA.Environ("COMPUTERNAME")
+    ' create sql to insert into patient log and NGS log
+    strPatLogTest = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" & Me.InternalPatientID & ", 'NGS: GeL Checker 2 scientist changed to " & Me.Check2ID.Column(1) & " and check2date set to current timestamp.',#" + dt + "#,'" + usr + "','" + cmp + "')"
+    strmemo = "INSERT INTO NGSLogMemo(InternalPatientID, Type, LinkID, LogMemoEntry, [Date], Login, PCName) VALUES(" & Me.InternalPatientID & ", 3, " & Me.NGSTestID & ",'NGS: GeL Checker 2 scientist changed to " & Me.Check2ID.Column(1) & " and check2date set to current timestamp.',#" + dt + "#,'" + usr + "','" + cmp + "')"
+
+    DoCmd.SetWarnings False
+    DoCmd.RunSQL strPatLogTest
+    DoCmd.RunSQL strmemo
+    DoCmd.SetWarnings True
+    
+
+End Sub
+
+
+Private Sub Check3ID_AfterUpdate()
+    Dim usr As String
+    Dim dt As String
+    Dim cmp As String
+    Dim strPatLogTest As String
+    Dim strmemo As String
+
+    ' set the associated date to current time stamp
+    Me.Check3Date.Value = Now
+    
+    ' set time, user and computer names for logs
+    dt = Format(Now, "dd/mmm/yyyy Hh:Nn:ss")
+    usr = VBA.Environ("USERNAME")
+    cmp = VBA.Environ("COMPUTERNAME")
+    ' create sql to insert into patient log and NGS log
+    strPatLogTest = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" & Me.InternalPatientID & ", 'NGS: GeL reporting scientist changed to " & Me.Check3ID.Column(1) & " and check3date set to current timestamp.',#" + dt + "#,'" + usr + "','" + cmp + "')"
+    strmemo = "INSERT INTO NGSLogMemo(InternalPatientID, Type, LinkID, LogMemoEntry, [Date], Login, PCName) VALUES(" & Me.InternalPatientID & ", 3, " & Me.NGSTestID & ",'NGS: GeL reporting scientist changed to " & Me.Check3ID.Column(1) & " and check3date set to current timestamp.',#" + dt + "#,'" + usr + "','" + cmp + "')"
+
+    DoCmd.SetWarnings False
+    DoCmd.RunSQL strPatLogTest
+    DoCmd.RunSQL strmemo
+    DoCmd.SetWarnings True
+
+    
+End Sub
+
+Private Sub Check4ID_AfterUpdate()
+    Dim usr As String
+    Dim dt As String
+    Dim cmp As String
+    Dim strPatLogTest As String
+    Dim strmemo As String
+
+    ' set the associated date to current time stamp
+    Me.Check4Date.Value = Now
+    
+    ' set time, user and computer names for logs
+    dt = Format(Now, "dd/mmm/yyyy Hh:Nn:ss")
+    usr = VBA.Environ("USERNAME")
+    cmp = VBA.Environ("COMPUTERNAME")
+    ' create sql to insert into patient log and NGS log
+    strPatLogTest = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" & Me.InternalPatientID & ", 'NGS: GeL Authorising scientist changed to " & Me.Check4ID.Column(1) & " and check4date set to current timestamp.',#" + dt + "#,'" + usr + "','" + cmp + "')"
+    strmemo = "INSERT INTO NGSLogMemo(InternalPatientID, Type, LinkID, LogMemoEntry, [Date], Login, PCName) VALUES(" & Me.InternalPatientID & ", 3, " & Me.NGSTestID & ",'NGS: GeL authorising scientist changed to " & Me.Check4ID.Column(1) & " and check4date set to current timestamp.',#" + dt + "#,'" + usr + "','" + cmp + "')"
+
+    DoCmd.SetWarnings False
+    DoCmd.RunSQL strPatLogTest
+    DoCmd.RunSQL strmemo
+    DoCmd.SetWarnings True
+    
+
+End Sub
+
+
+Private Sub ResultCode_AfterUpdate()
+    Dim usr As String
+    Dim dt As String
+    Dim cmp As String
+    Dim strPatLogTest As String
+    Dim strmemo As String
+
+    ' set time, user and computer names for logs
+    dt = Format(Now, "dd/mmm/yyyy Hh:Nn:ss")
+    usr = VBA.Environ("USERNAME")
+    cmp = VBA.Environ("COMPUTERNAME")
+    ' create sql to insert into patient log and NGS log
+    strPatLogTest = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" & Me.InternalPatientID & ", '100K: Result code set to " & Me.ResultCode.Column(1) & ".',#" + dt + "#,'" + usr + "','" + cmp + "')"
+    strmemo = "INSERT INTO NGSLogMemo(InternalPatientID, Type, LinkID, LogMemoEntry, [Date], Login, PCName) VALUES(" & Me.InternalPatientID & ", 3, " & Me.NGSTestID & ",'100K: Result code set to " & Me.ResultCode.Column(1) & ".',#" + dt + "#,'" + usr + "','" + cmp + "')"
+
+    DoCmd.SetWarnings False
+    DoCmd.RunSQL strPatLogTest
+    DoCmd.RunSQL strmemo
+    DoCmd.SetWarnings True
+End Sub
+
+Private Sub ResultComment_AfterUpdate()
+    Dim usr As String
+    Dim dt As String
+    Dim cmp As String
+    Dim strPatLogTest As String
+    Dim strmemo As String
+
+    ' set time, user and computer names for logs
+    dt = Format(Now, "dd/mmm/yyyy Hh:Nn:ss")
+    usr = VBA.Environ("USERNAME")
+    cmp = VBA.Environ("COMPUTERNAME")
+    ' create sql to insert into patient log and NGS log
+    strPatLogTest = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" & Me.InternalPatientID & ", 'NGS: GeL Result Comment changed to " & Me.ResultComment.Value & ".',#" + dt + "#,'" + usr + "','" + cmp + "')"
+    strmemo = "INSERT INTO NGSLogMemo(InternalPatientID, Type, LinkID, LogMemoEntry, [Date], Login, PCName) VALUES(" & Me.InternalPatientID & ", 3, " & Me.NGSTestID & ",'NGS: GeL ResultComment changed to " & Me.ResultComment.Value & ".',#" + dt + "#,'" + usr + "','" + cmp + "')"
+
+    DoCmd.SetWarnings False
+    DoCmd.RunSQL strPatLogTest
+    DoCmd.RunSQL strmemo
+    DoCmd.SetWarnings True
+End Sub
+
+Private Sub ResultComment_DblClick(Cancel As Integer)
+Dim stDocName As String
+    stDocName = "s0901_NGSLogMemo"
+    stLinkCriteria = "[Type]= 3 AND [LinkID] = " & Me![NGSTestID]
+    DoCmd.OpenForm stDocName, acFormDS, , stLinkCriteria
+End Sub
+
+Private Sub Status_AfterUpdate()
+    Dim usr As String
+    Dim dt As String
+    Dim cmp As String
+    Dim strPatLogTest As String
+    Dim strmemo As String
+
+    ' set time, user and computer names for logs
+    dt = Format(Now, "dd/mmm/yyyy Hh:Nn:ss")
+    usr = VBA.Environ("USERNAME")
+    cmp = VBA.Environ("COMPUTERNAME")
+    ' create sql to insert into patient log and NGS log
+    strPatLogTest = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" & Me.InternalPatientID & ", 'NGS: GeL test status changed to " & Me.Status.Column(1) & ".',#" + dt + "#,'" + usr + "','" + cmp + "')"
+    strmemo = "INSERT INTO NGSLogMemo(InternalPatientID, Type, LinkID, LogMemoEntry, [Date], Login, PCName) VALUES(" & Me.InternalPatientID & ", 3, " & Me.NGSTestID & ",'NGS: GeL test status changed to " & Me.Status.Column(1) & ".',#" + dt + "#,'" + usr + "','" + cmp + "')"
+
+    DoCmd.SetWarnings False
+    DoCmd.RunSQL strPatLogTest
+    DoCmd.RunSQL strmemo
+    DoCmd.SetWarnings True
+End Sub
+
+Private Sub Status_DblClick(Cancel As Integer)
+' View past comment history for test
+Dim stDocName As String
+    stDocName = "s0901_NGSLogMemo"
+    stLinkCriteria = "[Type]= 1 AND [LinkID] = " & Me![NGSTestID]
+    DoCmd.OpenForm stDocName, acFormDS, , stLinkCriteria
+End Sub
+
+Private Sub TestResult_AfterUpdate()
+    Dim usr As String
+    Dim dt As String
+    Dim cmp As String
+    Dim strPatLogTest As String
+    Dim strmemo As String
+
+    ' set time, user and computer names for logs
+    dt = Format(Now, "dd/mmm/yyyy Hh:Nn:ss")
+    usr = VBA.Environ("USERNAME")
+    cmp = VBA.Environ("COMPUTERNAME")
+    ' create sql to insert into patient log and NGS log
+    strPatLogTest = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" & Me.InternalPatientID & ", 'NGS: TestResult changed to " & Me.TestResult.Value & ".',#" + dt + "#,'" + usr + "','" + cmp + "')"
+    strmemo = "INSERT INTO NGSLogMemo(InternalPatientID, Type, LinkID, LogMemoEntry, [Date], Login, PCName) VALUES(" & Me.InternalPatientID & ", 3, " & Me.NGSTestID & ",'NGS: GeL TestResult changed to " & Me.TestResult.Value & ".',#" + dt + "#,'" + usr + "','" + cmp + "')"
+
+    DoCmd.SetWarnings False
+    DoCmd.RunSQL strPatLogTest
+    DoCmd.RunSQL strmemo
+    DoCmd.SetWarnings True
+End Sub
+
+Private Sub TestResult_DblClick(Cancel As Integer)
+' View NGS Test result in full
+Dim stDocName As String
+    stDocName = "s87020_NGSTestResultComment"
+    stLinkCriteria = " NGSTestID = " & Me![NGSTestID]
+    DoCmd.OpenForm stDocName, acFormSF, , stLinkCriteria
+End Sub
