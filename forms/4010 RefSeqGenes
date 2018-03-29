@@ -30,7 +30,7 @@ End Sub
 
 Private Sub Stop19_DblClick(Cancel As Integer)
     Dim url As String
-    url = "http://genome-euro.ucsc.edu/cgi-bin/hgTracks?hgS_doOtherUser=submit&hgS_otherUserName=wook&hgS_otherUserSessionName=hg19cgh9&db=hg19&position=chr" + Me![Chr] + "%3A" + CStr(Me.Start19 - 500000) + "-" + CStr(Me.Stop19 + 500000) + ""
+    url = "http://genome-euro.ucsc.edu/cgi-bin/hgTracks?hgS_doOtherUser=submit&hgS_otherUserName=devdisorders&hgS_otherUserSessionName=hg19cgh9&db=hg19&position=chr" + Me![Chr] + "%3A" + CStr(Me.Start19 - 500000) + "-" + CStr(Me.Stop19 + 500000) + ""
     'chromeurlserv url
     firefoxurl url
 End Sub
@@ -38,6 +38,6 @@ End Sub
 ''Vanity
 Private Sub Band_DblClick(Cancel As Integer)
     Dim url As String
-    url = "http://genome-euro.ucsc.edu/cgi-bin/hgTracks?hgS_doOtherUser=submit&hgS_otherUserName=wook&hgS_otherUserSessionName=hg19cgh9&db=hg19&position=chr" + Me![Chr] + "%3A" + CStr(Me.Start19 - 500000) + "-" + CStr(Me.Stop19 + 500000) + ""
+    url = "http://genome-euro.ucsc.edu/cgi-bin/hgTracks?hgS_doOtherUser=submit&hgS_otherUserName=devdisorders&hgS_otherUserSessionName=hg19cgh9&db=hg19&position=chr" + Me![Chr] + "%3A" + CStr(Me.Start19 - 500000) + "-" + CStr(Me.Stop19 + 500000) + ""
     chromeurl url
 End Sub

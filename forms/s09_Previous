@@ -37,7 +37,7 @@ End Sub
 
 Private Sub Stop_19__DblClick(Cancel As Integer)
     Dim url As String
-    url = "http://genome-euro.ucsc.edu/cgi-bin/hgTracks?hgS_doOtherUser=submit&hgS_otherUserName=wook&hgS_otherUserSessionName=hg19cgh9&db=hg19&position=chr" + Me![Chr(19)] + "%3A" + CStr(Me.[Start(19)]) + "-" + CStr(Me.[Stop(19)]) + ""
-    'http://genome.ucsc.edu/cgi-bin/hgTracks?hgS_doOtherUser=submit&hgS_otherUserName=Wook&hgS_otherUserSessionName=hg19CGH5&org=Human&db=hg18&position=chr16%3A15%2C666%2C145-15%2C666%2C245
+    url = "http://genome-euro.ucsc.edu/cgi-bin/hgTracks?hgS_doOtherUser=submit&hgS_otherUserName=devdisorders&hgS_otherUserSessionName=hg19cgh9&db=hg19&position=chr" + Me![Chr(19)] + "%3A" + CStr(Me.[Start(19)]) + "-" + CStr(Me.[Stop(19)]) + ""
+    'http://genome.ucsc.edu/cgi-bin/hgTracks?hgS_doOtherUser=submit&hgS_otherUserName=devdisorders&hgS_otherUserSessionName=hg19CGH5&org=Human&db=hg18&position=chr16%3A15%2C666%2C145-15%2C666%2C245
     firefoxurl url
 End Sub

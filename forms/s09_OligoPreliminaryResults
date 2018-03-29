@@ -29,7 +29,6 @@ Private Sub Form_DblClick(Cancel As Integer)
     stLinkCriteria = "[ChrID19]=" & Me![ChrID19]
     DoCmd.OpenForm stDocName, acFormDS, , stLinkCriteria
 End Sub
-
 '' Open variant assessment form
 Private Sub Pathogenic_DblClick(Cancel As Integer)
     Dim stDocName As String
@@ -89,7 +88,7 @@ End Sub
 ''ucsc
 Private Sub Stop19_DblClick(Cancel As Integer)
     Dim url As String
-    url = "http://genome-euro.ucsc.edu/cgi-bin/hgTracks?hgS_doOtherUser=submit&hgS_otherUserName=wook&hgS_otherUserSessionName=hg19cgh9&db=hg19&highlight=hg19.chr" + Me![ChrID19].Column(1) + "%3A" + CStr(Me.Start19) + "-" + CStr(Me.Stop19) + "&position=chr" + Me![ChrID19].Column(1) + "%3A" + CStr(Me.Start19 - 500000) + "-" + CStr(Me.Stop19 + 500000) + ""
+    url = "http://genome-euro.ucsc.edu/cgi-bin/hgTracks?hgS_doOtherUser=submit&hgS_otherUserName=devdisorders&hgS_otherUserSessionName=hg19cgh9&db=hg19&highlight=hg19.chr" + Me![ChrID19].Column(1) + "%3A" + CStr(Me.Start19) + "-" + CStr(Me.Stop19) + "&position=chr" + Me![ChrID19].Column(1) + "%3A" + CStr(Me.Start19 - 500000) + "-" + CStr(Me.Stop19 + 500000) + ""
     'url = "http://genome.ucsc.edu/cgi-bin/hgTracks?hgS_doOtherUser=submit&hgS_otherUserName=Wook&hgS_otherUserSessionName=hg19cgh8&highlight=hg19.chr" + Me![ChrID19].Column(1) + "%3A" + CStr(Me.Start19) + "-" + CStr(Me.Stop19) + "&position=chr" + Me![ChrID19].Column(1) + "%3A" + CStr(Me.Start19 - 500000) + "-" + CStr(Me.Stop19 + 500000) + ""
     'url = "http://genome.ucsc.edu/cgi-bin/hgTracks?hgS_doOtherUser=submit&hgS_otherUserName=Wook&hgS_otherUserSessionName=hg19cgh8&position=chr" + Me![ChrID19].Column(1) + "%3A" + CStr(Me.Start19 - 1000) + "-" + CStr(Me.Stop19 + 1000) + ""
     'url = "http://genome.ucsc.edu/cgi-bin/hgTracks?hgS_doOtherUser=submit&hgS_otherUserName=Wook&hgS_otherUserSessionName=hg19cgh8&position=chr" + Me![ChrID19].Column(1) + "%3A" + CStr(Me.Start19 - 500000) + "-" + CStr(Me.Stop19 + 500000) + ""
@@ -126,7 +125,7 @@ End Sub
 
 Private Sub Probes_DblClick(Cancel As Integer)
     Dim url As String
-    url = "http://genome-euro.ucsc.edu/cgi-bin/hgTracks?hgS_doOtherUser=submit&hgS_otherUserName=wook&hgS_otherUserSessionName=hg19cgh9&db=hg19&highlight=hg19.chr" + Me![ChrID19].Column(1) + "%3A" + CStr(Me.Start19) + "-" + CStr(Me.Stop19) + "&position=chr" + Me![ChrID19].Column(1) + "%3A" + CStr(Me.Start19 - 500000) + "-" + CStr(Me.Stop19 + 500000) + ""
+    url = "http://genome-euro.ucsc.edu/cgi-bin/hgTracks?hgS_doOtherUser=submit&hgS_otherUserName=devdisorders&hgS_otherUserSessionName=hg19cgh9&db=hg19&highlight=hg19.chr" + Me![ChrID19].Column(1) + "%3A" + CStr(Me.Start19) + "-" + CStr(Me.Stop19) + "&position=chr" + Me![ChrID19].Column(1) + "%3A" + CStr(Me.Start19 - 500000) + "-" + CStr(Me.Stop19 + 500000) + ""
     'url = "http://genome.ucsc.edu/cgi-bin/hgTracks?hgS_doOtherUser=submit&hgS_otherUserName=Wook&hgS_otherUserSessionName=hg19cgh8&highlight=hg19.chr" + Me![ChrID19].Column(1) + "%3A" + CStr(Me.Start19) + "-" + CStr(Me.Stop19) + "&position=chr" + Me![ChrID19].Column(1) + "%3A" + CStr(Me.Start19 - 500000) + "-" + CStr(Me.Stop19 + 500000) + ""
     'url = "http://genome.ucsc.edu/cgi-bin/hgTracks?hgS_doOtherUser=submit&hgS_otherUserName=Wook&hgS_otherUserSessionName=hg19cgh8&position=chr" + Me![ChrID19].Column(1) + "%3A" + CStr(Me.Start19 - 1000) + "-" + CStr(Me.Stop19 + 1000) + ""
     chromeurl url
@@ -205,14 +204,14 @@ Private Sub DNALabellingID_DblClick(Cancel As Integer)
         Set cxn2 = New ADODB.Recordset
         Dim SQLlogquery As String
         Dim DateStamp As String
-        Dim UserName As String
+        Dim username As String
         Dim ComputerName As String
 
         DateStamp = Format(Now, "dd/mmm/yyyy Hh:Nn:ss")
-        UserName = VBA.Environ("USERNAME")
+        username = VBA.Environ("USERNAME")
         ComputerName = VBA.Environ("COMPUTERNAME")
     
-        SQLlogquery = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + ",'Array test: Result changed to " + NewResultText + " from HybID " + Me![DNALabellingID].Column(1) + "',#" + DateStamp + "#,'" + UserName + "','" + ComputerName + "')"
+        SQLlogquery = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + ",'Array test: Result changed to " + NewResultText + " from HybID " + Me![DNALabellingID].Column(1) + "',#" + DateStamp + "#,'" + username + "','" + ComputerName + "')"
         cxn2.Open SQLlogquery, CurrentProject.Connection
         Set cxn2 = Nothing
         
@@ -242,11 +241,11 @@ Private Sub Pathogenic_Change()
         Dim U As ADODB.Recordset
         Set U = New ADODB.Recordset
         Dim v As String
-        Dim D As String
+        Dim d As String
         Dim dd As String
         Dim un As String
         Dim cn As String
-        D = Format(Now, "dd/mmm/yyyy Hh:Nn:ss")
+        d = Format(Now, "dd/mmm/yyyy Hh:Nn:ss")
         dd = Format(Now, "dd/mm/yyyy")
         un = VBA.Environ("USERNAME")
         cn = VBA.Environ("COMPUTERNAME")
@@ -295,16 +294,16 @@ Private Sub Pathogenic_Change()
         e.Update
         Set e = Nothing
     
-        v = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + ",'Array test: " + Me![Band19] + " " + f + " classified as " + h + " from HybID " + Me![DNALabellingID].Column(1) + "',#" + D + "#,'" + un + "','" + cn + "')"
+        v = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + ",'Array test: " + Me![Band19] + " " + f + " classified as " + h + " from HybID " + Me![DNALabellingID].Column(1) + "',#" + d + "#,'" + un + "','" + cn + "')"
         U.Open v, CurrentProject.Connection
         Set U = Nothing
     
         Me.Parent![s09_ArrayTest].Form.Requery
     
         If IsNull(Me.Parent![s09_ArrayTest]![ArrayResultComment]) Then
-            S = "INSERT INTO PatientLogMemo(InternalPatientID, ArrayTestID, LogMemoEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + "," + CStr(Me.Parent![s09_ArrayTest]![ArrayTestID]) + ",'Array test: Result comment deleted for test requested " + CStr(Me.Parent![s09_ArrayTest]![RequestedDate]) + "',#" + D + "#,'" + un + "','" + cn + "')"
+            S = "INSERT INTO PatientLogMemo(InternalPatientID, ArrayTestID, LogMemoEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + "," + CStr(Me.Parent![s09_ArrayTest]![ArrayTestID]) + ",'Array test: Result comment deleted for test requested " + CStr(Me.Parent![s09_ArrayTest]![RequestedDate]) + "',#" + d + "#,'" + un + "','" + cn + "')"
         Else
-            S = "INSERT INTO PatientLogMemo(InternalPatientID, ArrayTestID, LogMemoEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + "," + CStr(Me.Parent![s09_ArrayTest]![ArrayTestID]) + ",'Array test: Result comment updated for array test requested " + CStr(Me.Parent![s09_ArrayTest]![RequestedDate]) + " - " + Me.Parent![s09_ArrayTest]![ArrayResultComment] + "',#" + D + "#,'" + un + "','" + cn + "')"
+            S = "INSERT INTO PatientLogMemo(InternalPatientID, ArrayTestID, LogMemoEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + "," + CStr(Me.Parent![s09_ArrayTest]![ArrayTestID]) + ",'Array test: Result comment updated for array test requested " + CStr(Me.Parent![s09_ArrayTest]![RequestedDate]) + " - " + Me.Parent![s09_ArrayTest]![ArrayResultComment] + "',#" + d + "#,'" + un + "','" + cn + "')"
             End If
         
         Q.Open S, CurrentProject.Connection

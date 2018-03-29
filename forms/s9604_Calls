@@ -18,6 +18,6 @@ End Sub
 
 Private Sub Probes_DblClick(Cancel As Integer)
     Dim url As String
-    url = "http://genome-euro.ucsc.edu/cgi-bin/hgTracks?hgS_doOtherUser=submit&hgS_otherUserName=wook&hgS_otherUserSessionName=hg19cgh9&db=hg19&position=chr" + Me![ChrID19].Column(1) + "%3A" + CStr(Me.Start19 - 1000) + "-" + CStr(Me.Stop19 + 1000) + ""
+    url = "http://genome-euro.ucsc.edu/cgi-bin/hgTracks?hgS_doOtherUser=submit&hgS_otherUserName=devdisorders&hgS_otherUserSessionName=hg19cgh9&db=hg19&position=chr" + Me![ChrID19].Column(1) + "%3A" + CStr(Me.Start19 - 1000) + "-" + CStr(Me.Stop19 + 1000) + ""
     chromeurl url
 End Sub
