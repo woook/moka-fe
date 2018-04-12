@@ -1,0 +1,75 @@
+Private Sub GenerateReports_Click()
+On Error GoTo Err_GenerateReports_Click
+    ' This subroutine calls the python script which will create the gel reports
+    ' settings to have cmd box visible while running
+    Dim waitOnReturn As Boolean: waitOnReturn = True
+    Dim windowStyle As Integer: windowStyle = 1
+
+    ' variables to hold strings which will be passed to the python command
+    Dim strScriptPath As String ' used to capture the python script path
+    Dim strTotalCMD As String ' string which is used to build the command which executes the python script
+    ' report to hold stderr/out when running cmd
+    Dim strReport As String
+    ' For shell object
+    Dim wsh As Object
+    ' Recordset for subform values
+    Dim rsNegNeg As Recordset
+    
+    If vbYes = MsgBox("Generate negneg report for samples listed below?", vbYesNo + vbQuestion, "Continue?") Then
+        'set path to python script
+        'strScriptPath = "\\gstt.local\Apps\Moka\Files\Software\100K\gel_cover_report.py"
+        strScriptPath = "S:\Genetics_Data2\Moka_dev\andy_dev\GeLReports\gel_cover_report.py"
+    
+        'Construct first part of command
+        '/C means "execute this command as if I had typed it at the prompt, then quit"
+        '/S means you don't have to worry about quotes, removing first and last quotes, but leaving all others untouched.
+        'NB /K can be used for the cmd line window to remain after it has run - good for debugging - but may cause it to hang
+        strTotalCMD = "cmd.exe /S /C \\gstt.local\apps\Moka\Files\Software\Python\python.exe " & strScriptPath & " -n"
+        strTotalCMD = "cmd.exe /S /C S:\Genetics_Data2\Array\Software\Python\python.exe " & strScriptPath & " -n"
+    
+        'Clone the recordset of the subform to allow capture of NGS test IDs for report generation.
+        'This ensures only samples currently displayed in the subform are selected, even if additional WES tests have been approved since the form was opened.
+        Set rsNegNeg = Form_s88009_GEL_negneg_list.RecordsetClone
+        'Move to first record of the recordset
+        rsNegNeg.MoveFirst
+        'Loop through the recordset, adding the NGS test IDs as arguments to the command
+        While Not rsNegNeg.EOF
+            strTotalCMD = strTotalCMD & " " & rsNegNeg.Fields("NGSTestID")
+            rsNegNeg.MoveNext 'Move to next record
+        Wend
+        Set rsNegNeg = Nothing 'Clear the recordset
+        ' Add 2>&1 to the end of the command to redirect stderr to stdout
+        strTotalCMD = strTotalCMD & " 2>&1"
+        MsgBox strTotalCMD
+        ' Create shell object
+        Set wsh = CreateObject("WScript.Shell")
+        ' use .Exec not .Run so can access the stdout
+        Set wshexec = wsh.Exec(strTotalCMD)
+
+        'DoEvents pauses VB script until import script has finished running. wshexec.status is 0 while running 1 when finished
+        ' and 2 when errored so could use a if statement but have combined stderr and stdout above so no need.
+        Do While wshexec.Status = 0
+            DoEvents
+        Loop
+
+        'strReport captures stdout and stderr from executing python script (err is redirected to out in cmd)
+        strReport = wshexec.Stdout.readall()
+        'Display the stdout, which will report any samples that failed to the user
+        MsgBox strReport
+
+        'Requery the subform
+        Me.s88009_GEL_negneg_list.Requery
+    End If
+
+' ERROR HANDLING...
+' This is run when the sub routine finishes
+Exit_GenerateReports_Click:
+    ' exit the sub
+    Exit Sub
+'if error, report error description in message box
+Err_GenerateReports_Click:
+    MsgBox Err.Description
+    ' go to sub which will exit the routine
+    Resume Exit_GenerateReports_Click
+        
+End Sub
