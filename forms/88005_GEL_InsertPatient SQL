@@ -1,0 +1,3 @@
+SQL for unbound subform: ListPatientFound
+
+SELECT dbo_PatientLinked.PatientID, dbo_PatientLinked.PatientTrustID, dbo_PatientLinked.FamilyTrustID, dbo_PatientLinked.LastName, dbo_PatientLinked.FirstName, dbo_PatientLinked.Gender, dbo_PatientLinked.DoB FROM dbo_PatientLinked WHERE (((dbo_PatientLinked.PatientTrustID) Like [Forms]![88005_GEL_InsertPatient]![txFamilyTrustID] & "*"));
