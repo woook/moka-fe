@@ -23,7 +23,7 @@ On Error GoTo Err_GenerateReports_Click
         '/C means "execute this command as if I had typed it at the prompt, then quit"
         '/S means you don't have to worry about quotes, removing first and last quotes, but leaving all others untouched.
         'NB /K can be used for the cmd line window to remain after it has run - good for debugging - but may cause it to hang
-        strTotalCMD = "cmd.exe /S /C \\gstt.local\apps\Moka\Files\Software\Python\python.exe " & strScriptPath & " -n"
+        strTotalCMD = "cmd.exe /S /C \\gstt.local\shared\Genetics_Data2\Array\Software\Python\python.exe " & strScriptPath & " -n"
     
         'Clone the recordset of the subform to allow capture of NGS test IDs for report generation.
         'This ensures only samples currently displayed in the subform are selected, even if additional WES tests have been approved since the form was opened.
@@ -38,7 +38,6 @@ On Error GoTo Err_GenerateReports_Click
         Set rsNegNeg = Nothing 'Clear the recordset
         ' Add 2>&1 to the end of the command to redirect stderr to stdout
         strTotalCMD = strTotalCMD & " 2>&1"
-        MsgBox strTotalCMD
         ' Create shell object
         Set wsh = CreateObject("WScript.Shell")
         ' use .Exec not .Run so can access the stdout
