@@ -400,20 +400,7 @@ Private Sub Checked_AfterUpdate()
             DoCmd.SetWarnings True
             End If
     
-        If Me.USReportRecieved = True Then
-            Q = "Update FetalInformation set USReportRecieved = -1 where SpecimenNo = '" + LDS + "' and GWSpecID = " + GSI
-            
-            DoCmd.SetWarnings False
-            DoCmd.RunSQL Q
-            DoCmd.SetWarnings True
-        
-        ElseIf Me.USReportRecieved = False Then
-            Q = "Update FetalInformation set USReportRecieved = 0 where SpecimenNo = '" + LDS + "' and GWSpecID = " + GSI
-            DoCmd.SetWarnings False
-            DoCmd.RunSQL Q
-            DoCmd.SetWarnings True
-        End If
-        
+
         
     
         ''unautodate is checked is null
