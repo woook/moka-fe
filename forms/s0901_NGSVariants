@@ -51,7 +51,7 @@ Private Sub commentShort_DblClick(Cancel As Integer)
         requiresRequery = True 'Set requiresRequery to True so requery is performed at end
     End If
     'Needs a refresh for newly inserted comment/ACMG records to be found
-    Me.Refresh
+    Me.refresh
     stDocName = "s0901_NGSVariantACMGPopup" ' define name of the form to open
     stLinkCriteria = "[NGSVariantID] = " & Me.NGSVariantID ' Link the two forms on NGSVariantID
     'If form is locked following test completion, open the ACMG window in READ ONLY mode
@@ -138,3 +138,28 @@ Private Sub SangerConf_Click()
     DoCmd.RunSQL sqlPatLog
     DoCmd.SetWarnings True
 End Sub
+
+Private Sub gnomad_Hom_count_AfterUpdate()
+    Dim d As String
+    Dim un As String
+    Dim cn As String
+    Dim sqlMemo As String
+    
+    ' Set variables for date, user name, computername and patient ID.
+    d = Format(Now(), "dd/mmm/yyyy Hh:Nn:ss")
+    un = VBA.Environ("USERNAME")
+    cn = VBA.Environ("COMPUTERNAME")
+    patID = Me.Parent.InternalPatientID
+
+    'Add record to log when user updates Gnomad Homozygous count for each variant
+    If IsNull(Me.gnomad_Hom_count) Then ' logs removal for Hom count
+        sqlMemo = "INSERT INTO NGSLogMemo(InternalPatientID, Type, LinkID, LogMemoEntry, [Date], Login, PCName) VALUES(" + CStr(patID) + ", 2, " + CStr(Me.NGSVariantID) + ",'Gnomad Hom count removed',#" + d + "#,'" + un + "','" + cn + "')"
+    Else
+        sqlMemo = "INSERT INTO NGSLogMemo(InternalPatientID, Type, LinkID, LogMemoEntry, [Date], Login, PCName) VALUES(" + CStr(patID) + ", 2, " + CStr(Me.NGSVariantID) + ",'Gnomad Hom count updated to: " + CStr(gnomad_Hom_count) + " Homs',#" + d + "#,'" + un + "','" + cn + "')"
+    End If
+    ' Run SQL to update table
+    DoCmd.SetWarnings False
+    DoCmd.RunSQL sqlMemo
+    DoCmd.SetWarnings True
+End Sub
+
