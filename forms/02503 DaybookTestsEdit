@@ -1,0 +1,471 @@
+Option Compare Database
+
+''safety lock
+Private Sub Form_Current()
+    If Not IsNull(Me.Checked) And Me.SafetyCheck.Value = False Then
+        AllowEdits = False
+        Else: AllowEdits = True
+        End If
+End Sub
+
+'' safety unlock refresh
+Private Sub Command59_Click()
+    SafetyCheck.Value = Not SafetyCheck.Value
+    DoCmd.ShowAllRecords
+End Sub
+
+''autodate for signed
+Private Sub Signed_AfterUpdate()
+    If Not IsNull(Me.Signed) Then
+        Me.SignedDate = Format(Now, "dd/mmm/yyyy Hh:Nn:ss")
+        Else
+        Me.SignedDate = Null
+        End If
+End Sub
+
+''sanity check in case user has ticked array and targeted array
+Private Sub TickArray_AfterUpdate()
+    If Me.TickArray = True And Me.TickArrayTargeted Then
+        MsgBox "Error: you have selected arrays as well as targeted arrays. Only one should be selected. Please correct these choices.", , "Don't be a dummy"
+        End If
+End Sub
+
+''sanity check in case user has ticked array and targeted array
+Private Sub TickArrayTargeted_AfterUpdate()
+    If Me.TickArray = True And Me.TickArrayTargeted Then
+        MsgBox "Error: you have selected arrays as well as targeted arrays. Only one should be selected. Please correct these choices.", , "Don't be a dummy"
+        End If
+End Sub
+
+''''autodate & email & add tests into Moka
+Private Sub Checked_AfterUpdate()
+    
+    ''save
+    If Me.Dirty Then
+        Me.Dirty = False
+        End If
+        
+    ''autodate, email, add tests and log
+    If Not IsNull(Me.Checked) Then
+    
+        ''autodate for checked
+        Me.CheckedDate = Format(Now, "dd/mmm/yyyy Hh:Nn:ss")
+        
+        ''email
+        Dim iCfg As CDO.Configuration
+        Dim iMsg As CDO.Message
+        Dim emailto As String
+        Dim subjectline As String
+        Dim emailbody As String
+        
+        Set iCfg = New CDO.Configuration
+        
+        With iCfg
+        '.Fields(cdoSMTPServer) = "smtp.gstt.local"       '<---old smtp that will go offline 10/04/2014
+        .Fields(cdoSMTPServer) = "relay.gstt.local"        '<---new smtp
+        .Fields(cdoSMTPServerPort) = 25
+        .Fields(cdoSendUsingMethod) = cdoSendUsingPort
+        .Fields(cdoSMTPConnectionTimeout) = 200
+        .Fields.Update
+        End With
+    
+        ''target email address
+        emailto = "Prenatal-array@gstt.nhs.uk;cytodutyscientist@gstt.nhs.uk"
+        'emailto = "joowook.ahn@gstt.nhs.uk"
+    
+        'Define strings
+        Dim LDS As String
+        Dim STL As String
+        Dim DBN As String
+        Dim CM As String
+        Dim SIG As String
+        Dim CHE As String
+        Dim GSI As String
+                            
+        LDS = Me.SpecimenNo
+        STL = Me.DaybookSpecTypeLab
+        DBN = Me.DaybookName
+        If IsNull(Me.Comments) Then
+            CM = " "
+            Else
+            CM = Me.Comments
+            End If
+        SIG = Me.Signed.Column(1)
+        CHE = Me.Checked.Column(1)
+        GSI = Me.GWSpecID
+    
+        ''email detailing test requests
+        If Me.TickPCR = True Or Me.TickSex = True Or Me.TickArray = True Or Me.TickArrayTargeted Then
+            
+            If Me.TickPCR = True And Me.TickSex = True And Me.TickArray = True Then
+                subjectline = "Prenatal test request for " & LDS & " " & STL
+                emailbody = "<font face='arial' size='3'>" _
+                & "Prenatal test request for:<br /><br />" _
+                & "<b>QF-PCR trisomies, prenatal</b><br />" _
+                & "<b>QF-PCR sex test</b><br />" _
+                & "<b>Prenatal aCGH</b><br /><br />" _
+                & "Specimen no: <b>" & LDS & "</b>, type " & STL & "<br /><br />" _
+                & "Name-DOB-Sex: <b>" & DBN & "</b><br /><br />" _
+                & "Any comments: " & CM & "<br /><br /><br />" _
+                & "Duty scientist: " & SIG & "<br />" _
+                & "Checked by: " & CHE & "</font>"
+                
+            ElseIf Me.TickPCR = True And Me.TickSex = True And Me.TickArrayTargeted = True Then
+                subjectline = "Prenatal test request for " & LDS & " " & STL
+                emailbody = "<font face='arial' size='3'>" _
+                & "Prenatal test request for:<br /><br />" _
+                & "<b>QF-PCR trisomies, prenatal</b><br />" _
+                & "<b>QF-PCR sex test</b><br />" _
+                & "<b><font color='blue'>Targeted</font> Prenatal aCGH</b><br /><br />" _
+                & "Specimen no: <b>" & LDS & "</b>, type " & STL & "<br /><br />" _
+                & "Name-DOB-Sex: <b>" & DBN & "</b><br /><br />" _
+                & "Any comments: " & CM & "<br /><br /><br />" _
+                & "Duty scientist: " & SIG & "<br />" _
+                & "Checked by: " & CHE & "</font>"
+                
+            ElseIf Me.TickPCR = True And Me.TickSex = True And Me.TickArray = False And Me.TickArrayTargeted = False Then
+                subjectline = "Prenatal test request for " & LDS & " " & STL
+                emailbody = "<font face='arial' size='3'>" _
+                & "Prenatal test request for:<br /><br />" _
+                & "<b>QF-PCR trisomies, prenatal</b><br />" _
+                & "<b>QF-PCR sex test</b><br /><br />" _
+                & "Specimen no: <b>" & LDS & "</b>, type " & STL & "<br /><br />" _
+                & "Name-dob-sex: <b>" & DBN & "</b><br /><br />" _
+                & "Any comments: " & CM & "<br /><br /><br />" _
+                & "Duty scientist: " & SIG & "<br />" _
+                & "Checked by: " & CHE & "</font>"
+            
+            ElseIf Me.TickPCR = False And Me.TickSex = True And Me.TickArray = True Then
+                subjectline = "Prenatal test request for " & LDS & " " & STL
+                emailbody = "<font face='arial' size='3'>" _
+                & "Prenatal test request for:<br /><br />" _
+                & "<b>QF-PCR sex test</b><br />" _
+                & "<b>Prenatal aCGH</b><br /><br />" _
+                & "Specimen no: <b>" & LDS & "</b>, type " & STL & "<br /><br />" _
+                & "Name-dob-sex: <b>" & DBN & "</b><br /><br />" _
+                & "Any comments: " & CM & "<br /><br /><br />" _
+                & "Duty scientist: " & SIG & "<br />" _
+                & "Checked by: " & CHE & "</font>"
+            
+            ElseIf Me.TickPCR = False And Me.TickSex = True And Me.TickArrayTargeted = True Then
+                subjectline = "Prenatal test request for " & LDS & " " & STL
+                emailbody = "<font face='arial' size='3'>" _
+                & "Prenatal test request for:<br /><br />" _
+                & "<b>QF-PCR sex test</b><br />" _
+                & "<b><font color='blue'>Targeted</font> Prenatal aCGH</b><br /><br />" _
+                & "Specimen no: <b>" & LDS & "</b>, type " & STL & "<br /><br />" _
+                & "Name-dob-sex: <b>" & DBN & "</b><br /><br />" _
+                & "Any comments: " & CM & "<br /><br /><br />" _
+                & "Duty scientist: " & SIG & "<br />" _
+                & "Checked by: " & CHE & "</font>"
+            
+            ElseIf Me.TickPCR = True And Me.TickSex = False And Me.TickArray = True Then
+                subjectline = "Prenatal test request for " & LDS & " " & STL
+                emailbody = "<font face='arial' size='3'>" _
+                & "Prenatal test request for:<br /><br />" _
+                & "<b>QF-PCR trisomies, prenatal</b><br />" _
+                & "<b>Prenatal aCGH</b><br /><br />" _
+                & "Specimen no: <b>" & LDS & "</b>, type " & STL & "<br /><br />" _
+                & "Name-dob-sex: <b>" & DBN & "</b><br /><br />" _
+                & "Any comments: " & CM & "<br /><br /><br />" _
+                & "Duty scientist: " & SIG & "<br />" _
+                & "Checked by: " & CHE & "</font>"
+                
+            ElseIf Me.TickPCR = True And Me.TickSex = False And Me.TickArrayTargeted = True Then
+                subjectline = "Prenatal test request for " & LDS & " " & STL
+                emailbody = "<font face='arial' size='3'>" _
+                & "Prenatal test request for:<br /><br />" _
+                & "<b>QF-PCR trisomies, prenatal</b><br />" _
+                & "<b><font color='blue'>Targeted</font> Prenatal aCGH</b><br /><br />" _
+                & "Specimen no: <b>" & LDS & "</b>, type " & STL & "<br /><br />" _
+                & "Name-dob-sex: <b>" & DBN & "</b><br /><br />" _
+                & "Any comments: " & CM & "<br /><br /><br />" _
+                & "Duty scientist: " & SIG & "<br />" _
+                & "Checked by: " & CHE & "</font>"
+            
+            ElseIf Me.TickPCR = True And Me.TickSex = False And Me.TickArray = False And Me.TickArrayTargeted = False Then
+                subjectline = "Prenatal test request for " & LDS & " " & STL
+                emailbody = "<font face='arial' size='3'>" _
+                & "Prenatal test request for:<br /><br />" _
+                & "<b>QF-PCR trisomies, prenatal</b><br /><br />" _
+                & "Specimen no: <b>" & LDS & "</b>, type " & STL & "<br /><br />" _
+                & "Name-dob-sex: <b>" & DBN & "</b><br /><br />" _
+                & "Any comments: " & CM & "<br /><br /><br />" _
+                & "Duty scientist: " & SIG & "<br />" _
+                & "Checked by: " & CHE & "</font>"
+            
+            ElseIf Me.TickPCR = False And Me.TickSex = True And Me.TickArray = False And Me.TickArrayTargeted = False Then
+                subjectline = "Prenatal test request for " & LDS & " " & STL
+                emailbody = "<font face='arial' size='3'>" _
+                & "Prenatal test request for:<br /><br />" _
+                & "<b>QF-PCR sex test</b><br /><br />" _
+                & "Specimen no: <b>" & LDS & "</b>, type " & STL & "<br /><br />" _
+                & "Name-dob-sex: <b>" & DBN & "</b><br /><br />" _
+                & "Any comments: " & CM & "<br /><br /><br />" _
+                & "Duty scientist: " & SIG & "<br />" _
+                & "Checked by: " & CHE & "</font>"
+                
+            ElseIf Me.TickPCR = False And Me.TickSex = False And Me.TickArray = True Then
+                subjectline = "Prenatal test request for " & LDS & " " & STL
+                emailbody = "<font face='arial' size='3'>" _
+                & "Prenatal test request for:<br /><br />" _
+                & "<b>Prenatal aCGH</b><br /><br />" _
+                & "Specimen no: <b>" & LDS & "</b>, type " & STL & "<br /><br />" _
+                & "Name-dob-sex: <b>" & DBN & "</b><br /><br />" _
+                & "Any comments: " & CM & "<br /><br /><br />" _
+                & "Duty scientist: " & SIG & "<br />" _
+                & "Checked by: " & CHE & "</font>"
+                
+            ElseIf Me.TickPCR = False And Me.TickSex = False And Me.TickArrayTargeted = True Then
+                subjectline = "Prenatal test request for " & LDS & " " & STL
+                emailbody = "<font face='arial' size='3'>" _
+                & "Prenatal test request for:<br /><br />" _
+                & "<b><font color='blue'>Targeted</font> Prenatal aCGH</b><br /><br />" _
+                & "Specimen no: <b>" & LDS & "</b>, type " & STL & "<br /><br />" _
+                & "Name-dob-sex: <b>" & DBN & "</b><br /><br />" _
+                & "Any comments: " & CM & "<br /><br /><br />" _
+                & "Duty scientist: " & SIG & "<br />" _
+                & "Checked by: " & CHE & "</font>"
+                
+                End If
+        
+            Set iMsg = New CDO.Message
+            With iMsg
+            Set .Configuration = iCfg
+            .From = """Moka Alerts"" <moka.alerts@gstt.nhs.uk>"
+            .Sender = "moka.alerts@gstt.nhs.uk"
+            .ReplyTo = "Prenatal-array@gstt.nhs.uk"
+            .Subject = subjectline
+            .HTMLBody = emailbody
+            .to = emailto
+            .BCC = "moka.alerts@gstt.nhs.uk"
+            .Send
+            End With
+        
+            ''Tell user that email has been sent
+            MsgBox "Moka alert sent (will take a few minutes to arrive)", , "Don't be a dummy"
+        
+            End If
+    
+    
+        ''Additional email for additional PCR genotyping
+        If Me.TickGenotype = True Then
+            subjectline = "Prenatal genotyping request for " & LDS & " " & STL
+            emailbody = "<font face='arial' size='3'>" _
+            & "Prenatal <b>genotyping</b> request for:<br /><br />" _
+            & "Specimen no: <b>" & LDS & "</b>, type " & STL & "<br /><br />" _
+            & "Name-DOB-Sex: <b>" & DBN & "</b><br /><br />" _
+            & "Any comments: " & CM & "<br /><br /><br />" _
+            & "Duty scientist: " & SIG & "<br />" _
+            & "Checked by: " & CHE & "</font>"
+        
+            Set iMsg = New CDO.Message
+            With iMsg
+            Set .Configuration = iCfg
+            .From = """Moka Alerts"" <moka.alerts@gstt.nhs.uk>"
+            .Sender = "moka.alerts@gstt.nhs.uk"
+            .ReplyTo = "Prenatal-array@gstt.nhs.uk"
+            .Subject = subjectline
+            .HTMLBody = emailbody
+            .to = emailto
+            .BCC = "moka.alerts@gstt.nhs.uk"
+            .Send
+            End With
+        
+            ''Tell user that email has been sent
+            MsgBox "Moka alert sent (will take a few minutes to arrive)", , "Don't be a dummy"
+        
+            End If
+    
+        ''Additional email for additional PCR sexing of St George's prenatal
+        If Me.TickStGeorgesSex = True Then
+            subjectline = "St George's prenatal sample sexing request for " & LDS & " " & STL
+            emailbody = "<font face='arial' size='3'>" _
+            & "St George's prenatal sample <b>sexing</b> request for:<br /><br />" _
+            & "Specimen no: <b>" & LDS & "</b>, type " & STL & "<br /><br />" _
+            & "Name-DOB-Sex: <b>" & DBN & "</b><br /><br />" _
+            & "Any comments: " & CM & "<br /><br /><br />" _
+            & "Duty scientist: " & SIG & "<br />" _
+            & "Checked by: " & CHE & "</font>"
+        
+            Set iMsg = New CDO.Message
+            With iMsg
+            Set .Configuration = iCfg
+            .From = """Moka Alerts"" <moka.alerts@gstt.nhs.uk>"
+            .Sender = "moka.alerts@gstt.nhs.uk"
+            .ReplyTo = "Prenatal-array@gstt.nhs.uk"
+            .Subject = subjectline
+            .HTMLBody = emailbody
+            .to = emailto
+            .BCC = "moka.alerts@gstt.nhs.uk"
+            .Send
+            End With
+            
+            ''Tell user that email has been sent
+            MsgBox "Moka alert sent (will take a few minutes to arrive)", , "Don't be a dummy"
+            
+            End If
+    
+        Set iMsg = Nothing
+        Set iCfg = Nothing
+    
+     
+        ''add tests into Moka and log
+        
+        ''More variables
+        Dim d As String
+        Dim un As String
+        Dim cn As String
+        Dim t As String
+        Dim Q As String
+        Dim qfpcrprenat As String
+        Dim qfpcrsex As String
+        Dim qfpcrrsex As String
+        Dim qfpcrg As String
+        Dim acgh As String
+        Dim tacgh As String
+        Dim Sta As String
+                               
+        d = Format(Now, "dd/mmm/yyyy Hh:Nn:ss")
+        un = VBA.Environ("USERNAME")
+        cn = VBA.Environ("COMPUTERNAME")
+        qfpcrprenat = 1199901167
+        qfpcrsex = 1199901165
+        qfpcrrsex = 1199901191
+        qfpcrg = 1199901166
+        acgh = 1199901185
+        tacgh = 1199901188
+        Sta = 2
+        'for testing Sta = 1202218794
+        'sp = Me.SpecimenNo
+        
+        
+        If Me.TickPCR = True Then
+            Q = "INSERT INTO QFPCRRequest(SpecimenNo, GWSpecID, ReferralID, RequestedDate, BookedByID, BookingCheckedByID, StatusID) VALUES ('" + LDS + "'," + GSI + "," + qfpcrprenat + ",#" & Format(Me.CheckedDate, "dd/mmm/yyyy Hh:Nn:ss") & "#," & Me.Signed & "," & Me.Checked & "," + Sta + ")"
+            t = "INSERT INTO PatientLog(SpecNo, GWSpecID, LogEntry, [Date], Login, PCName) VALUES ('" + LDS + "'," + GSI + ",'Daybook: QF-PCR trisomies, prenatal, request added for spec no " + LDS + "',#" + d + "#,'" + un + "','" + cn + "')"
+            
+            DoCmd.SetWarnings False
+            DoCmd.RunSQL Q
+            DoCmd.RunSQL t
+            DoCmd.SetWarnings True
+            End If
+        
+        If Me.TickSex = True Then
+            Q = "INSERT INTO QFPCRRequest(SpecimenNo, GWSpecID, ReferralID, RequestedDate, BookedByID, BookingCheckedByID, StatusID) VALUES ('" + LDS + "'," + GSI + "," + qfpcrsex + ",#" & Format(Me.CheckedDate, "dd/mmm/yyyy Hh:Nn:ss") & "#," & Me.Signed & "," & Me.Checked & "," + Sta + ")"
+            t = "INSERT INTO PatientLog(SpecNo, GWSpecID, LogEntry, [Date], Login, PCName) VALUES ('" + LDS + "'," + GSI + ",'Daybook: QF-PCR sex test request added for spec no " + LDS + "',#" + d + "#,'" + un + "','" + cn + "')"
+            
+            DoCmd.SetWarnings False
+            DoCmd.RunSQL Q
+            DoCmd.RunSQL t
+            DoCmd.SetWarnings True
+            End If
+        
+        If Me.TickStGeorgesSex = True Then
+            Q = "INSERT INTO QFPCRRequest(SpecimenNo, GWSpecID, ReferralID, RequestedDate, BookedByID, BookingCheckedByID, StatusID) VALUES ('" + LDS + "'," + GSI + "," + qfpcrrsex + ",#" & Format(Me.CheckedDate, "dd/mmm/yyyy Hh:Nn:ss") & "#," & Me.Signed & "," & Me.Checked & "," + Sta + ")"
+            t = "INSERT INTO PatientLog(SpecNo, GWSpecID, LogEntry, [Date], Login, PCName) VALUES ('" + LDS + "'," + GSI + ",'Daybook: Retrospective QF-PCR sex test request added for spec no " + LDS + "',#" + d + "#,'" + un + "','" + cn + "')"
+            
+            DoCmd.SetWarnings False
+            DoCmd.RunSQL Q
+            DoCmd.RunSQL t
+            DoCmd.SetWarnings True
+            End If
+            
+        If Me.TickGenotype = True Then
+            Q = "INSERT INTO QFPCRRequest(SpecimenNo, GWSpecID, ReferralID, RequestedDate, BookedByID, BookingCheckedByID, StatusID) VALUES ('" + LDS + "'," + GSI + "," + qfpcrg + ",#" & Format(Me.CheckedDate, "dd/mmm/yyyy Hh:Nn:ss") & "#," & Me.Signed & "," & Me.Checked & "," + Sta + ")"
+            t = "INSERT INTO PatientLog(SpecNo, GWSpecID, LogEntry, [Date], Login, PCName) VALUES ('" + LDS + "'," + GSI + ",'Daybook: QF-PCR genotype test request added for spec no " + LDS + "',#" + d + "#,'" + un + "','" + cn + "')"
+            
+            DoCmd.SetWarnings False
+            DoCmd.RunSQL Q
+            DoCmd.RunSQL t
+            DoCmd.SetWarnings True
+            End If
+        
+        If Me.TickArray = True Then
+            Q = "INSERT INTO ArrayTest(SpecimenNo, GWSpecID, ReferralID, RequestedDate, BookedByID, BookingCheckedByID, StatusID) VALUES ('" + LDS + "'," + GSI + "," + acgh + ",#" & Format(Me.CheckedDate, "dd/mmm/yyyy Hh:Nn:ss") & "#," & Me.Signed & "," & Me.Checked & "," + Sta + ")"
+            t = "INSERT INTO PatientLog(SpecNo, GWSpecID, LogEntry, [Date], Login, PCName) VALUES ('" + LDS + "'," + GSI + ",'Daybook: Array test, prenatal request added for spec no " + LDS + "',#" + d + "#,'" + un + "','" + cn + "')"
+            
+            DoCmd.SetWarnings False
+            DoCmd.RunSQL Q
+            DoCmd.RunSQL t
+            DoCmd.SetWarnings True
+            End If
+    
+        If Me.TickArrayTargeted = True Then
+            Q = "INSERT INTO ArrayTest(SpecimenNo, GWSpecID, ReferralID, RequestedDate, BookedByID, BookingCheckedByID, StatusID) VALUES ('" + LDS + "'," + GSI + "," + tacgh + ",#" & Format(Me.CheckedDate, "dd/mmm/yyyy Hh:Nn:ss") & "#," & Me.Signed & "," & Me.Checked & "," + Sta + ")"
+            t = "INSERT INTO PatientLog(SpecNo, GWSpecID, LogEntry, [Date], Login, PCName) VALUES ('" + LDS + "'," + GSI + ",'Daybook: Array test, targeted prenatal request added for spec no " + LDS + "',#" + d + "#,'" + un + "','" + cn + "')"
+            
+            DoCmd.SetWarnings False
+            DoCmd.RunSQL Q
+            DoCmd.RunSQL t
+            DoCmd.SetWarnings True
+            End If
+    
+        If Me.USReportRecieved = True Then
+            Q = "Update FetalInformation set USReportRecieved = -1 where SpecimenNo = '" + LDS + "' and GWSpecID = " + GSI
+            
+            DoCmd.SetWarnings False
+            DoCmd.RunSQL Q
+            DoCmd.SetWarnings True
+        
+        ElseIf Me.USReportRecieved = False Then
+            Q = "Update FetalInformation set USReportRecieved = 0 where SpecimenNo = '" + LDS + "' and GWSpecID = " + GSI
+            DoCmd.SetWarnings False
+            DoCmd.RunSQL Q
+            DoCmd.SetWarnings True
+        End If
+        
+        
+    
+        ''unautodate is checked is null
+        Else
+            Me.CheckedDate = Null
+    
+        End If
+
+End Sub
+
+''navigate
+
+Private Sub Command52_Click()
+On Error GoTo Err_Command52_Click
+
+    DoCmd.GoToRecord , , acPrevious
+
+Exit_Command52_Click:
+    Exit Sub
+
+Err_Command52_Click:
+    MsgBox Err.Description
+    Resume Exit_Command52_Click
+    
+End Sub
+
+Private Sub Command53_Click()
+On Error GoTo Err_Command53_Click
+
+    DoCmd.GoToRecord , , acNext
+
+Exit_Command53_Click:
+    Exit Sub
+
+Err_Command53_Click:
+    MsgBox Err.Description
+    Resume Exit_Command53_Click
+    
+End Sub
+
+Private Sub Command55_Click()
+On Error GoTo Err_Command55_Click
+
+    DoCmd.ShowAllRecords
+    'DoCmd.DoMenuItem acFormBar, acRecordsMenu, 5, , acMenuVer70
+
+Exit_Command55_Click:
+    Exit Sub
+
+Err_Command55_Click:
+    MsgBox Err.Description
+    Resume Exit_Command55_Click
+    
+End Sub
+
