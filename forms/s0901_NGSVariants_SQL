@@ -1,3 +1,3 @@
-SELECT NGSVariant.*, Chromosome.Chr, NGSVariantComment.Comment, NGSVariantACMG.NGSVariantACMGID
+SELECT NGSVariant.*, Chromosome.Chr, NGSVariantComment.Comment, NGSVariantACMG.NGSVariantACMGID, Chromosome.Sorting, NGSVariant.Position_hg19
 FROM ((NGSVariant INNER JOIN Chromosome ON NGSVariant.ChrID = Chromosome.ChrID) LEFT JOIN NGSVariantComment ON NGSVariant.NGSVariantCommentID = NGSVariantComment.NGSVariantCommentID) LEFT JOIN NGSVariantACMG ON NGSVariant.NGSVariantID = NGSVariantACMG.NGSVariantID
-ORDER BY Chromosome.Sorting, NGSVariant.Position_hg19;
+ORDER BY NGSVariant.gnomad_Hom_count, Chromosome.Sorting, NGSVariant.Position_hg19;

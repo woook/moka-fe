@@ -2,8 +2,8 @@ Option Compare Database
 
 
 Private Sub Form_Current()
-'if test has been analysised and reported and safty switch is off then lock down form, apart from approver box
-   If (Not IsNull(Form_s0901_WESTestResults.Checker1) And Not IsNull(Form_s0901_WESTestResults.txt_Check1Date) And Not IsNull(Form_s0901_WESTestResults.Checker3) And [Form_0901 ExomeNGSResults].SafetyCheck.Value = False) Then
+'if test has been analysed and reported and safty switch is off then lock down form, apart from approver box
+   If (Not IsNull(Form_s0901_WESTestResults.Checker1) And Not IsNull(Form_s0901_WESTestResults.txt_Check1Date) And Not IsNull(Form_s0901_WESTestResults.txt_Check3Date) And [Form_0901 ExomeNGSResults].SafetyCheck.Value = False) Then
         Me.[Patient Status].Locked = True
         'Form_s0901_WESTestResults.AllowEdits = False
         Form_s0901_WESTestResults.VCFImport.Enabled = False
@@ -27,7 +27,7 @@ Private Sub Form_Current()
         Form_s0901_WESTestResults.Checker3.Locked = True
         
 'if test report has been approved then completely lock down the form
-ElseIf (Not IsNull(Form_s0901_WESTestResults.Checker4) And Not IsNull(Form_s0901_WESTestResults.Checker3) And (Form_s0901_WESTestResults.StatusID = 4 Or Form_s0901_WESTestResults.StatusID = 1202218816) And [Form_0901 ExomeNGSResults].SafetyCheck.Value = False) Then
+ElseIf (Not IsNull(Form_s0901_WESTestResults.Checker4) And Not IsNull(Form_s0901_WESTestResults.txt_Check3Date) And (Form_s0901_WESTestResults.StatusID = 4 Or Form_s0901_WESTestResults.StatusID = 1202218816) And [Form_0901 ExomeNGSResults].SafetyCheck.Value = False) Then
         Me.[Patient Status].Locked = True
         Form_s0901_WESTestResults.AllowEdits = False
         Form_s0901_WESTestResults.VCFImport.Enabled = False
@@ -138,7 +138,7 @@ End Sub
 
 
 Private Sub Patient_Status_AfterUpdate()
-    Dim r As ADODB.Recordset
+    Dim R As ADODB.Recordset
     Dim S As String
     Dim dt As String
     Dim cn As String
@@ -148,15 +148,15 @@ Private Sub Patient_Status_AfterUpdate()
     cn = VBA.Environ("COMPUTERNAME")
     
     dt = Format(Now, "dd/mmm/yyyy Hh:Nn:ss")
-    Set r = New ADODB.Recordset
+    Set R = New ADODB.Recordset
     S = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + ",'Patient: Status changed to " & Me![s_StatusOverall] & "',#" + dt + "#,'" + usr + "','" + cn + "')"
-    r.Open S, CurrentProject.Connection
-    Set r = Nothing
+    R.Open S, CurrentProject.Connection
+    Set R = Nothing
     
 End Sub
 
 Private Sub Priority_AfterUpdate()
-    Dim r As ADODB.Recordset
+    Dim R As ADODB.Recordset
     Dim S As String
     Dim dt As String
     Dim cn As String
@@ -166,16 +166,16 @@ Private Sub Priority_AfterUpdate()
     cn = VBA.Environ("COMPUTERNAME")
     
     dt = Format(Now, "dd/mmm/yyyy Hh:Nn:ss")
-    Set r = New ADODB.Recordset
+    Set R = New ADODB.Recordset
     S = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + ",'NGS WES test: Marked as Priority for NGS test " + CStr(Me![NGSTestID]) + " requested " + CStr(Me![DateRequested]) + "',#" + dt + "#,'" + usr + "','" + cn + "')"
-    r.Open S, CurrentProject.Connection
-    Set r = Nothing
+    R.Open S, CurrentProject.Connection
+    Set R = Nothing
 End Sub
 
 Private Sub txt_PatientResult_AfterUpdate()
     Me.Dirty = False
     
-    Dim r As ADODB.Recordset
+    Dim R As ADODB.Recordset
     Dim S As String
     Dim dt As String
     Dim t As String
@@ -185,7 +185,7 @@ Private Sub txt_PatientResult_AfterUpdate()
     cn = VBA.Environ("COMPUTERNAME")
     dt = Format(Now, "dd/mmm/yyyy Hh:Nn:ss")
     
-    Set r = New ADODB.Recordset
+    Set R = New ADODB.Recordset
     If IsNull(txt_PatientResult) Then
         S = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + ",'Patient: Result deleted',#" + dt + "#,'" + usr + "','" + cn + "')"
         t = "INSERT INTO PrevOverallResult(InternalPatientID, OverallResult, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + ",'Patient result deleted',#" + dt + "#,'" + usr + "','" + cn + "')"
@@ -193,9 +193,9 @@ Private Sub txt_PatientResult_AfterUpdate()
         S = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + ",'Patient: Result changed to [" + Me![txt_PatientResult] + "]',#" + dt + "#,'" + usr + "','" + cn + "')"
         t = "INSERT INTO PrevOverallResult(InternalPatientID, OverallResult, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + ",'" & Me![txt_PatientResult] & "',#" + dt + "#,'" + usr + "','" + cn + "')"
     End If
-    r.Open S, CurrentProject.Connection
-    r.Open t, CurrentProject.Connection
-    Set r = Nothing
+    R.Open S, CurrentProject.Connection
+    R.Open t, CurrentProject.Connection
+    Set R = Nothing
 End Sub
 
 '
