@@ -1,0 +1,179 @@
+Option Compare Database
+
+''Open forms
+
+Private Sub PatientID_DblClick(Cancel As Integer)
+    Dim stDocName As String
+    Dim stLinkCriteria As String
+    stDocName = "02 Patient Details"
+    stLinkCriteria = "[PatientID]=" & "'" & Me![PatientID] & "'"
+    DoCmd.OpenForm stDocName, , , stLinkCriteria
+End Sub
+
+''Locking
+
+Private Sub Form_Current()
+    If Not IsNull(Me!CheckedByID) Then
+        Form_s02_QFPCRRequests.AllowEdits = False
+    ElseIf IsNull(Me!CheckedByID) Then
+        Form_s02_QFPCRRequests.AllowEdits = True
+    End If
+End Sub
+
+''Autodate
+
+Private Sub ResultDate_DblClick(Cancel As Integer)
+    [ResultDate] = Now()
+End Sub
+
+''''Logging
+
+Private Sub Form_AfterInsert()
+    Dim Q As ADODB.Recordset
+    Dim S As String
+    Dim d As String
+    Dim cn As String
+    Dim un As String
+    un = VBA.Environ("USERNAME")
+    cn = VBA.Environ("COMPUTERNAME")
+    d = Format(Now, "dd/mmm/yyyy Hh:Nn:ss")
+    Set Q = New ADODB.Recordset
+    If IsNull(Me!Comment) Then
+        S = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + ",'QFPCR: Request added for " + Me![ReferralID].Column(1) + " test',#" + d + "#,'" + un + "','" + cn + "')"
+    Else
+        S = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + ",'QFPCR: Request added for " + Me![ReferralID].Column(1) + " test (" + Me![Comment] + ")',#" + d + "#,'" + un + "','" + cn + "')"
+    End If
+    Q.Open S, CurrentProject.Connection
+    Set Q = Nothing
+    If s_StatusOverall <> 1168443116 Then
+        MsgBox "Updated patient status?", , "Don't be a dummy"
+    End If
+End Sub
+
+Private Sub Form_Delete(Cancel As Integer)
+    Dim Q As ADODB.Recordset
+    Dim S As String
+    Dim d As String
+    Dim cn As String
+    Dim un As String
+    un = VBA.Environ("USERNAME")
+    cn = VBA.Environ("COMPUTERNAME")
+    d = Format(Now, "dd/mmm/yyyy Hh:Nn:ss")
+    Set Q = New ADODB.Recordset
+    If IsNull(Me!Comment) Then
+        S = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + ",'QFPCR: Request deleted for " + Me![ReferralID].Column(1) + " test (requested " + CStr(Me![RequestedDate]) + ")',#" + d + "#,'" + un + "','" + cn + "')"
+    Else
+        S = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + ",'QFPCR: Request deleted for " + Me![ReferralID].Column(1) + " test (" + Me![Comment] + ") (requested " + CStr(Me![RequestedDate]) + ")',#" + d + "#,'" + un + "','" + cn + "')"
+    End If
+    Q.Open S, CurrentProject.Connection
+    Set Q = Nothing
+    If s_StatusOverall = 1168443116 Then
+        MsgBox "Updated patient status?", , "Don't be a dummy"
+    End If
+End Sub
+
+Private Sub StatusID_AfterUpdate()
+    Dim Q As ADODB.Recordset
+    Dim S As String
+    Dim d As String
+    Dim cn As String
+    Dim un As String
+    un = VBA.Environ("USERNAME")
+    cn = VBA.Environ("COMPUTERNAME")
+    d = Format(Now, "dd/mmm/yyyy Hh:Nn:ss")
+    Dim t As String
+    t = Me![StatusID].Column(1)
+    Dim U As String
+    U = Me![ReferralID].Column(1)
+    Set Q = New ADODB.Recordset
+    If (Not IsNull(Me!ReferralID) And Not IsNull(Me!BookedByID) And IsNull(Me!Comment)) Then
+        S = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + ",'QFPCR: Status changed to " + t + " for " + U + " test',#" + d + "#,'" + un + "','" + cn + "')"
+    ElseIf (Not IsNull(Me!ReferralID) And Not IsNull(Me!BookedByID) And Not IsNull(Me!Comment)) Then
+        S = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + ",'QFPCR: Status changed to " + t + " for " + U + " test (" + Me![Comment] + ")',#" + d + "#,'" + un + "','" + cn + "')"
+    End If
+    Q.Open S, CurrentProject.Connection
+    Set Q = Nothing
+               
+End Sub
+
+Private Sub Result_AfterUpdate()
+    If IsNull(Me!ReferralID) Then
+        MsgBox "Enter referral type first", , "Don't be a dummy"
+    Else
+        Dim Q As ADODB.Recordset
+        Dim S As String
+        Dim d As String
+        Dim cn As String
+        Dim un As String
+        un = VBA.Environ("USERNAME")
+        cn = VBA.Environ("COMPUTERNAME")
+        d = Format(Now, "dd/mmm/yyyy Hh:Nn:ss")
+        Set Q = New ADODB.Recordset
+    End If
+    
+    If IsNull(Me!Result) Then
+        S = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + ",'QFPCR: Result deleted for " + Me![ReferralID].Column(1) + " test (was " + CStr(Me!Result.OldValue) + ")',#" + d + "#,'" + un + "','" + cn + "')"
+    Else
+        Dim sx As String
+        If Me.Result = 1190384930 Then
+            If Not IsNull(Me.Sexed) Then
+                sx = Me.Sexed
+                Me.Sexed = sx & " F"
+            Else: Me.Sexed = "F"
+            End If
+        ElseIf Me.Result = 1190384929 Then
+            If Not IsNull(Me.Sexed) Then
+                sx = Me.Sexed
+                Me.Sexed = sx & " M"
+            Else: Me.Sexed = "M"
+            End If
+        End If
+        
+        S = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + ",'QFPCR: Result updated to " + Me!Result.Column(1) + " for " + Me![ReferralID].Column(1) + " test ',#" + d + "#,'" + un + "','" + cn + "')"
+                
+    End If
+    
+    Q.Open S, CurrentProject.Connection
+    Set Q = Nothing
+End Sub
+
+Private Sub CheckedByID_AfterUpdate()
+        ResultDate = Now()
+        'MsgBox "Don't forget to update patient status (if it's currently QF-PCR)", , "Don't be a dummy"
+End Sub
+
+Private Sub AnalysedByID_AfterUpdate()
+    AnalysedByDate = Now()
+    
+    If IsNull(CheckedByID) Then
+        ResultDate = Now()
+    End If
+End Sub
+
+Private Sub PatientStatus_AfterUpdate()
+
+    Dim R As ADODB.Recordset
+    Dim S As String
+    Dim d As String
+    
+    Dim cn As String
+    Dim un As String
+    un = VBA.Environ("USERNAME")
+    cn = VBA.Environ("COMPUTERNAME")
+    
+    d = Format(Now, "dd/mmm/yyyy Hh:Nn:ss")
+    Set R = New ADODB.Recordset
+    S = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + ",'Patient: Status changed to " + Me![PatientStatus].Column(1) + "',#" + d + "#,'" + un + "','" + cn + "')"
+    R.Open S, CurrentProject.Connection
+    Set R = Nothing
+
+    If Me.PatientStatus = 15 Then
+        Dim stDocName As String
+        Dim stLinkCriteria As String
+    
+        stDocName = "s09_AddingArrayRequest"
+        
+        stLinkCriteria = "[InternalPatientID]=" & Me![InternalPatientID]
+        DoCmd.OpenForm stDocName, , , stLinkCriteria
+    End If
+End Sub
