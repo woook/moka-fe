@@ -72,9 +72,13 @@ Private Sub IRID_AfterUpdate()
 End Sub
 
 Private Sub Name_DblClick(Cancel As Integer)
+    ' Open the patient details form when double click on Name
     Dim stDocName As String
     Dim stLinkCriteria As String
+    ' define the name of the form to open
     stDocName = "02 Patient Details"
+    ' Use the internalpatientID to link forms
     stLinkCriteria = "[InternalPatientID]=" & Me![InternalPatientID]
+    ' open the form using linking criteria defined above
     DoCmd.OpenForm stDocName, , , stLinkCriteria
 End Sub
