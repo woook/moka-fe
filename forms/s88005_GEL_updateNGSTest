@@ -70,3 +70,11 @@ Private Sub IRID_AfterUpdate()
     DoCmd.SetWarnings True
 
 End Sub
+
+Private Sub Name_DblClick(Cancel As Integer)
+    Dim stDocName As String
+    Dim stLinkCriteria As String
+    stDocName = "02 Patient Details"
+    stLinkCriteria = "[InternalPatientID]=" & Me![InternalPatientID]
+    DoCmd.OpenForm stDocName, , , stLinkCriteria
+End Sub
