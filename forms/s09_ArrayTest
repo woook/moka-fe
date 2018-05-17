@@ -981,19 +981,39 @@ Else
     
 End Sub
 
-'Private Sub Command93_Click()
-' NOT SURE IF THIS BUTTON EXISTS?
-'On Error GoTo Err_Command93_Click
-'
-'
-'    Screen.PreviousControl.SetFocus
-'    DoCmd.FindNext
-'
-'Exit_Command93_Click:
-'    Exit Sub
-'
-'Err_Command93_Click:
-'    MsgBox Err.Description
-'    Resume Exit_Command93_Click
-'
-'End Sub
+
+Private Sub Command97_Click()
+On Error GoTo Err_Command97_Click
+
+
+    Screen.PreviousControl.SetFocus
+    DoCmd.FindNext
+
+Exit_Command97_Click:
+    Exit Sub
+
+Err_Command97_Click:
+    MsgBox Err.Description
+    Resume Exit_Command97_Click
+    
+End Sub
+Private Sub HybPartFamily_Click()
+On Error GoTo Err_HybPartFamily_Click
+    'This function uses the arraytestid and internalpatientid to identify the hyb ids of the family members of the hyb partner
+    Dim stDocName As String
+    Dim stLinkCriteria As String
+    ' Open the form s09_HybsPartnersFamilyMembers
+    stDocName = "s09_HybsPartnersFamilyMembers"
+    ' Filter the recordsource for this form using arraytestid and internalpatientid, where we're excluding this patient so we are only returning the hyb partner's family
+    stLinkCriteria = "[ArrayTest_to_filter].[ArrayTestID]=" & Me![ArrayTestID] & " AND [s_HybIDs_minimum_info_to_filter].[InternalPatientID]<>" & Me!InternalPatientID
+    ' open the form as a datasheet using the above values
+    DoCmd.OpenForm stDocName, acFormDS, , stLinkCriteria
+
+Exit_HybPartFamily_Click:
+    Exit Sub
+
+Err_HybPartFamily_Click:
+    MsgBox Err.Description
+    Resume Exit_HybPartFamily_Click
+    
+End Sub
