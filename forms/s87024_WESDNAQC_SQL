@@ -1,4 +1,4 @@
 SELECT DNA.DNAID, NGSTest.StatusID, NGSTest.Priority, NGSTest.DateRequested, NGSTest.NGSTestID, dbo_Patient_table.PatientTrustID, dbo_Patient_table.[LastName] & ", " & [Firstname] AS Name, ([DNA.Qubit]*[DNA.Volume]/1000) AS TotalDNA, IIf([NGSTest.Priority]=True,"High","") AS PriorityTxt, DNA.DNANumber, Patients.InternalPatientID, DNA.Qubit, DNA.TapeStationDin, DNA.Volume, DNA.DNAComment, DNA.Selected
 FROM ((DNA INNER JOIN Patients ON DNA.InternalPatientID = Patients.InternalPatientID) INNER JOIN NGSTest ON Patients.InternalPatientID = NGSTest.InternalPatientID) INNER JOIN dbo_Patient_table ON Patients.PatientID = dbo_Patient_table.PatientTrustID
-WHERE (((NGSTest.StatusID)=1202218800) AND ((Patients.s_StatusOverall)=1202218798) AND ((DNA.Active)=True))
+WHERE (((NGSTest.StatusID)=1202218800) AND ((DNA.Active)=True))
 ORDER BY NGSTest.Priority, NGSTest.DateRequested;
