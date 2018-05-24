@@ -1,0 +1,4 @@
+SELECT ArrayLabelling.DNALabellingID, Right([ArrayBarCode],3) & "." & [Subarray] & " (" & [ArrayRunNumber] & ") Cy" & Left([Label],1) AS HybID, ArrayLabelledDNA.InternalPatientID
+FROM (ArrayLabelling INNER JOIN (ArrayLabelledDNA INNER JOIN ArrayLabel ON ArrayLabelledDNA.ArrayLabelID = ArrayLabel.LabelID) ON ArrayLabelling.Cy3ArrayLabelledDNAID = ArrayLabelledDNA.ArrayLabelledDNAID) INNER JOIN Arrays ON ArrayLabelling.ArrayID = Arrays.ArrayID;
+UNION SELECT ArrayLabelling.DNALabellingID, Right([ArrayBarCode],3) & "." & [Subarray] & " (" & [ArrayRunNumber] & ") Cy" & Left([Label],1) AS HybID, ArrayLabelledDNA.InternalPatientID
+FROM (ArrayLabelling INNER JOIN (ArrayLabelledDNA INNER JOIN ArrayLabel ON ArrayLabelledDNA.ArrayLabelID = ArrayLabel.LabelID) ON ArrayLabelling.Cy5ArrayLabelledDNAID = ArrayLabelledDNA.ArrayLabelledDNAID) INNER JOIN Arrays ON ArrayLabelling.ArrayID = Arrays.ArrayID;
