@@ -1,0 +1,3 @@
+SELECT PrimerAmplicon.AmpliconID, PrimerAmplicon.DateOrdered, PrimerAmplicon.TestResultNotes, PrimerAmplicon.TestingTimestamp, PrimerAmplicon.Notes, PrimerAmplicon.Status, PrimerAmplicon.Mix, PrimerAmplicon.FFreezer, PrimerAmplicon.FTray, PrimerAmplicon.FGrid, PrimerAmplicon.RFreezer, PrimerAmplicon.RTray, PrimerAmplicon.RGrid, PrimerAmplicon.PrimerName, PrimerAmplicon.ForwardSeq, PrimerAmplicon.ReverseSeq
+FROM PrimerAmplicon
+WHERE (((PrimerAmplicon.Status)=1202218831));
