@@ -818,7 +818,7 @@ Private Sub Command79_Click()
         year_now = Format(Now, "yyyy")
         base_directory = "\\gstt.local\apps\Moka\Files\Analysis\"
         'Include timestamp in filename so that filename is unique (to prevent file being overwritten if results sheet is re-generated on same day)
-        filename = "ArrayResultsSheet_PRU" & Me.FamilyTrustID & "_" & date_now & "_" & time_now & ".pdf"
+        filename = "ArrayResultsSheet_PRU" & Replace(Me.PatientID, ":", "") & "_" & date_now & "_" & time_now & ".pdf"
         filepath = base_directory & year_now & "\" & date_now & "\" & filename
         
         'If year directory doesn't exist, create it
