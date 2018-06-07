@@ -795,7 +795,8 @@ End Sub
 Private Sub Command79_Click()
     Dim date_now As String
     Dim time_now As String
-    Dim year_now As String
+    Dim run_year As String
+    Dim run_number As String
     Dim month_now As String
     Dim base_directory As String
     Dim filename As String
@@ -815,45 +816,43 @@ Private Sub Command79_Click()
                     
         date_now = Format(Now, "yymmdd")
         time_now = Format(Now, "hhmmss")
-        year_now = Format(Now, "yyyy")
-        base_directory = "\\gstt.local\apps\Moka\Files\Analysis\"
+        'Use Split to extract run number from inside the parentheses in the Hyb ID field on form.
+        run_number = Split(Split(Me.DNALabellingID.Column(1), "(")(1), ")")(0)
+        'Run year
+        run_year = 20 & Left(run_number, 2)
+        run_folder = "\\gstt.local\apps\Moka\Files\Analysis\" & run_year & "\" & run_number & "\"
         'Include timestamp in filename so that filename is unique (to prevent file being overwritten if results sheet is re-generated on same day)
         filename = "ArrayResultsSheet_PRU" & Replace(Me.PatientID, ":", "") & "_" & date_now & "_" & time_now & ".pdf"
-        filepath = base_directory & year_now & "\" & date_now & "\" & filename
-        
-        'If year directory doesn't exist, create it
-        If Len(Dir(base_directory & year_now, vbDirectory)) = 0 Then
-            MkDir base_directory & year_now 'If year folder doesn't already exist, create it
-        End If
-        
-        'If date directory doesn't exist, create it
-        If Len(Dir(base_directory & year_now & "\" & date_now, vbDirectory)) = 0 Then
-            MkDir base_directory & year_now & "\" & date_now 'If date folder doesn't already exist, create it
-        End If
-        
-        'Force save before generating results sheet
-        DoCmd.DoMenuItem acFormBar, acRecordsMenu, 5, , acMenuVer70
+        'File will be saved in the run folder for this run
+        filepath = run_folder & "\" & filename
+        'Check the run folder actually exists and if it doesn't display error message and exit
+        If Len(Dir(run_folder, vbDirectory)) = 0 Then
+            MsgBox "Expected run folder for saving results sheet not found: " & run_folder, vbExclamation, "Error"
+        Else
+            'Force save before generating results sheet
+            DoCmd.DoMenuItem acFormBar, acRecordsMenu, 5, , acMenuVer70
 
-        'Open report
-        Dim stDocName As String
-        Dim stLinkCriteria As String
-        stDocName = "FamilyResults_Auto_R2"
-        'Save results sheet as PDF
-        DoCmd.OutputTo acOutputReport, stDocName, acFormatPDF, filepath
-         
-        'Add to ArrayTestFiles and update patient log
-        sqlTestFile = "INSERT INTO ArrayTestFile (ArrayTestID, Description, [Date], ArrayTestFilepath) VALUES (" & Me.ArrayTestID & ", 'Result Sheet', #" & d & "#, '" & filepath & "')"
-        sqlPatLog = "INSERT INTO PatientLog (InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + ",'Moka result sheet generated for specimen " + Me!SpecimenNo + "',#" + d + "#,'" + un + "','" + cn + "')"
-        Debug.Print sqlTestFile
-        Debug.Print sqlPatLog
-        
-        DoCmd.SetWarnings False
-        DoCmd.RunSQL sqlTestFile
-        DoCmd.RunSQL sqlPatLog
-        DoCmd.SetWarnings True
-         
-        'Refresh form so test file appears in list
-        Me.Refresh
+            'Open report
+            Dim stDocName As String
+            Dim stLinkCriteria As String
+            stDocName = "FamilyResults_Auto_R2"
+            'Save results sheet as PDF
+            DoCmd.OutputTo acOutputReport, stDocName, acFormatPDF, filepath
+
+            'Add to ArrayTestFiles and update patient log
+            sqlTestFile = "INSERT INTO ArrayTestFile (ArrayTestID, Description, [Date], ArrayTestFilepath) VALUES (" & Me.ArrayTestID & ", 'Result Sheet', #" & d & "#, '" & filepath & "')"
+            sqlPatLog = "INSERT INTO PatientLog (InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + ",'Moka result sheet generated for specimen " + Me!SpecimenNo + "',#" + d + "#,'" + un + "','" + cn + "')"
+            Debug.Print sqlTestFile
+            Debug.Print sqlPatLog
+
+            DoCmd.SetWarnings False
+            DoCmd.RunSQL sqlTestFile
+            DoCmd.RunSQL sqlPatLog
+            DoCmd.SetWarnings True
+
+            'Refresh form so test file appears in list
+            Me.Refresh
+        End If
     End If
 End Sub
 
