@@ -1,0 +1,10 @@
+Option Compare Database
+
+Private Sub Form_Open(Cancel As Integer)
+    Dim url As String
+    'Open helpdesk issues page
+    url = "https://github.com/moka-guys/helpdesk/issues/"
+    firefoxurl url
+    'Close form
+    DoCmd.close
+End Sub
