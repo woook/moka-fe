@@ -1,0 +1,38 @@
+USE [mokadata]
+GO
+/****** Object:  Table [dbo].[NGSVariant]    Script Date: 07/30/2018 11:44:24 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[NGSVariant](
+	[NGSVariantID] [int] IDENTITY(1,1) NOT NULL,
+	[NGSTestID] [int] NOT NULL,
+	[InternalPatientID] [int] NOT NULL,
+	[DateAdded] [datetime] NULL,
+	[PanelType] [int] NULL,
+	[PanelTypeName] [nvarchar](max) NULL,
+	[ChrID] [int] NULL,
+	[Position_hg19] [int] NULL,
+	[ref] [nvarchar](max) NULL,
+	[alt] [nvarchar](max) NULL,
+	[genotype] [nvarchar](max) NULL,
+	[CallQuality] [decimal](18, 0) NULL,
+	[ReadDepth] [int] NULL,
+	[AlleleFraction] [decimal](18, 0) NULL,
+	[RefAlleleDepth] [int] NULL,
+	[AltAlleleDepth] [int] NULL,
+	[GenotypeQuality] [decimal](18, 0) NULL,
+	[SangerConf] [bit] NULL CONSTRAINT [DF_NGSVariant_SangerConf]  DEFAULT ((0)),
+	[Classification] [int] NULL,
+	[NGSVariantCommentID] [int] NULL,
+	[relVars] [int] NULL,
+	[InheritanceID] [int] NULL,
+	[Gene] [nvarchar](max) NULL,
+	[gnomad_Hom_count] [int] NULL,
+	[gnomad_MAF] [decimal](18, 9) NULL,
+ CONSTRAINT [PK_NGSVariant] PRIMARY KEY CLUSTERED 
+(
+	[NGSVariantID] ASC
+)WITH (PAD_INDEX  = OFF, STATISTICS_NORECOMPUTE  = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS  = ON, ALLOW_PAGE_LOCKS  = ON) ON [PRIMARY]
+) ON [PRIMARY]
