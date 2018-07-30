@@ -4,13 +4,16 @@ Private Sub AnalysedByID_AfterUpdate()
     
 ''autodate
 AnalysedByDate = Now()
-If IsNull(CheckedByID) Then
-    CheckedByID = 1201865434
-    ResultDate = Now()
-    End If
+
+End Sub
+
+Private Sub CheckedByID_AfterUpdate()
+
+''autodate
+ResultDate = Now()
 
 ''email moka alert
-If (Not IsNull(Me!Result) And Not IsNull(Me!AnalysedByID) And _
+If (Not IsNull(Me!Result) And Not IsNull(Me!CheckedByID) And _
 Me!Result <> 5 And Me!Result <> 1190384957 And Me!Result <> 1190384958 And Me!Result <> 1190384929 And Me!Result <> 1190384930 And Me!Result <> 1190384906) Then
     
     Dim iCfg As CDO.Configuration
@@ -29,7 +32,7 @@ Me!Result <> 5 And Me!Result <> 1190384957 And Me!Result <> 1190384958 And Me!Re
     End With
     
     emailto = "Prenatal-array@gstt.nhs.uk;cytodutyscientist@gstt.nhs.uk"
-    'emailto = "joowook.ahn@gstt.nhs.uk"
+    'emailto = "joowook.ahn@gstt.nhs.uk" 'for testing
     subjectline = "Abnormal QF-PCR result for prenatal specimen " & Me!SpecimenNo
     
     emailbody = "<font face='arial' size='3'>" _
@@ -64,23 +67,6 @@ Me!Result <> 5 And Me!Result <> 1190384957 And Me!Result <> 1190384958 And Me!Re
     MsgBox "Moka alert sent (will take a few minutes to arrive)", , "Don't be a dummy"
     
     End If
-
-''This would auto-update sexed but we don't have an InternalPatientID yet so can't use this
-'If Me!ReferralID = 1199901165 And (Me!Result = 1190384929 Or Me!Result = 1190384929) Then
-'    Dim Q As ADODB.Recordset
-'    Set Q = New ADODB.Recordset
-'    Dim IPID As String
-'    Dim S As String
-'    IPID = Me!InternalPatientID
-'    If Me!Result = 1190384929 Then
-'        S = "UPDATE Patients SET Patients.Sexed = ""M"" WHERE Patients.InternalPatientID = " & IPID & ""
-'    ElseIf Me!Result = 1190384930 Then
-'        S = "UPDATE Patients SET Patients.Sexed = ""F"" WHERE Patients.InternalPatientID = " & IPID & ""
-'        End If
-'    DoCmd.SetWarnings False
-'    DoCmd.RunSQL S
-'    DoCmd.SetWarnings True
-'    End If
     
 End Sub
 
