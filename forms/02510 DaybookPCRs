@@ -1,0 +1,93 @@
+Option Compare Database
+
+Private Sub AnalysedByID_AfterUpdate()
+    
+''autodate
+AnalysedByDate = Now()
+If IsNull(CheckedByID) Then
+    CheckedByID = 1201865434
+    ResultDate = Now()
+    End If
+
+''email moka alert
+If (Not IsNull(Me!Result) And Not IsNull(Me!AnalysedByID) And _
+Me!Result <> 5 And Me!Result <> 1190384957 And Me!Result <> 1190384958 And Me!Result <> 1190384929 And Me!Result <> 1190384930 And Me!Result <> 1190384906) Then
+    
+    Dim iCfg As CDO.Configuration
+    Dim iMsg As CDO.Message
+    Dim emailto As String
+    Dim subjectline As String
+    Dim emailbody As String
+    Set iCfg = New CDO.Configuration
+    With iCfg
+    '.Fields(cdoSMTPServer) = "smtp.gstt.local"       '<---old smtp that will go offline 10/04/2014
+    .Fields(cdoSMTPServer) = "relay.gstt.local"        '<---new smtp
+    .Fields(cdoSMTPServerPort) = 25
+    .Fields(cdoSendUsingMethod) = cdoSendUsingPort
+    .Fields(cdoSMTPConnectionTimeout) = 200
+    .Fields.Update
+    End With
+    
+    emailto = "Prenatal-array@gstt.nhs.uk;cytodutyscientist@gstt.nhs.uk"
+    'emailto = "joowook.ahn@gstt.nhs.uk"
+    subjectline = "Abnormal QF-PCR result for prenatal specimen " & Me!SpecimenNo
+    
+    emailbody = "<font face='arial' size='3'>" _
+    & "Abnormal QF-PCR result<br /><br />" _
+    & "Specimen: <b>" & Me!SpecimenNo & "</b><br />" _
+    & "Name: <b>" & Me!Name & "</b><br />" _
+    & "Result: <b>" & Me.Result.Column(1) & "</b><br />" _
+    & "Test: <b>" & Me!Referral & "</b><br /><br />"
+    If Not IsNull(Me!Comment) Then
+        emailbody = emailbody & "Any comments: " & Me!Comment & "<br /><br /><br />"
+        Else: emailbody = emailbody & "Any comments: <br /><br /><br />"
+        End If
+    emailbody = emailbody & "QF-PCR request booked in: " & Me!RequestedDate & "<br />" _
+    & "QF-PCR result date: " & Me!AnalysedByDate & "<br /><br /><br /><br /></font>"
+    
+    Set iMsg = New CDO.Message
+    With iMsg
+    Set .Configuration = iCfg
+    .From = """Moka Alerts"" <moka.alerts@gstt.nhs.uk>"
+    .Sender = "moka.alerts@gstt.nhs.uk"
+    .ReplyTo = "Prenatal-array@gstt.nhs.uk"
+    .Subject = subjectline
+    .HTMLBody = emailbody
+    .to = emailto
+    .BCC = "moka.alerts@gstt.nhs.uk"
+    .Send
+    End With
+    
+    Set iMsg = Nothing
+    Set iCfg = Nothing
+    
+    MsgBox "Moka alert sent (will take a few minutes to arrive)", , "Don't be a dummy"
+    
+    End If
+
+''This would auto-update sexed but we don't have an InternalPatientID yet so can't use this
+'If Me!ReferralID = 1199901165 And (Me!Result = 1190384929 Or Me!Result = 1190384929) Then
+'    Dim Q As ADODB.Recordset
+'    Set Q = New ADODB.Recordset
+'    Dim IPID As String
+'    Dim S As String
+'    IPID = Me!InternalPatientID
+'    If Me!Result = 1190384929 Then
+'        S = "UPDATE Patients SET Patients.Sexed = ""M"" WHERE Patients.InternalPatientID = " & IPID & ""
+'    ElseIf Me!Result = 1190384930 Then
+'        S = "UPDATE Patients SET Patients.Sexed = ""F"" WHERE Patients.InternalPatientID = " & IPID & ""
+'        End If
+'    DoCmd.SetWarnings False
+'    DoCmd.RunSQL S
+'    DoCmd.SetWarnings True
+'    End If
+    
+End Sub
+
+Private Sub Result_AfterUpdate()
+''Auto status to complete
+If Me!StatusID <> 4 And Not IsNull(Me!Result) Then
+    Me.StatusID = 4
+    End If
+    
+End Sub
