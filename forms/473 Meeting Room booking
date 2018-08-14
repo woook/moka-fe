@@ -1,0 +1,8 @@
+
+Private Sub Form_Open(Cancel As Integer)
+    Dim url As String
+    url = "https://caprica-ext.genetics.kcl.ac.uk/mrbs/week.php?room=8"
+    firefoxurl url
+    'chromeurlserv url
+    DoCmd.Close
+End Sub
