@@ -1,8 +1,13 @@
+Option Compare Database
 
 Private Sub Form_Open(Cancel As Integer)
+    ' this function opens a the meeting room booking calendar in firefox
+    ' define variable to hold url
     Dim url As String
+    ' state url
     url = "https://caprica-ext.genetics.kcl.ac.uk/mrbs/week.php?room=8"
+    ' open in firefox
     firefoxurl url
-    'chromeurlserv url
+    ' close form
     DoCmd.Close
 End Sub
