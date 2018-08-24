@@ -1,4 +1,4 @@
-SELECT DISTINCT GenesHGNC_current.ApprovedSymbol AS Gene
-FROM (((NGSVariantAnnotations INNER JOIN NGSVariant ON NGSVariantAnnotations.NGSVariantID = NGSVariant.NGSVariantID) INNER JOIN NGSTest ON NGSVariant.NGSTestID = NGSTest.NGSTestID) INNER JOIN Referral ON NGSTest.ReferralID = Referral.ReferralID) INNER JOIN GenesHGNC_current ON NGSVariantAnnotations.HGNCID = GenesHGNC_current.HGNCID
-WHERE (((NGSVariantAnnotations.Reported)=-1) AND ((Referral.GroupTypeID)=14) AND ((NGSVariant.Classification) Is Not Null))
-ORDER BY GenesHGNC_current.ApprovedSymbol;
+SELECT DISTINCT GenesHGNC_current.HGNCID, GenesHGNC_current.ApprovedSymbol AS Gene, Checker.Initials AS [Validated By], Format([Check4Date],"Short Date") AS [Date]
+FROM ((((NGSVariantAnnotations INNER JOIN NGSVariant ON NGSVariantAnnotations.NGSVariantID = NGSVariant.NGSVariantID) INNER JOIN NGSTest ON NGSVariant.NGSTestID = NGSTest.NGSTestID) INNER JOIN Referral ON NGSTest.ReferralID = Referral.ReferralID) INNER JOIN GenesHGNC_current ON NGSVariantAnnotations.HGNCID = GenesHGNC_current.HGNCID) INNER JOIN Checker ON NGSTest.Check4ID = Checker.Check1ID
+WHERE (((NGSVariantAnnotations.Reported)=-1) AND ((Referral.GroupTypeID)=14) AND ((NGSVariant.Classification) Is Not Null) AND ((NGSVariant.DateAdded)>#1/11/2018#))
+ORDER BY GenesHGNC_current.ApprovedSymbol
