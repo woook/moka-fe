@@ -1,19 +1,29 @@
 Option Compare Database
+Option Explicit
 
-Private Sub open_990_Click()
-On Error GoTo Err_open_990_Click
-
-    Dim stDocName As String
-    Dim stLinkCriteria As String
-
-    stDocName = "990 Array analysis checking totals"
-    DoCmd.OpenForm stDocName, acFormDS, , stLinkCriteria
-
-Exit_open_990_Click:
-    Exit Sub
-
-Err_open_990_Click:
-    MsgBox Err.Description
-    Resume Exit_open_990_Click
+Private Function update_recordsource()
+    Dim sql_record_source As String
     
+    'SQL to pull out checking counts for each analyst grouped by result code based on the referral type and date range entered in form
+    sql_record_source = "TRANSFORM Count(Checker.Initials) AS CountOfInitials " _
+    & "SELECT ResultCode_1.ResultCode " _
+    & "FROM ((((ArrayTest INNER JOIN Checker ON ArrayTest.Check2ID = Checker.Check1ID) INNER JOIN ResultCode ON ArrayTest.ArrayResultCodeID = ResultCode.ResultCodeID) INNER JOIN Patients ON ArrayTest.InternalPatientID = Patients.InternalPatientID) INNER JOIN ResultCode AS ResultCode_1 ON Patients.OverallResultCodeID = ResultCode_1.ResultCodeID) INNER JOIN Referral ON ArrayTest.ReferralID = Referral.ReferralID " _
+    & "WHERE (((Checker.Initials) = 'AFD' Or (Checker.Initials) Like 'CVL' Or (Checker.Initials) Like 'AC' Or (Checker.Initials) Like 'SCH' Or (Checker.Initials) Like 'AFD' Or (Checker.Initials) Like 'SB' Or (Checker.Initials) Like 'CD') And ((arraytest.Service) = True) And ((Referral.ReferralID) = " & Me.referral_combo & ") And ((arraytest.ArrayResultDate) >= #" & Me.start_date & "#) And ((arraytest.ArrayResultDate) <= #" & Me.end_date & "#)) " _
+    & "GROUP BY ResultCode_1.ResultCode " _
+    & "PIVOT Checker.Initials;"
+    
+    'Update the record source
+    Me.s989_ArrayAnalysisChecks.Form.RecordSource = sql_record_source
+End Function
+
+Private Sub Form_Load()
+    'Set record source of the subform when form opens (so that results displayed match the referral type and date range displayed in the boxes)
+    update_recordsource
 End Sub
+
+Private Sub update_Click()
+    'Set record source of the subform when update button is pressed
+    update_recordsource
+End Sub
+
+
