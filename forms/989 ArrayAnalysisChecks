@@ -1,0 +1,19 @@
+Option Compare Database
+
+Private Sub open_990_Click()
+On Error GoTo Err_open_990_Click
+
+    Dim stDocName As String
+    Dim stLinkCriteria As String
+
+    stDocName = "990 Array analysis checking totals"
+    DoCmd.OpenForm stDocName, acFormDS, , stLinkCriteria
+
+Exit_open_990_Click:
+    Exit Sub
+
+Err_open_990_Click:
+    MsgBox Err.Description
+    Resume Exit_open_990_Click
+    
+End Sub

@@ -1,0 +1,19 @@
+Option Compare Database
+
+Private Sub Command2_Click()
+On Error GoTo Err_Command2_Click
+
+    Dim stDocName As String
+    Dim stLinkCriteria As String
+
+    stDocName = "9901 Array analysis totals"
+    DoCmd.OpenForm stDocName, acFormDS, , stLinkCriteria
+
+Exit_Command2_Click:
+    Exit Sub
+
+Err_Command2_Click:
+    MsgBox Err.Description
+    Resume Exit_Command2_Click
+    
+End Sub
