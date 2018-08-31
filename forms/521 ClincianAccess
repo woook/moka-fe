@@ -1,0 +1,33 @@
+Option Compare Database
+
+Private Sub Command6_Click()
+On Error GoTo Err_Command6_Click
+
+    Dim strHyperlink As String
+    'strHyperlink = "http://projects.tcag.ca/variation/cgi-bin/gbrowse/hg18/?start=" + CStr(Start - 500000) + ";stop=" + CStr(Stopend + 500000) + ";ref=chr" + CStr(Chr) + ";h_region=chr" + CStr(Chr) + ":" + CStr(Start) + ".." + CStr(Stopend) + ";grid=on;label=chromosome%3Aoverview-cytoband-Gap-RefGene-disease_gene-Decipher_Syndromes-NON_BAC_Variation-super_Duplication"
+    strHyperlink = "http://genome-euro.ucsc.edu/cgi-bin/hgTracks?hgS_doOtherUser=submit&hgS_otherUserName=devdisorders&hgS_otherUserSessionName=hg19cgh9&position=chr" + Me![Chr] + "%3A" + CStr(Me.Start - 1000) + "-" + CStr(Me.Stop + 1000) + ""
+    Command6.HyperlinkAddress = strHyperlink
+    'Note that Firefox is no longer used, IE instead for clinician moka
+
+Exit_Command6_Click:
+    Exit Sub
+
+Err_Command6_Click:
+    MsgBox Err.Description
+    Resume Exit_Command6_Click
+    
+End Sub
+Private Sub Command17_Click()
+On Error GoTo Err_Command17_Click
+
+
+    DoCmd.DoMenuItem acFormBar, acRecordsMenu, 3, , acMenuVer70
+
+Exit_Command17_Click:
+    Exit Sub
+
+Err_Command17_Click:
+    MsgBox Err.Description
+    Resume Exit_Command17_Click
+    
+End Sub
