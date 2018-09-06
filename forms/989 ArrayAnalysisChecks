@@ -2,13 +2,19 @@ Option Compare Database
 Option Explicit
 
 Private Function update_recordsource()
+    Dim start_date_formatted As String
+    Dim end_date_formatted As String
     Dim sql_record_source As String
+    
+    'Date must be formatted in US style for query
+    start_date_formatted = Format(Me.start_date, "mm/dd/yyyy")
+    end_date_formatted = Format(Me.end_date, "mm/dd/yyyy")
     
     'SQL to pull out checking counts for each analyst grouped by result code based on the referral type and date range entered in form
     sql_record_source = "TRANSFORM Count(Checker.Initials) AS CountOfInitials " _
     & "SELECT ResultCode_1.ResultCode " _
     & "FROM ((((ArrayTest INNER JOIN Checker ON ArrayTest.Check2ID = Checker.Check1ID) INNER JOIN ResultCode ON ArrayTest.ArrayResultCodeID = ResultCode.ResultCodeID) INNER JOIN Patients ON ArrayTest.InternalPatientID = Patients.InternalPatientID) INNER JOIN ResultCode AS ResultCode_1 ON Patients.OverallResultCodeID = ResultCode_1.ResultCodeID) INNER JOIN Referral ON ArrayTest.ReferralID = Referral.ReferralID " _
-    & "WHERE (((Checker.Initials) = 'AFD' Or (Checker.Initials) Like 'CVL' Or (Checker.Initials) Like 'AC' Or (Checker.Initials) Like 'SCH' Or (Checker.Initials) Like 'AFD' Or (Checker.Initials) Like 'SB' Or (Checker.Initials) Like 'CD') And ((arraytest.Service) = True) And ((Referral.ReferralID) = " & Me.referral_combo & ") And ((arraytest.ArrayResultDate) >= #" & Me.start_date & "#) And ((arraytest.ArrayResultDate) <= #" & Me.end_date & "#)) " _
+    & "WHERE (((Checker.Initials) Like 'AFD' Or (Checker.Initials) Like 'CVL' Or (Checker.Initials) Like 'AC' Or (Checker.Initials) Like 'SCH' Or (Checker.Initials) Like 'AFD' Or (Checker.Initials) Like 'SB' Or (Checker.Initials) Like 'CD') And ((arraytest.Service) = True) And ((Referral.ReferralID) = " & Me.referral_combo & ") And ((arraytest.ArrayResultDate) >= #" & start_date_formatted & "#) And ((arraytest.ArrayResultDate) <= #" & end_date_formatted & "#)) " _
     & "GROUP BY ResultCode_1.ResultCode " _
     & "PIVOT Checker.Initials;"
     
