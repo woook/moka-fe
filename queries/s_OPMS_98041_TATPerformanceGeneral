@@ -1,0 +1,4 @@
+SELECT TOP 24 s_OPMS_98020_ProbandTAT.Month, s_OPMS_98020_ProbandTAT.CountOfArrayTestID AS Generals, s_OPMS_98020_ProbandTAT.[28days] AS 28, s_OPMS_98020_ProbandTAT.[35days] AS 35, s_OPMS_98020_ProbandTAT.[42days] AS 42, s_OPMS_98020_ProbandTAT.[49days] AS 49, s_OPMS_98020_ProbandTAT.[56days] AS 56
+FROM s_OPMS_98020_ProbandTAT
+GROUP BY s_OPMS_98020_ProbandTAT.Month, s_OPMS_98020_ProbandTAT.CountOfArrayTestID, s_OPMS_98020_ProbandTAT.[28days], s_OPMS_98020_ProbandTAT.[35days], s_OPMS_98020_ProbandTAT.[42days], s_OPMS_98020_ProbandTAT.[49days], s_OPMS_98020_ProbandTAT.[56days]
+ORDER BY s_OPMS_98020_ProbandTAT.Month DESC;

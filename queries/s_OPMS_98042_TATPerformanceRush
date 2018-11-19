@@ -1,0 +1,4 @@
+SELECT TOP 24 s_OPMS_98021_UrgentTAT.Month, s_OPMS_98021_UrgentTAT.CountOfArrayTestID AS Rushes, s_OPMS_98021_UrgentTAT.[7days] AS 7, s_OPMS_98021_UrgentTAT.[14days] AS 14, s_OPMS_98021_UrgentTAT.[21days] AS 21, s_OPMS_98021_UrgentTAT.[28days] AS 28
+FROM s_OPMS_98021_UrgentTAT
+GROUP BY s_OPMS_98021_UrgentTAT.Month, s_OPMS_98021_UrgentTAT.CountOfArrayTestID, s_OPMS_98021_UrgentTAT.[7days], s_OPMS_98021_UrgentTAT.[14days], s_OPMS_98021_UrgentTAT.[21days], s_OPMS_98021_UrgentTAT.[28days]
+ORDER BY s_OPMS_98021_UrgentTAT.Month DESC;
