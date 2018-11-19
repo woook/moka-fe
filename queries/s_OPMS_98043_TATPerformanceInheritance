@@ -1,0 +1,4 @@
+SELECT TOP 24 s_OPMS_98022_InheritanceTAT.Month, s_OPMS_98022_InheritanceTAT.CountOfArrayTestID AS Inheritances, s_OPMS_98022_InheritanceTAT.[28days] AS 28, s_OPMS_98022_InheritanceTAT.[35days] AS 35, s_OPMS_98022_InheritanceTAT.[42days] AS 42, s_OPMS_98022_InheritanceTAT.[49days] AS 49, s_OPMS_98022_InheritanceTAT.[56days] AS 56
+FROM s_OPMS_98022_InheritanceTAT
+GROUP BY s_OPMS_98022_InheritanceTAT.Month, s_OPMS_98022_InheritanceTAT.CountOfArrayTestID, s_OPMS_98022_InheritanceTAT.[28days], s_OPMS_98022_InheritanceTAT.[35days], s_OPMS_98022_InheritanceTAT.[42days], s_OPMS_98022_InheritanceTAT.[49days], s_OPMS_98022_InheritanceTAT.[56days]
+ORDER BY s_OPMS_98022_InheritanceTAT.Month DESC;
