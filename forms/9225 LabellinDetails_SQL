@@ -1,0 +1,4 @@
+SELECT ArrayTest.StatusID, dbo_Patient.LastName & " " & [FirstName] AS Name, DNA.DNANumber, DNA.DNACheckRun, DNA.Active, ArrayTest.ArrayTestID, DNA.Concentration, ArrayTest.InternalPatientID, ArrayTest.RequestedDate
+FROM ((ArrayTest INNER JOIN Patients ON ArrayTest.InternalPatientID = Patients.InternalPatientID) INNER JOIN dbo_Patient ON Patients.PatientID = dbo_Patient.PatientID) INNER JOIN DNA ON Patients.InternalPatientID = DNA.InternalPatientID
+WHERE (((ArrayTest.StatusID)=1168443102 Or (ArrayTest.StatusID)=1168443103) AND ((DNA.DNACheckRun) Is Not Null) AND ((DNA.Active)=True))
+ORDER BY ArrayTest.StatusID, DNA.DNANumber DESC , ArrayTest.InternalPatientID;
