@@ -34,19 +34,19 @@ If (Response = vbOK And Not (Recordset.BOF And Recordset.EOF)) Then
     rn = InputBox("Run number? e.g. 100722")
         
     Dim t As String
-    Do Until t = "MRC" Or t = "CR" Or t = "RB" Or t = "MJF" Or t = "RP"
-        t = InputBox("Who is labelling? (CR / MRC / MJF / RB / RP)")
+    Do Until t = "MRC" Or t = "RB" Or t = "MJF" Or t = "ESM" Or t = "DER"
+        t = InputBox("Who is labelling? (MRC / MJF / RB / ESM / DER)")
     Loop
     If t = "MRC" Then
         t = 1165930743
-        ElseIf t = "CR" Then
-        t = 1201865443
         ElseIf t = "RB" Then
         t = 1165930735
         ElseIf t = "MJF" Then
         t = 1201865447
-        ElseIf t = "RP" Then
-        t = 1165930737
+        ElseIf t = "ESM" Then
+        t = 1201865535
+        ElseIf t = "MJF" Then
+        t = 1201865538
         End If
     
     Dim rc3 As Integer
@@ -128,3 +128,5 @@ If (Response = vbOK And Not (Recordset.BOF And Recordset.EOF)) Then
     End If
     
 End Sub
+
+
