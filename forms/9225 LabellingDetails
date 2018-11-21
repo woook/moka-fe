@@ -45,7 +45,7 @@ If (Response = vbOK And Not (Recordset.BOF And Recordset.EOF)) Then
         t = 1201865447
         ElseIf t = "ESM" Then
         t = 1201865535
-        ElseIf t = "MJF" Then
+        ElseIf t = "DER" Then
         t = 1201865538
         End If
     
