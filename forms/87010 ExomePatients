@@ -1,7 +1,7 @@
 Option Compare Database
 
 Private Sub btnClose_Click()
-  DoCmd.close
+  DoCmd.Close
 End Sub
 
 Private Sub btnFindPatient_Click()
@@ -59,8 +59,8 @@ Private Sub ListPatientFound_DblClick(Cancel As Integer)
     Set moka = db.OpenRecordset(strMokaCheckSQL, dbOpenDynaset, dbSeeChanges)
     
     ' escape any apostrophes in names using public function
-    escaped_lastname = EscapeNames(gwks!LastName)
-    escaped_firstname = EscapeNames(gwks!FirstName)
+    escaped_lastname = EscapeCharacters(gwks!LastName)
+    escaped_firstname = EscapeCharacters(gwks!FirstName)
             
     ' Test that a patient has been selected
     If Not IsNull(Me.ListPatientFound.Value) Then
@@ -92,7 +92,7 @@ Private Sub ListPatientFound_DblClick(Cancel As Integer)
              
              'PASS Paitent PRU to Form_exomeTest and close active form
              PatientPRU = Me.ListPatientFound.Value
-             DoCmd.close acForm, Me.Name
+             DoCmd.Close acForm, Me.Name
              DoCmd.OpenForm "87012 ExomeTest", , , , acFormAdd, , PatientPRU
                          
         ElseIf mc = vbNo Then Exit Sub
@@ -117,7 +117,7 @@ Private Sub ListPatientFound_DblClick(Cancel As Integer)
                   
                   'PASS Paitent PRU to Form_exomeTest and close active form
                   PatientPRU = Me.ListPatientFound.Value
-                  DoCmd.close acForm, Me.Name
+                  DoCmd.Close acForm, Me.Name
                   DoCmd.OpenForm "87012 ExomeTest", , , , acFormAdd, , PatientPRU
 
             ElseIf mc = vbNo Then Exit Sub
