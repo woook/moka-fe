@@ -58,6 +58,10 @@ Private Sub ListPatientFound_DblClick(Cancel As Integer)
     Set gwks = db.OpenRecordset(strDNASQL, dbOpenDynaset, dbSeeChanges)
     Set moka = db.OpenRecordset(strMokaCheckSQL, dbOpenDynaset, dbSeeChanges)
     
+    ' escape any apostrophes in names using public function
+    escaped_lastname = EscapeCharacters(gwks!LastName)
+    escaped_firstname = EscapeCharacters(gwks!FirstName)
+            
     ' Test that a patient has been selected
     If Not IsNull(Me.ListPatientFound.Value) Then
     
@@ -72,7 +76,8 @@ Private Sub ListPatientFound_DblClick(Cancel As Integer)
         msgb = MsgBox("You are about to order WES for:" & vbNewLine & vbNewLine & Me.ListPatientFound.Value & " " & gwks!FirstName & " " & gwks!LastName & vbNewLine & vbNewLine & "Do you wish to continue?", VbMsgBoxStyle.vbYesNo Or VbMsgBoxStyle.vbInformation, "Do you wish to proceed?")
         If msgb = vbYes Then
             strAddPatientSQL = "INSERT INTO patients (PatientID, s_StatusOverall, MokaCreated, MokaCreatedBy, MokaCreatedPC, NHSNumber, BookinLastname, BookinFirstName, BookinDoB, BookinCreatedBy, BookinCreatedDate, BookinSex)" & _
-                               "VALUES ('" & Me.ListPatientFound.Value & "', 1202218787,'" & dt & "','" & usr & "','" & cmp & "','" & gwks!NHSNo & "','" & gwks!LastName & "','" & gwks!FirstName & "','" & gwks!DOB & "','" & gwks!CreatedByID & "','" & gwks!CreatedDate & "','" & gwks!GenderShort & "')"
+                               "VALUES ('" & Me.ListPatientFound.Value & "', 1202218787,'" & dt & "','" & usr & "','" & cmp & "','" & gwks!NHSNo & "','" & escaped_lastname & "','" & escaped_firstname & "','" & gwks!DOB & "','" & gwks!CreatedByID & "','" & gwks!CreatedDate & "','" & gwks!GenderShort & "')"
+             Debug.Print strAddPatientSQL
              DoCmd.SetWarnings False
              DoCmd.RunSQL strAddPatientSQL
              DoCmd.SetWarnings True

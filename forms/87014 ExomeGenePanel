@@ -716,27 +716,28 @@ Private Sub SubmitButton_Click()
                     .Fields.Update
                 End With
     
-                emailto = "WES@viapath.co.uk"
-                subjectline = "WES test order for patient " & patientID_PRU
-                emailbody = "<font face='arial' size='3'><br />" _
-                            & "New WES test ordered. <br /><br />" _
-                            & "PRU: <b>" & patientID_PRU & "</b><br />" _
-                            & "Patient Name: <b>" & rsInfo.Fields("BookinLastName") & ", " & rsInfo.Fields("BookinFirstName") & "</b><br />" _
-                            & "Patient DOB: <b>" & rsInfo.Fields("BookinDOB") & "</b><br /><br />" _
-                            & "WES test ordered by " & rsInfo.Fields("Name") & "<br /><br />" _
-                            & "This is an automated alert from MOKA.<br />" _
-                            & "Please do not reply to this email.</font>"
-                Set iMsg = New CDO.Message
-                With iMsg
-                     Set .Configuration = iCfg
-                         .From = """Moka Alerts"" <moka.alerts@gstt.nhs.uk>"
-                         .Sender = "moka.alerts@gstt.nhs.uk"
-                         .ReplyTo = "DO NOT REPLY TO THIS MESSAGE"
-                         .Subject = subjectline
-                         .HTMLBody = emailbody
-                         .to = emailto
-                         .Send 'Send the email
-                End With
+'' 22/11/2018 - An error was reported when sending this email. WES team say they haven't been recieving these emails recently anyway and isn't an issue
+'               emailto = "WES@viapath.co.uk"
+'                subjectline = "WES test order for patient " & patientID_PRU
+'                emailbody = "<font face='arial' size='3'><br />" _
+'                            & "New WES test ordered. <br /><br />" _
+'                            & "PRU: <b>" & patientID_PRU & "</b><br />" _
+'                            & "Patient Name: <b>" & rsInfo.Fields("BookinLastName") & ", " & rsInfo.Fields("BookinFirstName") & "</b><br />" _
+'                            & "Patient DOB: <b>" & rsInfo.Fields("BookinDOB") & "</b><br /><br />" _
+'                            & "WES test ordered by " & rsInfo.Fields("Name") & "<br /><br />" _
+'                            & "This is an automated alert from MOKA.<br />" _
+'                            & "Please do not reply to this email.</font>"
+'                Set iMsg = New CDO.Message
+'                With iMsg
+'                     Set .Configuration = iCfg
+'                         .From = """Moka Alerts"" <moka.alerts@gstt.nhs.uk>"
+'                         .Sender = "moka.alerts@gstt.nhs.uk"
+'                         .ReplyTo = "DO NOT REPLY TO THIS MESSAGE"
+'                         .Subject = subjectline
+'                         .HTMLBody = emailbody
+'                         .to = emailto
+'                         .Send 'Send the email
+'                End With
            
             
             'EMAIL SECTION DISABLED BECAUSE CURRENTLY NO AUTHORISATION STEP
