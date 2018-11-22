@@ -28,7 +28,11 @@ Public Function chromeurlserv(url As String)
     Set objShell = CreateObject("Wscript.Shell")
     objShell.Run (v & " -url " & url)
 End Function
-
+Public Function EscapeCharacters(unescaped_str)
+    ' this function escapes apostrophes in strings, (such as names) to ensure the apostrophe doesn't affect any SQL statements
+    ' use replace to convert single apostrophes to two apostrophes and return the escaped string
+    EscapeCharacters = Replace(unescaped_str, "'", "''")
+End Function
 ''concatenate function to bring values relating to a single ID together to be a single field, e.g. contatenating a patient's phenotype
 ''the function should be used in a TOTALS query, where output field 1 is the ID and grouped by, and output field 2 is an EXPRESSION and calls the function
 ''note that the Value must be an integer
@@ -81,3 +85,5 @@ Public Function Lastworkday(MyDay As Date) As String
     Lastworkday = Format(MyDate, "dd/mm/yyyy")
      
 End Function
+
+
