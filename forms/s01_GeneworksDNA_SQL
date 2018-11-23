@@ -1,0 +1,3 @@
+SELECT dbo_DNANumber.DNANo, dbo_DNASpecimen.Concentration, dbo_DNASpecimen.PatientID, dbo_DNASpecimen.DateReceived, dbo_DNASpecimen.DatePrepared, dbo_DNASpecimen.SpecimenNo, dbo_DNASpecimen.Comment, dbo_DNASpecimen.SpecimenType, Patients.InternalPatientID
+FROM (dbo_DNASpecimen LEFT JOIN dbo_DNANumber ON dbo_DNASpecimen.SpecimenNo = dbo_DNANumber.SpecimenNo) INNER JOIN Patients ON dbo_DNASpecimen.PatientID = Patients.PatientID
+ORDER BY dbo_DNASpecimen.DateReceived DESC , dbo_DNASpecimen.DatePrepared DESC;

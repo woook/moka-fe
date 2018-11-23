@@ -1,0 +1,3 @@
+SELECT Left([Patients].[PatientID],6) AS FamilyNo, [Status].[Status] & " - " & [Patients].[PatientID] & " " & [Patients].[BookinLastName] & " " & [Patients].[BookinFirstName] & " (" & [Patients].[BookinDOB] & ") - " & [patients].[OverallResultComments] AS Patients, Patients.PatientID
+FROM Patients INNER JOIN Status ON Patients.s_StatusOverall = Status.StatusID
+ORDER BY Patients.PatientID;
