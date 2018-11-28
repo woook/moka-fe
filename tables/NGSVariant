@@ -1,6 +1,6 @@
 USE [mokadata]
 GO
-/****** Object:  Table [dbo].[NGSVariant]    Script Date: 07/30/2018 11:44:24 ******/
+/****** Object:  Table [dbo].[NGSVariant]    Script Date: 11/28/2018 11:01:35 ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -28,7 +28,7 @@ CREATE TABLE [dbo].[NGSVariant](
 	[NGSVariantCommentID] [int] NULL,
 	[relVars] [int] NULL,
 	[InheritanceID] [int] NULL,
-	[Gene] [nvarchar](max) NULL,
+	[Gene] [nvarchar](255) NULL,
 	[gnomad_Hom_count] [int] NULL,
 	[gnomad_MAF] [decimal](18, 9) NULL,
  CONSTRAINT [PK_NGSVariant] PRIMARY KEY CLUSTERED 
