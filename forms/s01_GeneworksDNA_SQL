@@ -1,3 +1,3 @@
-SELECT dbo_DNANumber.DNANo, dbo_DNASpecimen.Concentration, dbo_DNASpecimen.PatientID, dbo_DNASpecimen.DateReceived, dbo_DNASpecimen.DatePrepared, dbo_DNASpecimen.SpecimenNo, dbo_DNASpecimen.Comment, dbo_DNASpecimen.SpecimenType, Patients.InternalPatientID
-FROM (dbo_DNASpecimen LEFT JOIN dbo_DNANumber ON dbo_DNASpecimen.SpecimenNo = dbo_DNANumber.SpecimenNo) INNER JOIN Patients ON dbo_DNASpecimen.PatientID = Patients.PatientID
-ORDER BY dbo_DNASpecimen.DateReceived DESC , dbo_DNASpecimen.DatePrepared DESC;
+SELECT Patients.InternalPatientID, Patients.PatientID, dbo_dnanumberlinked.DNANo, dbo_dnaspecimenlinked.Concentration, dbo_dnaspecimenlinked.DateReceived, dbo_dnaspecimenlinked.DatePrepared, dbo_dnaspecimenlinked.SpecimenTrustID AS SpecimenNo, dbo_dnaspecimenlinked.SpecimenType
+FROM (Patients INNER JOIN dbo_patientlinked ON Patients.PatientID = dbo_patientlinked.PatientTrustID) INNER JOIN (dbo_dnanumberlinked RIGHT JOIN dbo_dnaspecimenlinked ON dbo_dnanumberlinked.SpecimenID = dbo_dnaspecimenlinked.SpecimenID) ON dbo_patientlinked.PatientID = dbo_dnaspecimenlinked.PatientID
+ORDER BY dbo_dnaspecimenlinked.DateReceived DESC , dbo_dnaspecimenlinked.DatePrepared DESC;
