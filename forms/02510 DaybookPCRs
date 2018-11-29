@@ -69,11 +69,3 @@ Me!Result <> 5 And Me!Result <> 1190384957 And Me!Result <> 1190384958 And Me!Re
     End If
     
 End Sub
-
-Private Sub Result_AfterUpdate()
-''Auto status to complete
-If Me!StatusID <> 4 And Not IsNull(Me!Result) Then
-    Me.StatusID = 4
-    End If
-    
-End Sub
