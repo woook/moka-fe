@@ -1,0 +1,13 @@
+USE [mokadata]
+GO
+/****** Object:  View [dbo].[gwv-dnanumberlinked]    Script Date: 11/29/2018 15:55:46 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+
+CREATE VIEW [dbo].[gwv-dnanumberlinked]
+AS
+
+SELECT DNANo,SpecimenID,SpecimenTrustID,PatientID
+FROM [SV-PR-GENWORK].[GeneWorks].[dbo].[DNANumberLinked];
