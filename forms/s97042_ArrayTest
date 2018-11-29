@@ -1,0 +1,31 @@
+Option Compare Database
+
+''open forms
+
+Private Sub Form_DblClick(Cancel As Integer)
+    Dim stDocName As String
+    Dim stLinkCriteria As String
+    stDocName = "09 ArrayResultsByPostition"
+    stLinkCriteria = "[ArrayTestID]=" & Me![ArrayTestID]
+    DoCmd.OpenForm stDocName, , , stLinkCriteria
+End Sub
+
+Private Sub StatusID_DblClick(Cancel As Integer)
+    Dim stDocName As String
+    Dim stLinkCriteria As String
+    stDocName = "09 ArrayResultsByPostition"
+    stLinkCriteria = "[ArrayTestID]=" & Me![ArrayTestID]
+    DoCmd.OpenForm stDocName, , , stLinkCriteria
+End Sub
+
+''date
+
+Private Sub RequestedDate_DblClick(Cancel As Integer)
+    [RequestedDate] = Now()
+End Sub
+
+''spec no
+Private Sub SpecimenNo_Enter()
+    Me.SpecimenNo.Requery
+End Sub
+
