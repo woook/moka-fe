@@ -1,0 +1,50 @@
+USE [mokadata]
+GO
+/****** Object:  View [dbo].[gwv-dnaspecimenlinked]    Script Date: 11/29/2018 16:02:55 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+
+CREATE VIEW [dbo].[gwv-dnaspecimenlinked]
+
+AS
+
+SELECT [SpecimenID]
+      ,[SpecimenTrustID]
+      ,[PatientID]
+      ,[DateReceived]
+      ,[UrgencyID]
+      ,[Urgency]
+      ,[Stage]
+      ,[SpecimenTypeID]
+      ,[SpecimenTypeCode]
+      ,[SpecimenType]
+      ,[Prenatal]
+      ,[SpecimenSubTypeID]
+      ,[SpecimenSubType]
+      ,[ContainerTypeID]
+      ,[ContainerTypeCode]
+      ,[ContainerType]
+      ,[ContainerCount]
+      ,[ReferralCategoryID]
+      ,[ReferralCategory]
+      ,[CreatedByID]
+      ,[InitialsCreatedBy]
+      ,[CreatedDate]
+      ,[RowVersion]
+      ,[DNASpecimenTrustID]
+      ,[Active]
+      ,[ReferralReason]
+      ,[Concentration]
+      ,[NewReferral]
+      ,[ClinicSpecimen]
+      ,[PreparedByID]
+      ,[InitialsPreparedBy]
+      ,[DatePrepared]
+      ,[DateActivated]
+      ,[DateChecked]
+      ,[DNASpecimenRowVersion]
+      ,[SampleCondition]
+  FROM [SV-PR-GENWORK].[GeneWorks].[dbo].[DNASpecimenLinked]
+
