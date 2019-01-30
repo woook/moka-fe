@@ -6,15 +6,15 @@ End Sub
 
 Private Sub Create_NGS_Click()
     Dim sqlNGSTest As String
-    Dim D As String
+    Dim d As String
     
     If IsNull(Me.BookBy) Or IsNull(Me.ReferralID) Or IsNull(Me.PanelID) Then
         MsgBox "You must complete the 'Booked By', 'Referral' and 'Panel' fields to proceed"
     Else
         'Add NGS Test
-        D = Format(Now(), "dd/mmm/yyyy Hh:Nn:ss")
-        sqlNGSTest = "INSERT INTO NGSTest (InternalPatientID, ReferralID, NGSPanelID, StatusID, DateRequested, BookBy, BookingAuthorisedDate, BookingAuthorisedByID, GWSpecID, OncologyLabID) " _
-                     & "VALUES (" & Me.InternalPatientID & ", " & Me.ReferralID & ", " & Me.PanelID & ", 1202218777, #" & D & "#, " & Me.BookBy & ", #" & D & "#, 1201865434, " & Me.SpecimenID & ", " & Me.OncologyLabID & ")"
+        d = Format(Now(), "dd/mmm/yyyy Hh:Nn:ss")
+        sqlNGSTest = "INSERT INTO NGSTest (InternalPatientID, ReferralID, NGSPanelID, StatusID, DateRequested, BookBy, BookingAuthorisedDate, BookingAuthorisedByID, GWSpecID, OncologyLabID, PipelineVersion) " _
+                     & "VALUES (" & Me.InternalPatientID & ", " & Me.ReferralID & ", " & Me.PanelID & ", 1202218777, #" & d & "#, " & Me.BookBy & ", #" & d & "#, 1201865434, " & Me.SpecimenID & ", " & Me.OncologyLabID & ", " & Me.pipeline_version & " ) "
         DoCmd.SetWarnings False
         DoCmd.RunSQL sqlNGSTest
         DoCmd.SetWarnings True
@@ -22,7 +22,7 @@ Private Sub Create_NGS_Click()
         un = VBA.Environ("USERNAME")
         cn = VBA.Environ("COMPUTERNAME")
         'Add record of NGS test creation to patient log
-        sqlPatLog = "INSERT INTO PatientLog(InternalPatientID, SpecNo, GWSpecID, LogEntry, [Date], Login, PCName) VALUES(" & Me.InternalPatientID & ", '" & Me.SpecimenTrustID & "', " & Me.SpecimenID & ", 'NGS Oncology: " & Me.ReferralID.Column(1) & " test request added. Panel: " & Me.PanelID.Column(1) & ". ',#" + D + "#,'" + un + "','" + cn + "')"
+        sqlPatLog = "INSERT INTO PatientLog(InternalPatientID, SpecNo, GWSpecID, LogEntry, [Date], Login, PCName) VALUES(" & Me.InternalPatientID & ", '" & Me.SpecimenTrustID & "', " & Me.SpecimenID & ", 'NGS Oncology: " & Me.ReferralID.Column(1) & " test request added. Panel: " & Me.PanelID.Column(1) & ". ',#" + d + "#,'" + un + "','" + cn + "')"
         DoCmd.SetWarnings False
         DoCmd.RunSQL sqlPatLog
         DoCmd.SetWarnings True
