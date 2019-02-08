@@ -1,6 +1,6 @@
 USE [mokadata]
 GO
-/****** Object:  Table [dbo].[Probands_100k]    Script Date: 01/30/2019 10:24:18 ******/
+/****** Object:  Table [dbo].[Probands_100k]    Script Date: 02/08/2019 13:24:06 ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -12,7 +12,7 @@ CREATE TABLE [dbo].[Probands_100k](
 	[GW_PatientID] [int] NULL,
 	[PatientTrustID] [nvarchar](9) NULL,
 	[InternalPatientID] [int] NULL,
- CONSTRAINT [PK_GeL_Probands] PRIMARY KEY CLUSTERED 
+ CONSTRAINT [PK_Probands_100k] PRIMARY KEY CLUSTERED 
 (
 	[Probands_100k_ID] ASC
 )WITH (PAD_INDEX  = OFF, STATISTICS_NORECOMPUTE  = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS  = ON, ALLOW_PAGE_LOCKS  = ON) ON [PRIMARY]
