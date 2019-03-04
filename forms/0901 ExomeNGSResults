@@ -5,6 +5,7 @@ Private Sub Form_Current()
 'if test has been analysed and reported and safty switch is off then lock down form, apart from approver box
    If (Not IsNull(Form_s0901_WESTestResults.Checker1) And Not IsNull(Form_s0901_WESTestResults.txt_Check1Date) And Not IsNull(Form_s0901_WESTestResults.txt_Check3Date) And [Form_0901 ExomeNGSResults].SafetyCheck.Value = False) Then
         Me.[Patient Status].Locked = True
+        Me.txt_result.Locked = True
         'Form_s0901_WESTestResults.AllowEdits = False
         Form_s0901_WESTestResults.VCFImport.Enabled = False
         Form_s0901_WESTestResults.FilterImport.Enabled = False
@@ -29,6 +30,7 @@ Private Sub Form_Current()
 'if test report has been approved then completely lock down the form
 ElseIf (Not IsNull(Form_s0901_WESTestResults.Checker4) And Not IsNull(Form_s0901_WESTestResults.txt_Check3Date) And (Form_s0901_WESTestResults.StatusID = 4 Or Form_s0901_WESTestResults.StatusID = 1202218816) And [Form_0901 ExomeNGSResults].SafetyCheck.Value = False) Then
         Me.[Patient Status].Locked = True
+        Me.txt_result.Locked = True
         Form_s0901_WESTestResults.AllowEdits = False
         Form_s0901_WESTestResults.VCFImport.Enabled = False
         Form_s0901_WESTestResults.FilterImport.Enabled = False
@@ -44,6 +46,7 @@ ElseIf (Not IsNull(Form_s0901_WESTestResults.Checker4) And Not IsNull(Form_s0901
 
     Else
         Me.[Patient Status].Locked = False
+        Me.txt_result.Locked = False
         Form_s0901_WESTestResults.AllowEdits = True
         Form_s0901_WESTestResults.VCFImport.Enabled = True
         Form_s0901_WESTestResults.FilterImport.Enabled = True
