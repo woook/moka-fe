@@ -27,7 +27,7 @@ End Sub
 Private Sub Checker2_AfterUpdate()
 If Not IsNull(Me.Checker2) Then
     Me.CheckDate = Now()
-    Me.Active = 1
+    Me.Active = -1
     Else
     Me.CheckDate = Null
     End If
