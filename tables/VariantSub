@@ -1,0 +1,19 @@
+USE [mokadata]
+GO
+/****** Object:  Table [dbo].[VariantSub]    Script Date: 03/25/2019 17:12:04 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[VariantSub](
+	[VariantSubID] [int] IDENTITY(1,1) NOT NULL,
+	[NGSVariantID] [int] NULL,
+	[OligoResultID] [int] NULL,
+	[ClinVarSubmissionID] [nvarchar](255) NULL,
+	[ClinVarVariantID] [int] NULL,
+	[DecipherID] [nvarchar](255) NULL,
+ CONSTRAINT [PK_VariantSub] PRIMARY KEY CLUSTERED 
+(
+	[VariantSubID] ASC
+)WITH (PAD_INDEX  = OFF, STATISTICS_NORECOMPUTE  = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS  = ON, ALLOW_PAGE_LOCKS  = ON) ON [PRIMARY]
+) ON [PRIMARY]
