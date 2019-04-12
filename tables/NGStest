@@ -1,6 +1,6 @@
 USE [mokadata]
 GO
-/****** Object:  Table [dbo].[NGSTest]    Script Date: 04/11/2019 10:13:40 ******/
+/****** Object:  Table [dbo].[NGSTest]    Script Date: 04/12/2019 15:27:59 ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -43,7 +43,7 @@ CREATE TABLE [dbo].[NGSTest](
 	[IRID] [nvarchar](50) NULL,
 	[GWWorksheet] [int] NULL,
 	[MDTdate] [datetime] NULL,
-	[BlockAutomatedReporting] [tinyint] NOT NULL CONSTRAINT [DF_NGSTest_BlockAutomatedReporting]  DEFAULT ((0)),
+	[BlockAutomatedReporting] [smallint] NOT NULL CONSTRAINT [DF_NGSTest_BlockAutomatedReporting]  DEFAULT ((0)),
  CONSTRAINT [PK_NGSTest] PRIMARY KEY CLUSTERED 
 (
 	[NGSTestID] ASC
