@@ -1,3 +1,3 @@
 SELECT NGSTest.NGSTestID, NGSTest.GELProbandID AS 100KParticipantID, NGSTest.IRID AS InterpretationRequestID, "https://cipapi.genomicsengland.nhs.uk/interpretationportal/#/participant/" & [NGSTest].[IRID] AS InterpretationPortal, Status.Status, NGSTest.InternalPatientID, [BookinLastname] & " " & [BookinFirstName] AS Name, ResultCode.ResultCode
 FROM ((NGSTest INNER JOIN Patients ON NGSTest.InternalPatientID = Patients.InternalPatientID) INNER JOIN Status ON NGSTest.StatusID = Status.StatusID) INNER JOIN ResultCode ON NGSTest.ResultCode = ResultCode.ResultCodeID
-WHERE (((ResultCode.ResultCode)="1189679668") AND ((NGSTest.BlockAutomatedReporting)=0) AND ((NGSTest.ReferralID)=1199901218) AND ((NGSTest.StatusID)=1202218811));
+WHERE (((NGSTest.BlockAutomatedReporting)=0) AND ((NGSTest.ReferralID)=1199901218) AND ((NGSTest.StatusID)=1202218811) AND ((ResultCode.ResultCodeID)=1189679668));
