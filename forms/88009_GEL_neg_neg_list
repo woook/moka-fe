@@ -14,6 +14,9 @@ On Error GoTo Err_GenerateReports_Click
     Dim wsh As Object
     ' Recordset for subform values
     Dim rsNegNeg As Recordset
+    Dim today_timstamp As String
+    Dim logfile_path As String
+    Dim count As Integer
     
     If vbYes = MsgBox("Generate negneg report for samples listed below?", vbYesNo + vbQuestion, "Continue?") Then
         'set path to python script
@@ -23,21 +26,26 @@ On Error GoTo Err_GenerateReports_Click
         '/C means "execute this command as if I had typed it at the prompt, then quit"
         '/S means you don't have to worry about quotes, removing first and last quotes, but leaving all others untouched.
         'NB /K can be used for the cmd line window to remain after it has run - good for debugging - but may cause it to hang
-        strTotalCMD = "cmd.exe /S /C \\gstt.local\shared\Genetics_Data2\Array\Software\Python\python.exe " & strScriptPath & " -n"
+        strTotalCMD = "cmd.exe /S /C \\gstt.local\shared\Genetics_Data2\Array\Software\Python\python.exe " & strScriptPath & " --submit_exit_q --download_summary -n"
     
         'Clone the recordset of the subform to allow capture of NGS test IDs for report generation.
         'This ensures only samples currently displayed in the subform are selected, even if additional WES tests have been approved since the form was opened.
         Set rsNegNeg = Form_s88009_GEL_negneg_list.RecordsetClone
         'Move to first record of the recordset
         rsNegNeg.MoveFirst
+        'Code errors if too many tests passed in one go, so just do 10 on each button press
+        count = 0
         'Loop through the recordset, adding the NGS test IDs as arguments to the command
-        While Not rsNegNeg.EOF
+        While Not rsNegNeg.EOF And count < 10
             strTotalCMD = strTotalCMD & " " & rsNegNeg.Fields("NGSTestID")
             rsNegNeg.MoveNext 'Move to next record
+            count = count + 1
         Wend
         Set rsNegNeg = Nothing 'Clear the recordset
-        ' Add 2>&1 to the end of the command to redirect stderr to stdout
-        strTotalCMD = strTotalCMD & " 2>&1"
+        today_timestamp = Format(Now, "yymmdd_HhNnss")
+        logfile_path = "\\gstt.local\apps\Moka\Files\100k_logfiles\negneg_reporting\" & today_timestamp & "_gel_cover_report_stdout.tsv"
+        ' Redirect output to timestamped logfile and add 2>&1 to the end of the command to redirect stderr to stdout
+        strTotalCMD = strTotalCMD & " > " & logfile_path & " 2>&1"
         ' Create shell object
         Set wsh = CreateObject("WScript.Shell")
         ' use .Exec not .Run so can access the stdout
@@ -49,10 +57,8 @@ On Error GoTo Err_GenerateReports_Click
             DoEvents
         Loop
 
-        'strReport captures stdout and stderr from executing python script (err is redirected to out in cmd)
-        strReport = wshexec.Stdout.readall()
-        'Display the stdout, which will report any samples that failed to the user
-        MsgBox strReport
+        'Display the path to logfile
+        MsgBox "Negneg reporting complete. Please see logfile at: " & logfile_path
 
         'Requery the subform
         Me.s88009_GEL_negneg_list.Requery

@@ -1,5 +1,31 @@
 Option Compare Database
 
+Private Sub blockautoreport_AfterUpdate()
+    Dim dt As String
+    Dim un As String
+    Dim cn As String
+    Dim blockStatus As String
+    ' set date, username and computer name as required by log tables
+    dt = Format(Now, "dd/mmm/yyyy Hh:Nn:ss")
+    un = VBA.Environ("USERNAME")
+    cn = VBA.Environ("COMPUTERNAME")
+    
+    If Me.BlockAutomatedReporting <> 0 Then
+        blockStatus = "blocked"
+    Else
+        blockStatus = "unblocked"
+    End If
+    
+    'SQL statement for PatientLog
+    sqlPatLog = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" + CStr(Me.InternalPatientID.Value) + ",'GEL NGS Test: Automated reporting " + blockStatus & _
+    "',#" + dt + "#,'" + un + "','" + cn + "')"
+    
+    'Execute SQL statements
+    DoCmd.SetWarnings False
+    DoCmd.RunSQL sqlPatLog
+    DoCmd.SetWarnings True
+End Sub
+
 Private Sub BookBy_AfterUpdate()
     Dim dt As String
     Dim un As String
