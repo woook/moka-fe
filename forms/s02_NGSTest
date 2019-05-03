@@ -5,14 +5,14 @@ Option Compare Database
 Private Sub Form_AfterInsert()
     Dim Q As ADODB.Recordset
     Dim S As String
-    Dim D As String
+    Dim d As String
     Dim cn As String
     Dim un As String
     un = VBA.Environ("USERNAME")
     cn = VBA.Environ("COMPUTERNAME")
-    D = Format(Now, "dd/mmm/yyyy Hh:Nn:ss")
+    d = Format(Now, "dd/mmm/yyyy Hh:Nn:ss")
     Set Q = New ADODB.Recordset
-    S = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + ",'NGS test: " + Me![ReferralID].Column(1) + " " + Me![NGSPanelID].Column(1) + " request added " + CStr(Me![RequestedDate]) + "',#" + D + "#,'" + un + "','" + cn + "')"
+    S = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + ",'NGS test: " + Me![ReferralID].Column(1) + " " + Me![NGSPanelID].Column(1) + " request added " + CStr(Me![RequestedDate]) + "',#" + d + "#,'" + un + "','" + cn + "')"
     Q.Open S, CurrentProject.Connection
     Set Q = Nothing
     
@@ -29,14 +29,14 @@ End Sub
 Private Sub Form_Delete(Cancel As Integer)
     Dim Q As ADODB.Recordset
     Dim S As String
-    Dim D As String
+    Dim d As String
     Dim cn As String
     Dim un As String
     un = VBA.Environ("USERNAME")
     cn = VBA.Environ("COMPUTERNAME")
-    D = Format(Now, "dd/mmm/yyyy Hh:Nn:ss")
+    d = Format(Now, "dd/mmm/yyyy Hh:Nn:ss")
     Set Q = New ADODB.Recordset
-    S = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + ",'NGS test: " + Me![ReferralID].Column(1) + " " + Me![NGSPanelID].Column(1) + " request deleted (requested " + CStr(Me![DateRequested]) + ")',#" + D + "#,'" + un + "','" + cn + "')"
+    S = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + ",'NGS test: " + Me![ReferralID].Column(1) + " " + Me![NGSPanelID].Column(1) + " request deleted (requested " + CStr(Me![DateRequested]) + ")',#" + d + "#,'" + un + "','" + cn + "')"
     Q.Open S, CurrentProject.Connection
     Set Q = Nothing
     If [Form_02 Patient Details]![s_StatusOverall] = 1202218798 Then
@@ -48,14 +48,14 @@ End Sub
 Private Sub NGSPanelID_AfterUpdate()
     Dim Q As ADODB.Recordset
     Dim S As String
-    Dim D As String
+    Dim d As String
     Dim cn As String
     Dim un As String
     cn = VBA.Environ("COMPUTERNAME")
     un = VBA.Environ("USERNAME")
-    D = Format(Now, "dd/mmm/yyyy Hh:Nn:ss")
+    d = Format(Now, "dd/mmm/yyyy Hh:Nn:ss")
     Set Q = New ADODB.Recordset
-    S = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + ",'NGS test: Panel changed to " + Me![NGSPanelID].Column(1) + "',#" + D + "#,'" + un + "','" + cn + "')"
+    S = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + ",'NGS test: Panel changed to " + Me![NGSPanelID].Column(1) + "',#" + d + "#,'" + un + "','" + cn + "')"
     Q.Open S, CurrentProject.Connection
     Set Q = Nothing
 
@@ -64,6 +64,101 @@ End Sub
 ''Refresh
 Private Sub DNA_Enter()
     Me.DNA.Requery
+End Sub
+
+Private Sub NGSTestID_DblClick(Cancel As Integer)
+Dim rsUpdatePatientLog As ADODB.Recordset
+Dim rsCopyNGSTest As ADODB.Recordset
+Dim Sql As String
+Dim d As String
+Dim cn As String
+Dim un As String
+Dim NewTestID As String
+Dim logentry As String
+
+cn = VBA.Environ("COMPUTERNAME")
+un = VBA.Environ("USERNAME")
+d = Format(Now, "dd/mmm/yyyy Hh:Nn:ss")
+
+' open prompt to confirm test is to be failed and new test created from copy of this testID
+msgb = MsgBox("You are about to fail NGSest ID " & Me.NGSTestID & " and create a new test request based on this test." + vbNewLine + "Do you wish to continue?", vbYesNo, "Fail & copy test?")
+If msgb = vbYes Then
+'' Create a new NGSTest record using fields from the failed test
+'build sql to create a copy of all the required fields
+Sql = "INSERT INTO ngstest (InternalPatientID, ReferralID, NGSPanelID,NGSPanelID_B,NGSPanelID_C,StatusID, DateRequested, bookby, resultbuild, BookingAuthorisedDate, BookingAuthorisedByID, service,costcentre, department, priority) " & _
+      "SELECT InternalPatientID, ReferralID, NGSPanelID,NGSPanelID_B,NGSPanelID_C,1202218803, DateRequested, bookby, resultbuild, BookingAuthorisedDate, BookingAuthorisedByID, service,costcentre, department, priority " & _
+      " FROM NGSTest WHERE NGStestid =" & Me.NGSTestID
+'Debug.Print "inserting new NGStest"
+'Debug.Print Sql
+
+' create new recordset
+Set rsCopyNGSTest = New ADODB.Recordset
+' run the sql to copy test
+rsCopyNGSTest.Open Sql, CurrentProject.Connection
+'Get ID of new entry
+rsCopyNGSTest.Open "SELECT @@identity", CurrentProject.Connection, adOpenKeyset
+NewTestID = rsCopyNGSTest.Fields(0).Value
+'Debug.Print "Newtestid = " & NewTestID
+Set rsCopyNGSTest = Nothing
+
+'Debug.Print "copying NGSTestfiles"
+'' copy all ngstest files, adding a prefix to description to make it clear copied from prev test
+Sql = "insert into NGSTestFile(NGSTestID,Description,NGSTestFile,DateAdded,VCF_Filter_Import) " & _
+    "select " & NewTestID & ",'copy_from_NGSTest'+'" & Me.NGSTestID & "'+'_'+Description,NGSTestFile,DateAdded,VCF_Filter_Import " & _
+    "from NGSTestFile where NGSTestID = " & Me.NGSTestID
+'Debug.Print Sql
+' turn off warnings so doesn't warn about appending rows
+DoCmd.SetWarnings False
+DoCmd.RunSQL Sql
+DoCmd.SetWarnings True
+
+'' copy panels in NGSTestPanelSelection
+Sql = "Insert into NGSTestPanelSelection(ngstestid, selectiontype, selectionid, analysisAB) " & _
+    "select " & NewTestID & ",selectiontype,selectionid,analysisAB  from NGSTestPanelSelection where NGSTESTID = " & Me.NGSTestID
+'Debug.Print "copying panels"
+'Debug.Print Sql
+' turn off warnings so doesn't warn about appending rows
+DoCmd.SetWarnings False
+DoCmd.RunSQL Sql
+DoCmd.SetWarnings True
+
+'' update patient log to say new test copied from a failed test
+'Debug.Print "updating patient log with copying NGSTestfiles"
+logentry = "NGS test: New test request (NGSTestID" & NewTestID & ") created from failed NGSTestID" & Me.NGSTestID & " (including testfiles)"
+'Debug.Print logentry
+Sql = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" & CStr(Me![InternalPatientID]) & ",'" + logentry + "',#" + d + "#,'" + un + "','" + cn + "')"
+'Debug.Print Sql
+' turn off warnings so doesn't warn about appending rows
+DoCmd.SetWarnings False
+DoCmd.RunSQL Sql
+DoCmd.SetWarnings True
+
+'' Deactivate failed test
+' set status = 1202218816 (test failed)
+'Debug.Print "setting status to test failed"
+Sql = "update NGStest set statusid = 1202218816 where ngstestid = " & Me.NGSTestID
+'Debug.Print Sql
+' turn off warnings so doesn't warn about appending rows
+DoCmd.SetWarnings False
+DoCmd.RunSQL Sql
+DoCmd.SetWarnings True
+
+'' update patient log to say test status set to failed
+'Debug.Print "updating patient log to record setting test status to test failed"
+logentry = "NGS test: Status changed to ""test failed"" for NGSTestID" & Me.NGSTestID
+'Debug.Print logentry
+Sql = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + ",'" + logentry + "',#" + d + "#,'" + un + "','" + cn + "')"
+'Debug.Print Sql
+' turn off warnings so doesn't warn about appending rows
+DoCmd.SetWarnings False
+DoCmd.RunSQL Sql
+DoCmd.SetWarnings True
+
+' refresh form to reflect changes applied above
+Me.Requery
+
+End If
+
 End Sub
 
 Private Sub StatusID_DblClick(Cancel As Integer)
