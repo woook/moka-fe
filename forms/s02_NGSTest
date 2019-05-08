@@ -67,7 +67,7 @@ Private Sub DNA_Enter()
 End Sub
 
 Private Sub ReferralID_DblClick(Cancel As Integer)
-Dim rsUpdatePatientLog As ADODB.Recordset
+' define variables
 Dim rsCopyNGSTest As ADODB.Recordset
 Dim Sql As String
 Dim d As String
@@ -89,27 +89,26 @@ Sql = "INSERT INTO ngstest (internalpatientid, referralid, ngspanelid, ngspaneli
       "SELECT internalpatientid, referralid, ngspanelid, ngspanelid_b, ngspanelid_c, 1202218803, daterequested, bookby, resultbuild, bookingauthoriseddate, bookingauthorisedbyid, service, costcentre, department, priority " & _
         "FROM ngstest " & _
        "WHERE ngstestid =" & Me.NGSTestID
-'Debug.Print "inserting new NGStest"
-'Debug.Print Sql
-
-' create new recordset
+       
+Debug.Print "inserting new NGStest"
+Debug.Print Sql
+' create new recordset - A recordset is used over DoCmd as we need to return the key of newly inserted row.
 Set rsCopyNGSTest = New ADODB.Recordset
 ' run the sql to copy test
 rsCopyNGSTest.Open Sql, CurrentProject.Connection
 'Get ID of new entry
 rsCopyNGSTest.Open "SELECT @@identity", CurrentProject.Connection, adOpenKeyset
 NewTestID = rsCopyNGSTest.Fields(0).Value
-'Debug.Print "Newtestid = " & NewTestID
+Debug.Print "Newtestid = " & NewTestID
 Set rsCopyNGSTest = Nothing
 
-'Debug.Print "copying NGSTestfiles"
 '' copy all ngstest files, adding a prefix to description to make it clear copied from prev test
 Sql = "INSERT INTO ngstestfile(ngstestid,description,ngstestfile,dateadded,vcf_filter_import) " & _
       "SELECT " & NewTestID & ",'copy_from_NGSTest'+'" & Me.NGSTestID & "'+'_'+description, ngstestfile, dateadded, vcf_filter_import " & _
         "FROM ngstestfile " & _
        "WHERE ngstestid = " & Me.NGSTestID
-
-'Debug.Print Sql
+Debug.Print "copying NGSTestfiles"
+Debug.Print Sql
 ' turn off warnings so doesn't warn about appending rows
 DoCmd.SetWarnings False
 DoCmd.RunSQL Sql
@@ -120,20 +119,20 @@ Sql = "INSERT INTO ngstestpanelselection(ngstestid, selectiontype, selectionid, 
       "SELECT " & NewTestID & ", selectiontype, selectionid, analysisab " & _
         "FROM ngstestpanelselection " & _
        "WHERE ngstestid = " & Me.NGSTestID
-'Debug.Print "copying panels"
-'Debug.Print Sql
+Debug.Print "copying panels"
+Debug.Print Sql
 ' turn off warnings so doesn't warn about appending rows
 DoCmd.SetWarnings False
 DoCmd.RunSQL Sql
 DoCmd.SetWarnings True
 
 '' update patient log to say new test copied from a failed test
-'Debug.Print "updating patient log with copying NGSTestfiles"
-logentry = "NGS test: New test request (NGSTestID" & NewTestID & ") created from failed NGSTestID" & Me.NGSTestID & " (including testfiles)"
-'Debug.Print logentry
+logentry = "NGS: New test request (NGSTestID" & NewTestID & ") created from failed NGSTestID" & Me.NGSTestID & " (including testfiles)"
 Sql = "INSERT INTO patientlog(internalpatientid, logentry, [date], login, pcname) " & _
       "VALUES (" & CStr(Me![InternalPatientID]) & ",'" + logentry + "',#" + d + "#,'" + un + "','" + cn + "')"
-'Debug.Print Sql
+Debug.Print "updating patient log with copying NGSTestfiles"
+Debug.Print logentry
+Debug.Print Sql
 ' turn off warnings so doesn't warn about appending rows
 DoCmd.SetWarnings False
 DoCmd.RunSQL Sql
@@ -141,23 +140,24 @@ DoCmd.SetWarnings True
 
 '' Deactivate failed test
 ' set status = 1202218816 (test failed)
-'Debug.Print "setting status to test failed"
+
 Sql = "UPDATE ngstest " & _
          "SET statusid = 1202218816 " & _
        "WHERE NGSTestID = " & Me.NGSTestID
-'Debug.Print Sql
+Debug.Print "setting status to test failed"
+Debug.Print Sql
 ' turn off warnings so doesn't warn about appending rows
 DoCmd.SetWarnings False
 DoCmd.RunSQL Sql
 DoCmd.SetWarnings True
 
 '' update patient log to say test status set to failed
-'Debug.Print "updating patient log to record setting test status to test failed"
-logentry = "NGS test: Status changed to ""test failed"" for NGSTestID" & Me.NGSTestID
-'Debug.Print logentry
+logentry = "NGS: Status changed to ""test failed"" for NGSTestID" & Me.NGSTestID
 Sql = "INSERT INTO patientlog(internalpatientid, logentry, [date], login, pcname) " & _
       "VALUES (" + CStr(Me![InternalPatientID]) + ",'" + logentry + "',#" + d + "#,'" + un + "','" + cn + "')"
-'Debug.Print Sql
+Debug.Print "updating patient log to record setting test status to test failed"
+Debug.Print logentry
+Debug.Print Sql
 ' turn off warnings so doesn't warn about appending rows
 DoCmd.SetWarnings False
 DoCmd.RunSQL Sql
