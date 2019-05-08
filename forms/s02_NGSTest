@@ -5,14 +5,14 @@ Option Compare Database
 Private Sub Form_AfterInsert()
     Dim Q As ADODB.Recordset
     Dim S As String
-    Dim d As String
-    Dim cn As String
-    Dim un As String
-    un = VBA.Environ("USERNAME")
-    cn = VBA.Environ("COMPUTERNAME")
-    d = Format(Now, "dd/mmm/yyyy Hh:Nn:ss")
+    Dim date_now As String
+    Dim computername As String
+    Dim username As String
+    username = VBA.Environ("USERNAME")
+    computername = VBA.Environ("COMPUTERNAME")
+    date_now = Format(Now, "dd/mmm/yyyy Hh:Nn:ss")
     Set Q = New ADODB.Recordset
-    S = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + ",'NGS test: " + Me![ReferralID].Column(1) + " " + Me![NGSPanelID].Column(1) + " request added " + CStr(Me![RequestedDate]) + "',#" + d + "#,'" + un + "','" + cn + "')"
+    S = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + ",'NGS test: " + Me![ReferralID].Column(1) + " " + Me![NGSPanelID].Column(1) + " request added " + CStr(Me![RequestedDate]) + "',#" + date_now + "#,'" + username + "','" + computername + "')"
     Q.Open S, CurrentProject.Connection
     Set Q = Nothing
     
@@ -29,14 +29,14 @@ End Sub
 Private Sub Form_Delete(Cancel As Integer)
     Dim Q As ADODB.Recordset
     Dim S As String
-    Dim d As String
-    Dim cn As String
-    Dim un As String
-    un = VBA.Environ("USERNAME")
-    cn = VBA.Environ("COMPUTERNAME")
-    d = Format(Now, "dd/mmm/yyyy Hh:Nn:ss")
+    Dim date_now As String
+    Dim computername As String
+    Dim username As String
+    username = VBA.Environ("USERNAME")
+    computername = VBA.Environ("COMPUTERNAME")
+    date_now = Format(Now, "dd/mmm/yyyy Hh:Nn:ss")
     Set Q = New ADODB.Recordset
-    S = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + ",'NGS test: " + Me![ReferralID].Column(1) + " " + Me![NGSPanelID].Column(1) + " request deleted (requested " + CStr(Me![DateRequested]) + ")',#" + d + "#,'" + un + "','" + cn + "')"
+    S = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + ",'NGS test: " + Me![ReferralID].Column(1) + " " + Me![NGSPanelID].Column(1) + " request deleted (requested " + CStr(Me![DateRequested]) + ")',#" + date_now + "#,'" + username + "','" + computername + "')"
     Q.Open S, CurrentProject.Connection
     Set Q = Nothing
     If [Form_02 Patient Details]![s_StatusOverall] = 1202218798 Then
@@ -48,14 +48,14 @@ End Sub
 Private Sub NGSPanelID_AfterUpdate()
     Dim Q As ADODB.Recordset
     Dim S As String
-    Dim d As String
-    Dim cn As String
-    Dim un As String
-    cn = VBA.Environ("COMPUTERNAME")
-    un = VBA.Environ("USERNAME")
-    d = Format(Now, "dd/mmm/yyyy Hh:Nn:ss")
+    Dim date_now As String
+    Dim computername As String
+    Dim username As String
+    computername = VBA.Environ("COMPUTERNAME")
+    username = VBA.Environ("USERNAME")
+    date_now = Format(Now, "dd/mmm/yyyy Hh:Nn:ss")
     Set Q = New ADODB.Recordset
-    S = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + ",'NGS test: Panel changed to " + Me![NGSPanelID].Column(1) + "',#" + d + "#,'" + un + "','" + cn + "')"
+    S = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + ",'NGS test: Panel changed to " + Me![NGSPanelID].Column(1) + "',#" + date_now + "#,'" + username + "','" + computername + "')"
     Q.Open S, CurrentProject.Connection
     Set Q = Nothing
 
@@ -70,15 +70,15 @@ Private Sub ReferralID_DblClick(Cancel As Integer)
 ' define variables
 Dim rsCopyNGSTest As ADODB.Recordset
 Dim Sql As String
-Dim d As String
-Dim cn As String
-Dim un As String
+Dim date_now As String
+Dim computername As String
+Dim username As String
 Dim NewTestID As String
 Dim logentry As String
 
-cn = VBA.Environ("COMPUTERNAME")
-un = VBA.Environ("USERNAME")
-d = Format(Now, "dd/mmm/yyyy Hh:Nn:ss")
+computername = VBA.Environ("COMPUTERNAME")
+username = VBA.Environ("USERNAME")
+date_now = Format(Now, "dd/mmm/yyyy Hh:Nn:ss")
 
 ' open prompt to confirm test is to be failed and new test created from copy of this testID
 msgb = MsgBox("You are about to fail NGSest ID " & Me.NGSTestID & " and create a new test request based on this test." + vbNewLine + "Do you wish to continue?", vbYesNo, "Fail & copy test?")
@@ -129,7 +129,7 @@ DoCmd.SetWarnings True
 '' update patient log to say new test copied from a failed test
 logentry = "NGS: New test request (NGSTestID" & NewTestID & ") created from failed NGSTestID" & Me.NGSTestID & " (including testfiles)"
 Sql = "INSERT INTO patientlog(internalpatientid, logentry, [date], login, pcname) " & _
-      "VALUES (" & CStr(Me![InternalPatientID]) & ",'" + logentry + "',#" + d + "#,'" + un + "','" + cn + "')"
+      "VALUES (" & CStr(Me![InternalPatientID]) & ",'" + logentry + "',#" + date_now + "#,'" + username + "','" + computername + "')"
 Debug.Print "updating patient log with copying NGSTestfiles"
 Debug.Print logentry
 Debug.Print Sql
@@ -154,7 +154,7 @@ DoCmd.SetWarnings True
 '' update patient log to say test status set to failed
 logentry = "NGS: Status changed to ""test failed"" for NGSTestID" & Me.NGSTestID
 Sql = "INSERT INTO patientlog(internalpatientid, logentry, [date], login, pcname) " & _
-      "VALUES (" + CStr(Me![InternalPatientID]) + ",'" + logentry + "',#" + d + "#,'" + un + "','" + cn + "')"
+      "VALUES (" + CStr(Me![InternalPatientID]) + ",'" + logentry + "',#" + date_now + "#,'" + username + "','" + computername + "')"
 Debug.Print "updating patient log to record setting test status to test failed"
 Debug.Print logentry
 Debug.Print Sql
