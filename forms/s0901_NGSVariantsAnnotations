@@ -3,18 +3,18 @@ Option Compare Database
 Private Sub Check35_Click()
     Dim resultStr As String
     Dim genotype As String
-    Dim class As String
+    Dim Class As String
     Dim rsGetResult As ADODB.Recordset
-    Dim D As String
+    Dim d As String
     Dim usr As String
     Dim cmp As String
-
-    D = Format(Now(), "dd/mmm/yyyy Hh:Nn:ss")
+    
+    d = Format(Now(), "dd/mmm/yyyy Hh:Nn:ss")
     usr = VBA.Environ("USERNAME")
     cmp = VBA.Environ("COMPUTERNAME")
-
+    
     Forms![0901 ExomeNGSResults].Dirty = False
-
+    
     'Copies selected variant details into NGSTestresult feild.
     If Not IsNull(Me.Parent.Classification) Then
         genotype = Me.Parent.genotype
@@ -23,19 +23,20 @@ Private Sub Check35_Click()
         ElseIf genotype = "1/1" Then
             genotype = "Hom"
         End If
-
-        'Get classification level (1-5) from classification text
-        class = Mid(Me.Parent.Classification.Column(1), Len(Me.Parent.Classification.Column(1)) - 1, 1)
+        
+        'Get classification level (1-5) from classification text ("class x")
+        Class = Replace(Me.Parent.Classification.Column(1), "class ", "")
+            
         'Construct variant string in HGNC format
-        resultStr = genotype & " " & Me.GENE_SYMBOL & " " & Me.TRANSCRIPT_ID & " " & Me.HGVS_Transcript & " " & Me.HGVS_Protein & " Class: " & class
-
+        resultStr = genotype & " " & Me.GENE_SYMBOL & " " & Me.TRANSCRIPT_ID & " " & Me.HGVS_Transcript & " " & Me.HGVS_Protein & " Class: " & Class
+        
         'If variant is marked as reported add, variant in HGNC format to the NGS test results feild
         If Me.Check35 = True Then
            'Retrieve exsiting NGSTest result so variant can be appended to end
             Set rsGetResult = New ADODB.Recordset
             sqlGetResult = "SELECT NGSTest.Result FROM NGSTest WHERE NGSTest.NGSTestID = " & Me.Parent.NGSTestID
             rsGetResult.Open sqlGetResult, CurrentProject.Connection, adOpenKeyset
-
+            
             ' checks that new variant entry will be inserted on with the first line or a newline
             newresult = rsGetResult.Fields("Result")
             lastChr = Right(newresult, 2)
@@ -53,18 +54,18 @@ Private Sub Check35_Click()
                 newresult = Replace(newresult, "'", "''") 'Escape any apostrophes to prevent SQL error
                 sqlUpdate = "UPDATE NGSTest SET NGSTest.Result = '" & newresult & "' WHERE NGSTest.NGSTestID = " & Me.Parent.NGSTestID
             End If
-
+            
             'Retrieve details inorder to update patient log
             patID = [Form_0901 ExomeNGSResults].InternalPatientID
             dateReq = Form_s0901_WESTestResults.DateRequested
             ' update patient log
-            sqlPatLog = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" + CStr(patID) + ",'NGS WES test: Result automatically updated with HGCN variant for WES test requested " + CStr(dateReq) + "' ,#" + D + "#,'" + usr + "','" + cmp + "')"
+            sqlPatLog = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" + CStr(patID) + ",'NGS WES test: Result automatically updated with HGCN variant for WES test requested " + CStr(dateReq) + "' ,#" + d + "#,'" + usr + "','" + cmp + "')"
             'Execute SQL statements
             DoCmd.SetWarnings False
             DoCmd.RunSQL sqlUpdate
             DoCmd.RunSQL sqlPatLog
             DoCmd.SetWarnings True
-            Forms![0901 ExomeNGSResults].Refresh 'Refresh so that result comments field is updated
+            Forms![0901 ExomeNGSResults].refresh 'Refresh so that result comments field is updated
 
          ' if the reported check box is unticked remove the HGCN varient from the NGSresult feild
         ElseIf Me.Check35 = False Then
@@ -75,19 +76,19 @@ Private Sub Check35_Click()
              If Not IsNull(newresult) Then
                 ' remove selected variant from the results
                 newresult = Replace(newresult, resultStr + vbCrLf, "")
-                Forms![0901 ExomeNGSResults].Refresh
+                Forms![0901 ExomeNGSResults].refresh
             sqlUpdate = "UPDATE NGSTest SET NGSTest.Result = '" & newresult & "' WHERE NGSTest.NGSTestID = " & Me.Parent.NGSTestID
             'Retrieve details inorder to update patient log
             patID = [Form_0901 ExomeNGSResults].InternalPatientID
             dateReq = Form_s0901_WESTestResults.DateRequested
             ' update patient log
-            sqlPatLog = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" + CStr(patID) + ",'NGS WES test: HGCN variant Result removed for WES test requested " + CStr(dateReq) + "' ,#" + D + "#,'" + usr + "','" + cmp + "')"
+            sqlPatLog = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" + CStr(patID) + ",'NGS WES test: HGCN variant Result removed for WES test requested " + CStr(dateReq) + "' ,#" + d + "#,'" + usr + "','" + cmp + "')"
             'Execute SQL statements
             DoCmd.SetWarnings False
             DoCmd.RunSQL sqlUpdate
             DoCmd.RunSQL sqlPatLog
             DoCmd.SetWarnings True
-            Forms![0901 ExomeNGSResults].Refresh 'Refresh so that result comments field is updated
+            Forms![0901 ExomeNGSResults].refresh 'Refresh so that result comments field is updated
             End If
         End If
     Else
@@ -118,7 +119,7 @@ Private Sub Transcript_DblClick(Cancel As Integer)
         If Not IsNull(Me.Parent.Classification) Then
             Dim resultStr As String
             Dim genotype As String
-            Dim class As String
+            Dim Class As String
             Dim rsGetComment As ADODB.Recordset
             genotype = Me.Parent.genotype
             If genotype = "0/1" Then
@@ -126,10 +127,12 @@ Private Sub Transcript_DblClick(Cancel As Integer)
             ElseIf genotype = "1/1" Then
                 genotype = "Hom"
             End If
-            'Get classification level (1-5) from classification text
-            class = Mid(Me.Parent.Classification.Column(1), Len(Me.Parent.Classification.Column(1)) - 1, 1)
+            
+            'Get classification level (1-5) from classification text ("class x")
+            Class = Replace(Me.Parent.Classification.Column(1), "class ", "")
+            
             'Construct variant string
-            resultStr = genotype & " " & Me.GENE_SYMBOL & " " & Me.TRANSCRIPT_ID & " " & Me.HGVS_Transcript & " " & Me.HGVS_Protein & " Class: " & class
+            resultStr = genotype & " " & Me.GENE_SYMBOL & " " & Me.TRANSCRIPT_ID & " " & Me.HGVS_Transcript & " " & Me.HGVS_Protein & " Class: " & Class
             'Retrieve exsiting comment so variant can be appended to end
             Set rsGetComment = New ADODB.Recordset
             sqlGetComment = "SELECT NGSTest.ResultComment FROM NGSTest WHERE NGSTest.NGSTestID = " & Me.Parent.NGSTestID
@@ -147,19 +150,19 @@ Private Sub Transcript_DblClick(Cancel As Integer)
             'Retrieve details for log
             patID = [Form_0901 ExomeNGSResults].InternalPatientID
             dateReq = Form_s0901_WESTestResults.DateRequested
-            D = Format(Now(), "dd/mmm/yyyy Hh:Nn:ss")
+            d = Format(Now(), "dd/mmm/yyyy Hh:Nn:ss")
             un = VBA.Environ("USERNAME")
             cn = VBA.Environ("COMPUTERNAME")
             'SQL statements for log
-            sqlMemo = "INSERT INTO NGSLogMemo(InternalPatientID, Type, LinkID, LogMemoEntry, [Date], Login, PCName) VALUES(" + CStr(patID) + ", 3, " + CStr(Me.Parent.NGSTestID) + ",'NGS WES test: Result comment updated for WES test requested " + CStr(dateReq) + " - " + newComment + "',#" + D + "#,'" + un + "','" + cn + "')"
-            sqlPatLog = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" + CStr(patID) + ",'NGS WES test: Result comment updated for WES test requested " + CStr(dateReq) + " - see memo log',#" + D + "#,'" + un + "','" + cn + "')"
+            sqlMemo = "INSERT INTO NGSLogMemo(InternalPatientID, Type, LinkID, LogMemoEntry, [Date], Login, PCName) VALUES(" + CStr(patID) + ", 3, " + CStr(Me.Parent.NGSTestID) + ",'NGS WES test: Result comment updated for WES test requested " + CStr(dateReq) + " - " + newComment + "',#" + d + "#,'" + un + "','" + cn + "')"
+            sqlPatLog = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" + CStr(patID) + ",'NGS WES test: Result comment updated for WES test requested " + CStr(dateReq) + " - see memo log',#" + d + "#,'" + un + "','" + cn + "')"
             'Execute SQL statements
             DoCmd.SetWarnings False
             DoCmd.RunSQL sqlUpdate
             DoCmd.RunSQL sqlMemo
             DoCmd.RunSQL sqlPatLog
             DoCmd.SetWarnings True
-            Forms![0901 ExomeNGSResults].Refresh 'Refresh so that result comments field is updated
+            Forms![0901 ExomeNGSResults].refresh 'Refresh so that result comments field is updated
         Else
             MsgBox "Please assign a classification before copying to results field", vbExclamation, "Assign Classification"
         End If
