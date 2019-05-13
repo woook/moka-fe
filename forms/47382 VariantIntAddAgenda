@@ -1,0 +1,11 @@
+Option Compare Database
+
+Private Sub Form_Open(Cancel As Integer)
+    'Open smartsheet
+    Dim url As String
+    url = "https://app.smartsheet.com/b/form/822ea2aacc384111a08ef97d85ae7f8b"
+    firefoxurl url
+    'Close the form
+    DoCmd.Close
+End Sub
+
