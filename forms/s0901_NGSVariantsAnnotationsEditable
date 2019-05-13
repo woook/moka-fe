@@ -19,12 +19,13 @@ Private Sub Gene_AfterUpdate()
     Dim sql As String
     Dim rs As ADODB.Recordset
     Dim gene_list As String
+    'User selects the gene for that specific transcript
     'Capture the HGNCID from column 1 of the dropdown and refresh to sync with database
     Me.HGNCID = Me.Gene.Column(1)
     Me.Refresh
-    'Record update to gene in patient log.
+    'Record new gene symbol for this transcript in patient log.
     Call UpdateLog("Gene for transcript " & Me.Transcript, Me.Gene)
-    'Top level variant table contains concatenation of gene symbols from each transcript. After gene is added/updated, re-generate this list
+    'Parent table (NGSvariant table) contains concatenation of gene symbols from each transcript. After gene is added/updated, re-generate this list
     'Pull out distinct list of genes for variant
     sql = "SELECT DISTINCT gene_symbol " & _
             "FROM ngsvariantannotations " & _
@@ -39,7 +40,7 @@ Private Sub Gene_AfterUpdate()
         gene_list = gene_list & ";" & rs.Fields("GENE_SYMBOL")
         rs.MoveNext
     Wend
-    'Update the gene field on parent form and refresh to sync with database
+    'Update the gene field on parent form (which displays Variant level rather than trancript level information) and refresh to sync with database
     Me.Parent.Gene = gene_list
     Me.Parent.Refresh
 End Sub
