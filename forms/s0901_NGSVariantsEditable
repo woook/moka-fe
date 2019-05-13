@@ -1,0 +1,144 @@
+
+Private Function UpdateLog(FieldName As String, ValueNew As String)
+    'Function to record updated value for a field in patient log
+    Dim d As String
+    Dim un As String
+    Dim cn As String
+    d = Format(Now(), "dd/mmm/yyyy Hh:Nn:ss")
+    un = VBA.Environ("USERNAME")
+    cn = VBA.Environ("COMPUTERNAME")
+    patID = Me.Parent.InternalPatientID
+    sqlPatLogVar = "INSERT INTO PatientLog (InternalPatientID, LogEntry, [Date], Login, PCName) " & _
+                   "VALUES (" & patID & ", 'NGS: NGSVariantID " & Me.NGSVariantID & ": " & FieldName & " updated to " & ValueNew & "', #" & d & "#,'" & un & "','" & cn & "')"
+    DoCmd.SetWarnings False
+    DoCmd.RunSQL sqlPatLogVar
+    DoCmd.SetWarnings True
+End Function
+
+Private Sub Form_BeforeUpdate(Cancel As Integer)
+    'Check that all required fields are filled in before updating the record
+    Dim d As String
+    Dim un As String
+    Dim cn As String
+    d = Format(Now(), "dd/mmm/yyyy Hh:Nn:ss")
+    un = VBA.Environ("USERNAME")
+    cn = VBA.Environ("COMPUTERNAME")
+    patID = Me.Parent.InternalPatientID
+    If IsNull(Me.ChromosomeCombo.Value) _
+    Or IsNull(Me.Position_hg19) _
+    Or IsNull(Me.ref) _
+    Or IsNull(Me.Alt) _
+    Or IsNull(Me.genotypeCombo.Value) _
+    Or IsNull(Me.PanelTypeName_combo.Value) Then
+        'If one of the required fields above has not been completed, warn the user and cancel the update
+        MsgBox "Please ensure all required fields are completed: " & vbNewLine & vbNewLine & "hg19 chromosome, hg19 position, hg19 ref, hg19 alt, genotype and panel type."
+        Cancel = True
+    'If there's no NGSVariant ID it means this is a new variant record (as opposed to updating an existing record) so record creation of new variant in patient log
+    ElseIf IsNull(Me.NGSVariantID) Then
+        sqlPatLogVar = "INSERT INTO PatientLog (InternalPatientID, LogEntry, [Date], Login, PCName) " & _
+                       "VALUES (" & patID & ", 'NGS: New variant added hg19 chr" & Me.ChromosomeCombo.Column(1) & " " & Me.Position_hg19 & " " & Me.ref & ">" & Me.Alt & "', #" & d & "#,'" & un & "','" & cn & "')"
+        DoCmd.SetWarnings False
+        DoCmd.RunSQL sqlPatLogVar
+        DoCmd.SetWarnings True
+    End If
+End Sub
+
+Private Sub alt_AfterUpdate()
+    'If there's an exisiting NGSVariant ID, this is an update to an existing record rather than creation of a new one. Therefore record the update in patient log.
+    '(New creations are logged in the Form_BeforeUpdate event above)
+    If Not IsNull(Me.NGSVariantID) Then
+        Call UpdateLog("alt_hg19", Me.Alt)
+    End If
+End Sub
+
+Private Sub CallQuality_AfterUpdate()
+    'If there's an exisiting NGSVariant ID, this is an update to an existing record rather than creation of a new one. Therefore record the update in patient log.
+    '(New creations are logged in the Form_BeforeUpdate event above)
+    If Not IsNull(Me.NGSVariantID) Then
+        Call UpdateLog("Call Quality", Me.CallQuality)
+    End If
+End Sub
+
+Private Sub ChromosomeCombo_AfterUpdate()
+    'If there's an exisiting NGSVariant ID, this is an update to an existing record rather than creation of a new one. Therefore record the update in patient log.
+    '(New creations are logged in the Form_BeforeUpdate event above)
+    If Not IsNull(Me.NGSVariantID) Then
+        'Column 1 (zero based) has the human readable chromosome number
+        Call UpdateLog("Chromosome_19", Me.ChromosomeCombo.Column(1))
+    End If
+End Sub
+
+Private Sub Chromosome38Combo_AfterUpdate()
+    'If there's an exisiting NGSVariant ID, this is an update to an existing record rather than creation of a new one. Therefore record the update in patient log.
+    '(New creations are logged in the Form_BeforeUpdate event above)
+    If Not IsNull(Me.NGSVariantID) Then
+        'Column 1 (zero based) has the human readable chromosome number
+        Call UpdateLog("Chromosome_38", Me.Chromosome38Combo.Column(1))
+    End If
+End Sub
+
+Private Sub Genes_AfterUpdate()
+    'If there's an exisiting NGSVariant ID, this is an update to an existing record rather than creation of a new one. Therefore record the update in patient log.
+    '(New creations are logged in the Form_BeforeUpdate event above)
+    If Not IsNull(Me.NGSVariantID) Then
+        Call UpdateLog("Genes", Me.Genes)
+    End If
+End Sub
+
+Private Sub genotypeCombo_AfterUpdate()
+    'If there's an exisiting NGSVariant ID, this is an update to an existing record rather than creation of a new one. Therefore record the update in patient log.
+    '(New creations are logged in the Form_BeforeUpdate event above)
+    If Not IsNull(Me.NGSVariantID) Then
+        Call UpdateLog("Genotype", Me.genotypeCombo.Column(0))
+    End If
+End Sub
+
+Private Sub PanelTypeName_combo_AfterUpdate()
+    'Panel type names have an associated ID. This is captured from column 0 of the dropdown and stored in PanelType field
+    Me.PanelType = Me.PanelTypeName_combo.Column(0)
+    'If there's an exisiting NGSVariant ID, this is an update to an existing record rather than creation of a new one. Therefore record the update in patient log.
+    '(New creations are logged in the Form_BeforeUpdate event above)
+    If Not IsNull(Me.NGSVariantID) Then
+        Call UpdateLog("PanelTypeName", Me.PanelTypeName_combo.Column(1))
+    End If
+End Sub
+
+Private Sub position_38_AfterUpdate()
+    'If there's an exisiting NGSVariant ID, this is an update to an existing record rather than creation of a new one. Therefore record the update in patient log.
+    '(New creations are logged in the Form_BeforeUpdate event above)
+    If Not IsNull(Me.NGSVariantID) Then
+        Call UpdateLog("Position_38", Me.position_38)
+    End If
+End Sub
+
+Private Sub Position_hg19_AfterUpdate()
+    'If there's an exisiting NGSVariant ID, this is an update to an existing record rather than creation of a new one. Therefore record the update in patient log.
+    '(New creations are logged in the Form_BeforeUpdate event above)
+    If Not IsNull(Me.NGSVariantID) Then
+        Call UpdateLog("Position_19", Me.Position_hg19)
+    End If
+End Sub
+
+Private Sub ref_38_AfterUpdate()
+    'If there's an exisiting NGSVariant ID, this is an update to an existing record rather than creation of a new one. Therefore record the update in patient log.
+    '(New creations are logged in the Form_BeforeUpdate event above)
+    If Not IsNull(Me.NGSVariantID) Then
+        Call UpdateLog("ref_38", Me.ref_38)
+    End If
+End Sub
+
+Private Sub alt_38_AfterUpdate()
+    'If there's an exisiting NGSVariant ID, this is an update to an existing record rather than creation of a new one. Therefore record the update in patient log.
+    '(New creations are logged in the Form_BeforeUpdate event above)
+    If Not IsNull(Me.NGSVariantID) Then
+        Call UpdateLog("alt_38", Me.alt_38)
+    End If
+End Sub
+
+Private Sub ref_AfterUpdate()
+    'If there's an exisiting NGSVariant ID, this is an update to an existing record rather than creation of a new one. Therefore record the update in patient log.
+    '(New creations are logged in the Form_BeforeUpdate event above)
+    If Not IsNull(Me.NGSVariantID) Then
+        Call UpdateLog("ref_19", Me.ref)
+    End If
+End Sub

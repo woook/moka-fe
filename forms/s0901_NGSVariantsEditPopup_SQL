@@ -1,0 +1,2 @@
+SELECT "Name: " & [FirstName] & " " & [LastName] & "     DoB: " & [DoB] & "     PRU: " & [PatientTrustID] AS Patient, NGSTest.NGSTestID, Patients.InternalPatientID
+FROM (NGSTest INNER JOIN Patients ON NGSTest.InternalPatientID = Patients.InternalPatientID) INNER JOIN dbo_patientlinked ON Patients.PatientID = dbo_patientlinked.PatientTrustID;

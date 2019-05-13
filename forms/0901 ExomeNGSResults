@@ -10,6 +10,7 @@ Private Sub Form_Current()
         Form_s0901_WESTestResults.VCFImport.Enabled = False
         Form_s0901_WESTestResults.FilterImport.Enabled = False
         Form_s0901_WESTestResults.RemoveAll.Enabled = False
+        Form_s0901_WESTestResults.EditVars.Enabled = False
         Form_s0901_NGSVariants.AllowEdits = False
         Form_s09_referpheno.AllowEdits = False
         Form_s09_referpheno.AllowDeletions = False
@@ -35,6 +36,7 @@ ElseIf (Not IsNull(Form_s0901_WESTestResults.Checker4) And Not IsNull(Form_s0901
         Form_s0901_WESTestResults.VCFImport.Enabled = False
         Form_s0901_WESTestResults.FilterImport.Enabled = False
         Form_s0901_WESTestResults.RemoveAll.Enabled = False
+        Form_s0901_WESTestResults.EditVars.Enabled = False
         Form_s0901_NGSVariants.AllowEdits = False
         Form_s09_referpheno.AllowEdits = False
         Form_s09_referpheno.AllowDeletions = False
@@ -51,6 +53,7 @@ ElseIf (Not IsNull(Form_s0901_WESTestResults.Checker4) And Not IsNull(Form_s0901
         Form_s0901_WESTestResults.VCFImport.Enabled = True
         Form_s0901_WESTestResults.FilterImport.Enabled = True
         Form_s0901_WESTestResults.RemoveAll.Enabled = True
+        Form_s0901_WESTestResults.EditVars.Enabled = True
         Form_s0901_NGSVariants.AllowEdits = True
         Form_s09_referpheno.AllowEdits = True
         Form_s09_referpheno.AllowDeletions = True
@@ -242,6 +245,25 @@ Dim stDocName As String
     DoCmd.OpenForm stDocName, acFormDS, , stLinkCriteria
 End Sub
 
+
+Private Sub result_code_AfterUpdate()
+    'Log that result code has been updated
+    Dim dt As String
+    Dim usr As String
+    Dim cn As String
+    Dim sql As String
+    
+    dt = Format(Now, "dd/mmm/yyyy Hh:Nn:ss")
+    usr = VBA.Environ("USERNAME")
+    cn = VBA.Environ("COMPUTERNAME")
+    
+    sql = "INSERT INTO PatientLog (InternalPatientID, LogEntry, [Date], Login, PCName) " & _
+          "VALUES (" & Me.InternalPatientID & ", 'NGS: NGSTest result code updated to " & Me.result_code.Column(1) & " for NGSTestID " & Me.NGSTestID & _
+                  "', #'" & dt & "'#, '" & usr & "', '" & cn & "')"
+    DoCmd.SetWarnings False
+    DoCmd.RunSQL sql
+    DoCmd.SetWarnings True
+End Sub
 
 Private Sub txt_result_AfterUpdate()
 

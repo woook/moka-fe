@@ -7,7 +7,13 @@ Private Sub btn_Coverage_Click()
         stLinkCriteria = "[NGSTestID] = " & Me.NGSTestID
         DoCmd.OpenForm "s0901_NGSCoveragePopup", , , stLinkCriteria
     End If
+End Sub
 
+Private Sub EditVars_Click()
+    'Open form for manually adding/editing variants
+    stDocName = "s0901_NGSVariantsEditPopup" ' define name of the form to open
+    stLinkCriteria = "[NGSTestID] = " & Me.NGSTestID ' Link the two forms on NGSTestID and Patient ID
+    DoCmd.OpenForm stDocName, , , stLinkCriteria, acFormEdit
 End Sub
 
 Private Sub Form_Current()
@@ -530,7 +536,7 @@ Private Sub VCFImport_Click()
             'Have to do it this way because calculating the count on the fly in subform recordsource query makes the subform read only, so classifcation, comments etc. can't be updated
             'This is recalculated every time the results form is opened, so up to date number is always displayed to user.
             ' Refresh is required to sync imported variants from Python script
-            Me.refresh
+            Me.Refresh
             Dim sqlPrevVars As String
             Dim rsPrevVars As ADODB.Recordset
             'Query below returns the variant ID and number of previous records for each variant associated with this test.
@@ -1309,7 +1315,7 @@ Function UpdatePatientRes()
     
 ' update record
     A!OverallResultComments = S
-    A.Update
+    A.update
 
 ' update Patient log
     PL = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + ",'Patient: Result changed to [" + S + "]',#" + dt + "#,'" + usr + "','" + cn + "')"
