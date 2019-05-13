@@ -1,0 +1,3 @@
+SELECT NGSVariant.*
+FROM NGSVariant
+ORDER BY NGSVariant.gnomad_Hom_count, NGSVariant.Position_hg19;
