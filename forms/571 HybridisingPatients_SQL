@@ -1,0 +1,26 @@
+SELECT Status.Status AS [Array status],
+       Status_1.Status AS [Patient status],
+       Referral.Referral,
+       ArrayLabelling.ArrayRunNumber,
+       Patients.PatientID,
+       Status.StatusID
+
+  FROM ((((Status
+       INNER JOIN ArrayTest
+       ON Status.StatusID = ArrayTest.StatusID)
+       
+       INNER JOIN Patients
+       ON ArrayTest.InternalPatientID = Patients.InternalPatientID)
+
+       INNER JOIN Referral
+       ON ArrayTest.ReferralID = Referral.ReferralID)
+       
+       LEFT JOIN ArrayLabelling
+       ON ArrayTest.DNALabellingID = ArrayLabelling.DNALabellingID)
+
+       INNER JOIN Status AS Status_1
+       ON Patients.s_StatusOverall = Status_1.StatusID
+
+ WHERE Status.StatusID=1168443123
+
+ORDER BY ArrayLabelling.ArrayRunNumber DESC;
