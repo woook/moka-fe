@@ -1,6 +1,6 @@
 USE [mokadata]
 GO
-/****** Object:  Table [dbo].[ArrayTest]    Script Date: 07/04/2019 16:36:47 ******/
+/****** Object:  Table [dbo].[ArrayTest]    Script Date: 07/04/2019 17:47:15 ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -31,6 +31,8 @@ CREATE TABLE [dbo].[ArrayTest](
 	[Check05Date] [datetime] NULL,
 	[Check1ID] [int] NULL,
 	[Check1Date] [datetime] NULL,
+	[Check15ID] [int] NULL,
+	[Check15Date] [datetime] NULL,
 	[Check2ID] [int] NULL,
 	[Check2Date] [datetime] NULL,
 	[Check3ID] [int] NULL,
