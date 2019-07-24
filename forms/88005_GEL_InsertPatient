@@ -145,10 +145,11 @@ On Error GoTo Err_ListPatientFound_DblClick
 
     End If
     ' populate the subform record source
-    Me.s88005_updateNGSTest.Form.RecordSource = "SELECT Patients.BookinLastName & ' ' & Patients.BookinFirstName AS Name, NGSTest.Check4Date, " & _
-    "NGSTest.NGSTestID, NGSTest.InternalPatientID, NGSTest.GELProbandID, NGSTest.IRID, NGSTest.BookBy, NGSTest.StatusID, NGSTest.ResultCode, NGSTest.ReferralID " & _
-    "FROM NGSTest INNER JOIN Patients ON NGSTest.InternalPatientID = Patients.InternalPatientID " & _
-    "WHERE (NGSTest.ReferralID=1199901218) AND Patients.InternalPatientID = " & strInternalPatientID
+    Me.s88005_updateNGSTest.Form.RecordSource = "SELECT Patients.BookinLastName & ' ' & Patients.BookinFirstName AS Name, NGSTest.ResultBuild, NGSTest.Check4Date, " & _
+                                                       "NGSTest.NGSTestID, NGSTest.InternalPatientID, NGSTest.GELProbandID, NGSTest.IRID, NGSTest.BookBy, NGSTest.StatusID, " & _
+                                                       "NGSTest.ResultCode, NGSTest.ReferralID, NGSTest.BlockAutomatedReporting " & _
+                                                  "FROM NGSTest INNER JOIN Patients ON NGSTest.InternalPatientID = Patients.InternalPatientID " & _
+                                                 "WHERE (NGSTest.ReferralID=1199901218) AND Patients.InternalPatientID = " & strInternalPatientID
     ' requery the subform
     Me.s88005_updateNGSTest.Requery
     
