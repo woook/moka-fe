@@ -1,3 +1,4 @@
+
 Option Compare Database
 
 Private Sub btn_Coverage_Click()
@@ -68,38 +69,111 @@ End If
 End Sub
 
 
+Private Function prevVars()
+    'Find number of other variants within +/- 2bp and add to NGSVariant table
+    Dim sqlCurrentVars As String
+    Dim sqlPrevVars As String
+    Dim rsCurrentVars As ADODB.Recordset
+    Dim rsPrevVar As ADODB.Recordset
+    'Pull out all variants for this NGSTest
+    'We want to batch the updates up client side then push to server in single commit (it's very slow otherwise).
+    'For this need adUseClient to tell it to do batching client side (default is server side) and adLockBatchOptimistic to enable batch updates
+    sqlCurrentVars = "SELECT * " & _
+                       "FROM NGSVariant " & _
+                      "WHERE NGSVariant.NGSTestID = " & Me.Parent.NGSTestID
+    Set rsCurrentVars = New ADODB.Recordset
+    rsCurrentVars.CursorLocation = adUseClient
+    rsCurrentVars.Open sqlCurrentVars, CurrentProject.Connection, adOpenKeyset, adLockBatchOptimistic
+    'Count number of overlapping previous variants (with 2bp padding) for each variant in this NGStest
+    sqlPrevVars = "SELECT NGSVariant.NGSVariantID, " & _
+                         "(SELECT Count(*) " & _
+                            "FROM NGSVariant " & _
+                           "WHERE NGSVariant.NGSTestID <> currentVar.NGSTestID " & _
+                             "AND NGSVariant.ChrID = currentVar.ChrID " & _
+                             "AND NGSVariant.Position_hg19 <= (currentVar.Position_hg19+Len(currentVar.ref)+1) " & _
+                             "AND (NGSVariant.Position_hg19+Len(NGSVariant.ref)-1) >= (currentVar.Position_hg19-2)) AS countPrev " & _
+                    "FROM NGSVariant AS currentVar " & _
+                         "INNER JOIN NGSVariant ON currentVar.NGSVariantID = NGSVariant.NGSVariantID " & _
+                   "WHERE NGSVariant.NGSTestID = " & Me.Parent.NGSTestID
+    Set rsPrevVar = New ADODB.Recordset
+    rsPrevVar.Open sqlPrevVars, CurrentProject.Connection, adOpenKeyset
+    'Loop through each variant in this NGStest
+    While Not rsCurrentVars.EOF
+        'Lookup the number of +/-2bp variants for this variant in the rsPrevVar query results
+        '(Need to move back to first record each time, so that Find method searches entire recordset)
+        rsPrevVar.MoveFirst
+        rsPrevVar.Find "NGSVariantID = " & rsCurrentVars("NGSVariantID")
+        'Update the relVars field in the local recordset with this count
+        rsCurrentVars("relVars") = rsPrevVar("countPrev")
+        'Move to the next variant
+        rsCurrentVars.MoveNext
+    Wend
+    'Push local updates to the server
+    rsCurrentVars.UpdateBatch
+    Set rsCurrentVars = Nothing
+    Set rsPrevVar = Nothing
+    Me.Requery 'Update variant subform
+End Function
+
 Private Sub Form_Load()
-' If genome build has not been set, set to default  109 = HG19
-If IsNull(Me![comb_WESResultBuild]) Then
-    Me!comb_WESResultBuild = 109
-End If
-
-'Find number of other variants within +/- 2bp and add to NGSVariant table
-Dim sqlPrevVars As String
-Dim rsPrevVar As ADODB.Recordset
-sqlPrevVars = "SELECT NGSVariant.NGSVariantID, (SELECT Count(*) FROM NGSVariant WHERE NGSVariant.NGSTestID <> currentVar.NGSTestID AND NGSVariant.ChrID=currentVar.ChrID AND NGSVariant.Position_hg19>=(currentVar.Position_hg19-2) And NGSVariant.Position_hg19<=(currentVar.Position_hg19+Len(currentVar.ref)+1)) AS countPrev FROM NGSVariant AS currentVar INNER JOIN NGSVariant ON currentVar.NGSVariantID = NGSVariant.NGSVariantID WHERE NGSVariant.NGSTestID = " & Me.Parent.NGSTestID
-Set rsPrevVar = New ADODB.Recordset
-rsPrevVar.Open sqlPrevVars, CurrentProject.Connection, adOpenKeyset
-While Not rsPrevVar.EOF
-    sqlUpdate = "UPDATE NGSVariant SET relVars = " & rsPrevVar.Fields("countPrev") & " WHERE NGSVariantID = " & rsPrevVar.Fields("NGSVariantID")
-    DoCmd.SetWarnings False
-    DoCmd.RunSQL sqlUpdate
-    DoCmd.SetWarnings True
-    rsPrevVar.MoveNext
-Wend
-Set rsPrevVar = Nothing
-Me.Requery 'Update variant subform
-
-
-'lock down result feld if test statusID = reported, completed or failed
-If Me.StatusID = 4 Or Me.StatusID = 1202218814 Or Me.StatusID = 1202218815 Or Me.StatusID = 1202218816 Then
-        Me.Parent.txt_result.Locked = True
-Else
-        Me.Parent.txt_result.Locked = False
-End If
-
+    'Find number previous overlapping variants
+    Call prevVars
+    
+    ' If genome build has not been set, set to default  109 = HG19
+    If IsNull(Me![comb_WESResultBuild]) Then
+        Me!comb_WESResultBuild = 109
+    End If
+    
+    
+    'lock down result feld if test statusID = reported, completed or failed
+    If Me.StatusID = 4 Or Me.StatusID = 1202218814 Or Me.StatusID = 1202218815 Or Me.StatusID = 1202218816 Then
+            Me.Parent.txt_result.Locked = True
+    Else
+            Me.Parent.txt_result.Locked = False
+    End If
 End Sub
 
+
+Private Sub import_100k_Click()
+    'Pass VCF filepath and test details to python script to parse VCF and insert records into Moka NGSVariants table
+    Dim wsh As Object
+    Dim pythonPath As String
+    Dim scriptPath As String
+    Dim wshexec As Object
+    Dim errReport As String
+    Dim int_pat_id As String
+    Dim ngs_test_id As String
+    Dim ir_id As String
+    Dim proband_id As String
+    If vbYes = MsgBox("Import 100k variants for this case?", vbYesNo + vbQuestion, "Continue?") Then
+        Set wsh = CreateObject("WScript.Shell")
+        ' set path to the python executable
+        pythonPath = "\\gstt.local\Shared\Genetics_Data2\Array\Software\Python\python.exe"
+        ' set path to the script which will import the variants
+        scriptPath = "\\gstt.local\Apps\Moka\Files\Software\100K\100k_variant_import.py"
+        ' capture the patientID and NGSTestID from the form to pass to python script
+        int_pat_id = Me.Parent.InternalPatientID
+        ngs_test_id = Me.Parent.NGSTestID
+        ir_id = Me.IRID
+        proband_id = Me.GELProbandID
+        ' Run script.
+        Set wshexec = wsh.Exec("cmd.exe /S /C " & pythonPath & " " & scriptPath & " --ir_id " & ir_id & " --proband_id " & proband_id & " --ngstest_id " & ngs_test_id & " --internal_pat_id " & int_pat_id & " 2>&1")
+        'DoEvents pauses VBA until python script has finished running. wshexec.status is 0 while running and 1 when finished
+        Do While wshexec.Status = 0
+            DoEvents
+        Loop
+        'Capture any error messages from python script (stdout is redirected to stderr in command)
+        errReport = wshexec.StdOut.readall()
+        ' Report any standard error in msgbox
+        If errReport <> "" Then
+            MsgBox "The following error was encountered when attempting to import 100k variants: " & vbNewLine & vbNewLine & errReport, vbCritical, "ERROR"
+        End If
+        ' Refresh is required to sync imported variants from Python script
+        Me.refresh
+        'Find number previous overlapping variants
+        Call prevVars
+    End If
+End Sub
 
 Private Sub Primary_Panel_DblClick(Cancel As Integer)
     If Not IsNull(Me.PrimaryPanelID) Then
@@ -307,7 +381,7 @@ Private Sub VCFImport_Click()
     Dim fDialog As Office.FileDialog
     Dim selectedFile As Variant
     Dim pythonPath As String
-    Dim ScriptPath As String
+    Dim scriptPath As String
     Dim csFileLst  As String
     Set vcfDict = CreateObject("scripting.dictionary")
     Dim loopcount As Integer
@@ -418,13 +492,13 @@ Private Sub VCFImport_Click()
         ' set path to the python executable
         pythonPath = "\\gstt.local\Shared\Genetics_Data2\Array\Software\Python\python.exe"
         ' set path to the script which will import the variants
-        ScriptPath = "\\gstt.local\Apps\Moka\Files\Software\VCFImport\VCFImport.py"
+        scriptPath = "\\gstt.local\Apps\Moka\Files\Software\VCFImport\VCFImport.py"
         ' capture the patientID and NGSTestID from the form to pass to python script
         patID = Me.Parent.InternalPatientID
         NGSTestID = Me.Parent.NGSTestID
     
         'Execute python script with required arguments. "2>&1" at the end redirects StdErr (2) to StdOut (1)
-        Set wshexec = wsh.Exec("cmd.exe /S /C " & pythonPath & " " & ScriptPath & " """ & csFileLst & """ " & patID & " " & NGSTestID & " 2>&1")
+        Set wshexec = wsh.Exec("cmd.exe /S /C " & pythonPath & " " & scriptPath & " """ & csFileLst & """ " & patID & " " & NGSTestID & " 2>&1")
         
         'DoEvents pauses VBA until python script has finished running. wshexec.status is 0 while running and 1 when finished
         Do While wshexec.Status = 0
@@ -432,7 +506,7 @@ Private Sub VCFImport_Click()
         Loop
 
         'Capture any error messages from python script (StdErr has been redirected to StdOut, see above)
-        errReport = wshexec.Stdout.readall()
+        errReport = wshexec.StdOut.readall()
 
         ' Report any standard error in msgbox
         If errReport <> "" Then
@@ -536,26 +610,10 @@ Private Sub VCFImport_Click()
             'Have to do it this way because calculating the count on the fly in subform recordsource query makes the subform read only, so classifcation, comments etc. can't be updated
             'This is recalculated every time the results form is opened, so up to date number is always displayed to user.
             ' Refresh is required to sync imported variants from Python script
-            Me.Refresh
-            Dim sqlPrevVars As String
-            Dim rsPrevVars As ADODB.Recordset
-            'Query below returns the variant ID and number of previous records for each variant associated with this test.
-            sqlPrevVars = "SELECT NGSVariant.NGSVariantID, (SELECT Count(*) FROM NGSVariant WHERE NGSVariant.NGSTestID <> currentVar.NGSTestID AND NGSVariant.ChrID=currentVar.ChrID AND NGSVariant.Position_hg19>=(currentVar.Position_hg19-2) And NGSVariant.Position_hg19<=(currentVar.Position_hg19+Len(currentVar.ref)+1)) AS countPrev FROM NGSVariant AS currentVar INNER JOIN NGSVariant ON currentVar.NGSVariantID = NGSVariant.NGSVariantID WHERE NGSVariant.NGSTestID = " & NGSTestID
-            Set rsPrevVars = New ADODB.Recordset
-            rsPrevVars.Open sqlPrevVars, CurrentProject.Connection, adOpenKeyset
-            'For each variant, update the relVars field of NGSVariant table
-            While Not rsPrevVars.EOF
-                sqlUpdate = "UPDATE NGSVariant SET relVars = " & rsPrevVars.Fields("countPrev") & " WHERE NGSVariantID = " & rsPrevVars.Fields("NGSVariantID")
-                DoCmd.SetWarnings False
-                DoCmd.RunSQL sqlUpdate
-                DoCmd.SetWarnings True
-                rsPrevVars.MoveNext
-            Wend
-            'unset variables
-            Set rsPrevVars = Nothing
+            Me.refresh
+            'Find number previous overlapping variants
+            Call prevVars
             Set wsh = Nothing
-            'Requery subform
-            Me.Requery
             End If
 
     Else
