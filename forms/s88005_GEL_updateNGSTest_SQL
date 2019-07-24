@@ -1,3 +1,3 @@
-SELECT [BookinLastName] & " " & [BookinFirstName] AS Name, NGSTest.NGSTestID, NGSTest.InternalPatientID, NGSTest.GELProbandID, NGSTest.IRID, NGSTest.BookBy, NGSTest.StatusID, NGSTest.ResultCode, NGSTest.referralid, NGSTest.Check4Date, NGSTest.BlockAutomatedReporting
+SELECT [BookinLastName] & " " & [BookinFirstName] AS Name, NGSTest.NGSTestID, NGSTest.InternalPatientID, NGSTest.GELProbandID, NGSTest.IRID, NGSTest.BookBy, NGSTest.StatusID, NGSTest.ResultCode, NGSTest.referralid, NGSTest.Check4Date, NGSTest.ResultBuild, NGSTest.BlockAutomatedReporting
 FROM NGSTest INNER JOIN Patients ON NGSTest.InternalPatientID = Patients.InternalPatientID
 WHERE (((NGSTest.NGSTestID)=0) AND ((NGSTest.referralid)=1199901218));
