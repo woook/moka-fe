@@ -97,6 +97,41 @@ Private Sub IRID_AfterUpdate()
 
 End Sub
 
+Private Sub IRID_DblClick(Cancel As Integer)
+    Dim strAddNGSTest As String
+    Dim strPatLogTest As String
+    Dim dt As String
+    Dim un As String
+    Dim cn As String
+    ' If user double clicks interpretation request, they can generate a new GeL case for this patient
+    If vbYes = MsgBox("Create an additional 100k test for this patient?", vbYesNo + vbQuestion, "Continue?") Then
+        If Not IsNull(Me.GELProbandID) And Not IsNull(Me.BookBy) And Not IsNull(Me.IRID) Then
+            ' set date, username and computer name as required by log tables
+            dt = Format(Now, "dd/mmm/yyyy Hh:Nn:ss")
+            un = VBA.Environ("USERNAME")
+            cn = VBA.Environ("COMPUTERNAME")
+            ' referralID = 100K RD, statusID = 'Pending', bookby and BookingAuthorisedByID = NA - these will be assigned in the subform
+            strAddNGSTest = "INSERT INTO NGSTest (InternalPatientID, ReferralID, StatusID, DateRequested, BookBy, BookingAuthorisedByID, Service, GELProbandID) " & _
+                            "VALUES (" & CStr(Me.InternalPatientID) & ", 1199901218, 2, now(), " & Me.BookBy & ", 1201865434, 0, " & Me.GELProbandID & ")"
+            ' execute insert statement
+            DoCmd.SetWarnings False
+            DoCmd.RunSQL strAddNGSTest
+            DoCmd.SetWarnings True
+            
+            'Record logs of NGSTest creation
+            strPatLogTest = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) " & _
+                            "VALUES (" & CStr(Me.InternalPatientID) & ", 'NGS: GeL test request added.',#" + dt + "#,'" + un + "','" + cn + "')"
+            DoCmd.SetWarnings False
+            DoCmd.RunSQL strPatLogTest
+            DoCmd.SetWarnings True
+            'requery the subform
+            Me.Requery
+        Else
+            MsgBox "Please enter '100k Participant ID', 'Interpretation Request ID' and 'Referring Clinician' for existing test"
+        End If
+    End If
+End Sub
+
 Private Sub Name_DblClick(Cancel As Integer)
     ' Open the patient details form when double click on Name
     Dim stDocName As String
@@ -107,4 +142,27 @@ Private Sub Name_DblClick(Cancel As Integer)
     stLinkCriteria = "[InternalPatientID]=" & Me![InternalPatientID]
     ' open the form using linking criteria defined above
     DoCmd.OpenForm stDocName, , , stLinkCriteria
+End Sub
+
+Private Sub ResultBuild_AfterUpdate()
+    Dim dt As String
+    Dim un As String
+    Dim cn As String
+    Dim log_message As String
+    ' set date, username and computer name as required by log tables
+    dt = Format(Now, "dd/mmm/yyyy Hh:Nn:ss")
+    un = VBA.Environ("USERNAME")
+    cn = VBA.Environ("COMPUTERNAME")
+    If IsNull(Me.ResultBuild) Then
+        log_message = "GEL NGS Test: Genome build deleted"
+    Else
+        log_message = "GEL NGS Test: Genome build updated to " + Me.ResultBuild.Column(1)
+    End If
+    'SQL statement for PatientLog
+    sqlPatLog = "INSERT INTO PatientLog (InternalPatientID, LogEntry, [Date], Login, PCName) " & _
+                "VALUES (" + CStr(Me.InternalPatientID) + ", '" + log_message + "',#" + dt + "#,'" + un + "','" + cn + "')"
+    'Execute SQL statements
+    DoCmd.SetWarnings False
+    DoCmd.RunSQL sqlPatLog
+    DoCmd.SetWarnings True
 End Sub
