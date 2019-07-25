@@ -1,0 +1,11 @@
+Public Function valid_seq(sequence As String) As Boolean
+    'Check a sequence string only contains ACGT
+    Dim regex As New RegExp
+    regex.IgnoreCase = False
+    regex.Pattern = "^[ACGT]*$"
+    If regex.Test(sequence) Then
+        valid_seq = True
+    Else
+        valid_seq = False
+    End If
+End Function
