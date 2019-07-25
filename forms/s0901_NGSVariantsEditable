@@ -20,23 +20,39 @@ Private Sub Form_BeforeUpdate(Cancel As Integer)
     Dim d As String
     Dim un As String
     Dim cn As String
+    Dim b37_entered As Boolean
+    Dim b38_entered As Boolean
     d = Format(Now(), "dd/mmm/yyyy Hh:Nn:ss")
     un = VBA.Environ("USERNAME")
     cn = VBA.Environ("COMPUTERNAME")
     patID = Me.Parent.InternalPatientID
-    If IsNull(Me.ChromosomeCombo.Value) _
-    Or IsNull(Me.Position_hg19) _
-    Or IsNull(Me.ref) _
-    Or IsNull(Me.Alt) _
-    Or IsNull(Me.genotypeCombo.Value) _
-    Or IsNull(Me.PanelTypeName_combo.Value) Then
-        'If one of the required fields above has not been completed, warn the user and cancel the update
-        MsgBox "Please ensure all required fields are completed: " & vbNewLine & vbNewLine & "hg19 chromosome, hg19 position, hg19 ref, hg19 alt, genotype and panel type."
+    'Check if build 37 fields filled in
+    b37_entered = False
+    If Not IsNull(Me.ChromosomeCombo.Value) _
+    And Not IsNull(Me.Position_hg19) _
+    And Not IsNull(Me.ref) _
+    And Not IsNull(Me.alt) _
+    And Not IsNull(Me.genotype_37.Value) Then
+        b37_entered = True
+    End If
+    'Check if build 38 fields filled in
+    b38_entered = False
+    If Not IsNull(Me.Chromosome38Combo.Value) _
+    And Not IsNull(Me.position_38) _
+    And Not IsNull(Me.ref_38) _
+    And Not IsNull(Me.alt_38) _
+    And Not IsNull(Me.genotype_38.Value) Then
+        b38_entered = True
+    End If
+    'Check that panel and atleast one of b37 or b38 details have been added
+    If IsNull(Me.PanelTypeName_combo.Value) Or (b37_entered = False And b38_entered = False) Then
+        'If required fields above has not been completed, warn the user and cancel the update
+        MsgBox "Please ensure all required fields are completed: " & vbNewLine & vbNewLine & "panel type " & vbNewLine & "chromosome, position, ref, alt, and genotype for at least one build."
         Cancel = True
     'If there's no NGSVariant ID it means this is a new variant record (as opposed to updating an existing record) so record creation of new variant in patient log
     ElseIf IsNull(Me.NGSVariantID) Then
         sqlPatLogVar = "INSERT INTO PatientLog (InternalPatientID, LogEntry, [Date], Login, PCName) " & _
-                       "VALUES (" & patID & ", 'NGS: New variant added hg19 chr" & Me.ChromosomeCombo.Column(1) & " " & Me.Position_hg19 & " " & Me.ref & ">" & Me.Alt & "', #" & d & "#,'" & un & "','" & cn & "')"
+                       "VALUES (" & patID & ", 'NGS: New variant added hg19 chr" & Me.ChromosomeCombo.Column(1) & " " & Me.Position_hg19 & " " & Me.ref & ">" & Me.alt & "', #" & d & "#,'" & un & "','" & cn & "')"
         DoCmd.SetWarnings False
         DoCmd.RunSQL sqlPatLogVar
         DoCmd.SetWarnings True
@@ -47,7 +63,7 @@ Private Sub alt_AfterUpdate()
     'If there's an exisiting NGSVariant ID, this is an update to an existing record rather than creation of a new one. Therefore record the update in patient log.
     '(New creations are logged in the Form_BeforeUpdate event above)
     If Not IsNull(Me.NGSVariantID) Then
-        Call UpdateLog("alt_hg19", Me.Alt)
+        Call UpdateLog("alt_hg19", Me.alt)
     End If
 End Sub
 
@@ -85,11 +101,19 @@ Private Sub Genes_AfterUpdate()
     End If
 End Sub
 
-Private Sub genotypeCombo_AfterUpdate()
+Private Sub genotype_38_AfterUpdate()
     'If there's an exisiting NGSVariant ID, this is an update to an existing record rather than creation of a new one. Therefore record the update in patient log.
     '(New creations are logged in the Form_BeforeUpdate event above)
     If Not IsNull(Me.NGSVariantID) Then
-        Call UpdateLog("Genotype", Me.genotypeCombo.Column(0))
+        Call UpdateLog("genotype_38", Me.genotype_38.Column(0))
+    End If
+End Sub
+
+Private Sub genotype_37_AfterUpdate()
+    'If there's an exisiting NGSVariant ID, this is an update to an existing record rather than creation of a new one. Therefore record the update in patient log.
+    '(New creations are logged in the Form_BeforeUpdate event above)
+    If Not IsNull(Me.NGSVariantID) Then
+        Call UpdateLog("Genotype", Me.genotype_37.Column(0))
     End If
 End Sub
 
@@ -140,5 +164,45 @@ Private Sub ref_AfterUpdate()
     '(New creations are logged in the Form_BeforeUpdate event above)
     If Not IsNull(Me.NGSVariantID) Then
         Call UpdateLog("ref_19", Me.ref)
+    End If
+End Sub
+
+Private Sub ref_BeforeUpdate(Cancel As Integer)
+    'Validate that string only contains uppercase ACGT
+    If Not IsNull(Me.ref) Then
+        If Not valid_seq(Me.ref) Then
+            MsgBox "Reference sequence must only contain characters A, C, G and T"
+            Cancel = True
+        End If
+    End If
+End Sub
+
+Private Sub alt_BeforeUpdate(Cancel As Integer)
+    'Validate that string only contains uppercase ACGT
+    If Not IsNull(Me.alt) Then
+        If Not valid_seq(Me.alt) Then
+            MsgBox "Reference sequence must only contain characters A, C, G and T"
+            Cancel = True
+        End If
+    End If
+End Sub
+
+Private Sub ref_38_BeforeUpdate(Cancel As Integer)
+    'Validate that string only contains uppercase ACGT
+    If Not IsNull(Me.ref_38) Then
+        If Not valid_seq(Me.ref_38) Then
+            MsgBox "Reference sequence must only contain characters A, C, G and T"
+            Cancel = True
+        End If
+    End If
+End Sub
+
+Private Sub alt_38_BeforeUpdate(Cancel As Integer)
+    'Validate that string only contains uppercase ACGT
+    If Not IsNull(Me.alt_38) Then
+        If Not valid_seq(Me.alt_38) Then
+            MsgBox "Reference sequence must only contain characters A, C, G and T"
+            Cancel = True
+        End If
     End If
 End Sub
