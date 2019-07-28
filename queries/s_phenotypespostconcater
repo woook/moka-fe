@@ -1,0 +1,4 @@
+SELECT s_phenotypesforconcater.InternalPatientID, Concater("Phenotype","InternalPatientID",[InternalPatientID],"S_phenotypesforconcater") AS ReferredFor
+FROM s_phenotypesforconcater
+GROUP BY s_phenotypesforconcater.InternalPatientID
+HAVING (((s_phenotypesforconcater.InternalPatientID) Is Not Null));
