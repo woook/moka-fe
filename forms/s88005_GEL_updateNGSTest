@@ -73,6 +73,20 @@ Private Sub GELProbandID_AfterUpdate()
     DoCmd.RunSQL sqlMemo
     DoCmd.SetWarnings True
 End Sub
+
+Private Sub IRID_BeforeUpdate(Cancel As Integer)
+    'Validate that interpretation request in correct format
+    Dim regex As New RegExp
+    If Not IsNull(Me.IRID) Then
+        regex.IgnoreCase = False
+        regex.Pattern = "^\d+-\d+$"
+        If Not regex.Test(Me.IRID) Then
+            MsgBox "Interpretation request ID should be entered in format <id>-<version> e.g. 12345-1"
+            Cancel = True
+        End If
+    End If
+End Sub
+
 Private Sub IRID_AfterUpdate()
     Dim dt As String
     Dim un As String
