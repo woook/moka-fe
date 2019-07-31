@@ -29,6 +29,21 @@ Private Sub Form_DblClick(Cancel As Integer)
     stLinkCriteria = "[ChrID19]=" & Me![ChrID19]
     DoCmd.OpenForm stDocName, acFormDS, , stLinkCriteria
 End Sub
+
+'' The report prenatally field must be populated if class 4 or class 5
+'' this function prevents a class 4 or 5 classification being entered when the report prenatally field is null
+Private Sub Pathogenic_BeforeUpdate(Cancel As Integer)
+    ' if pathogenic status is any of the class 4 or class 5 categories
+    If Me![Pathogenic] = 1202218783 Or Me![Pathogenic] = 1202218788 Or Me![Pathogenic] = 1202218792 Or Me![Pathogenic] = 1202218791 Then
+        ' if the report prenatally is also null
+        If IsNull(Me.ReportPrenatally) Then
+            ' show message box and cancel any changes
+            MsgBox ("Please ensure causative/secondary finding is recorded if class 4 or 5")
+            Cancel = True
+        End If
+    End If
+End Sub
+
 '' Open variant assessment form
 Private Sub Pathogenic_DblClick(Cancel As Integer)
     Dim stDocName As String
@@ -170,7 +185,7 @@ Private Sub DNALabellingID_DblClick(Cancel As Integer)
             End If
 
         cxn!ArrayResultComment = NewResultCommentText
-        cxn.Update
+        cxn.update
         Set cxn = Nothing
 
     'If this is the patient with a CNV, add ISNC to result field
@@ -196,7 +211,7 @@ Private Sub DNALabellingID_DblClick(Cancel As Integer)
             End If
     
         cxn![ArrayResult] = NewResultText
-        cxn.Update
+        cxn.update
         Set cxn = Nothing
         
         'logging
@@ -204,14 +219,14 @@ Private Sub DNALabellingID_DblClick(Cancel As Integer)
         Set cxn2 = New ADODB.Recordset
         Dim SQLlogquery As String
         Dim DateStamp As String
-        Dim username As String
-        Dim ComputerName As String
+        Dim UserName As String
+        Dim computername As String
 
         DateStamp = Format(Now, "dd/mmm/yyyy Hh:Nn:ss")
-        username = VBA.Environ("USERNAME")
-        ComputerName = VBA.Environ("COMPUTERNAME")
+        UserName = VBA.Environ("USERNAME")
+        computername = VBA.Environ("COMPUTERNAME")
     
-        SQLlogquery = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + ",'Array test: Result changed to " + NewResultText + " from HybID " + Me![DNALabellingID].Column(1) + "',#" + DateStamp + "#,'" + username + "','" + ComputerName + "')"
+        SQLlogquery = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + ",'Array test: Result changed to " + NewResultText + " from HybID " + Me![DNALabellingID].Column(1) + "',#" + DateStamp + "#,'" + UserName + "','" + computername + "')"
         cxn2.Open SQLlogquery, CurrentProject.Connection
         Set cxn2 = Nothing
         
@@ -291,7 +306,7 @@ Private Sub Pathogenic_Change()
             End If
         
         e!ArrayResultComment = b
-        e.Update
+        e.update
         Set e = Nothing
     
         v = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + ",'Array test: " + Me![Band19] + " " + f + " classified as " + h + " from HybID " + Me![DNALabellingID].Column(1) + "',#" + d + "#,'" + un + "','" + cn + "')"
@@ -336,7 +351,7 @@ Private Sub Band19_DblClick(Cancel As Integer)
             End If
         
         e!CandidateAbnormality = b
-        e.Update
+        e.update
         Set e = Nothing
     
         [Form_09 ArrayResultsByPostition].Requery
