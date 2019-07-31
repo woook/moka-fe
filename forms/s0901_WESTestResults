@@ -119,8 +119,8 @@ Private Sub Form_Load()
     'Find number previous overlapping variants
     Call prevVars
     
-    ' If genome build has not been set, set to default  109 = HG19
-    If IsNull(Me![comb_WESResultBuild]) Then
+    ' If genome build has not been set and it's a WES test, set to default  109 = HG19
+    If IsNull(Me![comb_WESResultBuild]) And Me.GroupTypeID = 14 Then
         Me!comb_WESResultBuild = 109
     End If
     
@@ -163,7 +163,7 @@ Private Sub import_100k_Click()
             DoEvents
         Loop
         'Capture any error messages from python script (stdout is redirected to stderr in command)
-        errReport = wshexec.StdOut.readall()
+        errReport = wshexec.Stdout.readall()
         ' Report any standard error in msgbox
         If errReport <> "" Then
             MsgBox "The following error was encountered when attempting to import 100k variants: " & vbNewLine & vbNewLine & errReport, vbCritical, "ERROR"
@@ -506,7 +506,7 @@ Private Sub VCFImport_Click()
         Loop
 
         'Capture any error messages from python script (StdErr has been redirected to StdOut, see above)
-        errReport = wshexec.StdOut.readall()
+        errReport = wshexec.Stdout.readall()
 
         ' Report any standard error in msgbox
         If errReport <> "" Then
@@ -761,6 +761,9 @@ ElseIf Me.StatusID = 4 Then
     Cancel = True
 ElseIf (Me.StatusID = 1202218814 Or Me.StatusID = 1202218815) And IsNull(Me.Checker3) Then
     msgb = MsgBox("Sorry you cannot presently update this tests status to " & vbNewLine + Me![StatusID].Column(1) + vbNewLine & "Please select another status, or update the status using the NGS Dashboard", vbOKOnly Or vbInformation, "Status update")
+    Cancel = True
+ElseIf (Me.StatusID = 1202218811 Or Me.StatusID = 1202218812) And IsNull(Me.Parent.Result) Then
+    MsgBox "Please enter test result before setting status to report positive/negative"
     Cancel = True
 End If
 End Sub
