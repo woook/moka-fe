@@ -10,6 +10,58 @@ Private Sub btn_Coverage_Click()
     End If
 End Sub
 
+Private Sub Ctl100k_cover_sheet_Click()
+    'This function will call a python script that generates a 100k cover sheet and attach to 100k summary of findings PDF
+    Dim wsh As Object
+    Dim pythonPath As String
+    Dim scriptPath As String
+    Dim wshexec As Object
+    Dim stdout As String
+    Dim ngs_test_id As String
+    Dim msg_string As String
+    Dim script_command As String
+    ' Check that result code is negative or previously reported variant
+    If Me.ResultCode <> 1 And Me.ResultCode <> 1189679670 Then
+        MsgBox "Cover reports can only be generated for reports that have result code of negative (N) or previously reported variant (PRV)"
+        Exit Sub
+    End If
+    If vbYes = MsgBox("Generate 100k cover sheet for this case?", vbYesNo + vbQuestion, "Continue?") Then
+        Set wsh = CreateObject("WScript.Shell")
+        ' set path to the python executable
+        pythonPath = "\\gstt.local\Shared\Genetics_Data2\Array\Software\Python\python.exe"
+        ' set path to the script which will import the variants
+        scriptPath = "\\gstt.local\Apps\Moka\Files\Software\100K\gel_cover_report.py"
+        ' capture the NGSTestID from the form to pass to python script
+        ngs_test_id = Me.Parent.NGSTestID
+        ' Build command
+        script_command = "cmd.exe /S /C " & pythonPath & " " & scriptPath & " -n " & ngs_test_id
+        ' Give user option to automatically download the summary of findings from interpretation portal
+        msg_string = "Download summary of findings from interpretation portal?" & vbNewLine & vbNewLine & _
+                     "This will only work for cases with a single summary of findings in the interpretation portal. " & _
+                     "For any other cases you must manually download and save as PDF in P:\Bioinformatics\GeL\technical_reports"
+        If vbYes = MsgBox(msg_string, vbYesNo + vbQuestion, "Download summary of findings?") Then
+            script_command = script_command & " --download_summary"
+        End If
+        ' Redirect stderr to stdout
+        script_command = script_command & " 2>&1"
+        MsgBox script_command
+        ' Run script.
+        Set wshexec = wsh.Exec(script_command)
+        'DoEvents pauses VBA until python script has finished running. wshexec.status is 0 while running and 1 when finished
+        Do While wshexec.Status = 0
+            DoEvents
+        Loop
+        'Capture any messages from python script (stdout is redirected to stderr in command)
+        stdout = wshexec.stdout.readall()
+        ' Report any standard error in msgbox
+        If stdout <> "" Then
+            MsgBox stdout
+        End If
+        ' Refresh is required to show file in NGSTestFiles
+        Me.refresh
+    End If
+End Sub
+
 Private Sub EditVars_Click()
     'Open form for manually adding/editing variants
     stDocName = "s0901_NGSVariantsEditPopup" ' define name of the form to open
@@ -163,7 +215,7 @@ Private Sub import_100k_Click()
             DoEvents
         Loop
         'Capture any error messages from python script (stdout is redirected to stderr in command)
-        errReport = wshexec.Stdout.readall()
+        errReport = wshexec.stdout.readall()
         ' Report any standard error in msgbox
         If errReport <> "" Then
             MsgBox "The following error was encountered when attempting to import 100k variants: " & vbNewLine & vbNewLine & errReport, vbCritical, "ERROR"
@@ -506,7 +558,7 @@ Private Sub VCFImport_Click()
         Loop
 
         'Capture any error messages from python script (StdErr has been redirected to StdOut, see above)
-        errReport = wshexec.Stdout.readall()
+        errReport = wshexec.stdout.readall()
 
         ' Report any standard error in msgbox
         If errReport <> "" Then
