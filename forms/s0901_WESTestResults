@@ -62,7 +62,7 @@ Private Sub Ctl100k_cover_sheet_Click()
 End Sub
 
 Private Sub Ctl100k_email_Click()
-    'This function will call a python script that populates an email for senfing 100k negative results
+    'This function will call a python script that populates an email for sending 100k negative results
     Dim rs_test_file As ADODB.Recordset
     Dim sql_test_file As String
     Dim path_to_results As String
