@@ -61,6 +61,81 @@ Private Sub Ctl100k_cover_sheet_Click()
     End If
 End Sub
 
+Private Sub Ctl100k_email_Click()
+    'This function will call a python script that populates an email for sending 100k negative results
+    Dim rs_test_file As ADODB.Recordset
+    Dim sql_test_file As String
+    Dim path_to_results As String
+    Dim email_body As String
+    Dim wsh As Object
+    Dim pythonPath As String
+    Dim scriptPath As String
+    Dim wshexec As Object
+    Dim stdout As String
+    Dim msg_string As String
+    Dim script_command As String
+    If vbYes = MsgBox("Generate 100k results email for this case?", vbYesNo + vbQuestion, "Continue?") Then
+        ' Find results file that need emailing out
+        Set rs_test_file = New ADODB.Recordset
+        sql_test_file = "SELECT NGSTestFile.NGSTestFile " & _
+                          "FROM NGSTestFile " & _
+                         "WHERE NGSTestFile.NGSTestID = " & Me.NGSTestID & " AND NGSTestFile.Description = '100k Results'"
+        rs_test_file.Open sql_test_file, CurrentProject.Connection, adOpenKeyset
+        If rs_test_file.RecordCount <> 1 Then
+            MsgBox "Expected 1 attached file with description '100k Results' but found " & rs_test_file.RecordCount
+            Exit Sub
+        End If
+        path_to_results = rs_test_file.Fields("NGSTestFile")
+        ' Check we have an email for sending the results to
+        If IsNull(Me.ReportEmail) Then
+            MsgBox "No results email found for referring clinican"
+            Exit Sub
+        End If
+        ' Create the email message body
+        email_body = "<body style=\""font-family:Calibri,sans-serif;\"">" & _
+        "<b>100,000 Genomes Project result from the Genetics Laboratory at Viapath - Guy's Hospital</b><br><br>" & _
+        "PLEASE DO NOT REPLY TO THIS EMAIL ADDRESS WITH ENQUIRIES ABOUT REPORTS<br>" & _
+        "FOR ALL ENQUIRIES PLEASE CONTACT THE LABORATORY USING <a href=\""mailto:DNADutyScientist@viapath.co.uk\"">DNADutyScientist@viapath.co.uk</a><br><br>" & _
+        "Kind regards<br>" & _
+        "Genetics Laboratory<br>" & _
+        "5th Floor, Tower Wing<br>" & _
+        "Guy's Hospital<br>" & _
+        "London, SE1 9RT<br>" & _
+        "United Kingdom<br><br>" & _
+        "Tel: + 44 (0) 207 188 1709" & _
+        "</body>"
+        'Run the script to send the email
+        Set wsh = CreateObject("WScript.Shell")
+        ' set path to the python executable
+        pythonPath = "\\gstt.local\Shared\Genetics_Data2\Array\Software\Python\python.exe"
+        ' set path to the script which will import the variants
+        scriptPath = "\\gstt.local\Apps\Moka\Files\Software\100K\generate_email.py"
+        ' Build command
+        script_command = "cmd.exe /S /C " & pythonPath & " " & scriptPath
+        script_command = script_command & " --to " & Me.ReportEmail
+        script_command = script_command & " --subject ""100,000 Genomes Project Result"""
+        script_command = script_command & " --body """ & email_body & """"
+        script_command = script_command & " --attachments " & path_to_results
+        ' Redirect stderr to stdout
+        script_command = script_command & " 2>&1"
+        ' Run script.
+        'Debug.Print script_command
+        Set wshexec = wsh.Exec(script_command)
+        'DoEvents pauses VBA until python script has finished running. wshexec.status is 0 while running and 1 when finished
+        Do While wshexec.Status = 0
+            DoEvents
+        Loop
+        'Capture any messages from python script (stdout is redirected to stderr in command)
+        stdout = wshexec.stdout.readall()
+        ' Report any standard error in msgbox
+        If stdout <> "" Then
+            MsgBox stdout
+        End If
+        ' Refresh is required to show file in NGSTestFiles
+        Me.refresh
+    End If
+End Sub
+
 Private Sub EditVars_Click()
     'Open form for manually adding/editing variants
     stDocName = "s0901_NGSVariantsEditPopup" ' define name of the form to open
@@ -777,7 +852,7 @@ End Sub
 
 Private Sub comb_WESResultBuild_AfterUpdate()
     Dim Q As ADODB.Recordset
-    Dim S As String
+    Dim s As String
     Dim dt As String
     Dim usr As String
     Dim cn As String
@@ -786,11 +861,11 @@ Private Sub comb_WESResultBuild_AfterUpdate()
     cn = VBA.Environ("COMPUTERNAME")
     Set Q = New ADODB.Recordset
     If IsNull([WESResultBuild]) Then
-        S = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + ",'NGS: WES test genome build deleted for test requested " + CStr(Me![DateRequested]) + "',#" + dt + "#,'" + usr + "','" + cn + "')"
+        s = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + ",'NGS: WES test genome build deleted for test requested " + CStr(Me![DateRequested]) + "',#" + dt + "#,'" + usr + "','" + cn + "')"
     Else
-        S = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + ",'NGS: WES test genome build changed to Item ID: " + CStr(Me![WESResultBuild]) + " for test requested " + CStr(Me![DateRequested]) + "',#" + dt + "#,'" + usr + "','" + cn + "')"
+        s = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + ",'NGS: WES test genome build changed to Item ID: " + CStr(Me![WESResultBuild]) + " for test requested " + CStr(Me![DateRequested]) + "',#" + dt + "#,'" + usr + "','" + cn + "')"
     End If
-    Q.Open S, CurrentProject.Connection
+    Q.Open s, CurrentProject.Connection
     Set Q = Nothing
 End Sub
 
@@ -1398,7 +1473,7 @@ Function UpdatePatientRes()
     Dim usr As String
     Dim cn As String
     Dim R As String
-    Dim S As String
+    Dim s As String
     Dim x As String
     Dim Y As String
     Dim t As String
@@ -1421,16 +1496,16 @@ Function UpdatePatientRes()
     
     If Not IsNull(A!OverallResultComments) Then
         t = A!OverallResultComments
-        S = "" + t + "," + Y + ""
-    Else: S = "" + Y + ""
+        s = "" + t + "," + Y + ""
+    Else: s = "" + Y + ""
     End If
     
 ' update record
-    A!OverallResultComments = S
+    A!OverallResultComments = s
     A.update
 
 ' update Patient log
-    PL = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + ",'Patient: Result changed to [" + S + "]',#" + dt + "#,'" + usr + "','" + cn + "')"
+    PL = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + ",'Patient: Result changed to [" + s + "]',#" + dt + "#,'" + usr + "','" + cn + "')"
     POR = "INSERT INTO PrevOverallResult(InternalPatientID, OverallResult, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + ",' WES result: " + Me.Parent.[txt_result] + "', #" + dt + "#,'" + usr + "','" + cn + "');"
     b.Open PL, CurrentProject.Connection
     C.Open POR, CurrentProject.Connection
@@ -1446,7 +1521,7 @@ Private Sub txt_Resultcmt_AfterUpdate()
 ' NGS test results comments/ observations record
     Dim Q As ADODB.Recordset
     Dim R As ADODB.Recordset
-    Dim S As String
+    Dim s As String
     Dim t As String
     Dim dt As String
     Dim usr As String
@@ -1462,16 +1537,16 @@ Private Sub txt_Resultcmt_AfterUpdate()
     ' Insert record and comment into PatientLog memo which can then be recalled later with input info.
     If IsNull(Me.txt_Resultcmt) Then
         'Debug.Print "If null test"
-        S = "INSERT INTO NGSLogMemo(InternalPatientID, Type, LinkID, LogMemoEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + ", 3," + CStr(Me![NGSTestID]) + ",'NGS: WES test Result comment deleted for WES test requested " + CStr(Me![DateRequested]) + "',#" + dt + "#,'" + usr + "','" + cn + "')"
+        s = "INSERT INTO NGSLogMemo(InternalPatientID, Type, LinkID, LogMemoEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + ", 3," + CStr(Me![NGSTestID]) + ",'NGS: WES test Result comment deleted for WES test requested " + CStr(Me![DateRequested]) + "',#" + dt + "#,'" + usr + "','" + cn + "')"
         'Debug.Print S
     Else
         Dim RC As String
         'Debug.Print " test"
         RC = Replace(Me![txt_Resultcmt], "'", "''")
-        S = "INSERT INTO NGSLogMemo(InternalPatientID, Type, LinkID, LogMemoEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + ", 3, " + CStr(Me![NGSTestID]) + ",'NGS: WES test Result comment updated for WES test requested " + CStr(Me![DateRequested]) + " - " + RC + "',#" + dt + "#,'" + usr + "','" + cn + "')"
+        s = "INSERT INTO NGSLogMemo(InternalPatientID, Type, LinkID, LogMemoEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + ", 3, " + CStr(Me![NGSTestID]) + ",'NGS: WES test Result comment updated for WES test requested " + CStr(Me![DateRequested]) + " - " + RC + "',#" + dt + "#,'" + usr + "','" + cn + "')"
         'Debug.Print S
     End If
-    Q.Open S, CurrentProject.Connection
+    Q.Open s, CurrentProject.Connection
     Set Q = Nothing
 
     ' Record input in the patient log
