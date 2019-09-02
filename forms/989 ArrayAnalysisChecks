@@ -14,7 +14,7 @@ Private Function update_recordsource()
     sql_record_source = "TRANSFORM Count(Checker.Initials) AS CountOfInitials " _
     & "SELECT ResultCode_1.ResultCode " _
     & "FROM ((((ArrayTest INNER JOIN Checker ON ArrayTest.Check2ID = Checker.Check1ID) INNER JOIN ResultCode ON ArrayTest.ArrayResultCodeID = ResultCode.ResultCodeID) INNER JOIN Patients ON ArrayTest.InternalPatientID = Patients.InternalPatientID) INNER JOIN ResultCode AS ResultCode_1 ON Patients.OverallResultCodeID = ResultCode_1.ResultCodeID) INNER JOIN Referral ON ArrayTest.ReferralID = Referral.ReferralID " _
-    & "WHERE (((Checker.Initials) Like 'AFD' Or (Checker.Initials) Like 'CVL' Or (Checker.Initials) Like 'AC' Or (Checker.Initials) Like 'SCH' Or (Checker.Initials) Like 'AFD' Or (Checker.Initials) Like 'APW' Or (Checker.Initials) Like 'SB' Or (Checker.Initials) Like 'CD') And ((arraytest.Service) = True) And ((Referral.ReferralID) = " & Me.referral_combo & ") And ((arraytest.ArrayResultDate) >= #" & start_date_formatted & "#) And ((arraytest.ArrayResultDate) <= #" & end_date_formatted & "#)) " _
+    & "WHERE (((Checker.Initials) Like 'AFD' Or (Checker.Initials) Like 'CVL' Or (Checker.Initials) Like 'AC' Or (Checker.Initials) Like 'SCH' Or (Checker.Initials) Like 'AFD' Or (Checker.Initials) Like 'APW' Or (Checker.Initials) Like 'SB' Or (Checker.Initials) Like 'CD' Or (Checker.Initials) Like 'CJB') And ((arraytest.Service) = True) And ((Referral.ReferralID) = " & Me.referral_combo & ") And ((arraytest.ArrayResultDate) >= #" & start_date_formatted & "#) And ((arraytest.ArrayResultDate) <= #" & end_date_formatted & "#)) " _
     & "GROUP BY ResultCode_1.ResultCode " _
     & "PIVOT Checker.Initials;"
     
