@@ -1,5 +1,5 @@
 """
-v1.1 - AB 2018/01/18
+v1.2 - AB 2019/09/11
 
 Requirements:
     ODBC connection to Moka
@@ -23,6 +23,7 @@ import os
 import Tkinter
 import tkMessageBox
 import pyodbc
+from ConfigParser import ConfigParser
 
 def check_directory(dir_path):
     """
@@ -53,7 +54,10 @@ class FEParser(object):
     """
     Parses all fe_files in a directory and inserts the QC records into Moka. Takes a directory and hyb ID as arguments.
     """
-    def __init__(self, directory, hyb_run):
+    def __init__(self, moka_server, moka_db_name, directory, hyb_run):
+        # Store moka server and database names
+        self.moka_server = moka_server
+        self.moka_db_name = moka_db_name
         # Store user supplied directory
         self.directory = directory
         # Store hyb run number
@@ -76,7 +80,12 @@ class FEParser(object):
         # List to store QC metric dictionaries for each fe_file found for the run
         self.all_QC_metrics = []
         # Create connection to Moka
-        self.cnxn = pyodbc.connect('DRIVER={SQL Server}; SERVER=GSTTV-MOKA; DATABASE=mokadata;', autocommit=True)
+        self.cnxn = pyodbc.connect('DRIVER={{SQL Server}}; SERVER={moka_server}; DATABASE={moka_db_name};'.format(
+                    moka_server=self.moka_server,
+                    moka_db_name=self.moka_db_name
+                ),
+            autocommit=True
+            )
         # Create cursor for executing queries
         self.cursor = self.cnxn.cursor()
 
@@ -198,9 +207,13 @@ class FEParser(object):
         tkMessageBox.showinfo('Complete', 'Import complete')
 
 def main():
+    # Get command line arguments
     args = process_arguments()
-    # Create FEParser obeject, passing in the user supplied directory from command line
-    f = FEParser(args.input_folder, args.hyb_run_number)
+    # Read config file
+    config = ConfigParser()
+    config.read(os.path.join(os.path.dirname(os.path.realpath(__file__)), "config.ini"))
+    # Create FEParser object
+    f = FEParser(config.get("MOKA", "SERVER"), config.get("MOKA", "DATABASE"), args.input_folder, args.hyb_run_number)
     # Find each hyb in Moka for the run and store details in dictionary
     f.moka_lookup()
     # Check if the files exist and store the filepaths in dictionary
