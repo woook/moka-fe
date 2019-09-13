@@ -55,9 +55,6 @@ class FEParser(object):
     Parses all fe_files in a directory and inserts the QC records into Moka. Takes a directory and hyb ID as arguments.
     """
     def __init__(self, moka_server, moka_db_name, directory, hyb_run):
-        # Store moka server and database names
-        self.moka_server = moka_server
-        self.moka_db_name = moka_db_name
         # Store user supplied directory
         self.directory = directory
         # Store hyb run number
@@ -81,8 +78,8 @@ class FEParser(object):
         self.all_QC_metrics = []
         # Create connection to Moka
         self.cnxn = pyodbc.connect('DRIVER={{SQL Server}}; SERVER={moka_server}; DATABASE={moka_db_name};'.format(
-                    moka_server=self.moka_server,
-                    moka_db_name=self.moka_db_name
+                    moka_server=moka_server,
+                    moka_db_name=moka_db_name
                 ),
             autocommit=True
             )
