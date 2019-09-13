@@ -57,12 +57,11 @@ class MokaVCF(object):
                       'SVTYPE')
         self.vcfPaths = {}
         self.cnxn = pyodbc.connect('DRIVER={{SQL Server}}; SERVER={moka_server}; DATABASE={moka_db_name};'.format(
-                    moka_server=self.moka_server,
-                    moka_db_name=self.moka_db_name
+                    moka_server=moka_server,
+                    moka_db_name=moka_db_name
                 ),
             autocommit=True
             )
-        #self.cnxn = pyodbc.connect(r'DRIVER={Microsoft Access Driver (*.mdb)};DBQ=C:\Users\Andy\MokaVCFImportTest\MOKA_FOR_WES_VCFImportTest.mdb;', autocommit=True)
         self.cursor = self.cnxn.cursor()
         self.prevVars = set([])
         self.mokaChr = {}
@@ -71,7 +70,6 @@ class MokaVCF(object):
         self.patID = patID
         self.ngsTestID = ngsTestID
         self.datetime = time.strftime("%Y%m%d %H:%M:%S %p") # date/time in format: yyyymmdd hh:mm:ss AM/PM
-        #self.datetime = time.strftime("%d/%b/%Y %H:%M:%S") # date/time in format: dd/mmm/yyyy hh:mm:ss
 
     def makeVCFdict(self, vcfPathLst):
         for vcf in vcfPathLst:
