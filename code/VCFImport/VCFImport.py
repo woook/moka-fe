@@ -91,7 +91,7 @@ class MokaVCF(object):
                     self.vcfPaths[(3, "Phenotype")] = vcf
                 else:
                     self.vcfPaths[(4, panelName)] = vcf
-    
+
     def unzip_vcf(self,vcfpath):
         # If the vcf is gzipped unzip and write to an uncompressed file. Return the filepath
         # if it's not gzipped
@@ -173,7 +173,7 @@ class MokaVCF(object):
                         rd = str(row.samples[0]['DP']) # Read depth
                     else:
                         rd = 'Null'
-                    #If QUAL is present, capture it, otherwise set to 'Null'    
+                    #If QUAL is present, capture it, otherwise set to 'Null'
                     if row.QUAL is not None:
                         cq = str(row.QUAL) # Call quality
                     else:
@@ -245,7 +245,7 @@ class MokaVCF(object):
                             if type(vcfVal) == int or type(vcfVal) == float:
                                 if math.isnan(vcfVal): # If value is NaN, add a Null value
                                     annot.append("Null")
-                                else:    
+                                else:
                                     annot.append(str(vcfVal)) # Need to convert number to string for adding to SQL statement
                             #If the value is a string, need to enclose in single quotes for SQL statement.
                             else:
@@ -280,7 +280,7 @@ if __name__ == "__main__":
     # Read config file
     config = ConfigParser()
     config.read(os.path.join(os.path.dirname(os.path.realpath(__file__)), "config.ini"))
-    # Insert variants to Moka    
+    # Insert variants to Moka
     mv = MokaVCF(config.get("MOKA", "SERVER"), config.get("MOKA", "DATABASE"), patID, ngsTestID)
     mv.makeVCFdict(vcfPathLst)
     mv.lookupPrevVars()
