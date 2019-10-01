@@ -1,6 +1,6 @@
 USE [mokadata]
 GO
-/****** Object:  Table [dbo].[ArrayTest]    Script Date: 07/04/2019 17:47:15 ******/
+/****** Object:  Table [dbo].[ArrayTest]    Script Date: 10/01/2019 14:18:30 ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -46,6 +46,8 @@ CREATE TABLE [dbo].[ArrayTest](
 	[DNALabellingID] [int] NULL,
 	[Processing] [nvarchar](255) NULL,
 	[Fail] [bit] NOT NULL CONSTRAINT [DF__ArrayTest__Fail__1920BF5C]  DEFAULT ((0)),
+	[ReportID] [int] NULL,
+	[ReportDate] [datetime] NULL,
  CONSTRAINT [ArrayTestID] PRIMARY KEY NONCLUSTERED 
 (
 	[ArrayTestID] DESC
