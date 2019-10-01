@@ -14,7 +14,7 @@ Set db = CurrentDb
 Set rsUSR = db.OpenRecordset(strUSRSQL, dbOpenDynaset, dbSeeChanges)
 
 ' Validate that user is authorised. Display alert if not authorised.
-If rsUSR!authoriser <> 1 And rsUSR!authoriser <> 4 Then
+If rsUSR!authoriser <> 1 And rsUSR!authoriser <> 4 And rsUSR!authoriser <> 5 Then
 MsgBox "You do not have authorisation to view this page.", vbExclamation, "ATTENTION"
 DoCmd.Close acForm, "4752 DeletePatientRecords"
 End If
