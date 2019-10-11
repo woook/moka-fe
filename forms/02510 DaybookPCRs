@@ -1,14 +1,24 @@
 Option Compare Database
 
 Private Sub AnalysedByID_AfterUpdate()
+        
+    ''autodate
+    AnalysedByDate = Now()
     
-''autodate
-AnalysedByDate = Now()
-
+    ''if analyst and checker details are entered, set status to complete
+    
+    If Not IsNull(Me.AnalysedByID) And Not IsNull(Me.CheckedByID) Then
+        Me.StatusID = 4
+    End If
+    '' if Analyst is removed after status is set to complete, change status back to pending
+    If Me.StatusID = 4 And IsNull(Me.AnalysedByID) Then
+        Me.StatusID = 2
+    End If
+    
 End Sub
 
 Private Sub CheckedByID_AfterUpdate()
-
+    
 ''autodate
 ResultDate = Now()
 
@@ -28,7 +38,7 @@ Me!Result <> 5 And Me!Result <> 1190384957 And Me!Result <> 1190384958 And Me!Re
     .Fields(cdoSMTPServerPort) = 25
     .Fields(cdoSendUsingMethod) = cdoSendUsingPort
     .Fields(cdoSMTPConnectionTimeout) = 200
-    .Fields.Update
+    .Fields.update
     End With
     
     emailto = "Prenatal-array@gstt.nhs.uk;cytodutyscientist@gstt.nhs.uk"
@@ -66,6 +76,16 @@ Me!Result <> 5 And Me!Result <> 1190384957 And Me!Result <> 1190384958 And Me!Re
     
     MsgBox "Moka alert sent (will take a few minutes to arrive)", , "Don't be a dummy"
     
+    End If
+    
+    'if analyst and checker details are entered, set status to complete
+    If Not IsNull(Me.AnalysedByID) And Not IsNull(Me.CheckedByID) Then
+        Me.StatusID = 4
+    End If
+    
+    'if Checker is removed after status is set to complete, change status back to pending
+    If Me.StatusID = 4 And IsNull(Me.CheckedByID) Then
+        Me.StatusID = 2
     End If
     
 End Sub

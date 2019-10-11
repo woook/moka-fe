@@ -852,7 +852,7 @@ End Sub
 
 Private Sub comb_WESResultBuild_AfterUpdate()
     Dim Q As ADODB.Recordset
-    Dim s As String
+    Dim S As String
     Dim dt As String
     Dim usr As String
     Dim cn As String
@@ -861,11 +861,11 @@ Private Sub comb_WESResultBuild_AfterUpdate()
     cn = VBA.Environ("COMPUTERNAME")
     Set Q = New ADODB.Recordset
     If IsNull([WESResultBuild]) Then
-        s = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + ",'NGS: WES test genome build deleted for test requested " + CStr(Me![DateRequested]) + "',#" + dt + "#,'" + usr + "','" + cn + "')"
+        S = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + ",'NGS: WES test genome build deleted for test requested " + CStr(Me![DateRequested]) + "',#" + dt + "#,'" + usr + "','" + cn + "')"
     Else
-        s = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + ",'NGS: WES test genome build changed to Item ID: " + CStr(Me![WESResultBuild]) + " for test requested " + CStr(Me![DateRequested]) + "',#" + dt + "#,'" + usr + "','" + cn + "')"
+        S = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + ",'NGS: WES test genome build changed to Item ID: " + CStr(Me![WESResultBuild]) + " for test requested " + CStr(Me![DateRequested]) + "',#" + dt + "#,'" + usr + "','" + cn + "')"
     End If
-    Q.Open s, CurrentProject.Connection
+    Q.Open S, CurrentProject.Connection
     Set Q = Nothing
 End Sub
 
@@ -1138,6 +1138,7 @@ Private Sub Checker2_AfterUpdate()
         rs.Open plSQL, CurrentProject.Connection
     End If
     Set rs = Nothing
+    Me.Parent.Requery
 End Sub
 
 Private Sub txt_Check2Date_DblClick(Cancel As Integer)
@@ -1264,6 +1265,8 @@ Private Sub Checker3_AfterUpdate()
         Me.Checker3 = Null
         Me.txt_Check3Date = Null
     End If
+    
+    Me.Parent.Requery
 
 End Sub
 Private Sub txt_Check3Date_DblClick(Cancel As Integer)
@@ -1457,6 +1460,7 @@ Private Sub Checker4_AfterUpdate()
         msg_1 = MsgBox("Authoriser ID has been updated to " + Me.Checker4.Column(2), vbOKOnly Or vbInformation, "Authoriser updated")
         rs.Open ck, CurrentProject.Connection
         Set rs = Nothing
+        Me.Parent.Requery
         
     Else
         msg_w = MsgBox("Report is not yet ready for approval.", vbOKOnly Or vbExclamation, "Error")
@@ -1473,7 +1477,7 @@ Function UpdatePatientRes()
     Dim usr As String
     Dim cn As String
     Dim R As String
-    Dim s As String
+    Dim S As String
     Dim x As String
     Dim Y As String
     Dim t As String
@@ -1496,16 +1500,16 @@ Function UpdatePatientRes()
     
     If Not IsNull(A!OverallResultComments) Then
         t = A!OverallResultComments
-        s = "" + t + "," + Y + ""
-    Else: s = "" + Y + ""
+        S = "" + t + "," + Y + ""
+    Else: S = "" + Y + ""
     End If
     
 ' update record
-    A!OverallResultComments = s
+    A!OverallResultComments = S
     A.update
 
 ' update Patient log
-    PL = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + ",'Patient: Result changed to [" + s + "]',#" + dt + "#,'" + usr + "','" + cn + "')"
+    PL = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + ",'Patient: Result changed to [" + S + "]',#" + dt + "#,'" + usr + "','" + cn + "')"
     POR = "INSERT INTO PrevOverallResult(InternalPatientID, OverallResult, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + ",' WES result: " + Me.Parent.[txt_result] + "', #" + dt + "#,'" + usr + "','" + cn + "');"
     b.Open PL, CurrentProject.Connection
     C.Open POR, CurrentProject.Connection
@@ -1521,7 +1525,7 @@ Private Sub txt_Resultcmt_AfterUpdate()
 ' NGS test results comments/ observations record
     Dim Q As ADODB.Recordset
     Dim R As ADODB.Recordset
-    Dim s As String
+    Dim S As String
     Dim t As String
     Dim dt As String
     Dim usr As String
@@ -1537,16 +1541,16 @@ Private Sub txt_Resultcmt_AfterUpdate()
     ' Insert record and comment into PatientLog memo which can then be recalled later with input info.
     If IsNull(Me.txt_Resultcmt) Then
         'Debug.Print "If null test"
-        s = "INSERT INTO NGSLogMemo(InternalPatientID, Type, LinkID, LogMemoEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + ", 3," + CStr(Me![NGSTestID]) + ",'NGS: WES test Result comment deleted for WES test requested " + CStr(Me![DateRequested]) + "',#" + dt + "#,'" + usr + "','" + cn + "')"
+        S = "INSERT INTO NGSLogMemo(InternalPatientID, Type, LinkID, LogMemoEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + ", 3," + CStr(Me![NGSTestID]) + ",'NGS: WES test Result comment deleted for WES test requested " + CStr(Me![DateRequested]) + "',#" + dt + "#,'" + usr + "','" + cn + "')"
         'Debug.Print S
     Else
         Dim RC As String
         'Debug.Print " test"
         RC = Replace(Me![txt_Resultcmt], "'", "''")
-        s = "INSERT INTO NGSLogMemo(InternalPatientID, Type, LinkID, LogMemoEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + ", 3, " + CStr(Me![NGSTestID]) + ",'NGS: WES test Result comment updated for WES test requested " + CStr(Me![DateRequested]) + " - " + RC + "',#" + dt + "#,'" + usr + "','" + cn + "')"
+        S = "INSERT INTO NGSLogMemo(InternalPatientID, Type, LinkID, LogMemoEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + ", 3, " + CStr(Me![NGSTestID]) + ",'NGS: WES test Result comment updated for WES test requested " + CStr(Me![DateRequested]) + " - " + RC + "',#" + dt + "#,'" + usr + "','" + cn + "')"
         'Debug.Print S
     End If
-    Q.Open s, CurrentProject.Connection
+    Q.Open S, CurrentProject.Connection
     Set Q = Nothing
 
     ' Record input in the patient log
