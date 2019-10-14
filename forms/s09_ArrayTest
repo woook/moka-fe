@@ -485,6 +485,10 @@ Dim PRU As String
 usr = VBA.Environ("USERNAME")
 cmp = VBA.Environ("COMPUTERNAME")
 strUSRSQL = "SELECT Checker.Check1ID, Checker.Name, Checker.Authoriser FROM Checker WHERE Checker.Username = '" + usr + "'"
+
+strUSRSQL = "SELECT Checker.Check1ID, Checker.Name, Checker.Authoriser " & _ 
+              "FROM Checker " & _ 
+             "WHERE Checker.Username = '" + usr + "'" 
 Set db = CurrentDb
 Set rsUSR = db.OpenRecordset(strUSRSQL, dbOpenDynaset, dbSeeChanges)
 
