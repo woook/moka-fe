@@ -32,10 +32,12 @@
            Referral.Referral,
            Patients.PatientID,
            [Patients].[BookinLastName] & " " & [Patients].[BookinFirstname] AS Name,
+           [Patients].[BookinFirstName] & " " & [Patients].[BookinLastname] AS CaseName,
            Left([PatientID],6) AS FamilyTrustID,
            Patients.ePGDCycleID
       FROM (ArrayTest
 INNER JOIN Referral
         ON ArrayTest.ReferralID = Referral.ReferralID)
 INNER JOIN Patients
-        ON ArrayTest.InternalPatientID = Patients.InternalPatientID;
+        ON ArrayTest.InternalPatientID =
+        Patients.InternalPatientID;

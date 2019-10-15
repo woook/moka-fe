@@ -471,15 +471,14 @@ Private Sub ArrayResultComment_DblClick(Cancel As Integer)
 End Sub
 
 
-''submit for reporting
 Private Sub SendReport_Click()
+''submit for reporting
 Dim rsUSR As dao.Recordset
 Dim usr As String
 Dim cmp As String
-Dim uid As Integer
 Dim dt As String
-Dim UpdateQuery1 As String
 Dim InsertQuery1 As String
+Dim PRU As String
 
 'get user
 usr = VBA.Environ("USERNAME")
@@ -490,44 +489,102 @@ strUSRSQL = "SELECT Checker.Check1ID, Checker.Name, Checker.Authoriser " & _
 Set db = CurrentDb
 Set rsUSR = db.OpenRecordset(strUSRSQL, dbOpenDynaset, dbSeeChanges)
 
-'If report already submitted for sending out, then say so
-If Not IsNull(Me!ReportID) Then
-    MsgBox "Report has already been queued to be sent out", vbOKOnly + vbInformation, "Report Sent"
-    Else
-        'If user is not in checker table as authoriser = 5 (array authoriser) or 1 (binfx admin) then say no
-        If (rsUSR!authoriser <> 5 And rsUSR!authoriser <> 1 Or IsNull(rsUSR!authoriser)) Then
-            MsgBox "Your account is not allowed to send out reports.", vbOKOnly + vbExclamation, "ATTENTION"
-            End If
-        'If user is in checker table as authoriser = 5 (array authoriser) or 1 (binfx admin) then are if they are sure, and then submit
-        If (rsUSR!authoriser = 5 Or rsUSR!authoriser = 1) Then
-            msga = MsgBox("Do you want to submit the report for sending out?", vbYesNo + vbQuestion, "Confirm Send Report")
-            If msga = vbNo Then
-                Cancel = True
-            ElseIf msga = vbYes Then
-                uid = rsUSR!Check1ID
-                dt = Format(Now, "dd/mmm/yyyy Hh:Nn:ss")
-                'record who sent report
-                UpdateQuery1 = "UPDATE ArrayTest " & _
-                               "SET ReportID = '" & uid & "', ReportDate = '" & dt & "' " & _
-                             "WHERE ArrayTest.ArrayTestID = " & CStr(Me!ArrayTestID)
-                DoCmd.SetWarnings False
-                DoCmd.RunSQL UpdateQuery1
-                DoCmd.SetWarnings True
-                'patient log
-                InsertQuery1 = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) " & _
-                                    "VALUES(" + CStr(Me![InternalPatientID]) + ",'Report submitted for sending out " + Me!SpecimenNo + "',#" + dt + "#,'" + usr + "','" + cmp + "')"
-                DoCmd.SetWarnings False
-                DoCmd.RunSQL InsertQuery1
-                DoCmd.SetWarnings True
-                'confirmation msgbox
-                MsgBox "Report is queued to be sent out", vbOKOnly + vbInformation, "Report Sent"
-                End If
-            End If
-    End If
+'This function will call a python script that populates an email for sending 100k negative results
+Dim email_body As String
+Dim wsh As Object
+Dim pythonPath As String
+Dim scriptPath As String
+Dim wshexec As Object
+Dim stdout As String
+Dim script_command As String
 
-rsUSR.Close
-Set rsUSR = Nothing    'Deassign all objects.
-Set db = Nothing
+'Check user wants to send email
+If vbYes = MsgBox("Generate reporting email for this case?", vbYesNo + vbQuestion, "Continue?") Then
+    'If user is not in checker table as authoriser = 5 (array authoriser) or 1 (binfx admin) then say no
+    If (rsUSR!authoriser <> 5 And rsUSR!authoriser <> 1 Or IsNull(rsUSR!authoriser)) Then
+        MsgBox "Your account is not allowed to send out reports.", vbOKOnly + vbExclamation, "ATTENTION"
+    End If
+    'If user is in checker table as authoriser = 5 (array authoriser) or 1 (binfx admin) then go
+    If (rsUSR!authoriser = 5 Or rsUSR!authoriser = 1) Then
+        'Patient log
+        dt = Format(Now, "dd/mmm/yyyy Hh:Nn:ss")
+        InsertQuery1 = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + ",'Report email generated for specimen " + Me!SpecimenNo + "',#" + dt + "#,'" + usr + "','" + cmp + "')"
+        DoCmd.SetWarnings False
+        DoCmd.RunSQL InsertQuery1
+        'Create the email message body
+        PRU = CStr(Me![PatientID])
+        email_body = "<body style=\""font-family:Calibri,sans-serif;\"">" & _
+        "Please send out the authorised array report for:<br><br>" & _
+        "PRU: <b>" & PRU & "</b><br>" & _
+        "Name: <b>" & Me.CaseName & "</b><br>" & _
+        "Specimen: <b>" & Me.SpecimenNo & "</b><br>" & _
+        "Array type: " & Me.Referral & "<br>" & _
+        "</body>"
+        'Run the script to send the email
+        Set wsh = CreateObject("WScript.Shell")
+        ' set path to the python executable
+        pythonPath = "\\gstt.local\Shared\Genetics_Data2\Array\Software\Python\python.exe"
+        ' set path to the script which will import the variants
+        scriptPath = "\\gstt.local\Apps\Moka\Files\Software\100K\generate_email.py"
+        ' Build command
+        script_command = "cmd.exe /S /C " & pythonPath & " " & scriptPath
+        script_command = script_command & " --to viapathgeneticsoffice@viapath.co.uk "
+        script_command = script_command & " --subject ""Authorised array report to send"""
+        script_command = script_command & " --body """ & email_body & """"
+        ' Redirect stderr to stdout
+        script_command = script_command & " 2>&1"
+        ' Run script.
+        'Debug.Print script_command
+        Set wshexec = wsh.Exec(script_command)
+        'DoEvents pauses VBA until python script has finished running. wshexec.status is 0 while running and 1 when finished
+        Do While wshexec.Status = 0
+            DoEvents
+        Loop
+        'Capture any messages from python script (stdout is redirected to stderr in command)
+        stdout = wshexec.stdout.readall()
+        ' Report any standard error in msgbox
+        If stdout <> "" Then
+            MsgBox stdout
+        End If
+    End If
+    rsUSR.Close
+    Set rsUSR = Nothing    'Deassign all objects.
+    Set db = Nothing
+End If
+
+
+''''''The following section has been commented out but there is a good chance that someone will be asked to create this fuction later so am leaving here for properity (JWA 14/10/2019)
+'''''
+''''''If report already submitted for sending out, then say so
+'''''If Not IsNull(Me!ReportID) Then
+'''''    MsgBox "Report has already been queued to be sent out", vbOKOnly + vbInformation, "Report Sent"
+'''''    'MsgBox "Report has already been queued to be sent out by '" + Me.ReportID + "', '" + Me.ReportDate + "'", vbOKOnly + vbInformation, "Report Sent"
+'''''    Else
+'''''        'If user is not in checker table as authoriser = 5 (array authoriser) or 1 (binfx admin) then say no
+'''''        If (rsUSR!authoriser <> 5 And rsUSR!authoriser <> 1 Or IsNull(rsUSR!authoriser)) Then
+'''''            MsgBox "Your account is not allowed to send out reports.", vbOKOnly + vbExclamation, "ATTENTION"
+'''''        End If
+'''''        'If user is in checker table as authoriser = 5 (array authoriser) or 1 (binfx admin) then are if they are sure, and then submit
+'''''        If (rsUSR!authoriser = 5 Or rsUSR!authoriser = 1) Then
+'''''            msga = MsgBox("Do you want to submit the report for sending out?", vbYesNo + vbQuestion, "Confirm Send Report")
+'''''            If msga = vbNo Then
+'''''                Cancel = True
+'''''            ElseIf msga = vbYes Then
+'''''                uid = rsUSR!Check1ID
+'''''                dt = Format(Now, "dd/mmm/yyyy Hh:Nn:ss")
+'''''                'record who sent report
+'''''                UpdateQuery1 = "UPDATE ArrayTest SET ReportID = '" & uid & "', ReportDate = '" & dt & "' WHERE ArrayTest.ArrayTestID = " & CStr(Me!ArrayTestID)
+'''''                DoCmd.SetWarnings False
+'''''                DoCmd.RunSQL UpdateQuery1
+'''''                'patient log
+'''''                InsertQuery1 = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + ",'Report submitted for sending out " + Me!SpecimenNo + "',#" + dt + "#,'" + usr + "','" + cmp + "')"
+'''''                DoCmd.SetWarnings False
+'''''                DoCmd.RunSQL InsertQuery1
+'''''                'confirmation msgbox
+'''''                MsgBox "Report is queued to be sent out", vbOKOnly + vbInformation, "Report Sent"
+'''''            End If
+'''''        End If
+'''''End If
 
 End Sub
 
