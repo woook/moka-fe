@@ -15,7 +15,6 @@ Private Sub StatusID_AfterUpdate()
         S = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + ",'Array test: Status updated to " + Me![StatusID].Column(1) + " for test requested " + CStr(Me![RequestedDate]) + "',#" + d + "#,'" + un + "','" + cn + "')"
         Q.Open S, CurrentProject.Connection
         Set Q = Nothing
-    'If Me![StatusID].Column(1) = "Complete" Then MsgBox "Don't forget to update overall status", , "Don't be a dummy"
 End Sub
 
 
@@ -484,9 +483,9 @@ Dim PRU As String
 'get user
 usr = VBA.Environ("USERNAME")
 cmp = VBA.Environ("COMPUTERNAME")
-strUSRSQL = "SELECT Checker.Check1ID, Checker.Name, Checker.Authoriser " & _ 
-              "FROM Checker " & _ 
-             "WHERE Checker.Username = '" + usr + "'" 
+strUSRSQL = "SELECT Checker.Check1ID, Checker.Name, Checker.Authoriser " & _
+              "FROM Checker " & _
+             "WHERE Checker.Username = '" + usr + "'"
 Set db = CurrentDb
 Set rsUSR = db.OpenRecordset(strUSRSQL, dbOpenDynaset, dbSeeChanges)
 
