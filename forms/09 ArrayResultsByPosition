@@ -33,7 +33,9 @@ Private Sub Form_Current()
             Form_s09_ArrayTest.PriorityCase.Visible = True
             End If
     End If
-
+    If Not IsNull(Form_s09_ArrayTest.DNALabellingID) Then
+        Form_s09_ArrayTest.DNALabellingID.Requery
+        End If
 End Sub
 
 
