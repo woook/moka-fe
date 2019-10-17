@@ -21,4 +21,4 @@ INNER JOIN Referral
 INNER JOIN Status
         ON ArrayTest.StatusID = Status.StatusID
      WHERE ArrayTest.StatusID=1168443123 OR ArrayTest.StatusID=1202218853
-ORDER BY ArrayTest.Priority, ArrayTest.RequestedDate;
+  ORDER BY ArrayTest.Priority, ArrayTest.RequestedDate;
