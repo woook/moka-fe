@@ -1,0 +1,24 @@
+    SELECT ArrayTest.Priority,
+           ArrayTest.RequestedDate,
+           Referral.Referral,
+           Patients.PatientID,
+           [BookinFirstName] & " " & [BookinLastName] AS Name,
+           ArrayTest.StatusID,
+           Status.Status,
+           ArrayTest.Check1ID,
+           ArrayTest.Check2ID,
+           ArrayTest.Check3ID,
+           ArrayTest.Check4ID,
+           ArrayTest.Check5ID,
+           ArrayTest.SpecimenNo,
+           ArrayTest.ArrayTestID,
+           Patients.InternalPatientID
+      FROM ((Patients
+INNER JOIN ArrayTest
+        ON Patients.InternalPatientID = ArrayTest.InternalPatientID)
+INNER JOIN Referral
+        ON ArrayTest.ReferralID = Referral.ReferralID)
+INNER JOIN Status
+        ON ArrayTest.StatusID = Status.StatusID
+     WHERE ArrayTest.StatusID=1168443123 OR ArrayTest.StatusID=1202218853
+ORDER BY ArrayTest.Priority, ArrayTest.RequestedDate;
