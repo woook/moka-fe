@@ -4,4 +4,3 @@ FROM ((((ArrayTest INNER JOIN ResultCode ON ArrayTest.ArrayResultCodeID = Result
 WHERE (((Checker.Initials) Like "APW" Or (Checker.Initials) Like "HT" Or (Checker.Initials) Like "RP" Or (Checker.Initials) Like "BW" Or (Checker.Initials) Like "IN" Or (Checker.Initials) Like "AFD" Or (Checker.Initials) Like "SCH" Or (Checker.Initials) Like "AC" Or (Checker.Initials) Like "SB" Or (Checker.Initials) Like "CVL" Or (Checker.Initials) Like "SS" Or (Checker.Initials) Like "DER") AND ((ArrayTest.Service)=True))
 GROUP BY ResultCode_1.ResultCode
 PIVOT Checker.Initials;
-
