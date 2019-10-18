@@ -1,637 +1,350 @@
 Option Compare Database
+' s0901_NGSVariantACMGPopup
+'     Assign evidence and ACMG classifications to an NGSVariant.NGSVariantID record.
+'   - Procedures: Main functions and routines
+'   - User Interface Events: Routines trigerred by Form UI
+'   - Loggers: Functions for logging events to MokaDB
 
-Private Sub Calculate_Click()
-    'Declare integer variables to hold counts for each ACMG category
-    'Default value of integers is 0
-    Dim PVS_count As Integer 'Pathogenic Very Strong
-    Dim PS_count As Integer 'Pathogenic Strong
-    Dim PM_count As Integer 'Pathogenic Moderate
-    Dim PP_count As Integer 'Pathogenic Supporting
-    Dim BP_count As Integer 'Benign Supporting
-    Dim BS_count As Integer 'Benign Strong
-    Dim BA_count As Integer 'Benign Standalone
-    
-    'Declare booleans for pathogenicity tests
-    'Default value of booleans is False
-    Dim path_i As Boolean
-    Dim path_ii As Boolean
-    Dim path_iii As Boolean
-    Dim like_path_i As Boolean
-    Dim like_path_ii As Boolean
-    Dim like_path_iii As Boolean
-    Dim like_path_iv As Boolean
-    Dim like_path_v As Boolean
-    Dim like_path_vi As Boolean
-    Dim benign_i As Boolean
-    Dim benign_ii As Boolean
-    Dim like_benign_i As Boolean
-    Dim like_benign_ii As Boolean
-    Dim unc_significance_i As Boolean
-    Dim unc_significance_ii As Boolean
-    Dim pathogenic_criteria_met As Boolean
-    Dim benign_criteria_met As Boolean
-        
-    'This will hold the calculated classification (class 1-5)
-    Dim acmg_classification As Integer
-    
-    'This will hold the text for the ACMG rule applied
-    Dim rule_applied As String
-    
-    'Declare recordset and query to find the pathogenicities (1-5) from the status table.
-    Dim status_classification As ADODB.Recordset
-    Dim sql_status_classification As String
-    
-    'Declare dictionaries to hold information from the status table for each of the 5 pathogenicity classifications
-    '(not quite sure how to get nested dictionaries to work in VBA so using separate dictionaries instead)
-    Dim path_status
-    Dim path_statusID
-    Dim statusID_status
-    
-    'This varibale will hold an integer for the classification (1-5)
-    Dim classification_num As Integer
-    
-    'Variables to hold the status and statusID from the status table
-    Dim Status As String
-    Dim StatusID As Long
-    
-    'Query to get the 5 classifications from the Status table.
-    Set status_classification = New ADODB.Recordset 'Create recordset
-    'sql to extract the 5 classifications from the status table
-    sql_status_classification = "SELECT TOP 5 Status.StatusID, Status.Status, Status.Pathogenic FROM Status WHERE Status.Pathogenic = 1 ORDER BY Status.SortingPathogenic;"
-    status_classification.Open sql_status_classification, CurrentProject.Connection, adOpenKeyset 'populate recordset with the classification
-    
-    'Create dictionaries to link from classification 1-5, statusID and status (separate dictionaries because nested dictionaries in VBA don't seem straightforward)
-    Set path_status = CreateObject("scripting.dictionary") 'Key: pathogencity class (e.g. 1), Value: Status (e.g. 'Benign (class 1)')
-    Set path_statusID = CreateObject("scripting.dictionary") 'Key: pathogencity class (e.g. 1), Value: StatusID (e.g. 1202218821)
-    Set statusID_status = CreateObject("scripting.dictionary") 'Key: StatusID (e.g. 1202218821), Value: Status (e.g. 'Benign (class 1)')
-    'Start at pathogenicity class 1
-    classification_num = 1
-    'Loop through the recordset from the status table
-    While Not status_classification.EOF
-        'Capture the status and statusID
-        Status = status_classification.Fields("Status")
-        StatusID = status_classification.Fields("StatusID")
-        'Populate dictionaries
-        path_status.Add classification_num, Status
-        path_statusID.Add classification_num, StatusID
-        statusID_status.Add StatusID, Status
-        'Increase pathogenicity by 1
-        classification_num = classification_num + 1
-        'Move to next record
-        status_classification.MoveNext
-    Wend
-    Set status_classification = Nothing 'Clear the recordset
-    
-    'For each check box on form, if ticked increase the value of the relevant count by 1.
-    'PVS
-    If Me.PVS1 Then
-        PVS_count = PVS_count + 1
-    End If
-    
-    'PS
-    If Me.PS1 Then
-        PS_count = PS_count + 1
-    End If
-    If Me.PS2 Then
-        PS_count = PS_count + 1
-    End If
-    If Me.PS3 Then
-        PS_count = PS_count + 1
-    End If
-    If Me.PS4 Then
-        PS_count = PS_count + 1
-    End If
-    If Me.PP1_STRONG Then
-        PS_count = PS_count + 1
-    End If
+' #####
+' Procedures
+' #####
 
-    'PM
-    If Me.PM1 Then
-        PM_count = PM_count + 1
-    End If
-    If Me.PM2 Then
-        PM_count = PM_count + 1
-    End If
-    If Me.PM3 Then
-        PM_count = PM_count + 1
-    End If
-    If Me.PM4 Then
-        PM_count = PM_count + 1
-    End If
-    If Me.PM5 Then
-        PM_count = PM_count + 1
-    End If
-    If Me.PM6 Then
-        PM_count = PM_count + 1
-    End If
-    If Me.PP1_MODERATE Then
-        PM_count = PM_count + 1
-    End If
+Private Sub SetEvidenceCounts()
+    'Sets the ACMG evidence counters from selected criteria tickboxes.
+    'Counter controls are used to set, access and display the evidence values. These are accessed by the following properties:
+    '    Me.PVS_count, Me.PS_count, Me.PM_count, Me.PP_count, Me.BA_count, Me.BS_count, Me.BP_count
     
-    'PP
-    If Me.PP1_SUPPORTING Then
-        PP_count = PP_count + 1
-    End If
-    If Me.PP2 Then
-        PP_count = PP_count + 1
-    End If
-    If Me.PP3 Then
-        PP_count = PP_count + 1
-    End If
-    If Me.PP4 Then
-        PP_count = PP_count + 1
-    End If
-    If Me.PP5 Then
-        PP_count = PP_count + 1
-    End If
+    ' Objects for querying the moka database
+    Dim dbs As DAO.Database
+    ' Recordset for NGSVariantACMG Table
+    Dim rsNVA As DAO.Recordset
+    ' Arrays for ACMG fields
+    Dim pathogenicArray() As Variant
+    Dim benignArray() As Variant
+    ' Constants for ACMG evidence
+    Dim VERYSTRONG As Integer
+    Dim STRONG As Integer
+    Dim MODERATE As Integer
+    Dim SUPPORTING As Integer
+    Dim STANDALONE As Integer
+    ' Variables to increment counts.
+    '    These are used in place of counter controls so that counts are reset each time the procedure is called.
+    Dim PVS_count As Integer  'Pathogenic Very Strong
+    Dim PS_count As Integer   'Pathogenic Strong
+    Dim PM_count As Integer   'Pathogenic Moderate
+    Dim PP_count As Integer   'Pathogenic Supporting
+    Dim BA_count As Integer   'Benign Standalone
+    Dim BS_count As Integer   'Benign Strong
+    Dim BP_count As Integer   'Benign Supporting
     
-    'BP
-    If Me.BP1 Then
-        BP_count = BP_count + 1
-    End If
-    If Me.BP2 Then
-        BP_count = BP_count + 1
-    End If
-    If Me.BP3 Then
-        BP_count = BP_count + 1
-    End If
-    If Me.BP4 Then
-        BP_count = BP_count + 1
-    End If
-    If Me.BP5 Then
-        BP_count = BP_count + 1
-    End If
-    If Me.BP6 Then
-        BP_count = BP_count + 1
-    End If
-    If Me.BP7 Then
-        BP_count = BP_count + 1
-    End If
+    'Set constants for evidence levels. These are ItemIDs found under dbo.Item.ItemCategoryIndexID = 78
+    VERYSTRONG = 3366
+    STRONG = 3367
+    MODERATE = 3368
+    SUPPORTING = 3369
+    STANDALONE = 3370
     
-    'BS
-    If Me.BS1 Then
-        BS_count = BS_count + 1
-    End If
-    If Me.BS2 Then
-        BS_count = BS_count + 1
-    End If
-    If Me.BS3 Then
-        BS_count = BS_count + 1
-    End If
-    If Me.BS4 Then
-        BS_count = BS_count + 1
-    End If
+    'Get NGSVariantACMG recordset for the variant currently displayed in the form
+    strSQL = "SELECT * FROM NGSVariantACMG WHERE NGSVariantACMGID = " & Me.NGSVariantACMGID
+    Set dbs = CurrentDb
+    Set rsNVA = dbs.OpenRecordset(strSQL, dbOpenDynaset, dbSeeChanges)
+    'Create arrays for pathogenic and benign ACMG fields respectively. This allows us to count their respective evidence levels.
+    pathogenicArray = Array(rsNVA!PVS1, rsNVA!PS1, rsNVA!PS2, rsNVA!PS3, rsNVA!PS4, rsNVA!PM1, rsNVA!PM2, _
+        rsNVA!PM3, rsNVA!PM4, rsNVA!PM5, rsNVA!PM6, rsNVA!PP1, rsNVA!PP2, rsNVA!PP3, rsNVA!PP4, rsNVA!PP5)
+    benignArray = Array(rsNVA!BA1, rsNVA!BS1, rsNVA!BS2, rsNVA!BS3, rsNVA!BS4, rsNVA!BP1, rsNVA!BP2, _
+        rsNVA!BP3, rsNVA!BP4, rsNVA!BP5, rsNVA!BP6, rsNVA!BP7)
     
-    'BA
-    If Me.BA1 Then
-        BA_count = BA_count + 1
-    End If
+    'Loop through Pathogenic fields and populate counts
+    For Each Element In pathogenicArray
+        Select Case Element
+            Case VERYSTRONG
+                PVS_count = PVS_count + 1
+            Case STRONG
+                PS_count = PS_count + 1
+            Case MODERATE
+                PM_count = PM_count + 1
+            Case SUPPORTING
+                PP_count = PP_count + 1
+            Case Else
+        End Select
+    Next Element
     
-    'Next check which rules have been met
+    'Loop through Benign fields and populate counts
+    For Each Element In benignArray
+        Select Case Element
+            Case STANDALONE
+                BA_count = BA_count + 1
+            Case STRONG
+                BS_count = BS_count + 1
+            Case SUPPORTING
+                BP_count = BP_count + 1
+            Case Else
+        End Select
+    Next Element
     
-    '=====Pathogenic=====
-    '(i)1 Very strong (PVS1) AND
-        '(a) >= 1 Strong (PS1–PS4) OR
-        '(b) >= 2 Moderate (PM1–PM6) OR
-        '(c) 1 Moderate (PM1–PM6) and 1 supporting (PP1–PP5) OR
-        '(d) >= 2 Supporting (PP1–PP5)
+    'Close recordset
+    rsNVA.Close
     
-    If PVS_count >= 1 And (PS_count >= 1 Or PM_count >= 2 Or (PM_count >= 1 And PP_count >= 1) Or PP_count >= 2) Then
-        path_i = True
-    End If
-    
-    'Pathogenic (ii) >=2 Strong (PS1–PS4)
-    If PS_count >= 2 Then
-        path_ii = True
-    End If
-    
-    '(iii)1 Strong (PS1–PS4) AND
-        '(a)>=3 Moderate (PM1–PM6) OR
-        '(b)2 Moderate (PM1–PM6) AND >=2 Supporting (PP1–PP5) OR
-        '(c)1 Moderate (PM1–PM6) AND >=4 supporting (PP1–PP5)
-    If PS_count = 1 And (PM_count >= 3 Or (PM_count >= 2 And PP_count >= 2) Or (PM_count >= 1 And PP_count >= 4)) Then
-        path_iii = True
-    End If
-    
-    '=====Likely pathogenic=====
-    '(i) 1 Very strong (PVS1) AND 1 moderate (PM1–PM6)
-    If PVS_count >= 1 And PM_count = 1 Then
-        like_path_i = True
-    End If
-    
-    '(ii) 1 Strong (PS1–PS4) AND 1–2 moderate (PM1–PM6)
-    If PS_count = 1 And (PM_count = 1 Or PM_count = 2) Then
-        like_path_ii = True
-    End If
-    
-    '(iii) 1 Strong (PS1–PS4) AND >=2 supporting (PP1–PP5)
-    If PS_count = 1 And PP_count >= 2 Then
-        like_path_iii = True
-    End If
-    
-    '(iv) >=3 Moderate (PM1–PM6)
-    If PM_count >= 3 Then
-        like_path_iv = True
-    End If
-    
-    '(v) 2 Moderate (PM1–PM6) AND >=2 supporting(PP1–PP5)
-    If PM_count = 2 And PP_count >= 2 Then
-        like_path_v = True
-    End If
-        
-    '(vi) 1 Moderate (PM1–PM6) AND >=4 supporting (PP1–PP5)
-    If PM_count = 1 And PP_count >= 4 Then
-        like_path_vi = True
-    End If
-    
-    '=====Benign=====
-    '(i) 1 Stand-alone (BA1)
-    If BA_count >= 1 Then
-        benign_i = True
-    End If
-    
-    '(ii) >=2 Strong (BS1–BS4)
-    If BS_count >= 2 Then
-        benign_ii = True
-    End If
-    
-    '=====Likely Benign=====
-    '(i) 1 Strong (BS1–BS4) and 1 supporting (BP1–BP7)
-    If BS_count = 1 And BP_count >= 1 Then
-        like_benign_i = True
-    End If
-    
-    '(ii) >=2 Supporting (BP1–BP7)
-    If BP_count >= 2 Then
-        like_benign_ii = True
-    End If
-    
-    '=====Uncertain significance=====
-    '(i) Other criteria shown above are not met
-    If Not (path_i Or _
-            path_ii Or _
-            path_iii Or _
-            like_path_i Or _
-            like_path_ii Or _
-            like_path_iii Or _
-            like_path_iv Or _
-            like_path_v Or _
-            like_path_vi Or _
-            benign_i Or _
-            benign_ii Or _
-            like_benign_i Or _
-            like_benign_ii) Then
-        unc_significance_i = True
-    End If
-    
-    '(ii) the criteria for benign and pathogenic are contradictory
-    'The following will set pathogenic_criteria_met to True if any of the pathogenic criteria are met
-    pathogenic_criteria_met = (path_i Or _
-                               path_ii Or _
-                               path_iii Or _
-                               like_path_i Or _
-                               like_path_ii Or _
-                               like_path_iii Or _
-                               like_path_iv Or _
-                               like_path_v Or _
-                               like_path_vi)
-    'The following will set benign_criteria_met to True if any of the benign criteria are met
-    benign_criteria_met = (benign_i Or _
-                           benign_ii Or _
-                           like_benign_i Or _
-                           like_benign_ii)
-    'If both pathogenic and benign criteria are met, result is contradictory so activate rule
-    If pathogenic_criteria_met And benign_criteria_met Then
-        unc_significance_ii = True
-    End If
-    
-   'Check which above rules have been met, to determine classification
-   'Classification:
-   '1 = Benign
-   '2 = Likely benign
-   '3 = Uncertain significance
-   '4 = Likely pathogenic
-   '5 = Pathogenic
-    'Rules checked in order such that teh strongest classifciation will be chosen
-    'e.g. if both pathogenic and likely pathogenic rules are activated, the classification will go in as pathogenic
-    
-    'If uncertain signigicance (either no rules met, or contradicting), set acmg_classification to 3
-    If unc_significance_i Then
-        acmg_classification = 3
-        rule_applied = "Uncertain significance (i) Other criteria shown above are not met"
-    ElseIf unc_significance_ii Then
-        acmg_classification = 3
-        rule_applied = "Uncertain significance (ii) the criteria for benign and pathogenic are contradictory"
-    'Else if it's pathogenic, set classification to 5
-    ElseIf path_i Then
-        acmg_classification = 5
-        rule_applied = "Pathogenic (i) 1 Very strong (PVS1) AND" & vbNewLine & vbTab _
-                        & "(a) >= 1 Strong (PS1–PS4) OR" & vbNewLine & vbTab _
-                        & "(b) >= 2 Moderate (PM1–PM6) OR" & vbNewLine & vbTab _
-                        & "(c) 1 Moderate (PM1–PM6) and 1 supporting (PP1–PP5) OR" & vbNewLine & vbTab _
-                        & "(d) >= 2 Supporting (PP1–PP5)"
-    ElseIf path_ii Then
-        acmg_classification = 5
-        rule_applied = "Pathogenic (ii) >=2 Strong (PS1–PS4)"
-    ElseIf path_iii Then
-        acmg_classification = 5
-        rule_applied = "Pathogenic (iii) 1 Strong (PS1–PS4) AND" & vbNewLine & vbTab _
-                        & "(a)>=3 Moderate (PM1–PM6) OR" & vbNewLine & vbTab _
-                        & "(b)2 Moderate (PM1–PM6) AND >=2 Supporting (PP1–PP5) OR" & vbNewLine & vbTab _
-                        & "(c)1 Moderate (PM1–PM6) AND >=4 supporting (PP1–PP5)"
-    'Else if it's likely pathogenic, set classification to 4
-    ElseIf like_path_i Then
-        acmg_classification = 4
-        rule_applied = "Likely pathogenic (i) 1 Very strong (PVS1) AND 1 moderate (PM1–PM6)"
-    ElseIf like_path_ii Then
-        acmg_classification = 4
-        rule_applied = "Likely pathogenic (ii) 1 Strong (PS1–PS4) AND 1–2 moderate (PM1–PM6)"
-    ElseIf like_path_iii Then
-        acmg_classification = 4
-        rule_applied = "Likely pathogenic (iii) 1 Strong (PS1–PS4) AND >=2 supporting (PP1–PP5)"
-    ElseIf like_path_iv Then
-        acmg_classification = 4
-        rule_applied = "Likely pathogenic (iv) >=3 Moderate (PM1–PM6)"
-    ElseIf like_path_v Then
-        acmg_classification = 4
-        rule_applied = "Likely pathogenic (v) 2 Moderate (PM1–PM6) AND >=2 supporting(PP1–PP5)"
-    ElseIf like_path_vi Then
-        acmg_classification = 4
-        rule_applied = "Likely pathogenic (vi) 1 Moderate (PM1–PM6) AND >=4 supporting (PP1–PP5)"
-    'Else if it's benign, set classification to 1
-    ElseIf benign_i Then
-        acmg_classification = 1
-        rule_applied = "Benign (i) 1 Stand-alone (BA1)"
-    ElseIf benign_ii Then
-        acmg_classification = 1
-        rule_applied = "Benign (ii) >=2 Strong (BS1–BS4)"
-    'Else if it's likely benign, set classification to 2
-    ElseIf like_benign_i Then
-        acmg_classification = 2
-        rule_applied = "Likely benign (i) 1 Strong (BS1–BS4) and 1 supporting (BP1–BP7)"
-    ElseIf like_benign_ii Then
-        acmg_classification = 2
-        rule_applied = "Likely benign (ii) >=2 Supporting (BP1–BP7)"
-    Else
-        MsgBox "Unable to calculate pathogencity. Please speak to the bioinformatics team.", vbOKOnly + vbCritical, "ERROR"
-    End If
-     
-    'Populate count text boxes on form
-    Me.PVS_count_box = PVS_count
-    Me.PS_count_box = PS_count
-    Me.PM_count_box = PM_count
-    Me.PP_count_box = PP_count
-    Me.BP_count_box = BP_count
-    Me.BS_count_box = BS_count
-    Me.BA_count_box = BA_count
-    
-    'Populate rule invoked text box
-    Me.rule = rule_applied
-    
-    'Only offer to update the classification if the form is in edit mode (for tests with status of complete it won't by default)
-    If Me.AllowEdits Then
-        'If there is no existing classification, offer to set it to the calulcated value.
-        If IsNull(Me.Classification) Then
-            'Display message box asking user if they want to update classification. If they select Yes, update it. Use path_status dictionary to lookup the status text for that classification.
-            If vbYes = MsgBox("The calculated classification is: " & path_status(acmg_classification) & vbNewLine & vbNewLine & "ACMG rule applied: " & rule_applied _
-            & vbNewLine & vbNewLine & "Would you like to update the classification of the variant?", vbYesNo, "Update Classification?") Then
-                'Use path_statusID dictionary to find the statusID for that pathogenicity classification
-                Me.Classification = path_statusID(acmg_classification)
-                Call Classification_log 'Log that classification has been updated
-            End If
-        'Else if the calculated classification is different to the existing classification, offer to update it to the calulcated value.
-        ElseIf path_statusID(acmg_classification) <> Me.Classification Then
-            'Display message box asking user if they want to update classification. If they select Yes, update it.
-            'Use statusID_status dictionary to lookup the status text for the existing classification.
-            'Use path_status dictionary to lookup the new status text for the calculated classification.
-            If vbYes = MsgBox("The existing classification is: " & statusID_status(Me.Classification.Value) & vbNewLine & "The calculated classification is: " & path_status(acmg_classification) & vbNewLine & vbNewLine & "ACMG rule applied: " & rule_applied _
-            & vbNewLine & vbNewLine & "Would you like to update the classification of the variant?", vbYesNo, "Update Classification?") Then
-                'Use path_statusID dictionary to find the statusID for that pathogenicity classification
-                Me.Classification = path_statusID(acmg_classification)
-                Call Classification_log 'Log that classification has been updated
-            End If
-        End If
-    End If
+    'Set evidence counts to their respective counter objects in the form
+    Me.PVS_count = PVS_count
+    Me.PS_count = PS_count
+    Me.PM_count = PM_count
+    Me.PP_count = PP_count
+    Me.BA_count = BA_count
+    Me.BS_count = BS_count
+    Me.BP_count = BP_count
+    Debug.Print "EvidenceCounts Return:", PVS_count, PS_count, PM_count, PP_count, BA_count, BS_count, BP_count
+
 End Sub
 
-Private Function Classification_log()
-    'Updates the patient log and NGS log tables when the classification is updated
+Public Function GetACMGClassification() As Variant
+    ' Calculates the ACMG classification from selected evidence categories. Reports the strongest criteria met and the rule that invoked it.
+    ' Returns:
+    '    Array(ACMG classification As Integer, ACMG rule applied AS String)
+    Dim isPathogenic As Boolean: isPathogenic = False
+    Dim isLikelyPathogenic As Boolean: isLikelyPathogenic = False
+    Dim isUncertain As Boolean: isUncertain = False
+    Dim isLikelyBenign As Boolean: isLikelyBenign = False
+    Dim isBenign As Boolean: isBenign = False
+    
+    ' Define intermediate variables for selected rules
+    Dim path_rule As String
+    Dim lpath_rule As String
+    Dim lbenign_rule As String
+    Dim benign_rule As String
+    Dim vus_rule As String
+    
+    ' Function Return Values:
+    ' Variable to hold final classification as integer
+    '    1 is Benign, 2 is Likely benign, 3 is Uncertain significance, 4 is Likely pathogenic, 5 is Pathogenic
+    Dim Classification As Integer
+    ' Final ACMG rule for selected criteria as free text
+    Dim rule_applied As String
+
+    
+    '### Pathogenic Criteria
+    ' Pathogenic (i) 1 Very Strong AND (1 Strong OR 1 Moderate OR 2 Supporting)
+    ' Pathogenic (ii) 2 Strong AND (1 Moderate or 2 Supporting)
+    ' Pathogenic (iii) 1 Strong AND (3 Moderate OR [2 Moderate and 2 Supporting] OR [1 Moderate and 4 Supporting])
+    If (Me.PVS_count >= 1 And (Me.PS_count >= 1 Or Me.PM_count >= 1 Or Me.PP_count >= 2)) Then
+        path_rule = "Pathogenic (i) 1 Very Strong AND (1 Strong OR 1 Moderate OR 2 Supporting)"
+        isPathogenic = True
+    ElseIf (Me.PS_count >= 2 And (Me.PM_count >= 1 Or Me.PP_count >= 2)) Then
+        path_rule = "Pathogenic (ii) 2 Strong AND (1 Moderate or 2 Supporting)"
+        isPathogenic = True
+    ElseIf (Me.PS_count >= 1 And ( _
+             Me.PM_count >= 3 Or _
+            (Me.PM_count >= 2 And Me.PP_count >= 2) Or _
+            (Me.PM_count >= 1 And Me.PP_count >= 4) _
+            )) Then
+        path_rule = "Pathogenic (iii) 1 Strong AND (3 Moderate OR [2 Moderate and 2 Supporting] OR [1 Moderate and 4 Supporting])"
+        isPathogenic = True
+    Else
+        path_rule = "None"
+        isPathogenic = False
+    End If
+    
+    '### Likely Pathogenic Criteria
+    ' Likely Pathogenic (i) 2 Strong, (ii) 1 Strong and 1 Moderate, (iii) 1 Strong and 2 Supporting
+    '    (iv) 3 Moderate, (v) 2 Moderate and 2 Supporting, (vi) 1 Moderate and 4 Supporting
+    If Me.PS_count >= 2 Then
+        lpath_rule = "Likely pathogenic (i) 2 Strong"
+        isLikelyPathogenic = True
+    ElseIf (Me.PS_count >= 1 And Me.PM_count >= 1) Then
+        lpath_rule = "Likely pathogenic (ii) Strong and 1 Moderate"
+        isLikelyPathogenic = True
+    ElseIf (Me.PS_count >= 1 And Me.PP_count >= 2) Then
+        lpath_rule = "Likely Pathogenic (iii) 1 Strong and 2 Supporting"
+        isLikelyPathogenic = True
+    ElseIf Me.PM_count >= 3 Then
+        lpath_rule = "Likely pathogenic (iv) 3 Moderate"
+        isLikelyPathogenic = True
+    ElseIf (Me.PM_count >= 2 And Me.PP_count >= 2) Then
+        lpath_rule = "Likely pathogenic (v) 2 Moderate and 2 Supporting"
+        isLikelyPathogenic = True
+    ElseIf (Me.PM_count >= 1 And Me.PP_count >= 4) Then
+        lpath_rule = "Likely pathogenic (vi) 1 Moderate and 4 Supporting"
+        isLikelyPathogenic = True
+    Else
+        lpath_rule = "None"
+        isLikelyPathogenic = False
+    End If
+    
+    '### Likely Benign Criteria
+    ' (i) 1 Strong and 1 Supporting, (ii) 2 Supporting
+    If (Me.BS_count >= 1 And Me.BP_count >= 1) Then
+        lbenign_rule = "Likely Benign (i) 1 Strong and 1 Supporting"
+        isLikelyBenign = True
+    ElseIf Me.BP_count >= 2 Then
+        lbenign_rule = "Likely Benign (ii) 2 Supporting"
+        isLikelyBenign = True
+    Else
+        lbenign_rule = "None"
+        isLikelyBenign = False
+    End If
+    
+    '### Benign Criteria
+    ' (i) 1 StandAlone, (ii) 2 Strong
+    If Me.BA_count >= 1 Then
+        benign_rule = "Benign (i) 1 StandAlone"
+        isBenign = True
+    ElseIf Me.BS_count >= 2 Then
+        benign_rule = "Benign (ii) 2 Strong"
+        isBenign = True
+    Else
+        benign_rule = "None"
+        isBenign = False
+    End If
+    
+    '### Uncertain Significance Criteria
+    ' (i) No other criteria met, (ii) Benign and Pathogenic criteria contradict
+    If (isPathogenic = False And isLikelyPathogenic = False And isBenign = False And isLikelyBenign = False) Then
+        vus_rule = "Uncertain Significance (i) No other criteria met"
+        isUncertain = True
+    ElseIf ((isLikelyBenign = True Or isBenign = True) And (isLikelyPathogenic = True Or isPathogenic = True)) Then
+        vus_rule = "Uncertain Significance (ii) Benign and Pathogenic criteria contradict"
+        isUncertain = True
+    Else
+        vus_rule = "None"
+        isUncertain = False
+    End If
+    
+    '### Calculate ACMG classification
+    ' As per ACMG rules, calculation gives presidence to VUS criteria, then Pathogenic Or Benign, then LikelyPathogenic or LikelyBenign.
+    ' 1 = Benign, 2 = Likely benign, 3 = Uncertain significance, 4 = Likely pathogenic, 5 = Pathogenic
+    If isUncertain = True Then
+        Classification = 3
+        rule_applied = vus_rule
+    ElseIf isPathogenic Then
+        Classification = 5
+        rule_applied = path_rule
+    ElseIf isBenign Then
+        Classification = 1
+        rule_applied = benign_rule
+    ElseIf isLikelyPathogenic Then
+        Classification = 4
+        rule_applied = lpath_rule
+    ElseIf isLikelyBenign Then
+        Classification = 2
+        rule_applied = lbenign_rule
+    Else
+        MsgBox "Error. No classification could be assigned."
+    End If
+    
+    Debug.Print "isPathogenic", isPathogenic
+    Debug.Print "isLikelyPathogenic", isLikelyPathogenic
+    Debug.Print "isLikelyBenign", isLikelyBenign
+    Debug.Print "isBenign", isBenign
+    Debug.Print "isUncertain", isUncertain
+    Debug.Print "classification", Classification, rule_applied
+    
+    ' Return an array containing (ACMG classification As Integer, Rule Applied As String)
+    GetACMGClassification = Array(Classification, rule_applied)
+    
+End Function
+
+' #####
+' # User Interface Events
+' #####
+
+Private Sub Calculate_Click()
+    ' Calculate the ACMG classification from selected evidence categories and update Moka database record.
+    Dim dbs As DAO.Database
+    Dim rsStatus As DAO.Recordset
+
+    Dim acmg_classification As Integer
+    Dim rule_applied As String
+    
+    ' Create a dictionary to hold mappings between calculated classification and its dbo.Status.StatusID record.
+    '    Required to udpate the Me.Classification combo box using the StatusID.
+    Dim class_status
+    Set class_status = CreateObject("scripting.dictionary")
+    ' Set the dbo.Status.StatusID values for the
+    ' scripting.dictionary sets values As String type by default. Use CLng to convert to Long Integer,
+    '    required to match the StatusID data type in SQL queries.
+    class_status.Add 1, CLng(1202218821)
+    class_status.Add 2, CLng(1202218779)
+    class_status.Add 3, CLng(1202218781)
+    class_status.Add 4, CLng(1202218783)
+    class_status.Add 5, CLng(1202218788)
+    ' Save the current record open in the form, updating the database with all selected ACMG criteria
+    DoCmd.RunCommand acCmdSaveRecord
+    
+    ' Update form counter controls using selected ACMG tickboxes:
+    Call SetEvidenceCounts
+    
+    'Calculate the ACMG Classification score and corresponding status
+    class_array = Me.GetACMGClassification
+    acmg_classification = class_array(0)
+    rule_applied = class_array(1)
+    Debug.Print "Calculate_Click:", acmg_classification, rule_applied
+
+    'Get Status text for the calculated ACMG classification.
+    strSQL = "SELECT StatusID, Status FROM Status WHERE Pathogenic = 1 AND StatusID = " & class_status(acmg_classification)
+    Set dbs = CurrentDb
+    Set rsStatus = dbs.OpenRecordset(strSQL, dbOpenDynaset, dbSeeChanges)
+    Debug.Print acmg_classification, rsStatus!Status, rule_applied
+
+    ' Check if the form is in Edit Mode. Returns False for tests with Status 'complete'.
+    If Me.AllowEdits Then
+        ' Display the classification and rule applied. Ask the user if they want to save the classification.
+        If vbYes = MsgBox( _
+            "The calculated classification is: " & rsStatus!Status & vbNewLine & "Rule Applied: " & rule_applied & vbNewLine & _
+            "Would you like to update the classification of the variant?", vbYesNo, "Update Classification?" _
+            ) Then _
+            ' Display the rule in the ACMG rule invoked textbox and update the Variant Classificaiton combo box.
+            Me.rule = rule_applied
+            Me.Classification = rsStatus!StatusID
+            ' Log classification update in NGSMemo and PatientLog tables. Display Classification on WES results page.
+            Call Classification_log
+        End If
+    End If
+
+    rsStatus.Close
+    DoCmd.RunCommand acCmdSaveRecord
+End Sub
+
+Private Sub NGSVariant_comment_AfterUpdate()
+    'Updates the patient log and NGS log tables when the variant comment is updated
     Dim date_now As String
-    Dim username As String
-    Dim pcname As String
-    Dim Classification As String
+    Dim UserName As String
+    Dim PCName As String
+    Dim RC As String
+    Dim sqlMemo As String
+    Dim sqlPatLog As String
     'capture details to be inserted into logs
     date_now = Format(Now(), "dd/mmm/yyyy Hh:Nn:ss")
-    username = VBA.Environ("USERNAME")
-    pcname = VBA.Environ("COMPUTERNAME")
-    patID = Me.InternalPatientID
-    Classification = Me.Classification.Column(1) 'This is the statusID of the current classification in the combo box
-    'construct SQL statementsn and execute
-    sqlMemo = "INSERT INTO NGSLogMemo(InternalPatientID, Type, LinkID, LogMemoEntry, [Date], Login, PCName) VALUES(" & CStr(patID) & ", 2, " & CStr(Me.NGSVariantID) & ",'Variant classification updated to: " & Classification & "',#" & date_now & "#,'" & username & "','" & pcname & "')"
-    sqlPatLogVar = "INSERT INTO PatientLog (InternalPatientID, LogEntry, [Date], Login, PCName) VALUES (" & patID & ", 'NGS: Variant classification for NGSVariantID " & Me.NGSVariantID & " updated to: " & Classification & "', #" & date_now & "#,'" & username & "','" & pcname & "')"
+    UserName = VBA.Environ("USERNAME")
+    PCName = VBA.Environ("COMPUTERNAME")
+    'If the comment has been deleted, record that it has been deleted
+    If Me.NGSVariant_comment.Value = "" Then
+        sqlMemo = "INSERT INTO NGSLogMemo(InternalPatientID, Type, LinkID, LogMemoEntry, [Date], Login, PCName) VALUES(" & Me.InternalPatientID & ", 2, " & Me.NGSVariantID & ",'Variant comment deleted.',#" & date_now & "#,'" & UserName & "','" & PCName & "')"
+        sqlPatLog = "INSERT INTO PatientLog (InternalPatientID, LogEntry, [Date], Login, PCName) VALUES (" & Me.InternalPatientID & ", 'NGS: Variant comment for NGSVariantID " & Me.NGSVariantID & " deleted.', #" & date_now & "#,'" & UserName & "','" & PCName & "')"
+    'If the comment has been edited (rather than deleted), record what it has been updated to in log.
+    Else
+        'Capture the comment from the comment box, escaping any single quotes to prevent SQL errors
+        RC = Replace(Me.NGSVariant_comment.Value, "'", "''")
+        sqlMemo = "INSERT INTO NGSLogMemo(InternalPatientID, Type, LinkID, LogMemoEntry, [Date], Login, PCName) VALUES(" & Me.InternalPatientID & ", 2, " & Me.NGSVariantID & ",'Variant comment updated - " & RC & "',#" & date_now & "#,'" & UserName & "','" & PCName & "')"
+        sqlPatLog = "INSERT INTO PatientLog (InternalPatientID, LogEntry, [Date], Login, PCName) VALUES (" & Me.InternalPatientID & ", 'NGS: Variant comment for NGSVariantID " & Me.NGSVariantID & " updated.', #" & date_now & "#,'" & UserName & "','" & PCName & "')"
+    End If
+    'Execute SQL
     DoCmd.SetWarnings False
     DoCmd.RunSQL sqlMemo
-    DoCmd.RunSQL sqlPatLogVar
+    DoCmd.RunSQL sqlPatLog
     DoCmd.SetWarnings True
     'Save record then update the variant table on results page
     DoCmd.RunCommand acCmdSaveRecord
     Form_s0901_NGSVariants.Requery
-End Function
+End Sub
 
 Private Sub Classification_AfterUpdate()
     'After classification is manually updated, call the classification_log function
     Call Classification_log
 End Sub
 
-Private Sub close_Click()
+Private Sub Close_Click()
     'Close the form
-    DoCmd.close
-End Sub
-
-Private Sub NGSVariant_comment_AfterUpdate()
-    'Updates the patient log and NGS log tables when the variant comment is updated
-    Dim date_now As String
-    Dim username As String
-    Dim pcname As String
-    Dim RC As String
-    Dim sqlMemo As String
-    Dim sqlPatLog As String
-    'capture details to be inserted into logs
-    date_now = Format(Now(), "dd/mmm/yyyy Hh:Nn:ss")
-    username = VBA.Environ("USERNAME")
-    pcname = VBA.Environ("COMPUTERNAME")
-    'If the comment has been deleted, record that it has been deleted
-    If Me.NGSVariant_comment.Value = "" Then
-        sqlMemo = "INSERT INTO NGSLogMemo(InternalPatientID, Type, LinkID, LogMemoEntry, [Date], Login, PCName) VALUES(" & Me.InternalPatientID & ", 2, " & Me.NGSVariantID & ",'Variant comment deleted.',#" & date_now & "#,'" & username & "','" & pcname & "')"
-        sqlPatLog = "INSERT INTO PatientLog (InternalPatientID, LogEntry, [Date], Login, PCName) VALUES (" & Me.InternalPatientID & ", 'NGS: Variant comment for NGSVariantID " & Me.NGSVariantID & " deleted.', #" & date_now & "#,'" & username & "','" & pcname & "')"
-    'If the comment has been edited (rather than deleted), record what it has been updated to in log.
-    Else
-        'Capture the comment from the comment box, escaping any single quotes to prevent SQL errors
-        RC = Replace(Me.NGSVariant_comment.Value, "'", "''")
-        sqlMemo = "INSERT INTO NGSLogMemo(InternalPatientID, Type, LinkID, LogMemoEntry, [Date], Login, PCName) VALUES(" & Me.InternalPatientID & ", 2, " & Me.NGSVariantID & ",'Variant comment updated - " & RC & "',#" & date_now & "#,'" & username & "','" & pcname & "')"
-        sqlPatLog = "INSERT INTO PatientLog (InternalPatientID, LogEntry, [Date], Login, PCName) VALUES (" & Me.InternalPatientID & ", 'NGS: Variant comment for NGSVariantID " & Me.NGSVariantID & " updated.', #" & date_now & "#,'" & username & "','" & pcname & "')"
-    End If
-    'Execute SQL
-    DoCmd.SetWarnings False
-    DoCmd.RunSQL sqlMemo
-    DoCmd.RunSQL sqlPatLog
-    DoCmd.SetWarnings True
-    'Save record then update the variant table on results page
-    DoCmd.RunCommand acCmdSaveRecord
-    Form_s0901_NGSVariants.Requery
-End Sub
-
-Private Function acmg_comment_log(comment_field)
-    'Takes the name of the comment field that has been updated as an argument
-    'Updates the patient log and NGS log tables when a comment for one of the ACMG fields is updated
-    Dim date_now As String
-    Dim username As String
-    Dim pcname As String
-    Dim RC As String
-    Dim sqlMemo As String
-    Dim sqlPatLog As String
-    'capture details to be inserted into logs
-    date_now = Format(Now(), "dd/mmm/yyyy Hh:Nn:ss")
-    username = VBA.Environ("USERNAME")
-    pcname = VBA.Environ("COMPUTERNAME")
-    'If the comment has been deleted, record that it has been deleted
-    'Me.Controls(comment_field).Value will return the comment string from the field that has been updated
-    If Me.Controls(comment_field).Value = "" Then
-        sqlMemo = "INSERT INTO NGSLogMemo(InternalPatientID, Type, LinkID, LogMemoEntry, [Date], Login, PCName) VALUES(" & Me.InternalPatientID & ", 2, " & Me.NGSVariantID & ",'ACMG " & comment_field & " deleted.',#" & date_now & "#,'" & username & "','" & pcname & "')"
-        sqlPatLog = "INSERT INTO PatientLog (InternalPatientID, LogEntry, [Date], Login, PCName) VALUES (" & Me.InternalPatientID & ", 'NGS: ACMG " & comment_field & " deleted for NGSVariantID " & Me.NGSVariantID & ".', #" & date_now & "#,'" & username & "','" & pcname & "')"
-    'If the comment has been edited (rather than deleted), record what it has been updated to in log.
-    Else
-        'Capture the comment from the comment box, escaping any single quotes to prevent SQL errors
-        RC = Replace(Me.Controls(comment_field).Value, "'", "''")
-        sqlMemo = "INSERT INTO NGSLogMemo(InternalPatientID, Type, LinkID, LogMemoEntry, [Date], Login, PCName) VALUES(" & Me.InternalPatientID & ", 2, " & Me.NGSVariantID & ",'ACMG " & comment_field & " updated - " & RC & "',#" & date_now & "#,'" & username & "','" & pcname & "')"
-        sqlPatLog = "INSERT INTO PatientLog (InternalPatientID, LogEntry, [Date], Login, PCName) VALUES (" & Me.InternalPatientID & ", 'NGS: ACMG " & comment_field & " updated for NGSVariantID " & Me.NGSVariantID & ".', #" & date_now & "#,'" & username & "','" & pcname & "')"
-    End If
-    'Execute SQL
-    DoCmd.SetWarnings False
-    DoCmd.RunSQL sqlMemo
-    DoCmd.RunSQL sqlPatLog
-    DoCmd.SetWarnings True
-End Function
-
-'For each ACMG comment field, call the acmg_comment_log function passing the field name as a argument
-Private Sub PVS1_comment_AfterUpdate()
-    Call acmg_comment_log("PVS1_comment")
-End Sub
-
-Private Sub PS1_comment_AfterUpdate()
-    Call acmg_comment_log("PS1_comment")
-End Sub
-
-Private Sub PS2_comment_AfterUpdate()
-    Call acmg_comment_log("PS2_comment")
-End Sub
-
-Private Sub PS3_comment_AfterUpdate()
-    Call acmg_comment_log("PS3_comment")
-End Sub
-
-Private Sub PS4_comment_AfterUpdate()
-    Call acmg_comment_log("PS4_comment")
-End Sub
-
-Private Sub PP1_STRONG_comment_AfterUpdate()
-    Call acmg_comment_log("PP1_STRONG_comment")
-End Sub
-
-Private Sub PM1_comment_AfterUpdate()
-    Call acmg_comment_log("PM1_comment")
-End Sub
-
-Private Sub PM2_comment_AfterUpdate()
-    Call acmg_comment_log("PM2_comment")
-End Sub
-
-Private Sub PM3_comment_AfterUpdate()
-    Call acmg_comment_log("PM3_comment")
-End Sub
-
-Private Sub PM4_comment_AfterUpdate()
-    Call acmg_comment_log("PM4_comment")
-End Sub
-
-Private Sub PM5_comment_AfterUpdate()
-    Call acmg_comment_log("PM5_comment")
-End Sub
-
-Private Sub PM6_comment_AfterUpdate()
-    Call acmg_comment_log("PM6_comment")
-End Sub
-
-Private Sub PP1_MODERATE_comment_AfterUpdate()
-    Call acmg_comment_log("PP1_MODERATE_comment")
-End Sub
-
-Private Sub PP1_SUPPORTING_comment_AfterUpdate()
-    Call acmg_comment_log("PP1_SUPPORTING_comment")
-End Sub
-
-Private Sub PP2_comment_AfterUpdate()
-    Call acmg_comment_log("PP2_comment")
-End Sub
-
-Private Sub PP3_comment_AfterUpdate()
-    Call acmg_comment_log("PP3_comment")
-End Sub
-
-Private Sub PP4_comment_AfterUpdate()
-    Call acmg_comment_log("PP4_comment")
-End Sub
-
-Private Sub PP5_comment_AfterUpdate()
-    Call acmg_comment_log("PP5_comment")
-End Sub
-
-Private Sub BP1_comment_AfterUpdate()
-    Call acmg_comment_log("BP1_comment")
-End Sub
-
-Private Sub BP2_comment_AfterUpdate()
-    Call acmg_comment_log("BP2_comment")
-End Sub
-
-Private Sub BP3_comment_AfterUpdate()
-    Call acmg_comment_log("BP3_comment")
-End Sub
-
-Private Sub BP4_comment_AfterUpdate()
-    Call acmg_comment_log("BP4_comment")
-End Sub
-
-Private Sub BP5_comment_AfterUpdate()
-    Call acmg_comment_log("BP5_comment")
-End Sub
-
-Private Sub BP6_comment_AfterUpdate()
-    Call acmg_comment_log("BP6_comment")
-End Sub
-
-Private Sub BP7_comment_AfterUpdate()
-    Call acmg_comment_log("BP7_comment")
-End Sub
-
-Private Sub BS1_comment_AfterUpdate()
-    Call acmg_comment_log("BS1_comment")
-End Sub
-
-Private Sub BS2_comment_AfterUpdate()
-    Call acmg_comment_log("BS2_comment")
-End Sub
-
-Private Sub BS3_comment_AfterUpdate()
-    Call acmg_comment_log("BS3_comment")
-End Sub
-
-Private Sub BS4_comment_AfterUpdate()
-    Call acmg_comment_log("BS4_comment")
-End Sub
-
-Private Sub BA1_comment_AfterUpdate()
-    Call acmg_comment_log("BA1_comment")
+    DoCmd.Close
 End Sub
 
 Private Sub rule_DblClick(Cancel As Integer)
@@ -639,155 +352,530 @@ Private Sub rule_DblClick(Cancel As Integer)
     DoCmd.OpenForm "s0901_NGSVariantACMGPopupRules"
 End Sub
 
-Private Function boxtick_log(box_name As String)
-    'Takes the name of the acmg field that has been updated as an argument
-    'Updates the patient log and NGS log tables when a box is ticked or unticked for one of the ACMG fields
+' ## *_Frame_AfterUpdate: Update the patient log with the human-readable value of the ACMG criteria tickbox selection.
+'        Note: Empty fields are logged with the string 'Null' as the VBA Null value cannot be inserted into SQL statements.
+Private Sub PVS1_Frame_AfterUpdate()
+    If IsNull(PVS1_Frame.Value) Then
+        OptionBox_Log PVS1_Frame.ControlSource, "Null"
+    Else
+        OptionBox_Log PVS1_Frame.ControlSource, PVS1_Frame.Value
+    End If
+End Sub
+
+Private Sub PS1_Frame_AfterUpdate()
+    If IsNull(PS1_Frame.Value) Then
+        OptionBox_Log PS1_Frame.ControlSource, "Null"
+    Else
+        OptionBox_Log PS1_Frame.ControlSource, PS1_Frame.Value
+    End If
+End Sub
+
+Private Sub PS2_Frame_AfterUpdate()
+    If IsNull(PS2_Frame.Value) Then
+        OptionBox_Log PS2_Frame.ControlSource, "Null"
+    Else
+        OptionBox_Log PS2_Frame.ControlSource, PS2_Frame.Value
+    End If
+End Sub
+
+Private Sub PS3_Frame_AfterUpdate()
+    If IsNull(PS3_Frame.Value) Then
+        OptionBox_Log PS3_Frame.ControlSource, "Null"
+    Else
+        OptionBox_Log PS3_Frame.ControlSource, PS3_Frame.Value
+    End If
+End Sub
+
+Private Sub PS4_Frame_AfterUpdate()
+    If IsNull(PS4_FRAME.Value) Then
+        OptionBox_Log PS4_FRAME.ControlSource, "Null"
+    Else
+        OptionBox_Log PS4_FRAME.ControlSource, PS4_FRAME.Value
+    End If
+End Sub
+
+Private Sub PM1_Frame_AfterUpdate()
+    If IsNull(PM1_Frame.Value) Then
+        OptionBox_Log PM1_Frame.ControlSource, "Null"
+    Else
+        OptionBox_Log PM1_Frame.ControlSource, PM1_Frame.Value
+    End If
+End Sub
+
+Private Sub PM2_Frame_AfterUpdate()
+    If IsNull(PM2_Frame.Value) Then
+        OptionBox_Log PM2_Frame.ControlSource, "Null"
+    Else
+        OptionBox_Log PM2_Frame.ControlSource, PM2_Frame.Value
+    End If
+End Sub
+
+Private Sub PM3_Frame_AfterUpdate()
+    If IsNull(PM3_Frame.Value) Then
+        OptionBox_Log PM3_Frame.ControlSource, "Null"
+    Else
+        OptionBox_Log PM3_Frame.ControlSource, PM3_Frame.Value
+    End If
+End Sub
+
+Private Sub PM4_Frame_AfterUpdate()
+    If IsNull(PM4_Frame.Value) Then
+        OptionBox_Log PM4_Frame.ControlSource, "Null"
+    Else
+        OptionBox_Log PM4_Frame.ControlSource, PM4_Frame.Value
+    End If
+End Sub
+
+Private Sub PM5_Frame_AfterUpdate()
+    If IsNull(PM5_Frame.Value) Then
+        OptionBox_Log PM5_Frame.ControlSource, "Null"
+    Else
+        OptionBox_Log PM5_Frame.ControlSource, PM5_Frame.Value
+    End If
+End Sub
+
+Private Sub PM6_Frame_AfterUpdate()
+    If IsNull(PM6_Frame.Value) Then
+        OptionBox_Log PM6_Frame.ControlSource, "Null"
+    Else
+        OptionBox_Log PM6_Frame.ControlSource, PM6_Frame.Value
+    End If
+End Sub
+
+Private Sub PP1_Frame_AfterUpdate()
+    If IsNull(PP1_Frame.Value) Then
+        OptionBox_Log PP1_Frame.ControlSource, "Null"
+    Else
+        OptionBox_Log PP1_Frame.ControlSource, PP1_Frame.Value
+    End If
+End Sub
+
+Private Sub PP2_Frame_AfterUpdate()
+    If IsNull(PP2_Frame.Value) Then
+        OptionBox_Log PP2_Frame.ControlSource, "Null"
+    Else
+        OptionBox_Log PP2_Frame.ControlSource, PP2_Frame.Value
+    End If
+End Sub
+
+Private Sub PP3_Frame_AfterUpdate()
+    If IsNull(PP3_Frame.Value) Then
+        OptionBox_Log PP3_Frame.ControlSource, "Null"
+    Else
+        OptionBox_Log PP3_Frame.ControlSource, PP3_Frame.Value
+    End If
+End Sub
+
+Private Sub PP4_Frame_AfterUpdate()
+    If IsNull(PP4_Frame.Value) Then
+        OptionBox_Log PP4_Frame.ControlSource, "Null"
+    Else
+        OptionBox_Log PP4_Frame.ControlSource, PP4_Frame.Value
+    End If
+End Sub
+
+Private Sub PP5_Frame_AfterUpdate()
+    If IsNull(PP5_Frame.Value) Then
+        OptionBox_Log PP5_Frame.ControlSource, "Null"
+    Else
+        OptionBox_Log PP5_Frame.ControlSource, PP5_Frame.Value
+    End If
+End Sub
+
+Private Sub BA1_Frame_AfterUpdate()
+    If IsNull(BA1_Frame.Value) Then
+        OptionBox_Log BA1_Frame.ControlSource, "Null"
+    Else
+        OptionBox_Log BA1_Frame.ControlSource, BA1_Frame.Value
+    End If
+End Sub
+
+Private Sub BS1_Frame_AfterUpdate()
+    If IsNull(BS1_Frame.Value) Then
+        OptionBox_Log BS1_Frame.ControlSource, "Null"
+    Else
+        OptionBox_Log BS1_Frame.ControlSource, BS1_Frame.Value
+    End If
+End Sub
+
+Private Sub BS2_Frame_AfterUpdate()
+    If IsNull(BS2_Frame.Value) Then
+        OptionBox_Log BS2_Frame.ControlSource, "Null"
+    Else
+        OptionBox_Log BS2_Frame.ControlSource, BS2_Frame.Value
+    End If
+End Sub
+
+Private Sub BS3_Frame_AfterUpdate()
+    If IsNull(BS3_Frame.Value) Then
+        OptionBox_Log BS3_Frame.ControlSource, "Null"
+    Else
+        OptionBox_Log BS3_Frame.ControlSource, BS3_Frame.Value
+    End If
+End Sub
+
+Private Sub BS4_Frame_AfterUpdate()
+    If IsNull(BS4_Frame.Value) Then
+        OptionBox_Log BS4_Frame.ControlSource, "Null"
+    Else
+        OptionBox_Log BS4_Frame.ControlSource, BS4_Frame.Value
+    End If
+End Sub
+
+Private Sub BP1_Frame_AfterUpdate()
+    If IsNull(BP1_Frame.Value) Then
+        OptionBox_Log BP1_Frame.ControlSource, "Null"
+    Else
+        OptionBox_Log BP1_Frame.ControlSource, BP1_Frame.Value
+    End If
+End Sub
+
+Private Sub BP2_Frame_AfterUpdate()
+    If IsNull(BP2_Frame.Value) Then
+        OptionBox_Log BP2_Frame.ControlSource, "Null"
+    Else
+        OptionBox_Log BP2_Frame.ControlSource, BP2_Frame.Value
+    End If
+End Sub
+
+Private Sub BP3_Frame_AfterUpdate()
+    If IsNull(BP3_Frame.Value) Then
+        OptionBox_Log BP3_Frame.ControlSource, "Null"
+    Else
+        OptionBox_Log BP3_Frame.ControlSource, BP3_Frame.Value
+    End If
+End Sub
+
+Private Sub BP4_Frame_AfterUpdate()
+    If IsNull(BP4_Frame.Value) Then
+        OptionBox_Log BP4_Frame.ControlSource, "Null"
+    Else
+        OptionBox_Log BP4_Frame.ControlSource, BP4_Frame.Value
+    End If
+End Sub
+
+Private Sub BP5_Frame_AfterUpdate()
+    If IsNull(BP5_Frame.Value) Then
+        OptionBox_Log BP5_Frame.ControlSource, "Null"
+    Else
+        OptionBox_Log BP5_Frame.ControlSource, BP5_Frame.Value
+    End If
+End Sub
+
+Private Sub BP6_Frame_AfterUpdate()
+    If IsNull(BP6_Frame.Value) Then
+        OptionBox_Log BP6_Frame.ControlSource, "Null"
+    Else
+        OptionBox_Log BP6_Frame.ControlSource, BP6_Frame.Value
+    End If
+End Sub
+
+Private Sub BP7_Frame_AfterUpdate()
+    If IsNull(BP7_Frame.Value) Then
+        OptionBox_Log BP7_Frame.ControlSource, "Null"
+    Else
+        OptionBox_Log BP7_Frame.ControlSource, BP7_Frame.Value
+    End If
+End Sub
+
+' ## *_comment_AfterUpdate: Call the ACMG comment log whenever a comment field is updated for an ACMG criteria
+
+Private Sub PVS1_comment_AfterUpdate()
+    Call acmg_comment_log("PVS1_comment")
+End Sub
+Private Sub PS1_comment_AfterUpdate()
+    Call acmg_comment_log("PS1_comment")
+End Sub
+Private Sub PS2_comment_AfterUpdate()
+    Call acmg_comment_log("PS2_comment")
+End Sub
+Private Sub PS3_comment_AfterUpdate()
+    Call acmg_comment_log("PS3_comment")
+End Sub
+Private Sub PS4_comment_AfterUpdate()
+    Call acmg_comment_log("PS4_comment")
+End Sub
+Private Sub PM1_comment_AfterUpdate()
+    Call acmg_comment_log("PM1_comment")
+End Sub
+Private Sub PM2_comment_AfterUpdate()
+    Call acmg_comment_log("PM2_comment")
+End Sub
+Private Sub PM3_comment_AfterUpdate()
+    Call acmg_comment_log("PM3_comment")
+End Sub
+Private Sub PM4_comment_AfterUpdate()
+    Call acmg_comment_log("PM4_comment")
+End Sub
+Private Sub PM5_comment_AfterUpdate()
+    Call acmg_comment_log("PM5_comment")
+End Sub
+Private Sub PM6_comment_AfterUpdate()
+    Call acmg_comment_log("PM6_comment")
+End Sub
+Private Sub PP1_comment_AfterUpdate()
+    Call acmg_comment_log("PP1_comment")
+End Sub
+Private Sub PP2_comment_AfterUpdate()
+    Call acmg_comment_log("PP2_comment")
+End Sub
+Private Sub PP3_comment_AfterUpdate()
+    Call acmg_comment_log("PP3_comment")
+End Sub
+Private Sub PP4_comment_AfterUpdate()
+    Call acmg_comment_log("PP4_comment")
+End Sub
+Private Sub PP5_comment_AfterUpdate()
+    Call acmg_comment_log("PP5_comment")
+End Sub
+Private Sub BP1_comment_AfterUpdate()
+    Call acmg_comment_log("BP1_comment")
+End Sub
+Private Sub BP2_comment_AfterUpdate()
+    Call acmg_comment_log("BP2_comment")
+End Sub
+Private Sub BP3_comment_AfterUpdate()
+    Call acmg_comment_log("BP3_comment")
+End Sub
+Private Sub BP4_comment_AfterUpdate()
+    Call acmg_comment_log("BP4_comment")
+End Sub
+Private Sub BP5_comment_AfterUpdate()
+    Call acmg_comment_log("BP5_comment")
+End Sub
+Private Sub BP6_comment_AfterUpdate()
+    Call acmg_comment_log("BP6_comment")
+End Sub
+Private Sub BP7_comment_AfterUpdate()
+    Call acmg_comment_log("BP7_comment")
+End Sub
+Private Sub BS1_comment_AfterUpdate()
+    Call acmg_comment_log("BS1_comment")
+End Sub
+Private Sub BS2_comment_AfterUpdate()
+    Call acmg_comment_log("BS2_comment")
+End Sub
+Private Sub BS3_comment_AfterUpdate()
+    Call acmg_comment_log("BS3_comment")
+End Sub
+Private Sub BS4_comment_AfterUpdate()
+    Call acmg_comment_log("BS4_comment")
+End Sub
+Private Sub BA1_comment_AfterUpdate()
+    Call acmg_comment_log("BA1_comment")
+End Sub
+
+' ## *_Clear_Click() - Reset criteria to Null in NGSVariantACMG table and resets tick-boxes. Bound to criteria clear (X) buttons.
+Private Sub PVS1_Clear_Click()
+Me.PVS1_Frame = Null
+PVS1_Frame_AfterUpdate
+End Sub
+Private Sub PS1_Clear_Click()
+Me.PS1_Frame = Null
+PS1_Frame_AfterUpdate
+End Sub
+Private Sub PS2_Clear_Click()
+Me.PS2_Frame = Null
+PS2_Frame_AfterUpdate
+End Sub
+Private Sub PS3_Clear_Click()
+Me.PS3_Frame = Null
+PS3_Frame_AfterUpdate
+End Sub
+Private Sub PS4_Clear_Click()
+Me.PS4_FRAME = Null
+PS4_Frame_AfterUpdate
+End Sub
+Private Sub PM1_Clear_Click()
+Me.PM1_Frame = Null
+PM1_Frame_AfterUpdate
+End Sub
+Private Sub PM2_Clear_Click()
+Me.PM2_Frame = Null
+PM2_Frame_AfterUpdate
+End Sub
+Private Sub PM3_Clear_Click()
+Me.PM3_Frame = Null
+PM3_Frame_AfterUpdate
+End Sub
+Private Sub PM4_Clear_Click()
+Me.PM4_Frame = Null
+PM4_Frame_AfterUpdate
+End Sub
+Private Sub PM5_Clear_Click()
+Me.PM5_Frame = Null
+PM5_Frame_AfterUpdate
+End Sub
+Private Sub PM6_Clear_Click()
+Me.PM6_Frame = Null
+PM6_Frame_AfterUpdate
+End Sub
+Private Sub PP1_Clear_Click()
+Me.PP1_Frame = Null
+PP1_Frame_AfterUpdate
+End Sub
+Private Sub PP2_Clear_Click()
+Me.PP2_Frame = Null
+PP2_Frame_AfterUpdate
+End Sub
+Private Sub PP3_Clear_Click()
+Me.PP3_Frame = Null
+PP3_Frame_AfterUpdate
+End Sub
+Private Sub PP4_Clear_Click()
+Me.PP4_Frame = Null
+PP4_Frame_AfterUpdate
+End Sub
+Private Sub PP5_Clear_Click()
+Me.PP5_Frame = Null
+PP5_Frame_AfterUpdate
+End Sub
+Private Sub BA1_Clear_Click()
+Me.BA1_Frame = Null
+BA1_Frame_AfterUpdate
+End Sub
+Private Sub BS1_Clear_Click()
+Me.BS1_Frame = Null
+BS1_Frame_AfterUpdate
+End Sub
+Private Sub BS2_Clear_Click()
+Me.BS2_Frame = Null
+BS2_Frame_AfterUpdate
+End Sub
+Private Sub BS3_Clear_Click()
+Me.BS3_Frame = Null
+BS3_Frame_AfterUpdate
+End Sub
+Private Sub BS4_Clear_Click()
+Me.BS4_Frame = Null
+BS4_Frame_AfterUpdate
+End Sub
+Private Sub BP1_Clear_Click()
+Me.BP1_Frame = Null
+BP1_Frame_AfterUpdate
+End Sub
+Private Sub BP2_Clear_Click()
+Me.BP2_Frame = Null
+BP2_Frame_AfterUpdate
+End Sub
+Private Sub BP3_Clear_Click()
+Me.BP3_Frame = Null
+BP3_Frame_AfterUpdate
+End Sub
+Private Sub BP4_Clear_Click()
+Me.BP4_Frame = Null
+BP4_Frame_AfterUpdate
+End Sub
+Private Sub BP5_Clear_Click()
+Me.BP5_Frame = Null
+BP5_Frame_AfterUpdate
+End Sub
+Private Sub BP6_Clear_Click()
+Me.BP6_Frame = Null
+BP6_Frame_AfterUpdate
+End Sub
+Private Sub BP7_Clear_Click()
+Me.BP7_Frame = Null
+BP7_Frame_AfterUpdate
+End Sub
+
+' #####
+' Loggers
+' #####
+Private Function Classification_log()
+    'Create an entry in the NGSMemo and PatientLog tables to indicate that the classification has been updated.
+    '    Pulls classification from Me.Classification combo box, therefore this value must be set before calling function.
+    '    Returns: None
     Dim date_now As String
-    Dim username As String
-    Dim pcname As String
-    Dim sqlMemo As String
+    Dim UserName As String
+    Dim PCName As String
+    Dim Classification As String
+    ' Capture details to be inserted into logs
+    date_now = Format(Now(), "dd/mmm/yyyy Hh:Nn:ss")
+    UserName = VBA.Environ("USERNAME")
+    PCName = VBA.Environ("COMPUTERNAME")
+    patID = Me.InternalPatientID
+    Classification = Me.Classification.Column(1) 'This is the statusID of the current classification in the combo box
+    sqlMemo = "INSERT INTO NGSLogMemo(InternalPatientID, Type, LinkID, LogMemoEntry, [Date], Login, PCName) VALUES(" & CStr(patID) & ", 2, " & CStr(Me.NGSVariantID) & ",'Variant classification updated to: " & Classification & "',#" & date_now & "#,'" & UserName & "','" & PCName & "')"
+    sqlPatLogVar = "INSERT INTO PatientLog (InternalPatientID, LogEntry, [Date], Login, PCName) VALUES (" & patID & ", 'NGS: Variant classification for NGSVariantID " & Me.NGSVariantID & " updated to: " & Classification & "', #" & date_now & "#,'" & UserName & "','" & PCName & "')"
+    DoCmd.SetWarnings False ' Turn System Messages off
+    DoCmd.RunSQL sqlMemo
+    DoCmd.RunSQL sqlPatLogVar
+    DoCmd.SetWarnings True
+    'Save the record and update the NGSVariant table to display the new classification on the WES results page
+    DoCmd.RunCommand acCmdSaveRecord
+    Form_s0901_NGSVariants.Requery
+End Function
+
+Private Function acmg_comment_log(comment_field)
+    'Takes the name of the comment field that has been updated as an argument
+    'Updates the patient log and NGS log tables when a comment for one of the ACMG fields is updated
+    Dim date_now As String
+    Dim UserName As String
+    Dim PCName As String
+    Dim RC As String
     Dim sqlPatLog As String
     'capture details to be inserted into logs
     date_now = Format(Now(), "dd/mmm/yyyy Hh:Nn:ss")
-    username = VBA.Environ("USERNAME")
-    pcname = VBA.Environ("COMPUTERNAME")
-    patID = Me.InternalPatientID
-    'Me.Controls(box_name) will return the value of the checkbox that has been updated
-    'If the box is checked the value will be -1 which == True
-    'If it is not checked the value will be 0 which == False
-    'If the box is ticked, update log to say it was ticked
-    If Me.Controls(box_name) Then
-        sqlMemo = "INSERT INTO NGSLogMemo(InternalPatientID, Type, LinkID, LogMemoEntry, [Date], Login, PCName) VALUES(" & CStr(patID) & ", 2, " & CStr(Me.NGSVariantID) & ",'" & box_name & " box TICKED.',#" & date_now & "#,'" & username & "','" & pcname & "')"
-        sqlPatLog = "INSERT INTO PatientLog (InternalPatientID, LogEntry, [Date], Login, PCName) VALUES (" & patID & ", 'NGS: " & box_name & " box for NGSVariantID " & Me.NGSVariantID & " box TICKED.', #" & date_now & "#,'" & username & "','" & pcname & "')"
-    'If the box isn't ticked, update log to say it was unticked
+    UserName = VBA.Environ("USERNAME")
+    PCName = VBA.Environ("COMPUTERNAME")
+    'If the comment has been deleted, record that it has been deleted
+    'Me.Controls(comment_field).Value will return the comment string from the field that has been updated
+    If Me.Controls(comment_field).Value = "" Then
+        sqlPatLog = "INSERT INTO PatientLog (InternalPatientID, LogEntry, [Date], Login, PCName) VALUES (" & Me.InternalPatientID & ", 'NGS: ACMG " & comment_field & " deleted for NGSVariantID " & Me.NGSVariantID & ".', #" & date_now & "#,'" & UserName & "','" & PCName & "')"
+    'If the comment has been edited (rather than deleted), record what it has been updated to in log.
     Else
-        sqlMemo = "INSERT INTO NGSLogMemo(InternalPatientID, Type, LinkID, LogMemoEntry, [Date], Login, PCName) VALUES(" & CStr(patID) & ", 2, " & CStr(Me.NGSVariantID) & ",'" & box_name & " box UNTICKED.',#" & date_now & "#,'" & username & "','" & pcname & "')"
-        sqlPatLog = "INSERT INTO PatientLog (InternalPatientID, LogEntry, [Date], Login, PCName) VALUES (" & patID & ", 'NGS: " & box_name & " box for NGSVariantID " & Me.NGSVariantID & " box UNTICKED.', #" & date_now & "#,'" & username & "','" & pcname & "')"
+        'Capture the comment from the comment box, escaping any single quotes to prevent SQL errors
+        RC = Replace(Me.Controls(comment_field).Value, "'", "''")
+        sqlPatLog = "INSERT INTO PatientLog (InternalPatientID, LogEntry, [Date], Login, PCName) VALUES (" & Me.InternalPatientID & ", 'NGS: ACMG " & comment_field & " updated for NGSVariantID " & Me.NGSVariantID & ".', #" & date_now & "#,'" & UserName & "','" & PCName & "')"
     End If
     'Execute SQL
+    DoCmd.SetWarnings False
+    DoCmd.RunSQL sqlPatLog
+    DoCmd.SetWarnings True
+End Function
+
+Private Function OptionBox_Log(box_name As String, box_value As String)
+    ' Updates the NGSMemo and PatientLog tables when an ACMG criteria tickbox is updated.
+    '    Args:
+    '        box_name: The record source for an ACMG criteria option box e.g. 'PVS1'
+    '        box_value: The value of an ACMG criteria tickbox e.g. '3366'. These map to criteria strength labels in dbo.Item
+    '            The item table is queried for the evidence label string unless box_value = "Null".
+
+    ' Objects for querying the moka database
+    Dim dbs As DAO.Database
+    Dim rsItem As DAO.Recordset
+    
+    Dim date_now As String
+    Dim UserName As String
+    Dim PCName As String
+    Dim sqlMemo As String
+    Dim sqlPatLog As String
+    Dim hrBoxValue As String
+    
+
+    ' Capture details to be inserted into logs
+    date_now = Format(Now(), "dd/mmm/yyyy Hh:Nn:ss")
+    UserName = VBA.Environ("USERNAME")
+    PCName = VBA.Environ("COMPUTERNAME")
+    patID = Me.InternalPatientID
+    
+    ' Set the human-readable box value by querying the box_value argument against dbo.Item.ItemID.
+    '     VBA Null cannot be passed as a argument, so the string "Null" is expected if this argument is empty.
+    If box_value = "Null" Then
+        hrBoxValue = "Null"
+    Else
+        Set dbs = CurrentDb
+        Set rsItem = dbs.OpenRecordset("SELECT Item FROM Item WHERE ItemID = " & box_value)
+        hrBoxValue = rsItem!item
+        rsItem.Close
+    End If
+    
+    ' Define and Execute SQL
+    sqlMemo = "INSERT INTO NGSLogMemo(InternalPatientID, Type, LinkID, LogMemoEntry, [Date], Login, PCName) VALUES(" & CStr(patID) & ", 2, " & CStr(Me.NGSVariantID) & ",'" & box_name & " has been updated to " & hrBoxValue & ".',#" & date_now & "#,'" & UserName & "','" & PCName & "')"
+    sqlPatLog = "INSERT INTO PatientLog (InternalPatientID, LogEntry, [Date], Login, PCName) VALUES (" & patID & ", 'NGS: " & box_name & " box for NGSVariantID " & Me.NGSVariantID & " has been updated to " & hrBoxValue & ".', #" & date_now & "#,'" & UserName & "','" & PCName & "')"
     DoCmd.SetWarnings False
     DoCmd.RunSQL sqlMemo
     DoCmd.RunSQL sqlPatLog
     DoCmd.SetWarnings True
 End Function
-
-'When checkboxes are ticked/unticked, call the boxtick_log function passing the field name as an argument so logs can be updated.
-Private Sub PVS1_Click()
-    Call boxtick_log("PVS1")
-End Sub
-
-Private Sub PS1_Click()
-    Call boxtick_log("PS1")
-End Sub
-
-Private Sub PS2_Click()
-    Call boxtick_log("PS2")
-End Sub
-
-Private Sub PS3_Click()
-    Call boxtick_log("PS3")
-End Sub
-
-Private Sub PS4_Click()
-    Call boxtick_log("PS4")
-End Sub
-
-Private Sub PP1_STRONG_Click()
-    Call boxtick_log("PP1_STRONG")
-End Sub
-
-Private Sub PM1_Click()
-    Call boxtick_log("PM1")
-End Sub
-
-Private Sub PM2_Click()
-    Call boxtick_log("PM2")
-End Sub
-
-Private Sub PM3_Click()
-    Call boxtick_log("PM3")
-End Sub
-
-Private Sub PM4_Click()
-    Call boxtick_log("PM4")
-End Sub
-
-Private Sub PM5_Click()
-    Call boxtick_log("PM5")
-End Sub
-
-Private Sub PM6_Click()
-    Call boxtick_log("PM6")
-End Sub
-
-Private Sub PP1_MODERATE_Click()
-    Call boxtick_log("PP1_MODERATE")
-End Sub
-
-Private Sub PP1_SUPPORTING_Click()
-    Call boxtick_log("PP1_SUPPORTING")
-End Sub
-
-Private Sub PP2_Click()
-    Call boxtick_log("PP2")
-End Sub
-
-Private Sub PP3_Click()
-    Call boxtick_log("PP3")
-End Sub
-
-Private Sub PP4_Click()
-    Call boxtick_log("PP4")
-End Sub
-
-Private Sub PP5_Click()
-    Call boxtick_log("PP5")
-End Sub
-
-Private Sub BP1_Click()
-    Call boxtick_log("BP1")
-End Sub
-
-Private Sub BP2_Click()
-    Call boxtick_log("BP2")
-End Sub
-
-Private Sub BP3_Click()
-    Call boxtick_log("BP3")
-End Sub
-
-Private Sub BP4_Click()
-    Call boxtick_log("BP4")
-End Sub
-
-Private Sub BP5_Click()
-    Call boxtick_log("BP5")
-End Sub
-
-Private Sub BP6_Click()
-    Call boxtick_log("BP6")
-End Sub
-
-Private Sub BP7_Click()
-    Call boxtick_log("BP7")
-End Sub
-
-Private Sub BS1_Click()
-    Call boxtick_log("BS1")
-End Sub
-
-Private Sub BS2_Click()
-    Call boxtick_log("BS2")
-End Sub
-
-Private Sub BS3_Click()
-    Call boxtick_log("BS3")
-End Sub
-
-Private Sub BS4_Click()
-    Call boxtick_log("BS4")
-End Sub
-
-Private Sub BA1_Click()
-    Call boxtick_log("BA1")
-End Sub
