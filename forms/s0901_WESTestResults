@@ -493,6 +493,30 @@ Private Sub RemoveAll_MouseDown(Button As Integer, Shift As Integer, x As Single
 End Sub
 
 
+Private Sub txt_Check1Date_BeforeUpdate(Cancel As Integer)
+    'Don't allow user to modify check1date if subsequent checks already complete
+    If Not IsNull(Me.Check2Date) Or Not IsNull(Me.Check3Date) Or Not IsNull(Me.Check4Date) Then
+        MsgBox "You cannot modify the check 1 date after subsequent checks have been completed"
+        Cancel = True
+    End If
+End Sub
+
+Private Sub txt_Check2Date_BeforeUpdate(Cancel As Integer)
+    'Don't allow user to modify check2date if subsequent checks already complete
+    If Not IsNull(Me.Check3Date) Or Not IsNull(Me.Check4Date) Then
+        MsgBox "You cannot modify the check 2 date after subsequent checks have been completed"
+        Cancel = True
+    End If
+End Sub
+
+Private Sub txt_Check3Date_BeforeUpdate(Cancel As Integer)
+    'Don't allow user to modify check3date if subsequent checks already complete
+    If Not IsNull(Me.Check4Date) Then
+        MsgBox "You cannot modify the reported date after case has been approved"
+        Cancel = True
+    End If
+End Sub
+
 Private Sub txt_Resultcmt_GotFocus()
     Me.txt_Resultcmt.SelLength = 0
 End Sub

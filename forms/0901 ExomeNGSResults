@@ -26,7 +26,9 @@ Private Sub Form_Current()
         Form_s0901_WESTestResults.Checker1.Locked = True
         Form_s0901_WESTestResults.txt_Check1Date.Locked = True
         Form_s0901_WESTestResults.Checker2.Locked = True
+        Form_s0901_WESTestResults.txt_Check2Date.Locked = True
         Form_s0901_WESTestResults.Checker3.Locked = True
+        Form_s0901_WESTestResults.txt_Check3Date.Locked = True
         
 'if test report has been approved then completely lock down the form
 ElseIf (Not IsNull(Form_s0901_WESTestResults.Checker4) And Not IsNull(Form_s0901_WESTestResults.txt_Check3Date) And (Form_s0901_WESTestResults.StatusID = 4 Or Form_s0901_WESTestResults.StatusID = 1202218816) And [Form_0901 ExomeNGSResults].SafetyCheck.Value = False) Then
@@ -68,7 +70,9 @@ ElseIf (Not IsNull(Form_s0901_WESTestResults.Checker4) And Not IsNull(Form_s0901
         Form_s0901_WESTestResults.Checker1.Locked = False
         Form_s0901_WESTestResults.txt_Check1Date.Locked = False
         Form_s0901_WESTestResults.Checker2.Locked = False
+        Form_s0901_WESTestResults.txt_Check2Date.Locked = False
         Form_s0901_WESTestResults.Checker3.Locked = False
+        Form_s0901_WESTestResults.txt_Check3Date.Locked = False
     End If
 End Sub
 
