@@ -865,7 +865,6 @@ Private Function OptionBox_Log(box_name As String, box_value As String)
     If box_value = "Null" Then
         hrBoxValue = "Null"
     Else
-        strSQL = "SELECT * FROM NGSVariantACMG WHERE NGSVariantACMGID = " & Me.NGSVariantACMGID
         Set dbs = CurrentDb
         Set rsItem = dbs.OpenRecordset("SELECT Item FROM Item WHERE ItemID = " & box_value)
         hrBoxValue = rsItem!item
