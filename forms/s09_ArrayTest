@@ -15,6 +15,8 @@ Private Sub StatusID_AfterUpdate()
         S = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + ",'Array test: Status updated to " + Me![StatusID].Column(1) + " for test requested " + CStr(Me![RequestedDate]) + "',#" + d + "#,'" + un + "','" + cn + "')"
         Q.Open S, CurrentProject.Connection
         Set Q = Nothing
+    'Save changes (the quick way - by switching focus to a different subform, much faster than doing a refresh or requery)
+    Forms![09 ArrayResultsByPostition]![s_StatusOverall].SetFocus
 End Sub
 
 
@@ -131,24 +133,26 @@ Private Sub Check0ID_AfterUpdate()
     Q.Open S, CurrentProject.Connection
     Set Q = Nothing
     
+    'Save changes (the quick way - by switching focus to a different subform, much faster than doing a refresh or requery)
+    Forms![09 ArrayResultsByPostition]![s_StatusOverall].SetFocus
+    
     'Update date fields whenever something changes
     Check0Date = Now()
-    If IsNull(Check2ID) Then
-        ArrayResultDate = Now()
-        Me.ArrayResultDate.Requery
-        Dim cred As Long
-        Dim cgrey As Long
-        cred = RGB(255, 0, 0)
-        cgrey = RGB(192, 192, 192)
-        Me.Label35.BackColor = cred
-        Dim PauseTime, Start
-        PauseTime = 1
-        Start = Timer
-        Do While Timer < Start + PauseTime
-             DoEvents
-        Loop
-        Me.Label35.BackColor = cgrey
-        End If
+    ArrayResultDate = Now()
+    Me.ArrayResultDate.Requery
+    Dim cred As Long
+    Dim cgrey As Long
+    cred = RGB(255, 0, 0)
+    cgrey = RGB(192, 192, 192)
+    Me.Label35.BackColor = cred
+    Dim PauseTime, Start
+    PauseTime = 1
+    Start = Timer
+    Do While Timer < Start + PauseTime
+         DoEvents
+    Loop
+    Me.Label35.BackColor = cgrey
+
 End Sub
 
 Private Sub Check05ID_AfterUpdate()
@@ -170,24 +174,26 @@ Private Sub Check05ID_AfterUpdate()
     Q.Open S, CurrentProject.Connection
     Set Q = Nothing
     
+    'Save changes (the quick way - by switching focus to a different subform, much faster than doing a refresh or requery)
+    Forms![09 ArrayResultsByPostition]![s_StatusOverall].SetFocus
+    
     'Update date fields whenever something changes
     Check05Date = Now()
-    If IsNull(Check2ID) Then
-        ArrayResultDate = Now()
-        Me.ArrayResultDate.Requery
-        Dim cred As Long
-        Dim cgrey As Long
-        cred = RGB(255, 0, 0)
-        cgrey = RGB(192, 192, 192)
-        Me.Label35.BackColor = cred
-        Dim PauseTime, Start
-        PauseTime = 1
-        Start = Timer
-        Do While Timer < Start + PauseTime
-             DoEvents
-        Loop
-        Me.Label35.BackColor = cgrey
-        End If
+    ArrayResultDate = Now()
+    Me.ArrayResultDate.Requery
+    Dim cred As Long
+    Dim cgrey As Long
+    cred = RGB(255, 0, 0)
+    cgrey = RGB(192, 192, 192)
+    Me.Label35.BackColor = cred
+    Dim PauseTime, Start
+    PauseTime = 1
+    Start = Timer
+    Do While Timer < Start + PauseTime
+         DoEvents
+    Loop
+    Me.Label35.BackColor = cgrey
+
 End Sub
 
 Private Sub Check1ID_AfterUpdate()
@@ -209,25 +215,26 @@ Private Sub Check1ID_AfterUpdate()
     Q.Open S, CurrentProject.Connection
     Set Q = Nothing
     
+    'Save changes (the quick way - by switching focus to a different subform, much faster than doing a refresh or requery)
+    Forms![09 ArrayResultsByPostition]![s_StatusOverall].SetFocus
+    
     'Update date fields whenever something changes
     Check1Date = Now()
-    If IsNull(Check2ID) Then
-        ArrayResultDate = Now()
-        Me.ArrayResultDate.Requery
-        Dim cred As Long
-        Dim cgrey As Long
-        cred = RGB(255, 0, 0)
-        cgrey = RGB(192, 192, 192)
-        Me.Label35.BackColor = cred
-        Dim PauseTime, Start
-        PauseTime = 1
-        Start = Timer
-        Do While Timer < Start + PauseTime
-             DoEvents
-        Loop
-        Me.Label35.BackColor = cgrey
-        End If
-                        
+    ArrayResultDate = Now()
+    Me.ArrayResultDate.Requery
+    Dim cred As Long
+    Dim cgrey As Long
+    cred = RGB(255, 0, 0)
+    cgrey = RGB(192, 192, 192)
+    Me.Label35.BackColor = cred
+    Dim PauseTime, Start
+    PauseTime = 1
+    Start = Timer
+    Do While Timer < Start + PauseTime
+         DoEvents
+    Loop
+    Me.Label35.BackColor = cgrey
+
 End Sub
 
 Private Sub Check2ID_AfterUpdate()
@@ -248,6 +255,9 @@ Private Sub Check2ID_AfterUpdate()
         End If
     Q.Open S, CurrentProject.Connection
     Set Q = Nothing
+
+    'Save changes (the quick way - by switching focus to a different subform, much faster than doing a refresh or requery)
+    Forms![09 ArrayResultsByPostition]![s_StatusOverall].SetFocus
     
     'Update date fields whenever something changes
     Check2Date = Now()
@@ -265,7 +275,7 @@ Private Sub Check2ID_AfterUpdate()
          DoEvents
     Loop
     Me.Label35.BackColor = cgrey
-    
+
 End Sub
 
 Private Sub Check3ID_AfterUpdate()
@@ -287,25 +297,26 @@ Private Sub Check3ID_AfterUpdate()
     Q.Open S, CurrentProject.Connection
     Set Q = Nothing
     
+    'Save changes (the quick way - by switching focus to a different subform, much faster than doing a refresh or requery)
+    Forms![09 ArrayResultsByPostition]![s_StatusOverall].SetFocus
+    
     'Update date fields whenever something changes
     Check3Date = Now()
-    If IsNull(Check2ID) Then
-        ArrayResultDate = Now()
-        Me.ArrayResultDate.Requery
-        Dim cred As Long
-        Dim cgrey As Long
-        cred = RGB(255, 0, 0)
-        cgrey = RGB(192, 192, 192)
-        Me.Label35.BackColor = cred
-        Dim PauseTime, Start
-        PauseTime = 1
-        Start = Timer
-        Do While Timer < Start + PauseTime
-             DoEvents
-        Loop
-        Me.Label35.BackColor = cgrey
-        End If
- 
+    ArrayResultDate = Now()
+    Me.ArrayResultDate.Requery
+    Dim cred As Long
+    Dim cgrey As Long
+    cred = RGB(255, 0, 0)
+    cgrey = RGB(192, 192, 192)
+    Me.Label35.BackColor = cred
+    Dim PauseTime, Start
+    PauseTime = 1
+    Start = Timer
+    Do While Timer < Start + PauseTime
+         DoEvents
+    Loop
+    Me.Label35.BackColor = cgrey
+
 End Sub
 
 Private Sub Check4ID_AfterUpdate()
@@ -327,25 +338,26 @@ Private Sub Check4ID_AfterUpdate()
     Q.Open S, CurrentProject.Connection
     Set Q = Nothing
     
+    'Save changes (the quick way - by switching focus to a different subform, much faster than doing a refresh or requery)
+    Forms![09 ArrayResultsByPostition]![s_StatusOverall].SetFocus
+    
     'Update date fields whenever something changes
-    Check3Date = Now()
-    If IsNull(Check2ID) Then
-        ArrayResultDate = Now()
-        Me.ArrayResultDate.Requery
-        Dim cred As Long
-        Dim cgrey As Long
-        cred = RGB(255, 0, 0)
-        cgrey = RGB(192, 192, 192)
-        Me.Label35.BackColor = cred
-        Dim PauseTime, Start
-        PauseTime = 1
-        Start = Timer
-        Do While Timer < Start + PauseTime
-             DoEvents
-        Loop
-        Me.Label35.BackColor = cgrey
-        End If
- 
+    Check4Date = Now()
+    ArrayResultDate = Now()
+    Me.ArrayResultDate.Requery
+    Dim cred As Long
+    Dim cgrey As Long
+    cred = RGB(255, 0, 0)
+    cgrey = RGB(192, 192, 192)
+    Me.Label35.BackColor = cred
+    Dim PauseTime, Start
+    PauseTime = 1
+    Start = Timer
+    Do While Timer < Start + PauseTime
+         DoEvents
+    Loop
+    Me.Label35.BackColor = cgrey
+
 End Sub
 
 Private Sub Check5ID_AfterUpdate()
@@ -367,25 +379,26 @@ Private Sub Check5ID_AfterUpdate()
     Q.Open S, CurrentProject.Connection
     Set Q = Nothing
     
+    'Save changes (the quick way - by switching focus to a different subform, much faster than doing a refresh or requery)
+    Forms![09 ArrayResultsByPostition]![s_StatusOverall].SetFocus
+    
     'Update date fields whenever something changes
-    Check3Date = Now()
-    If IsNull(Check2ID) Then
-        ArrayResultDate = Now()
-        Me.ArrayResultDate.Requery
-        Dim cred As Long
-        Dim cgrey As Long
-        cred = RGB(255, 0, 0)
-        cgrey = RGB(192, 192, 192)
-        Me.Label35.BackColor = cred
-        Dim PauseTime, Start
-        PauseTime = 1
-        Start = Timer
-        Do While Timer < Start + PauseTime
-             DoEvents
-        Loop
-        Me.Label35.BackColor = cgrey
-        End If
- 
+    Check5Date = Now()
+    ArrayResultDate = Now()
+    Me.ArrayResultDate.Requery
+    Dim cred As Long
+    Dim cgrey As Long
+    cred = RGB(255, 0, 0)
+    cgrey = RGB(192, 192, 192)
+    Me.Label35.BackColor = cred
+    Dim PauseTime, Start
+    PauseTime = 1
+    Start = Timer
+    Do While Timer < Start + PauseTime
+         DoEvents
+    Loop
+    Me.Label35.BackColor = cgrey
+
 End Sub
 
 Private Sub ArrayResultDate_AfterUpdate()
@@ -478,6 +491,7 @@ Dim usr As String
 Dim cmp As String
 Dim dt As String
 Dim InsertQuery1 As String
+Dim UpdateQuery1 As String
 Dim PRU As String
 
 'get user
@@ -511,6 +525,10 @@ If vbYes = MsgBox("Generate reporting email for this case?", vbYesNo + vbQuestio
         InsertQuery1 = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + ",'Report email generated for specimen " + Me!SpecimenNo + "',#" + dt + "#,'" + usr + "','" + cmp + "')"
         DoCmd.SetWarnings False
         DoCmd.RunSQL InsertQuery1
+        'record who sent report email
+        UpdateQuery1 = "UPDATE ArrayTest SET ReportDate = '" & dt & "' WHERE ArrayTest.ArrayTestID = " & CStr(Me!ArrayTestID)
+        DoCmd.RunSQL UpdateQuery1
+        DoCmd.SetWarnings True
         'Create the email message body
         PRU = CStr(Me![PatientID])
         email_body = "<body style=\""font-family:Calibri,sans-serif;\"">" & _
@@ -529,7 +547,11 @@ If vbYes = MsgBox("Generate reporting email for this case?", vbYesNo + vbQuestio
         ' Build command
         script_command = "cmd.exe /S /C " & pythonPath & " " & scriptPath
         script_command = script_command & " --to viapathgeneticsoffice@viapath.co.uk "
-        script_command = script_command & " --subject ""Authorised array report to send"""
+        If Me.Priority = True Then
+            script_command = script_command & " --subject ""URGENT authorised array report to send"""
+        Else
+            script_command = script_command & " --subject ""Authorised array report to send"""
+        End If
         script_command = script_command & " --body """ & email_body & """"
         ' Redirect stderr to stdout
         script_command = script_command & " 2>&1"
@@ -551,40 +573,6 @@ If vbYes = MsgBox("Generate reporting email for this case?", vbYesNo + vbQuestio
     Set rsUSR = Nothing    'Deassign all objects.
     Set db = Nothing
 End If
-
-
-''''''The following section has been commented out but there is a good chance that someone will be asked to create this fuction later so am leaving here for properity (JWA 14/10/2019)
-'''''
-''''''If report already submitted for sending out, then say so
-'''''If Not IsNull(Me!ReportID) Then
-'''''    MsgBox "Report has already been queued to be sent out", vbOKOnly + vbInformation, "Report Sent"
-'''''    'MsgBox "Report has already been queued to be sent out by '" + Me.ReportID + "', '" + Me.ReportDate + "'", vbOKOnly + vbInformation, "Report Sent"
-'''''    Else
-'''''        'If user is not in checker table as authoriser = 5 (array authoriser) or 1 (binfx admin) then say no
-'''''        If (rsUSR!authoriser <> 5 And rsUSR!authoriser <> 1 Or IsNull(rsUSR!authoriser)) Then
-'''''            MsgBox "Your account is not allowed to send out reports.", vbOKOnly + vbExclamation, "ATTENTION"
-'''''        End If
-'''''        'If user is in checker table as authoriser = 5 (array authoriser) or 1 (binfx admin) then are if they are sure, and then submit
-'''''        If (rsUSR!authoriser = 5 Or rsUSR!authoriser = 1) Then
-'''''            msga = MsgBox("Do you want to submit the report for sending out?", vbYesNo + vbQuestion, "Confirm Send Report")
-'''''            If msga = vbNo Then
-'''''                Cancel = True
-'''''            ElseIf msga = vbYes Then
-'''''                uid = rsUSR!Check1ID
-'''''                dt = Format(Now, "dd/mmm/yyyy Hh:Nn:ss")
-'''''                'record who sent report
-'''''                UpdateQuery1 = "UPDATE ArrayTest SET ReportID = '" & uid & "', ReportDate = '" & dt & "' WHERE ArrayTest.ArrayTestID = " & CStr(Me!ArrayTestID)
-'''''                DoCmd.SetWarnings False
-'''''                DoCmd.RunSQL UpdateQuery1
-'''''                'patient log
-'''''                InsertQuery1 = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + ",'Report submitted for sending out " + Me!SpecimenNo + "',#" + dt + "#,'" + usr + "','" + cmp + "')"
-'''''                DoCmd.SetWarnings False
-'''''                DoCmd.RunSQL InsertQuery1
-'''''                'confirmation msgbox
-'''''                MsgBox "Report is queued to be sent out", vbOKOnly + vbInformation, "Report Sent"
-'''''            End If
-'''''        End If
-'''''End If
 
 End Sub
 
