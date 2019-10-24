@@ -548,9 +548,9 @@ If vbYes = MsgBox("Generate reporting email for this case?", vbYesNo + vbQuestio
         script_command = "cmd.exe /S /C " & pythonPath & " " & scriptPath
         script_command = script_command & " --to viapathgeneticsoffice@viapath.co.uk "
         If Me.Priority = True Then
-            script_command = script_command & " --subject ""URGENT authorised array report to send"""
+            script_command = script_command & " --subject ""URGENT authorised array report " & PRU & " to send"""
         Else
-            script_command = script_command & " --subject ""Authorised array report to send"""
+            script_command = script_command & " --subject ""Authorised array report " & PRU & " to send"""
         End If
         script_command = script_command & " --body """ & email_body & """"
         ' Redirect stderr to stdout

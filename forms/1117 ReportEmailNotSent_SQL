@@ -1,0 +1,45 @@
+    SELECT ArrayTest.Priority,
+           ArrayTest.RequestedDate,
+           ArrayTest.ReferralID,
+           Referral.Referral,
+           Patients.PatientID,
+           [BookinFirstName] & " " & [BookinLastName] AS Name,
+           ArrayTest.StatusID,
+           Status.Status,
+           ArrayTest.Check1ID,
+           ArrayTest.Check2ID,
+           ArrayTest.Check3ID,
+           ArrayTest.Check4ID,
+           ArrayTest.Check5ID,
+           ArrayTest.ReportDate,
+           ArrayTest.SpecimenNo,
+           ArrayTest.ArrayTestID,
+           Patients.InternalPatientID,
+           ArrayTest.Service
+      FROM ((Patients
+INNER JOIN ArrayTest
+        ON Patients.InternalPatientID = ArrayTest.InternalPatientID)
+INNER JOIN Referral
+        ON ArrayTest.ReferralID = Referral.ReferralID)
+INNER JOIN Status
+        ON ArrayTest.StatusID = Status.StatusID
+     WHERE (((ArrayTest.RequestedDate)>#10/16/2019#)
+       AND ((ArrayTest.ReferralID)=2
+        OR (ArrayTest.ReferralID)=1199901215
+        OR (ArrayTest.ReferralID)=1199901195
+        OR (ArrayTest.ReferralID)=1185356886
+        OR (ArrayTest.ReferralID)=1199901176
+        OR (ArrayTest.ReferralID)=1199901197
+        OR (ArrayTest.ReferralID)=1199901175
+        OR (ArrayTest.ReferralID)=1199901204
+        OR (ArrayTest.ReferralID)=1199901185
+        OR (ArrayTest.ReferralID)=1199901188
+        OR (ArrayTest.ReferralID)=1199901202
+        OR (ArrayTest.ReferralID)=1199901181
+        OR (ArrayTest.ReferralID)=1199901187
+        OR (ArrayTest.ReferralID)=1199901194)
+       AND ((ArrayTest.StatusID)<>1202218787
+       AND (ArrayTest.StatusID)<>2)
+       AND ((ArrayTest.ReportDate) Is Null)
+       AND ((ArrayTest.Service)=True))
+  ORDER BY ArrayTest.Priority, ArrayTest.RequestedDate;
