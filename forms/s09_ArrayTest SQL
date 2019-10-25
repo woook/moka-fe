@@ -22,8 +22,6 @@
            ArrayTest.Check5ID,
            ArrayTest.Check5Date,
            ArrayTest.ArrayResultDate,
-           ArrayTest.ReportID,
-           ArrayTest.ReportDate,
            ArrayTest.RequestedDate,
            ArrayTest.ArrayResultBuild,
            ArrayTest.SpecimenNo,
@@ -31,13 +29,14 @@
            Referral.ReferralID,
            Referral.Referral,
            Patients.PatientID,
+           Left([Patients].[PatientID],6) AS FamilyTrustID,
            [Patients].[BookinLastName] & " " & [Patients].[BookinFirstname] AS Name,
            [Patients].[BookinFirstName] & " " & [Patients].[BookinLastname] AS CaseName,
-           Left([PatientID],6) AS FamilyTrustID,
-           Patients.ePGDCycleID
+           Patients.ePGDCycleID,
+           ArrayTest.ReportID,
+           ArrayTest.ReportDate
       FROM (ArrayTest
 INNER JOIN Referral
         ON ArrayTest.ReferralID = Referral.ReferralID)
 INNER JOIN Patients
-        ON ArrayTest.InternalPatientID =
-        Patients.InternalPatientID;
+        ON ArrayTest.InternalPatientID = Patients.InternalPatientID;

@@ -487,21 +487,24 @@ End Sub
 Private Sub SendReport_Click()
 ''submit for reporting
 Dim rsUSR As dao.Recordset
+Dim rsORG As dao.Recordset
 Dim usr As String
 Dim cmp As String
 Dim dt As String
 Dim InsertQuery1 As String
 Dim UpdateQuery1 As String
 Dim PRU As String
+Dim ATI As String
 
-'get user
+'get user and referring organisation
 usr = VBA.Environ("USERNAME")
 cmp = VBA.Environ("COMPUTERNAME")
-strUSRSQL = "SELECT Checker.Check1ID, Checker.Name, Checker.Authoriser " & _
-              "FROM Checker " & _
-             "WHERE Checker.Username = '" + usr + "'"
+ATI = Me.ArrayTestID
+strUSRSQL = "SELECT Checker.Check1ID, Checker.Name, Checker.Authoriser FROM Checker WHERE Checker.Username = '" + usr + "'"
+strORG = "SELECT [v_arraytestid-referral-org].ReferralOrganisation, [v_arraytestid-referral-org].Department FROM [v_arraytestid-referral-org] WHERE [v_arraytestid-referral-org].ArrayTestID = " + ATI + ""
 Set db = CurrentDb
 Set rsUSR = db.OpenRecordset(strUSRSQL, dbOpenDynaset, dbSeeChanges)
+Set rsORG = db.OpenRecordset(strORG, dbOpenDynaset, dbSeeChanges)
 
 'This function will call a python script that populates an email for sending 100k negative results
 Dim email_body As String
@@ -511,6 +514,7 @@ Dim scriptPath As String
 Dim wshexec As Object
 Dim stdout As String
 Dim script_command As String
+Dim TestType As String
 
 'Check user wants to send email
 If vbYes = MsgBox("Generate reporting email for this case?", vbYesNo + vbQuestion, "Continue?") Then
@@ -531,12 +535,19 @@ If vbYes = MsgBox("Generate reporting email for this case?", vbYesNo + vbQuestio
         DoCmd.SetWarnings True
         'Create the email message body
         PRU = CStr(Me![PatientID])
+        If Me.Priority = True Then
+            TestType = "URGENT " & Me.Referral
+        Else
+            TestType = Me.Referral
+        End If
         email_body = "<body style=\""font-family:Calibri,sans-serif;\"">" & _
         "Please send out the authorised array report for:<br><br>" & _
         "PRU: <b>" & PRU & "</b><br>" & _
         "Name: <b>" & Me.CaseName & "</b><br>" & _
         "Specimen: <b>" & Me.SpecimenNo & "</b><br>" & _
-        "Array type: " & Me.Referral & "<br>" & _
+        "Array test type: " & TestType & "<br>" & _
+        "Referring Org: " & rsORG!ReferralOrganisation & "<br>" & _
+        "Referring Dept: " & rsORG!Department & "<br>" & _
         "</body>"
         'Run the script to send the email
         Set wsh = CreateObject("WScript.Shell")
