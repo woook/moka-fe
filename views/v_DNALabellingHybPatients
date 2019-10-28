@@ -1,0 +1,9 @@
+
+    SELECT dbo.ArrayLabelling.DNALabellingID,
+           RIGHT(dbo.Arrays.ArrayBarCode, 3) + '.' + dbo.ArrayLabelling.Subarray + ' (' + dbo.ArrayLabelling.ArrayRunNumber + ') ' + STR(dbo.ArrayLabelling.DSLR, 4, 3) AS HybID,
+           dbo.DNA.InternalPatientID AS Cy3InternalPatientID,
+           dbo.DNA_1.InternalPatientID AS Cy5InternalPatientID
+      FROM dbo.DNA 
+INNER JOIN dbo.ArrayLabelling
+INNER JOIN dbo.Arrays ON dbo.ArrayLabelling.ArrayID = dbo.Arrays.ArrayID ON dbo.DNA.DNAID = dbo.ArrayLabelling.Cy3DNAID
+INNER JOIN dbo.DNA AS DNA_1 ON dbo.ArrayLabelling.Cy5DNAID = DNA_1.DNAID
