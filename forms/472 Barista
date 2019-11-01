@@ -1,0 +1,9 @@
+Option Compare Database
+
+Private Sub Form_Open(Cancel As Integer)
+    Dim url As String
+    url = "https://viapath.sharepoint.com/sites/DevelopmentalDisorders/Barista%20v20/Home.aspx"
+    firefoxurl url
+    'chromeurlserv url
+    DoCmd.Close
+End Sub
