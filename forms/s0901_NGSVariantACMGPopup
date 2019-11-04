@@ -15,9 +15,9 @@ Private Sub SetEvidenceCounts()
     '    Me.PVS_count, Me.PS_count, Me.PM_count, Me.PP_count, Me.BA_count, Me.BS_count, Me.BP_count
     
     ' Objects for querying the moka database
-    Dim dbs As DAO.Database
+    Dim Dbs As dao.Database
     ' Recordset for NGSVariantACMG Table
-    Dim rsNVA As DAO.Recordset
+    Dim rsNVA As dao.Recordset
     ' Arrays for ACMG fields
     Dim pathogenicArray() As Variant
     Dim benignArray() As Variant
@@ -46,8 +46,8 @@ Private Sub SetEvidenceCounts()
     
     'Get NGSVariantACMG recordset for the variant currently displayed in the form
     strSQL = "SELECT * FROM NGSVariantACMG WHERE NGSVariantACMGID = " & Me.NGSVariantACMGID
-    Set dbs = CurrentDb
-    Set rsNVA = dbs.OpenRecordset(strSQL, dbOpenDynaset, dbSeeChanges)
+    Set Dbs = CurrentDb
+    Set rsNVA = Dbs.OpenRecordset(strSQL, dbOpenDynaset, dbSeeChanges)
     'Create arrays for pathogenic and benign ACMG fields respectively. This allows us to count their respective evidence levels.
     pathogenicArray = Array(rsNVA!PVS1, rsNVA!PS1, rsNVA!PS2, rsNVA!PS3, rsNVA!PS4, rsNVA!PM1, rsNVA!PM2, _
         rsNVA!PM3, rsNVA!PM4, rsNVA!PM5, rsNVA!PM6, rsNVA!PP1, rsNVA!PP2, rsNVA!PP3, rsNVA!PP4, rsNVA!PP5)
@@ -83,7 +83,7 @@ Private Sub SetEvidenceCounts()
     Next Element
     
     'Close recordset
-    rsNVA.Close
+    rsNVA.close
     
     'Set evidence counts to their respective counter objects in the form
     Me.PVS_count = PVS_count
@@ -249,8 +249,8 @@ End Function
 
 Private Sub Calculate_Click()
     ' Calculate the ACMG classification from selected evidence categories and update Moka database record.
-    Dim dbs As DAO.Database
-    Dim rsStatus As DAO.Recordset
+    Dim Dbs As dao.Database
+    Dim rsStatus As dao.Recordset
 
     Dim acmg_classification As Integer
     Dim rule_applied As String
@@ -281,8 +281,8 @@ Private Sub Calculate_Click()
 
     'Get Status text for the calculated ACMG classification.
     strSQL = "SELECT StatusID, Status FROM Status WHERE Pathogenic = 1 AND StatusID = " & class_status(acmg_classification)
-    Set dbs = CurrentDb
-    Set rsStatus = dbs.OpenRecordset(strSQL, dbOpenDynaset, dbSeeChanges)
+    Set Dbs = CurrentDb
+    Set rsStatus = Dbs.OpenRecordset(strSQL, dbOpenDynaset, dbSeeChanges)
     Debug.Print acmg_classification, rsStatus!Status, rule_applied
 
     ' Check if the form is in Edit Mode. Returns False for tests with Status 'complete'.
@@ -300,7 +300,7 @@ Private Sub Calculate_Click()
         End If
     End If
 
-    rsStatus.Close
+    rsStatus.close
     DoCmd.RunCommand acCmdSaveRecord
 End Sub
 
@@ -344,12 +344,135 @@ End Sub
 
 Private Sub Close_Click()
     'Close the form
-    DoCmd.Close
+    DoCmd.close
 End Sub
 
 Private Sub rule_DblClick(Cancel As Integer)
     'Opens a form that displays all of the ACMG rules for classification
     DoCmd.OpenForm "s0901_NGSVariantACMGPopupRules"
+End Sub
+
+Private Sub Open_WES_Guide(anchor As String)
+    'Open the WES ACMG guidance on sharepoint.
+    '    Args:
+    '        anchor: Anchor tags have been placed in the WES ACMG form. Passing one of the following will append to the URL and open the page at that section:
+    '            ["path_vstrong", "path_strong", "path_mod", "path_supp", "ben_standalone", "ben_strong", "ben_supp"]
+    Dim url As String
+    url = "https://viapath.sharepoint.com/sites/analytics/WES%20ACMG%20Guidance%20Guys/Home.aspx?#" + anchor
+    firefoxurl url
+End Sub
+
+' ## *_Label_Click: Open the WES ACMG Guidance at the relevant section for this label
+Private Sub PVS1_Label_Click()
+    Open_WES_Guide ("path_vstrong")
+End Sub
+
+Private Sub PS1_Label_Click()
+    Open_WES_Guide ("path_strong")
+End Sub
+
+Private Sub PS2_Label_Click()
+    Open_WES_Guide ("path_strong")
+End Sub
+
+Private Sub PS3_Label_Click()
+    Open_WES_Guide ("path_strong")
+End Sub
+
+Private Sub PS4_Label_Click()
+    Open_WES_Guide ("path_strong")
+End Sub
+
+Private Sub PM1_Label_Click()
+    Open_WES_Guide ("path_mod")
+End Sub
+
+Private Sub PM2_Label_Click()
+    Open_WES_Guide ("path_mod")
+End Sub
+
+Private Sub PM3_Label_Click()
+    Open_WES_Guide ("path_mod")
+End Sub
+
+Private Sub PM4_Label_Click()
+    Open_WES_Guide ("path_mod")
+End Sub
+
+Private Sub PM5_Label_Click()
+    Open_WES_Guide ("path_mod")
+End Sub
+
+Private Sub PM6_Label_Click()
+    Open_WES_Guide ("path_mod")
+End Sub
+
+Private Sub PP1_Label_Click()
+    Open_WES_Guide ("path_supp")
+End Sub
+
+Private Sub PP2_Label_Click()
+    Open_WES_Guide ("path_supp")
+End Sub
+
+Private Sub PP3_Label_Click()
+    Open_WES_Guide ("path_supp")
+End Sub
+
+Private Sub PP4_Label_Click()
+    Open_WES_Guide ("path_supp")
+End Sub
+
+Private Sub PP5_Label_Click()
+    Open_WES_Guide ("path_supp")
+End Sub
+
+Private Sub BA1_Label_Click()
+    Open_WES_Guide ("ben_standalone")
+End Sub
+
+Private Sub BS1_Label_Click()
+    Open_WES_Guide ("ben_strong")
+End Sub
+
+Private Sub BS2_Label_Click()
+    Open_WES_Guide ("ben_strong")
+End Sub
+
+Private Sub BS3_Label_Click()
+    Open_WES_Guide ("ben_strong")
+End Sub
+
+Private Sub BS4_Label_Click()
+    Open_WES_Guide ("ben_strong")
+End Sub
+
+Private Sub BP1_Label_Click()
+    Open_WES_Guide ("ben_supp")
+End Sub
+
+Private Sub BP2_Label_Click()
+    Open_WES_Guide ("ben_supp")
+End Sub
+
+Private Sub BP3_Label_Click()
+    Open_WES_Guide ("ben_supp")
+End Sub
+
+Private Sub BP4_Label_Click()
+    Open_WES_Guide ("ben_supp")
+End Sub
+
+Private Sub BP5_Label_Click()
+    Open_WES_Guide ("ben_supp")
+End Sub
+
+Private Sub BP6_Label_Click()
+    Open_WES_Guide ("ben_supp")
+End Sub
+
+Private Sub BP7_Label_Click()
+    Open_WES_Guide ("ben_supp")
 End Sub
 
 ' ## *_Frame_AfterUpdate: Update the patient log with the human-readable value of the ACMG criteria tickbox selection.
@@ -387,10 +510,10 @@ Private Sub PS3_Frame_AfterUpdate()
 End Sub
 
 Private Sub PS4_Frame_AfterUpdate()
-    If IsNull(PS4_FRAME.Value) Then
-        OptionBox_Log PS4_FRAME.ControlSource, "Null"
+    If IsNull(PS4_Frame.Value) Then
+        OptionBox_Log PS4_Frame.ControlSource, "Null"
     Else
-        OptionBox_Log PS4_FRAME.ControlSource, PS4_FRAME.Value
+        OptionBox_Log PS4_Frame.ControlSource, PS4_Frame.Value
     End If
 End Sub
 
@@ -683,7 +806,7 @@ Me.PS3_Frame = Null
 PS3_Frame_AfterUpdate
 End Sub
 Private Sub PS4_Clear_Click()
-Me.PS4_FRAME = Null
+Me.PS4_Frame = Null
 PS4_Frame_AfterUpdate
 End Sub
 Private Sub PM1_Clear_Click()
@@ -843,8 +966,8 @@ Private Function OptionBox_Log(box_name As String, box_value As String)
     '            The item table is queried for the evidence label string unless box_value = "Null".
 
     ' Objects for querying the moka database
-    Dim dbs As DAO.Database
-    Dim rsItem As DAO.Recordset
+    Dim Dbs As dao.Database
+    Dim rsItem As dao.Recordset
     
     Dim date_now As String
     Dim UserName As String
@@ -865,10 +988,10 @@ Private Function OptionBox_Log(box_name As String, box_value As String)
     If box_value = "Null" Then
         hrBoxValue = "Null"
     Else
-        Set dbs = CurrentDb
-        Set rsItem = dbs.OpenRecordset("SELECT Item FROM Item WHERE ItemID = " & box_value)
-        hrBoxValue = rsItem!item
-        rsItem.Close
+        Set Dbs = CurrentDb
+        Set rsItem = Dbs.OpenRecordset("SELECT Item FROM Item WHERE ItemID = " & box_value)
+        hrBoxValue = rsItem!Item
+        rsItem.close
     End If
     
     ' Define and Execute SQL
