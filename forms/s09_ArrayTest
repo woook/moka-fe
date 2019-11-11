@@ -1,5 +1,14 @@
 Option Compare Database
 
+'Form refresh sometimes required following a beforeupdate Cancel event (see StatusID_BeforeUpdate below)
+'This refresh has to occur after the BeforeUpdate event (i.e. not during), e.g. on lose focus event
+'However the refresh takes time so only want to do it if necessary, hence this boolean
+Private requires_refresh As Boolean
+
+Private Sub Form_Open(Cancel As Integer)
+    requires_refresh = False
+End Sub
+
 ''logging
 
 Private Sub StatusID_AfterUpdate()
@@ -533,6 +542,7 @@ If vbYes = MsgBox("Generate reporting email for this case?", vbYesNo + vbQuestio
         UpdateQuery1 = "UPDATE ArrayTest SET ReportDate = '" & dt & "' WHERE ArrayTest.ArrayTestID = " & CStr(Me!ArrayTestID)
         DoCmd.RunSQL UpdateQuery1
         DoCmd.SetWarnings True
+        Me.Requery
         'Create the email message body
         PRU = CStr(Me![PatientID])
         If Me.Priority = True Then
@@ -901,4 +911,25 @@ Err_HybPartFamily_Click:
     MsgBox Err.Description
     Resume Exit_HybPartFamily_Click
     
+End Sub
+
+Private Sub StatusID_BeforeUpdate(Cancel As Integer)
+    'If user tries to update test status to complete, but report email hasn't been sent warn user and give option to cancel
+    If Me.StatusID = 4 And IsNull(Me.ReportDate) Then
+        If vbNo = MsgBox("It appears the report email for this case has not been sent. Are you sure you want to set status to Complete??", vbYesNo) Then
+            'Cancel the status update
+            Cancel = True
+            Me.StatusID.Undo
+            'Form requires refresh to sync with db, but this has to be done after the BeforeUpdate event, not during
+            requires_refresh = True
+        End If
+    End If
+End Sub
+
+Private Sub StatusID_LostFocus()
+    'If required, refresh the form to sync database changes
+    If requires_refresh Then
+        Me.refresh
+        requires_refresh = False
+    End If
 End Sub
