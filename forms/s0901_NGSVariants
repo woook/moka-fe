@@ -192,6 +192,10 @@ Private Sub triaging_clinician_AfterUpdate()
     un = VBA.Environ("USERNAME")
     cn = VBA.Environ("COMPUTERNAME")
     patID = Me.Parent.InternalPatientID
+    If IsNull(Me.triaging_clinician.Column(1)) Then
+    sqlPatLogVar = "INSERT INTO PatientLog (InternalPatientID, LogEntry, [Date], Login, PCName) VALUES (" & patID & ", 'Clinician  " & " initials removed from  " & Me.NGSVariantID & " " & "', #" + d + "#,'" + un + "','" + cn + "')"
+    sqlMemo = "INSERT INTO NGSLogMemo(InternalPatientID, Type, LinkID, LogMemoEntry, [Date], Login, PCName) VALUES(" + CStr(patID) + ", 2, " + CStr(Me.NGSVariantID) + ", 'Triaging clinician ID removed has been removed from variant: " + "',#" + d + "#,'" + un + "','" + cn + "')"
+    Else
     triaging_clinician = Me.triaging_clinician.Column(1)
     sqlMemo = "INSERT INTO NGSLogMemo(InternalPatientID, Type, LinkID, LogMemoEntry, [Date], Login, PCName) VALUES(" + CStr(patID) + ", 2, " + CStr(Me.NGSVariantID) + ", 'Clinician ID who has triaged the variant: " + triaging_clinician + "',#" + d + "#,'" + un + "','" + cn + "')"
     sqlPatLogVar = "INSERT INTO PatientLog (InternalPatientID, LogEntry, [Date], Login, PCName) VALUES (" & patID & ", 'Clinician  " & triaging_clinician & " has triaged the variant  " & Me.NGSVariantID & " " & "', #" + d + "#,'" + un + "','" + cn + "')"
@@ -199,7 +203,7 @@ Private Sub triaging_clinician_AfterUpdate()
     DoCmd.RunSQL sqlMemo
     DoCmd.RunSQL sqlPatLogVar
     DoCmd.SetWarnings True
-
+    End If
 End Sub
 
 Private Sub triaging_comment_AfterUpdate()
