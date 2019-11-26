@@ -174,13 +174,19 @@ Private Sub triaging_category_AfterUpdate()
     un = VBA.Environ("USERNAME")
     cn = VBA.Environ("COMPUTERNAME")
     patID = Me.Parent.InternalPatientID
+    If IsNull(Me.triaging_category.Column(1)) Then
+    sqlMemo = "INSERT INTO NGSLogMemo(InternalPatientID, Type, LinkID, LogMemoEntry, [Date], Login, PCName) VALUES(" + CStr(patID) + ", 2, " + CStr(Me.NGSVariantID) + ",'NGS: Triaged category has been removed " + "',#" + d + "#,'" + un + "','" + cn + "')"
+    sqlPatLogVar = "INSERT INTO PatientLog (InternalPatientID, LogEntry, [Date], Login, PCName) VALUES (" & patID & ", 'NGS: Triaged category has been removed for the variant " & Me.NGSVariantID & "', #" + d + "#,'" + un + "','" + cn + "')"
+    Else
     triaging_category = Me.triaging_category.Column(1)
-    sqlMemo = "INSERT INTO NGSLogMemo(InternalPatientID, Type, LinkID, LogMemoEntry, [Date], Login, PCName) VALUES(" + CStr(patID) + ", 2, " + CStr(Me.NGSVariantID) + ",'Clinician has triaged the variant to: " + triaging_category + "',#" + d + "#,'" + un + "','" + cn + "')"
-    sqlPatLogVar = "INSERT INTO PatientLog (InternalPatientID, LogEntry, [Date], Login, PCName) VALUES (" & patID & ", 'Clinician has triaged the variant " & Me.NGSVariantID & ":" & " " & triaging_category & "', #" + d + "#,'" + un + "','" + cn + "')"
+    sqlMemo = "INSERT INTO NGSLogMemo(InternalPatientID, Type, LinkID, LogMemoEntry, [Date], Login, PCName) VALUES(" + CStr(patID) + ", 2, " + CStr(Me.NGSVariantID) + ",'NGS: Clinician has triaged the variant to: " + triaging_category + "',#" + d + "#,'" + un + "','" + cn + "')"
+    sqlPatLogVar = "INSERT INTO PatientLog (InternalPatientID, LogEntry, [Date], Login, PCName) VALUES (" & patID & ", 'NGS: Clinician has triaged the variant " & Me.NGSVariantID & ":" & " " & triaging_category & "', #" + d + "#,'" + un + "','" + cn + "')"
+    End If
     DoCmd.SetWarnings False
     DoCmd.RunSQL sqlMemo
     DoCmd.RunSQL sqlPatLogVar
     DoCmd.SetWarnings True
+    
 End Sub
 
 Private Sub triaging_clinician_AfterUpdate()
@@ -193,17 +199,18 @@ Private Sub triaging_clinician_AfterUpdate()
     cn = VBA.Environ("COMPUTERNAME")
     patID = Me.Parent.InternalPatientID
     If IsNull(Me.triaging_clinician.Column(1)) Then
-    sqlPatLogVar = "INSERT INTO PatientLog (InternalPatientID, LogEntry, [Date], Login, PCName) VALUES (" & patID & ", 'Clinician  " & " initials removed from  " & Me.NGSVariantID & " " & "', #" + d + "#,'" + un + "','" + cn + "')"
-    sqlMemo = "INSERT INTO NGSLogMemo(InternalPatientID, Type, LinkID, LogMemoEntry, [Date], Login, PCName) VALUES(" + CStr(patID) + ", 2, " + CStr(Me.NGSVariantID) + ", 'Triaging clinician ID removed has been removed from variant: " + "',#" + d + "#,'" + un + "','" + cn + "')"
+    sqlMemo = "INSERT INTO NGSLogMemo(InternalPatientID, Type, LinkID, LogMemoEntry, [Date], Login, PCName) VALUES(" + CStr(patID) + ", 2, " + CStr(Me.NGSVariantID) + ", 'NGS: Triaging clinician initials has been removed from variant: " + "',#" + d + "#,'" + un + "','" + cn + "')"
+    sqlPatLogVar = "INSERT INTO PatientLog (InternalPatientID, LogEntry, [Date], Login, PCName) VALUES (" & patID & ", 'NGS: Clinician initials have been removed from the triaged variant  " & Me.NGSVariantID & " " & "', #" + d + "#,'" + un + "','" + cn + "')"
     Else
     triaging_clinician = Me.triaging_clinician.Column(1)
-    sqlMemo = "INSERT INTO NGSLogMemo(InternalPatientID, Type, LinkID, LogMemoEntry, [Date], Login, PCName) VALUES(" + CStr(patID) + ", 2, " + CStr(Me.NGSVariantID) + ", 'Clinician ID who has triaged the variant: " + triaging_clinician + "',#" + d + "#,'" + un + "','" + cn + "')"
-    sqlPatLogVar = "INSERT INTO PatientLog (InternalPatientID, LogEntry, [Date], Login, PCName) VALUES (" & patID & ", 'Clinician  " & triaging_clinician & " has triaged the variant  " & Me.NGSVariantID & " " & "', #" + d + "#,'" + un + "','" + cn + "')"
+    sqlMemo = "INSERT INTO NGSLogMemo(InternalPatientID, Type, LinkID, LogMemoEntry, [Date], Login, PCName) VALUES(" + CStr(patID) + ", 2, " + CStr(Me.NGSVariantID) + ", 'NGS: Clinician ID who has triaged the variant: " + triaging_clinician + "',#" + d + "#,'" + un + "','" + cn + "')"
+    sqlPatLogVar = "INSERT INTO PatientLog (InternalPatientID, LogEntry, [Date], Login, PCName) VALUES (" & patID & ", 'NGS: Clinician  " & triaging_clinician & " has triaged the variant  " & Me.NGSVariantID & " " & "', #" + d + "#,'" + un + "','" + cn + "')"
+    End If
     DoCmd.SetWarnings False
     DoCmd.RunSQL sqlMemo
     DoCmd.RunSQL sqlPatLogVar
     DoCmd.SetWarnings True
-    End If
+    
 End Sub
 
 Private Sub triaging_comment_AfterUpdate()
@@ -216,9 +223,14 @@ Private Sub triaging_comment_AfterUpdate()
     un = VBA.Environ("USERNAME")
     cn = VBA.Environ("COMPUTERNAME")
     patID = Me.Parent.InternalPatientID
+    If Me.triaging_comment = "" Then
+    sqlMemo = "INSERT INTO NGSLogMemo(InternalPatientID, Type, LinkID, LogMemoEntry, [Date], Login, PCName) VALUES(" + CStr(patID) + ", 2, " + CStr(Me.NGSVariantID) + ", 'NGS: Triaged comment has been removed " + "',#" + d + "#,'" + un + "','" + cn + "')"
+    sqlPatLogVar = "INSERT INTO PatientLog (InternalPatientID, LogEntry, [Date], Login, PCName) VALUES (" & patID & ", 'NGS:triaged comment has been removed for variant  " & Me.NGSVariantID & " " & "', #" + d + "#,'" + un + "','" + cn + "')"
+    Else
     triaging_comment = Me.triaging_comment
-    sqlMemo = "INSERT INTO NGSLogMemo(InternalPatientID, Type, LinkID, LogMemoEntry, [Date], Login, PCName) VALUES(" + CStr(patID) + ", 2, " + CStr(Me.NGSVariantID) + ", 'Triaging comment added: " + triaging_comment + "',#" + d + "#,'" + un + "','" + cn + "')"
-    sqlPatLogVar = "INSERT INTO PatientLog (InternalPatientID, LogEntry, [Date], Login, PCName) VALUES (" & patID & ", 'Clinician has added a comment to the triaged variant  " & Me.NGSVariantID & ": " & triaging_comment & " " & "', #" + d + "#,'" + un + "','" + cn + "')"
+    sqlMemo = "INSERT INTO NGSLogMemo(InternalPatientID, Type, LinkID, LogMemoEntry, [Date], Login, PCName) VALUES(" + CStr(patID) + ", 2, " + CStr(Me.NGSVariantID) + ", 'NGS: Triaged comment added NGS: " + triaging_comment + "',#" + d + "#,'" + un + "','" + cn + "')"
+    sqlPatLogVar = "INSERT INTO PatientLog (InternalPatientID, LogEntry, [Date], Login, PCName) VALUES (" & patID & ", 'NGS: Clinician has added a comment to the triaged variant  " & Me.NGSVariantID & "NGS: " & triaging_comment & " " & "', #" + d + "#,'" + un + "','" + cn + "')"
+    End If
     DoCmd.SetWarnings False
     DoCmd.RunSQL sqlMemo
     DoCmd.RunSQL sqlPatLogVar
