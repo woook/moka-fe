@@ -18,6 +18,8 @@ Private Sub Classification_AfterUpdate()
     DoCmd.SetWarnings True
 End Sub
 
+
+
 Private Sub commentShort_DblClick(Cancel As Integer)
     Dim stDocName As String
     Dim rsAddComment As ADODB.Recordset
@@ -163,3 +165,59 @@ Private Sub gnomad_Hom_count_AfterUpdate()
     DoCmd.SetWarnings True
 End Sub
 
+Private Sub triaging_category_AfterUpdate()
+    Dim d As String
+    Dim un As String
+    Dim cn As String
+    Dim triaging_category As String
+    d = Format(Now(), "dd/mmm/yyyy Hh:Nn:ss")
+    un = VBA.Environ("USERNAME")
+    cn = VBA.Environ("COMPUTERNAME")
+    patID = Me.Parent.InternalPatientID
+    triaging_category = Me.triaging_category.Column(1)
+    sqlMemo = "INSERT INTO NGSLogMemo(InternalPatientID, Type, LinkID, LogMemoEntry, [Date], Login, PCName) VALUES(" + CStr(patID) + ", 2, " + CStr(Me.NGSVariantID) + ",'Clinician has triaged the variant to: " + triaging_category + "',#" + d + "#,'" + un + "','" + cn + "')"
+    sqlPatLogVar = "INSERT INTO PatientLog (InternalPatientID, LogEntry, [Date], Login, PCName) VALUES (" & patID & ", 'Clinician has triaged the variant " & Me.NGSVariantID & ":" & " " & triaging_category & "', #" + d + "#,'" + un + "','" + cn + "')"
+    DoCmd.SetWarnings False
+    DoCmd.RunSQL sqlMemo
+    DoCmd.RunSQL sqlPatLogVar
+    DoCmd.SetWarnings True
+End Sub
+
+Private Sub triaging_clinician_AfterUpdate()
+    Dim d As String
+    Dim un As String
+    Dim cn As String
+    Dim triaging_clinician As String
+    d = Format(Now(), "dd/mmm/yyyy Hh:Nn:ss")
+    un = VBA.Environ("USERNAME")
+    cn = VBA.Environ("COMPUTERNAME")
+    patID = Me.Parent.InternalPatientID
+    triaging_clinician = Me.triaging_clinician.Column(1)
+    sqlMemo = "INSERT INTO NGSLogMemo(InternalPatientID, Type, LinkID, LogMemoEntry, [Date], Login, PCName) VALUES(" + CStr(patID) + ", 2, " + CStr(Me.NGSVariantID) + ", 'Clinician ID who has triaged the variant: " + triaging_clinician + "',#" + d + "#,'" + un + "','" + cn + "')"
+    sqlPatLogVar = "INSERT INTO PatientLog (InternalPatientID, LogEntry, [Date], Login, PCName) VALUES (" & patID & ", 'Clinician  " & triaging_clinician & " has triaged the variant  " & Me.NGSVariantID & " " & "', #" + d + "#,'" + un + "','" + cn + "')"
+    DoCmd.SetWarnings False
+    DoCmd.RunSQL sqlMemo
+    DoCmd.RunSQL sqlPatLogVar
+    DoCmd.SetWarnings True
+
+End Sub
+
+Private Sub triaging_comment_AfterUpdate()
+
+    Dim d As String
+    Dim un As String
+    Dim cn As String
+    Dim triaging_comment As String
+    d = Format(Now(), "dd/mmm/yyyy Hh:Nn:ss")
+    un = VBA.Environ("USERNAME")
+    cn = VBA.Environ("COMPUTERNAME")
+    patID = Me.Parent.InternalPatientID
+    triaging_comment = Me.triaging_comment
+    sqlMemo = "INSERT INTO NGSLogMemo(InternalPatientID, Type, LinkID, LogMemoEntry, [Date], Login, PCName) VALUES(" + CStr(patID) + ", 2, " + CStr(Me.NGSVariantID) + ", 'Triaging comment added: " + triaging_comment + "',#" + d + "#,'" + un + "','" + cn + "')"
+    sqlPatLogVar = "INSERT INTO PatientLog (InternalPatientID, LogEntry, [Date], Login, PCName) VALUES (" & patID & ", 'Clinician has added a comment to the triaged variant  " & Me.NGSVariantID & ": " & triaging_comment & " " & "', #" + d + "#,'" + un + "','" + cn + "')"
+    DoCmd.SetWarnings False
+    DoCmd.RunSQL sqlMemo
+    DoCmd.RunSQL sqlPatLogVar
+    DoCmd.SetWarnings True
+
+End Sub
