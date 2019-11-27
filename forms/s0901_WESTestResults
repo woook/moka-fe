@@ -12,6 +12,7 @@ End Sub
 
 Private Sub Ctl100k_cover_sheet_Click()
     'This function will call a python script that generates a 100k cover sheet and attach to 100k summary of findings PDF
+    Dim confirmation_message As String
     Dim wsh As Object
     Dim pythonPath As String
     Dim scriptPath As String
@@ -25,7 +26,13 @@ Private Sub Ctl100k_cover_sheet_Click()
         MsgBox "Cover reports can only be generated for reports that have result code of negative (N) or previously reported variant (PRV)"
         Exit Sub
     End If
-    If vbYes = MsgBox("Generate 100k cover sheet for this case?", vbYesNo + vbQuestion, "Continue?") Then
+    confirmation_message = "Generate 100k cover sheet for this case?"
+    If Me.skip_labkey Then
+        confirmation_message = confirmation_message & vbNewLine & vbNewLine & _
+        "WARNING!!! Skip Labkey box is ticked. Labkey PID check will be skipped. Please make sure GeL participant ID and Interpretation Request ID " & _
+        "are entered correctly in Moka to ensure correct Summary of Findings is downloaded from portal!"
+    End If
+    If vbYes = MsgBox(confirmation_message, vbYesNo + vbQuestion, "Continue?") Then
         Set wsh = CreateObject("WScript.Shell")
         ' set path to the python executable
         pythonPath = "\\gstt.local\Shared\Genetics_Data2\Array\Software\Python\python.exe"
@@ -35,6 +42,9 @@ Private Sub Ctl100k_cover_sheet_Click()
         ngs_test_id = Me.Parent.NGSTestID
         ' Build command
         script_command = "cmd.exe /S /C " & pythonPath & " " & scriptPath & " -n " & ngs_test_id
+        If Me.skip_labkey Then
+            script_command = script_command & " --skip_labkey"
+        End If
         ' Give user option to automatically download the summary of findings from interpretation portal
         msg_string = "Download summary of findings from interpretation portal?" & vbNewLine & vbNewLine & _
                      "This will only work for cases with a single summary of findings in the interpretation portal. " & _
@@ -370,6 +380,41 @@ Private Sub Secondary_Panel_DblClick(Cancel As Integer)
         
     'Open folder containing file
         Shell "explorer.exe """ & DestFolder & "", vbNormalFocus
+    End If
+End Sub
+
+Private Sub skip_labkey_Click()
+    'Ticking this box allows the automated PID cross-check between Labkey and Geneworks to be skipped when generating a cover report for negative 100k cases
+    'This is required for pilot cases (which aren't in Labkey) or for rare cases where there is no DoB/NHS num avaialble in Geneworks e.g. because it's a fetal sample
+    'In these cases, the user generating the report must double check that GeL details entered to Moka are correct, to ensure that the correct summary of findings is pulled from the CIP API
+    Dim sql_pat_log As String
+    Dim username As String
+    Dim computer_name As String
+    Dim today_date As String
+    username = VBA.Environ("USERNAME")
+    computer_name = VBA.Environ("COMPUTERNAME")
+    today_date = Format(Now(), "dd/mmm/yyyy Hh:Nn:ss")
+    'If skip labkey box is ticked, get user to confirm that they have checked details entered to Moka are correct and record in patient log
+    If Me.skip_labkey Then
+        If vbYes = MsgBox("Have you checked the GeL participant ID and interpretation request ID have been entered to Moka correctly?", vbExclamation + vbYesNo, "IMPORTANT!") Then
+            sql_pat_log = "INSERT INTO PatientLog (InternalPatientID, LogEntry, [Date], Login, PCName) " & _
+            "VALUES (" & Me.InternalPatientID & ", 'NGS: User ticked skip labkey box and confirmed that GeL details entered correctly in Moka', #" & today_date & "#,'" & _
+            username & "','" & computer_name & "')"
+            DoCmd.SetWarnings False
+            DoCmd.RunSQL sql_pat_log
+            DoCmd.SetWarnings True
+        Else
+            'If user answers 'No' to above, untick the box
+            Me.skip_labkey = False
+        End If
+    'If skip labkey box is unticked, record in patient log
+    Else
+        sql_pat_log = "INSERT INTO PatientLog (InternalPatientID, LogEntry, [Date], Login, PCName) " & _
+        "VALUES (" & Me.InternalPatientID & ", 'NGS: User unticked skip labkey box.', #" & today_date & "#,'" & _
+        username & "','" & computer_name & "')"
+        DoCmd.SetWarnings False
+        DoCmd.RunSQL sql_pat_log
+        DoCmd.SetWarnings True
     End If
 End Sub
 
