@@ -1,0 +1,49 @@
+Option Compare Database
+
+Private Sub Command156_Click()
+    Dim stDocName As String
+    stDocName = "4004 Cancergenehitshg19"
+    DoCmd.OpenForm stDocName, acFormDS
+End Sub
+
+Private Sub Command159_Click()
+    Dim stDocName As String
+    stDocName = "4004b Cancergenehitshg19Date"
+    DoCmd.OpenForm stDocName, acFormDS
+End Sub
+
+Private Sub Command165_Click()
+    Dim stDocName As String
+    stDocName = "4736 Phenotips"
+    DoCmd.OpenForm stDocName
+End Sub
+
+Private Sub Command173_Click()
+    Dim stDocName As String
+    stDocName = "87010 ExomePatients"
+    DoCmd.OpenForm stDocName
+End Sub
+
+Private Sub Command174_Click()
+    Dim stDocName As String
+    stDocName = "87016 Exome_Internal_approvalform"
+    DoCmd.OpenForm stDocName
+End Sub
+
+Private Sub Command175_Click()
+    Dim stDocName As String
+    stDocName = "87018 ExomeStatus"
+    DoCmd.OpenForm stDocName
+End Sub
+
+Private Sub Command4_Click()
+    Dim stDocName As String
+    stDocName = "521 ClinicianAccess"
+    DoCmd.OpenForm stDocName
+End Sub
+
+Private Sub Command86_Click()
+    Dim stDocName As String
+    stDocName = "4003 Cancerwatchlisthg19"
+    DoCmd.OpenForm stDocName, acFormDS
+End Sub
