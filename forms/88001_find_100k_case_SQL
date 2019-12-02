@@ -1,0 +1,3 @@
+SELECT dbo_Patient.PatientID, [LastName] & " " & [FirstName] AS Name, Status.Status, Patients.InternalPatientID
+FROM (dbo_Patient LEFT JOIN Patients ON dbo_Patient.PatientID = Patients.PatientID) LEFT JOIN Status ON Patients.s_StatusOverall = Status.StatusID
+WHERE (((dbo_Patient.PatientID) Like [PatientID?] & "*"));
