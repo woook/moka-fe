@@ -1,0 +1,3 @@
+SELECT NGSTest.InternalPatientID, Status.Status, NGSTest.NGSTestID, NGSTest.GELProbandID, NGSTest.IRID
+FROM NGSTest INNER JOIN Status ON NGSTest.StatusID = Status.StatusID
+WHERE (((NGSTest.GELProbandID) Is Not Null) AND ((NGSTest.IRID) Is Not Null));

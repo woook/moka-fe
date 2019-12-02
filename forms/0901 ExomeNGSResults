@@ -2,8 +2,15 @@ Option Compare Database
 
 
 Private Sub Form_Current()
-'if test has been analysed and reported and safty switch is off then lock down form, apart from approver box
-   If (Not IsNull(Form_s0901_WESTestResults.Checker1) And Not IsNull(Form_s0901_WESTestResults.txt_Check1Date) And Not IsNull(Form_s0901_WESTestResults.txt_Check3Date) And [Form_0901 ExomeNGSResults].SafetyCheck.Value = False) Then
+        
+'If form opened in clinic view, disable safety switch
+If CurrentProject.Name = "clinicial.mdb" Then
+        Me.btnSafetyOnOff.Enabled = False
+        Me.SafetyCheck.Enabled = False
+End If
+        
+'if test has been analysed and reported and safty switch is off then lock down form, apart from approver box and 100k email
+If (Not IsNull(Form_s0901_WESTestResults.Checker1) And Not IsNull(Form_s0901_WESTestResults.txt_Check1Date) And Not IsNull(Form_s0901_WESTestResults.txt_Check3Date) And [Form_0901 ExomeNGSResults].SafetyCheck.Value = False) Then
         Me.[Patient Status].Locked = True
         Me.txt_result.Locked = True
         'Form_s0901_WESTestResults.AllowEdits = False
@@ -11,6 +18,9 @@ Private Sub Form_Current()
         Form_s0901_WESTestResults.FilterImport.Enabled = False
         Form_s0901_WESTestResults.RemoveAll.Enabled = False
         Form_s0901_WESTestResults.EditVars.Enabled = False
+        Form_s0901_WESTestResults.import_100k.Enabled = False
+        Form_s0901_WESTestResults.skip_labkey.Enabled = False
+        Form_s0901_WESTestResults.Ctl100k_cover_sheet.Enabled = False
         Form_s0901_NGSVariants.AllowEdits = False
         Form_s09_referpheno.AllowEdits = False
         Form_s09_referpheno.AllowDeletions = False
@@ -29,6 +39,11 @@ Private Sub Form_Current()
         Form_s0901_WESTestResults.txt_Check2Date.Locked = True
         Form_s0901_WESTestResults.Checker3.Locked = True
         Form_s0901_WESTestResults.txt_Check3Date.Locked = True
+        'If form is opened in Clinic view, also lock down the authoriser field
+        If CurrentProject.Name = "clinicial.mdb" Then
+            Form_s0901_WESTestResults.Checker4.Locked = True
+            Form_s0901_WESTestResults.txt_Check4Date.Locked = True
+        End If
         
 'if test report has been approved then completely lock down the form
 ElseIf (Not IsNull(Form_s0901_WESTestResults.Checker4) And Not IsNull(Form_s0901_WESTestResults.txt_Check3Date) And (Form_s0901_WESTestResults.StatusID = 4 Or Form_s0901_WESTestResults.StatusID = 1202218816) And [Form_0901 ExomeNGSResults].SafetyCheck.Value = False) Then
@@ -39,6 +54,10 @@ ElseIf (Not IsNull(Form_s0901_WESTestResults.Checker4) And Not IsNull(Form_s0901
         Form_s0901_WESTestResults.FilterImport.Enabled = False
         Form_s0901_WESTestResults.RemoveAll.Enabled = False
         Form_s0901_WESTestResults.EditVars.Enabled = False
+        Form_s0901_WESTestResults.import_100k.Enabled = False
+        Form_s0901_WESTestResults.skip_labkey.Enabled = False
+        Form_s0901_WESTestResults.Ctl100k_cover_sheet.Enabled = False
+        Form_s0901_WESTestResults.Ctl100k_email.Enabled = False
         Form_s0901_NGSVariants.AllowEdits = False
         Form_s09_referpheno.AllowEdits = False
         Form_s09_referpheno.AllowDeletions = False
@@ -47,7 +66,31 @@ ElseIf (Not IsNull(Form_s0901_WESTestResults.Checker4) And Not IsNull(Form_s0901
         Form_s0901_NGSTestFile.AllowDeletions = False
         Form_s0901_NGSTestFile.AllowAdditions = False
         
-
+'if opened in clinician view and test isn't reported or complete (i.e. above two conditions not met), lock down all fields except the clinician triaging fields
+ElseIf CurrentProject.Name = "clinicial.mdb" Then
+        Me.[Patient Status].Locked = True
+        Me.txt_result.Locked = True
+        Form_s0901_WESTestResults.AllowEdits = False
+        Form_s0901_WESTestResults.VCFImport.Enabled = False
+        Form_s0901_WESTestResults.FilterImport.Enabled = False
+        Form_s0901_WESTestResults.RemoveAll.Enabled = False
+        Form_s0901_WESTestResults.EditVars.Enabled = False
+        Form_s0901_WESTestResults.import_100k.Enabled = False
+        Form_s0901_WESTestResults.skip_labkey.Enabled = False
+        Form_s0901_WESTestResults.Ctl100k_cover_sheet.Enabled = False
+        Form_s0901_WESTestResults.Ctl100k_email.Enabled = False
+        Form_s0901_NGSVariants.Classification.Enabled = False
+        Form_s0901_NGSVariants.commentShort.Enabled = False
+        Form_s0901_NGSVariants.SangerConf.Enabled = False
+        Form_s0901_NGSVariants.Inheritance.Enabled = False
+        Form_s0901_NGSVariants.gnomad_Hom_count.Enabled = False
+        Form_s0901_NGSVariantsAnnotations.AllowEdits = False
+        Form_s09_referpheno.AllowEdits = False
+        Form_s09_referpheno.AllowDeletions = False
+        Form_s09_referpheno.AllowAdditions = False
+        Form_s0901_NGSTestFile.AllowEdits = False
+        Form_s0901_NGSTestFile.AllowDeletions = False
+        Form_s0901_NGSTestFile.AllowAdditions = False
     Else
         Me.[Patient Status].Locked = False
         Me.txt_result.Locked = False
@@ -56,6 +99,10 @@ ElseIf (Not IsNull(Form_s0901_WESTestResults.Checker4) And Not IsNull(Form_s0901
         Form_s0901_WESTestResults.FilterImport.Enabled = True
         Form_s0901_WESTestResults.RemoveAll.Enabled = True
         Form_s0901_WESTestResults.EditVars.Enabled = True
+        Form_s0901_WESTestResults.import_100k.Enabled = True
+        Form_s0901_WESTestResults.skip_labkey.Enabled = True
+        Form_s0901_WESTestResults.Ctl100k_cover_sheet.Enabled = True
+        Form_s0901_WESTestResults.Ctl100k_email.Enabled = True
         Form_s0901_NGSVariants.AllowEdits = True
         Form_s09_referpheno.AllowEdits = True
         Form_s09_referpheno.AllowDeletions = True
