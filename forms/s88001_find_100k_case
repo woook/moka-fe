@@ -1,0 +1,11 @@
+Option Compare Database
+Option Explicit
+
+Private Sub IRID_DblClick(Cancel As Integer)
+    Dim stDocName As String
+    Dim stLinkCriteria As String
+    stDocName = "0901 ExomeNGSResults"
+    stLinkCriteria = "[NGSTestID]=" & Me![NGSTestID]
+    DoCmd.close
+    DoCmd.OpenForm stDocName, , , stLinkCriteria
+End Sub
