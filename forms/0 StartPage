@@ -36,6 +36,12 @@ Private Sub Command175_Click()
     DoCmd.OpenForm stDocName
 End Sub
 
+Private Sub Command177_Click()
+    Dim stDocName As String
+    stDocName = "88001_find_100k_case"
+    DoCmd.OpenForm stDocName, acFormDS
+End Sub
+
 Private Sub Command4_Click()
     Dim stDocName As String
     stDocName = "521 ClinicianAccess"
