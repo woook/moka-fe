@@ -105,6 +105,11 @@ Private Sub dbSNPrs_DblClick(Cancel As Integer)
 End Sub
 
 Private Sub Form_Load()
+    'If opened in Clinician view, disable actions to prevent edits being made (this has to be done here because this form does not load when the rest of the page loads
+    If CurrentProject.Name = "clinicial.mdb" Then
+        Me.AllowEdits = False
+        Me.Check35.Enabled = False 'Reported check box
+    End If
     'When subform is opened on main results page, add '**' to label indicating that double clicking transcript performs an action (see below)
     If Me.Parent.Name = "s0901_NGSVariants" Then
         Me.transcriptLabel.Caption = "Transcript**"
@@ -115,7 +120,7 @@ End Sub
 
 Private Sub Transcript_DblClick(Cancel As Integer)
     'Copies selected variant details into results comments.
-    If Me.Parent.Name = "s0901_NGSVariants" Then 'Prevents function from being used when on the previous varaiants popup.
+    If Me.Parent.Name = "s0901_NGSVariants" And Not CurrentProject.Name = "clinicial.mdb" Then 'Prevents function from being used when on the previous varaiants popup, or in clinician view
         If Not IsNull(Me.Parent.Classification) Then
             Dim resultStr As String
             Dim genotype As String

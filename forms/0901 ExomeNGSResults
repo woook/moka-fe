@@ -84,7 +84,6 @@ ElseIf CurrentProject.Name = "clinicial.mdb" Then
         Form_s0901_NGSVariants.SangerConf.Enabled = False
         Form_s0901_NGSVariants.Inheritance.Enabled = False
         Form_s0901_NGSVariants.gnomad_Hom_count.Enabled = False
-        Form_s0901_NGSVariantsAnnotations.AllowEdits = False
         Form_s09_referpheno.AllowEdits = False
         Form_s09_referpheno.AllowDeletions = False
         Form_s09_referpheno.AllowAdditions = False
