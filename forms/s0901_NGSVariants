@@ -54,8 +54,8 @@ Private Sub commentShort_DblClick(Cancel As Integer)
     Me.refresh
     stDocName = "s0901_NGSVariantACMGPopup" ' define name of the form to open
     stLinkCriteria = "[NGSVariantID] = " & Me.NGSVariantID ' Link the two forms on NGSVariantID
-    'If form is locked following test completion, open the ACMG window in READ ONLY mode
-    If Me.AllowEdits = False Then
+    'If form is locked following test completion, or is opened in Clinician view, open the ACMG window in READ ONLY mode
+    If Me.AllowEdits = False Or CurrentProject.Name = "clinicial.mdb" Then
         DoCmd.OpenForm stDocName, , , stLinkCriteria, acFormReadOnly
     'If form is not locked, open the comment window in EDIT mode
     Else
