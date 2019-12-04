@@ -819,7 +819,7 @@ Private Sub Command96_Click()
             stDocName = "FamilyResults_Auto_PGD_Report"
             'stLinkCriteria = "[dbo_Patient_Table].[PatientTrustID]=" & "'" & Me![PatientID] & "'"
             stLinkCriteria = "([dbo_Patient_Table].[PatientTrustID]=" & "'" & Me![PatientID] & "'" & " AND [ePCI1]=" & Me.[ePGDCycleID] & ") OR ([dbo_Patient_Table].[PatientTrustID]=" & "'" & Me![PatientID] & "'" & " AND [ePCI2]=" & Me.[ePGDCycleID] & ")"
-            DoCmd.OpenReport stDocName, acViewNormal, , stLinkCriteria
+            DoCmd.OpenReport stDocName, acViewPreview, , stLinkCriteria
             
         End If
 End Sub
