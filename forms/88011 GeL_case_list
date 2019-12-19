@@ -1,0 +1,9 @@
+Option Compare Database
+Option Explicit
+
+Private Sub IRID_DblClick(Cancel As Integer)
+    'Open NGS results page for selected case
+    Dim stLinkCriteria As String
+    stLinkCriteria = "[NGSTestID]=" & Me.NGSTestID
+    DoCmd.OpenForm "0901 ExomeNGSResults", , , stLinkCriteria
+End Sub
