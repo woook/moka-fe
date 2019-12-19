@@ -26,6 +26,28 @@ Private Sub blockautoreport_AfterUpdate()
     DoCmd.SetWarnings True
 End Sub
 
+Private Sub BlockAutomatedReporting_AfterUpdate()
+    Dim today_date As String
+    Dim username As String
+    Dim computer_name As String
+    Dim sql_pat_log As String
+    username = VBA.Environ("USERNAME")
+    computer_name = VBA.Environ("COMPUTERNAME")
+    today_date = Format(Now(), "dd/mmm/yyyy Hh:Nn:ss")
+    If Me.BlockAutomatedReporting = 0 Then
+        sql_pat_log = "INSERT INTO PatientLog (InternalPatientID, LogEntry, [Date], Login, PCName) " & _
+        "VALUES (" & Me.InternalPatientID & ", 'NGS: User unblocked auto reporting of 100k case', #" & today_date & "#,'" & _
+        username & "','" & computer_name & "')"
+    Else
+        sql_pat_log = "INSERT INTO PatientLog (InternalPatientID, LogEntry, [Date], Login, PCName) " & _
+        "VALUES (" & Me.InternalPatientID & ", 'NGS: User blocked auto reporting of 100k case: " & Me.BlockAutomatedReporting.Column(1) & "', #" & today_date & "#,'" & _
+        username & "','" & computer_name & "')"
+    End If
+    DoCmd.SetWarnings False
+    DoCmd.RunSQL sql_pat_log
+    DoCmd.SetWarnings True
+End Sub
+
 Private Sub BookBy_AfterUpdate()
     Dim dt As String
     Dim un As String
