@@ -1,0 +1,3 @@
+SELECT NGSTest.InternalPatientID, NGSTest.NGSTestID, NGSTest.IRID
+FROM NGSTest
+WHERE (((NGSTest.IRID) Is Not Null));
