@@ -1,6 +1,32 @@
 
 Option Compare Database
 
+Private Sub add_block_Click()
+    DoCmd.OpenForm "s0901_Add_Block_Codes", acFormDS
+End Sub
+
+Private Sub BlockAutomatedReporting_AfterUpdate()
+    Dim today_date As String
+    Dim username As String
+    Dim computer_name As String
+    Dim sql_pat_log As String
+    username = VBA.Environ("USERNAME")
+    computer_name = VBA.Environ("COMPUTERNAME")
+    today_date = Format(Now(), "dd/mmm/yyyy Hh:Nn:ss")
+    If Me.BlockAutomatedReporting = 0 Then
+        sql_pat_log = "INSERT INTO PatientLog (InternalPatientID, LogEntry, [Date], Login, PCName) " & _
+        "VALUES (" & Me.InternalPatientID & ", 'NGS: User unblocked auto reporting of 100k case', #" & today_date & "#,'" & _
+        username & "','" & computer_name & "')"
+    Else
+        sql_pat_log = "INSERT INTO PatientLog (InternalPatientID, LogEntry, [Date], Login, PCName) " & _
+        "VALUES (" & Me.InternalPatientID & ", 'NGS: User blocked auto reporting of 100k case: " & Me.BlockAutomatedReporting.Column(1) & "', #" & today_date & "#,'" & _
+        username & "','" & computer_name & "')"
+    End If
+    DoCmd.SetWarnings False
+    DoCmd.RunSQL sql_pat_log
+    DoCmd.SetWarnings True
+End Sub
+
 Private Sub btn_Coverage_Click()
     ' load s0901_NGSCoveragePopup form passing it the NGStest ID. to select coverage report gerneration arguments.
     Dim stLinkCritera As String
@@ -21,12 +47,14 @@ Private Sub Ctl100k_cover_sheet_Click()
     Dim ngs_test_id As String
     Dim msg_string As String
     Dim script_command As String
-    ' Check that result code is negative or previously reported variant
-    If Me.ResultCode <> 1 And Me.ResultCode <> 1189679670 Then
-        MsgBox "Cover reports can only be generated for reports that have result code of negative (N) or previously reported variant (PRV)"
+    Dim negneg_skip_auto_close As Boolean
+    negneg_skip_auto_close = False
+    ' Check that result code is negative, negative negative or previously reported variant
+    If Me.ResultCode <> 1 And Me.ResultCode <> 1189679670 And Me.ResultCode <> 1189679668 Then
+        MsgBox "Cover reports can only be generated for reports that have result code of negative (N), negative negative (NN) or previously reported variant (PRV)"
         Exit Sub
     End If
-    confirmation_message = "Generate 100k cover sheet for this case?"
+    confirmation_message = "RESULT CODE: " & Me.Parent.result_code.Column(2) & vbNewLine & vbNewLine & "Generate 100k cover sheet for this case?"
     If Me.skip_labkey Then
         confirmation_message = confirmation_message & vbNewLine & vbNewLine & _
         "WARNING!!! Skip Labkey box is ticked. Labkey PID check will be skipped. Please make sure GeL participant ID and Interpretation Request ID " & _
@@ -45,12 +73,25 @@ Private Sub Ctl100k_cover_sheet_Click()
         If Me.skip_labkey Then
             script_command = script_command & " --skip_labkey"
         End If
-        ' Give user option to automatically download the summary of findings from interpretation portal
-        msg_string = "Download summary of findings from interpretation portal?" & vbNewLine & vbNewLine & _
-                     "This will only work for cases with a single summary of findings in the interpretation portal. " & _
-                     "For any other cases you must manually download and save as PDF in P:\Bioinformatics\GeL\technical_reports"
-        If vbYes = MsgBox(msg_string, vbYesNo + vbQuestion, "Download summary of findings?") Then
-            script_command = script_command & " --download_summary"
+        ' For negnegs, give user option to programmatically submit exit questionnaire and automatically download the summary of findings from interpretation portal
+        If Me.ResultCode = 1189679668 Then
+            msg_string = "For this NEGNEG case, do you want to automatically close the case in the interpretation portal and download summary of findings?" & vbNewLine & vbNewLine & _
+                         "This will only work for cases that have not yet been closed in the interpretation portal. "
+            If vbYes = MsgBox(msg_string, vbYesNo + vbQuestion, "Automatically close case in portal?") Then
+                script_command = script_command & " --submit_exit_q  --download_summary"
+            Else
+                ' If user decides not to close the case programmatically, set negneg_skip_auto_close to True
+                negneg_skip_auto_close = True
+            End If
+        End If
+        ' If result code not negneg, or if user skipped programmatic closing above, give the user option to automatically download the summary of findings from interpretation portal
+        If Me.ResultCode <> 1189679668 Or negneg_skip_auto_close Then
+            msg_string = "Download summary of findings from interpretation portal?" & vbNewLine & vbNewLine & _
+                         "This will only work for cases with a single summary of findings in the interpretation portal. " & _
+                         "For any other cases you must manually download and save as PDF in P:\Bioinformatics\GeL\technical_reports"
+            If vbYes = MsgBox(msg_string, vbYesNo + vbQuestion, "Download summary of findings?") Then
+                script_command = script_command & " --download_summary"
+            End If
         End If
         ' Redirect stderr to stdout
         script_command = script_command & " 2>&1"
@@ -270,6 +311,24 @@ Private Sub Form_Load()
 End Sub
 
 
+Private Sub GWWorksheet_AfterUpdate()
+    Dim today_date As String
+    Dim username As String
+    Dim computer As String
+    Dim sql As String
+    today_date = Format(Now, "dd/mmm/yyyy Hh:Nn:ss")
+    username = VBA.Environ("USERNAME")
+    computer = VBA.Environ("COMPUTERNAME")
+    If IsNull(Me.GWWorksheet) Then
+        sql = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" & CStr(Me![InternalPatientID]) & ",'NGS: Geneworks Worksheet number deleted for test requested " & CStr(Me![DateRequested]) & "',#" & today_date + "#,'" & username & "','" & computer & "')"
+    Else
+        sql = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" & CStr(Me![InternalPatientID]) & ",'NGS: Geneworks Worksheet number changed to " & CStr(Me.GWWorksheet) & " for test requested " & CStr(Me![DateRequested]) & "',#" & today_date + "#,'" & username & "','" & computer & "')"
+    End If
+    DoCmd.SetWarnings False
+    DoCmd.RunSQL sql
+    DoCmd.SetWarnings True
+End Sub
+
 Private Sub import_100k_Click()
     'Pass VCF filepath and test details to python script to parse VCF and insert records into Moka NGSVariants table
     Dim wsh As Object
@@ -309,6 +368,24 @@ Private Sub import_100k_Click()
         'Find number previous overlapping variants
         Call prevVars
     End If
+End Sub
+
+Private Sub MDTdate_AfterUpdate()
+    Dim today_date As String
+    Dim username As String
+    Dim computer As String
+    Dim sql As String
+    today_date = Format(Now, "dd/mmm/yyyy Hh:Nn:ss")
+    username = VBA.Environ("USERNAME")
+    computer = VBA.Environ("COMPUTERNAME")
+    If IsNull(Me.MDTdate) Then
+        sql = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" & CStr(Me![InternalPatientID]) & ",'NGS: MDT date deleted for test requested " & CStr(Me![DateRequested]) & "',#" & today_date + "#,'" & username & "','" & computer & "')"
+    Else
+        sql = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" & CStr(Me![InternalPatientID]) & ",'NGS: MDT date changed to " & CStr(Me.MDTdate) & " for test requested " & CStr(Me![DateRequested]) & "',#" & today_date + "#,'" & username & "','" & computer & "')"
+    End If
+    DoCmd.SetWarnings False
+    DoCmd.RunSQL sql
+    DoCmd.SetWarnings True
 End Sub
 
 Private Sub Primary_Panel_DblClick(Cancel As Integer)
