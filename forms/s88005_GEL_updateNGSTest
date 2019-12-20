@@ -27,6 +27,7 @@ Private Sub blockautoreport_AfterUpdate()
 End Sub
 
 Private Sub BlockAutomatedReporting_AfterUpdate()
+    'Record in patient log when this field is updated
     Dim today_date As String
     Dim username As String
     Dim computer_name As String
