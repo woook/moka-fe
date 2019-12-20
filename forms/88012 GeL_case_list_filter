@@ -79,3 +79,26 @@ Private Sub show_cases_referred_Click()
     DoCmd.OpenForm "88011 GeL_case_list", acFormDS, , stLinkCriteria
 End Sub
 
+Private Sub show_cases_worksheet_Click()
+    'Show 100k cases assigned to worksheet number
+    Dim stLinkCriteria As String
+    stLinkCriteria = "[GWWorksheet] = " & Me.dropdown_worksheet.Column(0)
+    DoCmd.OpenForm "88011 GeL_case_list", acFormDS, , stLinkCriteria
+End Sub
+
+Private Sub show_all_cases_worksheet_Click()
+    'Show all 100k cases assigned to any Geneworks worksheet
+    Dim stLinkCriteria As String
+    stLinkCriteria = "[GWWorksheet] IS NOT NULL "
+    DoCmd.OpenForm "88011 GeL_case_list", acFormDS, , stLinkCriteria
+End Sub
+
+Private Sub show_cases_mdt_Click()
+    'Show 100k cases assigned to MDT
+    Dim stLinkCriteria As String
+    Dim mdt_date As String
+    ' Format date to US for query
+    mdt_date = Format(Me.dropdown_mdt.Column(0), "mm/dd/yyyy")
+    stLinkCriteria = "[MDTdate] = #" & mdt_date & "#"
+    DoCmd.OpenForm "88011 GeL_case_list", acFormDS, , stLinkCriteria
+End Sub
