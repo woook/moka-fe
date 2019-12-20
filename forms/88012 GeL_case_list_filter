@@ -1,5 +1,8 @@
 Option Compare Database
 
+'This form allows users to apply filters to the datasheet form 88011 GeL_case_list
+'Each of these subroutines will open 88011 GeL_case_list, using stLinkCriteria to add a WHERE clause to the forms record source, filtering the results
+
 Private Sub show_all_cases_Click()
     Dim stLinkCriteria As String
     'Open GeL_case_list showing all cases
@@ -48,6 +51,10 @@ Private Sub show_cases_check1_Click()
     'Show 100k cases first checked by selected user
     Dim stLinkCriteria As String
     stLinkCriteria = "[Check1ID] = " & Me.dropdown_user.Column(0)
+    'Unless user has ticked inlcude_completed check box, do not include cases with status Complete, Not Required or Test Failed in results
+    If Me.inlcude_completed = 0 Then
+        stLinkCriteria = stLinkCriteria + " AND [StatusID] NOT IN (4, 1202218787, 1202218816)"
+    End If
     DoCmd.OpenForm "88011 GeL_case_list", acFormDS, , stLinkCriteria
 End Sub
 
@@ -55,6 +62,10 @@ Private Sub show_cases_check2_Click()
     'Show 100k cases second checked by selected user
     Dim stLinkCriteria As String
     stLinkCriteria = "[Check2ID] = " & Me.dropdown_user.Column(0)
+    'Unless user has ticked inlcude_completed check box, do not include cases with status Complete, Not Required or Test Failed in results
+    If Me.inlcude_completed = 0 Then
+        stLinkCriteria = stLinkCriteria + " AND [StatusID] NOT IN (4, 1202218787, 1202218816)"
+    End If
     DoCmd.OpenForm "88011 GeL_case_list", acFormDS, , stLinkCriteria
 End Sub
 
@@ -62,6 +73,10 @@ Private Sub show_cases_reported_Click()
     'Show 100k cases reported by selected user
     Dim stLinkCriteria As String
     stLinkCriteria = "[Check3ID] = " & Me.dropdown_user.Column(0)
+    'Unless user has ticked inlcude_completed check box, do not include cases with status Complete, Not Required or Test Failed in results
+    If Me.inlcude_completed = 0 Then
+        stLinkCriteria = stLinkCriteria + " AND [StatusID] NOT IN (4, 1202218787, 1202218816)"
+    End If
     DoCmd.OpenForm "88011 GeL_case_list", acFormDS, , stLinkCriteria
 End Sub
 
@@ -69,6 +84,10 @@ Private Sub show_cases_authorised_Click()
     'Show 100k cases authorised by selected user
     Dim stLinkCriteria As String
     stLinkCriteria = "[Check4ID] = " & Me.dropdown_user.Column(0)
+    'Unless user has ticked inlcude_completed check box, do not include cases with status Complete, Not Required or Test Failed in results
+    If Me.inlcude_completed = 0 Then
+        stLinkCriteria = stLinkCriteria + " AND [StatusID] NOT IN (4, 1202218787, 1202218816)"
+    End If
     DoCmd.OpenForm "88011 GeL_case_list", acFormDS, , stLinkCriteria
 End Sub
 
@@ -76,6 +95,10 @@ Private Sub show_cases_referred_Click()
     'Show 100k cases refererd by selected clinician
     Dim stLinkCriteria As String
     stLinkCriteria = "[BookBy] = " & Me.dropdown_user.Column(0)
+    'Unless user has ticked inlcude_completed check box, do not include cases with status Complete, Not Required or Test Failed in results
+    If Me.inlcude_completed = 0 Then
+        stLinkCriteria = stLinkCriteria + " AND [StatusID] NOT IN (4, 1202218787, 1202218816)"
+    End If
     DoCmd.OpenForm "88011 GeL_case_list", acFormDS, , stLinkCriteria
 End Sub
 
@@ -88,8 +111,9 @@ End Sub
 
 Private Sub show_all_cases_worksheet_Click()
     'Show all 100k cases assigned to any Geneworks worksheet
+    'Exclude cases with status Complete, Not Required or Test Failed
     Dim stLinkCriteria As String
-    stLinkCriteria = "[GWWorksheet] IS NOT NULL "
+    stLinkCriteria = "[GWWorksheet] IS NOT NULL AND [StatusID] NOT IN (4, 1202218787, 1202218816)"
     DoCmd.OpenForm "88011 GeL_case_list", acFormDS, , stLinkCriteria
 End Sub
 
