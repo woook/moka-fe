@@ -2,10 +2,12 @@
 Option Compare Database
 
 Private Sub add_block_Click()
+    'Open form to allow addition of new block codes for 100k cases
     DoCmd.OpenForm "s0901_Add_Block_Codes", acFormDS
 End Sub
 
 Private Sub BlockAutomatedReporting_AfterUpdate()
+    'Record in patient log when this field is updated
     Dim today_date As String
     Dim username As String
     Dim computer_name As String
@@ -312,6 +314,7 @@ End Sub
 
 
 Private Sub GWWorksheet_AfterUpdate()
+    'Record in patient log when this field is updated
     Dim today_date As String
     Dim username As String
     Dim computer As String
@@ -371,6 +374,7 @@ Private Sub import_100k_Click()
 End Sub
 
 Private Sub MDTdate_AfterUpdate()
+    'Record in patient log when this field is updated
     Dim today_date As String
     Dim username As String
     Dim computer As String
