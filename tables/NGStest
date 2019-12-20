@@ -1,7 +1,7 @@
 USE [mokadata]
 GO
 
-/****** Object:  Table [dbo].[NGSTest]    Script Date: 12/12/2019 15:11:22 ******/
+/****** Object:  Table [dbo].[NGSTest]    Script Date: 19/12/2019 13:14:50 ******/
 SET ANSI_NULLS ON
 GO
 
@@ -44,10 +44,11 @@ CREATE TABLE [dbo].[NGSTest](
 	[OncologyLabID] [int] NULL,
 	[GELProbandID] [int] NULL,
 	[IRID] [nvarchar](50) NULL,
-	[GWWorksheet] [int] NULL,
+	[GWWorksheet_dont_use] [int] NULL,
 	[MDTdate] [datetime] NULL,
 	[BlockAutomatedReporting] [smallint] NOT NULL,
 	[GeL_case_flags] [nvarchar](max) NULL,
+	[GWWorksheet] [nvarchar](max) NULL,
  CONSTRAINT [PK_NGSTest] PRIMARY KEY CLUSTERED 
 (
 	[NGSTestID] ASC
@@ -70,5 +71,3 @@ GO
 
 ALTER TABLE [dbo].[NGSTest] ADD  CONSTRAINT [DF_NGSTest_BlockAutomatedReporting]  DEFAULT ((0)) FOR [BlockAutomatedReporting]
 GO
-
-

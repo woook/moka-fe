@@ -1,0 +1,4 @@
+SELECT Item.Item, Item.ItemCategoryIndex1ID, Item.ItemID
+FROM Item
+WHERE (((Item.ItemCategoryIndex1ID)=77))
+ORDER BY Item.Item;

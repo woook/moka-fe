@@ -32,6 +32,8 @@ If (Not IsNull(Form_s0901_WESTestResults.Checker1) And Not IsNull(Form_s0901_WES
         Form_s0901_WESTestResults.txt_Resultcmt.Locked = True
         Form_s0901_WESTestResults.comb_WESResultBuild.Locked = True
         Form_s0901_WESTestResults.TertiaryPanel.Locked = True
+        Form_s0901_WESTestResults.MDTdate.Locked = True
+        Form_s0901_WESTestResults.GWWorksheet.Locked = True
         Form_s0901_WESTestResults.StatusID.Locked = True
         Form_s0901_WESTestResults.Checker1.Locked = True
         Form_s0901_WESTestResults.txt_Check1Date.Locked = True
@@ -112,6 +114,8 @@ ElseIf CurrentProject.Name = "clinicial.mdb" Then
         Form_s0901_WESTestResults.txt_Resultcmt.Locked = False
         Form_s0901_WESTestResults.comb_WESResultBuild.Locked = False
         Form_s0901_WESTestResults.TertiaryPanel.Locked = False
+        Form_s0901_WESTestResults.MDTdate.Locked = False
+        Form_s0901_WESTestResults.GWWorksheet.Locked = False
         Form_s0901_WESTestResults.StatusID.Locked = False
         Form_s0901_WESTestResults.Checker1.Locked = False
         Form_s0901_WESTestResults.txt_Check1Date.Locked = False
@@ -313,6 +317,7 @@ Private Sub result_code_AfterUpdate()
     DoCmd.SetWarnings False
     DoCmd.RunSQL sql
     DoCmd.SetWarnings True
+    Me.Requery
 End Sub
 
 Private Sub txt_result_AfterUpdate()
