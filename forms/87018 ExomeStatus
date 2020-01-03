@@ -12,7 +12,7 @@ Private Sub Form_Load()
     "LEFT JOIN NGSWESBatch ON NGSTest.WESBatch = NGSWESBatch.NGSWESBatchID "
     
     'String of WES referral types to include (used in WHERE clause of recordsource)
-    includeReferrals = "NGSTest.ReferralID in (1199901211,1199901212,1199901213,1199901214,1199901209,1199901222,1199901223)"
+    includeReferrals = "NGSTest.ReferralID in (1199901211,1199901212,1199901213,1199901214,1199901209,1199901222,1199901223,1199901225)"
     
     sqlNull = "SELECT Null AS NGSTestID, Null AS PatientTrustID, Null AS LastName, Null AS FirstName, Null AS DateRequested, Null AS StatusID, Null AS Status, Null AS RefName, Null AS BatchName;"
     [Form_s87018_ExomeStatus].RecordSource = sqlNull
