@@ -17,7 +17,7 @@ Me.txt_displayed = "All WES tests currently in progress"
 Cmb_Approver.Visible = False
 
 'String of WES referral types to include (used in WHERE clause of recordsource)
-includeReferrals = "NGSTest.ReferralID in (1199901211,1199901212,1199901213,1199901214,1199901209,1199901222,1199901223)"
+includeReferrals = "NGSTest.ReferralID in (1199901211,1199901212,1199901213,1199901214,1199901209,1199901222,1199901223,1199901225)"
 End Sub
 
 
