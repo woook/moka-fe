@@ -1091,10 +1091,7 @@ End Sub
 Function update_referral()
     '' This function alters the includeReferrals variable to filter the subform to display all samples, or only WES or only EB samples
     '' InclueReferrals is a string used in WHERE clause of subform recordsource
-    
-    ' the referral_filter box displays the value of the status (only used for debugging)
-    'Me.referral_filter.Value = Me.WES_user_group.Column(0)
-    
+        
     ' If the WES_user_group.Value is null show all samples
     If IsNull(Me.WES_user_group.Value) Then
         includeReferrals = "NGSTest.ReferralID in (select referralid from referral where grouptypeid = 14)"
