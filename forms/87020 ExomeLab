@@ -1081,9 +1081,12 @@ End Sub
 Private Sub WES_user_group_AfterUpdate()
     '' When the user group is changed change includereferral and the text displayed describing filter(s) applied calling the two functions which reads this value
     ' msgbox to warn that any other filters will be removed
-    msgbox1 = MsgBox("Warning, resetting the user group will remove any filters", vbOKOnly, "Resetting filters")
-    Call update_referral
-    Call update_display
+    If MsgBox("Warning, resetting the user group will remove any filters", vbOKCancel, "Resetting filters") = vbCancel Then
+        Cancel = True
+    Else
+        Call update_referral
+        Call update_display
+    End If
 End Sub
 Function update_referral()
     '' This function alters the includeReferrals variable to filter the subform to display all samples, or only WES or only EB samples
@@ -1116,4 +1119,3 @@ Function update_display()
     ' Set variable bound to the text box - this variable can be further modified by other functions
     Me.txt_displayed = "All " & user_type_display & " tests currently in progress"
 End Function
-
