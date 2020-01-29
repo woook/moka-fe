@@ -13,18 +13,17 @@ Me.Check_1st = 0
 Me.Check_2nd = 0
 Me.cmb_BatchView.Value = Null
 Me.cmb_StatusView.Value = Null
-Me.txt_displayed = "All WES tests currently in progress"
-Cmb_Approver.Visible = False
 
-'String of WES referral types to include (used in WHERE clause of recordsource)
-includeReferrals = "NGSTest.ReferralID in (1199901211,1199901212,1199901213,1199901214,1199901209,1199901222,1199901223,1199901225)"
+Cmb_Approver.Visible = False
+Call update_referral
+
 End Sub
 
 
 Function Unselect()
 ' Use to unselect a test. Sets selection to 0 for all
 Dim unsel As String
-
+    
     unsel = "UPDATE NGSTest SET NGSTest.Selection = False WHERE " & includeReferrals & " AND NGSTest.StatusID <> 1202218787"
     DoCmd.SetWarnings False
     DoCmd.RunSQL unsel
@@ -214,7 +213,7 @@ Dim AllTotal As Long
 ' deselect any selected files and set the select all check box to empty
 Call Unselect
     
-' reload subform calling querey to view all
+' reload subform calling query to view all
            
 subfrmSQL = "SELECT NGSTest.Selection, Patients.PatientID AS PRU, NGSTest.NGSTestID, dbo_Patient_table.LastName, dbo_Patient_table.FirstName, dbo_Patient_table.DoB, gw_GenderTable.GenderShort, Referral.Referral, NGSTest.DateRequested, Checker.Name AS RefName, Checker.Initials AS Referrer, NGSPanel.Panel AS PanelA, NGSPanel_1.Panel AS PanelB, Status_1.StatusID AS PatientStatus, NGSWESBatch.BatchName AS WESBatch, Status.StatusID, Status.Status AS TestStatus, NGSTest.ResultComment, Patients.InternalPatientID, Checker_1.Initials AS Checker1, NGSTest.Check1Date, Checker_2.Initials AS Checker2, NGSTest.Check2Date, Checker_3.Initials AS ReportApproved, NGSTest.Check3Date, Patients.s_StatusOverall, NGSPanel.PanelCode AS [Primary], NGSPanel_1.PanelCode AS Secondary, NGSTest.DNA, NGSTest.Priority, NGSTest.Result AS TestResult, NGSPanel_2.PanelCode AS Tertiary, Checker_4.Initials AS check4ID, NGSTest.Check4Date " & _
             "FROM (((((((((((((((NGSTest INNER JOIN Patients ON NGSTest.InternalPatientID = Patients.InternalPatientID) INNER JOIN Referral ON NGSTest.ReferralID = Referral.ReferralID) INNER JOIN Checker ON NGSTest.BookBy = Checker.Check1ID) INNER JOIN NGSPanel ON NGSTest.NGSPanelID = NGSPanel.NGSPanelID) LEFT JOIN NGSPanel AS NGSPanel_1 ON NGSTest.NGSPanelID_B = NGSPanel_1.NGSPanelID) INNER JOIN Status ON NGSTest.StatusID = Status.StatusID) INNER JOIN dbo_Patient_table ON Patients.PatientID = dbo_Patient_table.PatientTrustID) LEFT JOIN DNA ON NGSTest.DNA = DNA.DNANumber) INNER JOIN Status AS Status_1 ON Patients.s_StatusOverall = Status_1.StatusID) LEFT JOIN gw_GenderTable ON dbo_Patient_table.GenderID = gw_GenderTable.GenderID) " & _
@@ -238,7 +237,7 @@ Me.txt_SelectionCount = selTotal
     Me.check_ViewAllPend = 0
     Me.cmb_BatchView.Value = Null
     Me.cmb_StatusView.Value = Null
-Me.txt_displayed = "All WES tests currently in progress"
+Call update_display
 End Sub
 
 
@@ -276,7 +275,8 @@ Me.txt_TotalTally = AllTotal
 selTotal = DCount("[Selection]", "s87020_ListWESSamples", "[Selection] = True")
 Me.txt_SelectionCount = selTotal
 ' Update summary of displayed samples
-Me.txt_displayed = "All WES tests awaiting assignment to a WES batch"
+Call update_display
+Me.txt_displayed = Me.txt_displayed & " awaiting assignment to a WES batch"
 End Sub
 
 
@@ -293,7 +293,8 @@ Dim AllTotal As Long
     Me.Check_2nd = 0
     Me.cmb_BatchView.Value = Null
     Me.cmb_StatusView.Value = Null
-    Me.txt_displayed = "All WES tests awaiting primary analysis (check 1)"
+    Call update_display
+    Me.txt_displayed = Me.txt_displayed & " awaiting primary analysis (check 1)"
 
 ' deselect any selected files and set the select all check box to empty
 Call Unselect
@@ -332,7 +333,8 @@ Dim AllTotal As Long
     Me.check_ViewAllPend = 0
     Me.cmb_BatchView.Value = Null
     Me.cmb_StatusView.Value = Null
-    Me.txt_displayed = "All WES tests requiring second check"
+    Call update_display
+    Me.txt_displayed = Me.txt_displayed & " requiring second check"
 
 ' deselect any selected files and set the select all check box to empty
 Call Unselect
@@ -387,7 +389,8 @@ If Not IsNull(Me!cmb_BatchView) Then
                                         
         'Debug.Print subfrmSQL
         [Form_s87020_ExomeLabList].Form.RecordSource = subfrmSQL
-        Me.txt_displayed = "Batch " + Me![cmb_BatchView].Column(1)
+        Call update_display
+        Me.txt_displayed = Me.txt_displayed & " in batch " + Me![cmb_BatchView].Column(1)
         
         ' refresh total tally
         strCriteria = " WESBatch = '" & Me.cmb_BatchView.Column(1) & "'"
@@ -406,7 +409,8 @@ If Not IsNull(Me!cmb_BatchView) Then
                     
         'Debug.Print subfrmSQL
         [Form_s87020_ExomeLabList].Form.RecordSource = subfrmSQL
-        Me.txt_displayed = "Batch " + Me![cmb_BatchView].Column(1) + " with status " + Me![cmb_StatusView].Column(1)
+        Call update_display
+        Me.txt_displayed = Me.txt_displayed & " in Batch " + Me![cmb_BatchView].Column(1) + " with status " + Me![cmb_StatusView].Column(1)
     
         ' refresh total tally
         strCriteria = " WESBatch = '" & Me.cmb_BatchView.Column(1) & "' AND TestStatus = '" & Me.cmb_StatusView.Column(1) & "'"
@@ -476,7 +480,8 @@ If Not IsNull(cmb_StatusView) Then
             
         'Debug.Print subfrmSQL
         [Form_s87020_ExomeLabList].Form.RecordSource = subfrmSQL
-        Me.txt_displayed = "Sample with status: " + Me![cmb_StatusView].Column(1)
+        Call update_display
+        Me.txt_displayed = Me.txt_displayed & " with status: " + Me![cmb_StatusView].Column(1)
         
         ' refresh total tally
         strCriteria = " TestStatus = '" & Me.cmb_StatusView.Column(1) & "'"
@@ -493,7 +498,8 @@ If Not IsNull(cmb_StatusView) Then
       
         'Debug.Print subfrmSQL
         [Form_s87020_ExomeLabList].Form.RecordSource = subfrmSQL
-        Me.txt_displayed = "Batch " + Me![cmb_BatchView].Column(1) + " with status " + Me![cmb_StatusView].Column(1)
+        Call update_display
+        Me.txt_displayed = Me.txt_displayed & " in batch " + Me![cmb_BatchView].Column(1) + " with status " + Me![cmb_StatusView].Column(1)
         
         ' refresh total tally
         strCriteria = " WESBatch = '" & Me.cmb_BatchView.Column(1) & "' AND TestStatus = '" & Me.cmb_StatusView.Column(1) & "'"
@@ -552,7 +558,8 @@ subfrmSQL = "SELECT NGSTest.Selection, Patients.PatientID AS PRU, NGSTest.NGSTes
             "ORDER BY NGSTest.Priority , NGSTest.DateRequested;"
             
 [Form_s87020_ExomeLabList].Form.RecordSource = subfrmSQL
-Me.txt_displayed = "All tests pending approval of the reports"
+Call update_display
+Me.txt_displayed = Me.txt_displayed & " pending approval of the reports"
         
 ' refresh total tally
 strCriteria = "TestStatus = 'Pending Report Authorsation' Or TestStatus = 'Pending Report Authorsation (Fail report)' "
@@ -1062,3 +1069,51 @@ End Sub
 Private Sub btn_refresh_Click()
 Form!s87020_ExomeLabList.Requery
 End Sub
+
+Private Sub user_group_clear_Click()
+    '' Remove the user group filter to edit includereferral and the text displayed describing filter(s) applied
+    ' this removes the value assigned to the WES_user_group variable and calls the two functions which reads this value
+    Me.WES_user_group.Value = Null
+    Call update_referral
+    Call update_display
+End Sub
+
+Private Sub WES_user_group_AfterUpdate()
+    '' When the user group is changed change includereferral and the text displayed describing filter(s) applied calling the two functions which reads this value
+    ' msgbox to warn that any other filters will be removed
+    msgbox1 = MsgBox("Warning, resetting the user group will remove any filters", vbOKOnly, "Resetting filters")
+    Call update_referral
+    Call update_display
+End Sub
+Function update_referral()
+    '' This function alters the includeReferrals variable to filter the subform to display all samples, or only WES or only EB samples
+    '' InclueReferrals is a string used in WHERE clause of subform recordsource
+    
+    ' the referral_filter box displays the value of the status (only used for debugging)
+    'Me.referral_filter.Value = Me.WES_user_group.Column(0)
+    
+    ' If the WES_user_group.Value is null show all samples
+    If IsNull(Me.WES_user_group.Value) Then
+        includeReferrals = "NGSTest.ReferralID in (select referralid from referral where grouptypeid = 14)"
+    Else
+        ' if the WES_user_group.Value is not null add this to the variable to select for EB lab or WES
+        includeReferrals = "NGSTest.ReferralID in (select referralid from referral where grouptypeid = 14) and NGSTest.ReferralID in (select referralid from referral where prioritysorting = " & Me.WES_user_group.Column(0) & ")"
+    End If
+    
+    ' call the function which refreshes the subform, using the new includeReferral variable
+    Call btn_ViewAll_Click
+    
+End Function
+Function update_display()
+    '' This function is used to create the text string desctibing what filters have been applied
+    '' the result of this function is a variable me.txt_displayed - this variable can be further modified outside of this function
+    Dim user_type_display  As String
+    user_type_display = ""
+    ' if the WES_user_group is not null then get text description of filter (EB lab or WES)
+    If Not IsNull(Me.WES_user_group.Value) Then
+        user_type_display = Me.WES_user_group.Column(1)
+    End If
+    ' Set variable bound to the text box - this variable can be further modified by other functions
+    Me.txt_displayed = "All " & user_type_display & " tests currently in progress"
+End Function
+
