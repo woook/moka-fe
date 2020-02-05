@@ -28,7 +28,7 @@ If (Response = vbOK And Not (Recordset.BOF And Recordset.EOF)) Then
     Dim rn As String
     rn = InputBox("Run number? e.g. 100722")
     Dim t As String
-    Do Until t = "MRC" Or t = "RB" Or t = "MJF" Or t = "ESM" Or t = "DER"
+    Do Until t = "RB" Or t = "AER" Or t = "SE" Or t = "DER" Or t = "AD"
         t = InputBox("Who is labelling? (RB / AER / SE / DER / AD)")
     Loop
     If t = "SS" Then
