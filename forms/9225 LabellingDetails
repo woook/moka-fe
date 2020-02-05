@@ -1,5 +1,6 @@
 Option Compare Database
-
+Private Sub Detail_DblClick(Cancel As Integer)
+End Sub
 Private Sub Form_DblClick(Cancel As Integer)
 On Error GoTo Err_Form_DblClick
     Dim stDocName As String
@@ -13,7 +14,6 @@ Err_Form_DblClick:
     MsgBox Err.Description
     Resume Exit_Form_DblClick
 End Sub
-
 Private Sub Name_DblClick(Cancel As Integer)
     Dim stDocName As String
     Dim stLinkCriteria As String
@@ -21,9 +21,7 @@ Private Sub Name_DblClick(Cancel As Integer)
     stLinkCriteria = "[InternalPatientID]=" & Me![InternalPatientID]
     DoCmd.OpenForm stDocName, , , stLinkCriteria
 End Sub
-
 Private Sub StatusID_DblClick(Cancel As Integer)
-
 Dim Msg, Style, Title, Response
 Msg = "Do you want Moka to update labelling details? (make sure that the right number of labelling reactions are shown)"
 Style = vbOKCancel + vbCritical + vbDefaultButton1
@@ -32,23 +30,23 @@ Response = MsgBox(Msg, Style, Title)
 If (Response = vbOK And Not (Recordset.BOF And Recordset.EOF)) Then
     Dim rn As String
     rn = InputBox("Run number? e.g. 100722")
-        
     Dim t As String
     Do Until t = "MRC" Or t = "RB" Or t = "MJF" Or t = "ESM" Or t = "DER"
-        t = InputBox("Who is labelling? (MRC / MJF / RB / ESM / DER)")
+        t = InputBox("Who is labelling? (RB / AER / SE / DER / AD)")
     Loop
-    If t = "MRC" Then
-        t = 1165930743
+    If t = "SS" Then
+        t = 1201865626
         ElseIf t = "RB" Then
         t = 1165930735
-        ElseIf t = "MJF" Then
-        t = 1201865447
-        ElseIf t = "ESM" Then
-        t = 1201865535
+        ElseIf t = "AER" Then
+        t = 1201865631
+        ElseIf t = "SE" Then
+        t = 1201865641
         ElseIf t = "DER" Then
         t = 1201865538
+        ElseIf t = "AD" Then
+        t = 1201865664
         End If
-    
     Dim rc3 As Integer
     rc3 = 0
     Dim rc5 As Integer
@@ -60,12 +58,10 @@ If (Response = vbOK And Not (Recordset.BOF And Recordset.EOF)) Then
     Dim d As Integer
     Dim rr As String
     Dim c3c As String
-            
     Do While Not Recordset.EOF
         Dim Q As ADODB.Recordset
         Set Q = New ADODB.Recordset
         Dim S As String
-        
         If Me![StatusID] = 1168443102 Then
             rc3 = rc3 + 1
             If rc3 = 9 Then
@@ -121,12 +117,7 @@ If (Response = vbOK And Not (Recordset.BOF And Recordset.EOF)) Then
             End If
         Q.Open S, CurrentProject.Connection
         Set Q = Nothing
-        
         Recordset.MoveNext
     Loop
-            
     End If
-    
 End Sub
-
-
