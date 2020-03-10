@@ -83,7 +83,7 @@ Private Sub SetEvidenceCounts()
     Next Element
     
     'Close recordset
-    rsNVA.close
+    rsNVA.Close
     
     'Set evidence counts to their respective counter objects in the form
     Me.PVS_count = PVS_count
@@ -126,6 +126,7 @@ Public Function GetACMGClassification() As Variant
     ' Pathogenic (i) 1 Very Strong AND (1 Strong OR 1 Moderate OR 2 Supporting)
     ' Pathogenic (ii) 2 Strong AND (1 Moderate or 2 Supporting)
     ' Pathogenic (iii) 1 Strong AND (3 Moderate OR [2 Moderate and 2 Supporting] OR [1 Moderate and 4 Supporting])
+    ' Pathogenic (iv) 3 or more Strong
     If (Me.PVS_count >= 1 And (Me.PS_count >= 1 Or Me.PM_count >= 1 Or Me.PP_count >= 2)) Then
         path_rule = "Pathogenic (i) 1 Very Strong AND (1 Strong OR 1 Moderate OR 2 Supporting)"
         isPathogenic = True
@@ -139,6 +140,9 @@ Public Function GetACMGClassification() As Variant
             )) Then
         path_rule = "Pathogenic (iii) 1 Strong AND (3 Moderate OR [2 Moderate and 2 Supporting] OR [1 Moderate and 4 Supporting])"
         isPathogenic = True
+    ElseIf (Me.PS_count >= 3) Then
+        path_rule = "Pathogenic (iv) 3 or more Strong"
+        isPathogenic = True
     Else
         path_rule = "None"
         isPathogenic = False
@@ -150,7 +154,7 @@ Public Function GetACMGClassification() As Variant
     If Me.PS_count >= 2 Then
         lpath_rule = "Likely pathogenic (i) 2 Strong"
         isLikelyPathogenic = True
-    ElseIf (Me.PS_count >= 1 And Me.PM_count >= 1) Then
+    ElseIf (Me.PS_count = 1 And Me.PM_count >= 1) Then
         lpath_rule = "Likely pathogenic (ii) Strong and 1 Moderate"
         isLikelyPathogenic = True
     ElseIf (Me.PS_count >= 1 And Me.PP_count >= 2) Then
@@ -159,10 +163,10 @@ Public Function GetACMGClassification() As Variant
     ElseIf Me.PM_count >= 3 Then
         lpath_rule = "Likely pathogenic (iv) 3 Moderate"
         isLikelyPathogenic = True
-    ElseIf (Me.PM_count >= 2 And Me.PP_count >= 2) Then
+    ElseIf (Me.PM_count = 2 And Me.PP_count >= 2) Then
         lpath_rule = "Likely pathogenic (v) 2 Moderate and 2 Supporting"
         isLikelyPathogenic = True
-    ElseIf (Me.PM_count >= 1 And Me.PP_count >= 4) Then
+    ElseIf (Me.PM_count = 1 And Me.PP_count >= 4) Then
         lpath_rule = "Likely pathogenic (vi) 1 Moderate and 4 Supporting"
         isLikelyPathogenic = True
     Else
@@ -300,7 +304,7 @@ Private Sub Calculate_Click()
         End If
     End If
 
-    rsStatus.close
+    rsStatus.Close
     DoCmd.RunCommand acCmdSaveRecord
 End Sub
 
@@ -344,7 +348,7 @@ End Sub
 
 Private Sub Close_Click()
     'Close the form
-    DoCmd.close
+    DoCmd.Close
 End Sub
 
 Private Sub rule_DblClick(Cancel As Integer)
@@ -991,7 +995,7 @@ Private Function OptionBox_Log(box_name As String, box_value As String)
         Set Dbs = CurrentDb
         Set rsItem = Dbs.OpenRecordset("SELECT Item FROM Item WHERE ItemID = " & box_value)
         hrBoxValue = rsItem!Item
-        rsItem.close
+        rsItem.Close
     End If
     
     ' Define and Execute SQL
