@@ -455,7 +455,7 @@ If Not IsNull(cmb_StatusView) Then
                     "WHERE " & includeReferrals & " And Status.StatusID = " & CStr(Me![cmb_StatusView]) & " " & _
                     "ORDER BY NGSTest.Priority , NGSTest.DateRequested;"
             
-        Debug.Print subfrmSQL
+        'Debug.Print subfrmSQL
         [Form_s87020_ExomeLabList].Form.RecordSource = subfrmSQL
         Call update_display
         Me.txt_displayed = Me.txt_displayed & " with status: " + Me![cmb_StatusView].Column(1)
@@ -630,14 +630,14 @@ ElseIf Not IsNull(Me.cmb_BatchAssign) And IsNull(Me.txt_NEWBatch) Then
                 While (Not .EOF)
 
                     If rsAssign!Selection = True Then
-                        strUpd8Batch = "UPDATE NGSTest SET WESBatch = " & Me.cmb_BatchAssign & " WHERE NGSTest.NGSTestID = " & rsAssign!NGStestID
+                        strUpd8Batch = "UPDATE NGSTest SET WESBatch = " & Me.cmb_BatchAssign & " WHERE NGSTest.NGSTestID = " & rsAssign!NGSTestID
                         ' update the test status to nest step NextSEQ sequencing
-                        strUpd8Status = "UPDATE NGSTest SET StatusID = 1202218804 WHERE NGSTest.NGSTestID = " & rsAssign!NGStestID
+                        strUpd8Status = "UPDATE NGSTest SET StatusID = 1202218804 WHERE NGSTest.NGSTestID = " & rsAssign!NGSTestID
                         'update patient log
-                        strLogSQL = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" & rsAssign!InternalPatientID & ", 'NGS WES test: NGS testID " & rsAssign!NGStestID & " assigned to WES batch " & Me.cmb_BatchAssign.Column(1) & " (ID " & Me.cmb_BatchAssign.Column(0) & "). ',#" + dt + "#,'" + usr + "','" + cmp + "')"
-                        strLogSQL2 = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" & rsAssign!InternalPatientID & ", 'NGS WES test: Status updated to NextSEQ sequencing for test requested " & rsAssign!DateRequested & " NGS testID " & rsAssign!NGStestID & ". ',#" + dt + "#,'" + usr + "','" + cmp + "')"
+                        strLogSQL = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" & rsAssign!InternalPatientID & ", 'NGS WES test: NGS testID " & rsAssign!NGSTestID & " assigned to WES batch " & Me.cmb_BatchAssign.Column(1) & " (ID " & Me.cmb_BatchAssign.Column(0) & "). ',#" + dt + "#,'" + usr + "','" + cmp + "')"
+                        strLogSQL2 = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" & rsAssign!InternalPatientID & ", 'NGS WES test: Status updated to NextSEQ sequencing for test requested " & rsAssign!DateRequested & " NGS testID " & rsAssign!NGSTestID & ". ',#" + dt + "#,'" + usr + "','" + cmp + "')"
                         'update NGSlogmemo
-                        strLogMemo = "INSERT INTO NGSLogMemo(InternalPatientID, Type, LinkID, LogMemoEntry, [Date], Login, PCName) VALUES(" + CStr(rsAssign!InternalPatientID) + ", 1, " + CStr(rsAssign!NGStestID) + ",'NGS WES test status updated to: NextSEQ sequencing.' ,#" + dt + "#,'" + usr + "','" + cn + "')"
+                        strLogMemo = "INSERT INTO NGSLogMemo(InternalPatientID, Type, LinkID, LogMemoEntry, [Date], Login, PCName) VALUES(" + CStr(rsAssign!InternalPatientID) + ", 1, " + CStr(rsAssign!NGSTestID) + ",'NGS WES test status updated to: NextSEQ sequencing.' ,#" + dt + "#,'" + usr + "','" + cn + "')"
                         'Debug.Print strLogMemo
                         
                         DoCmd.SetWarnings False
@@ -734,14 +734,14 @@ ElseIf IsNull(Me.cmb_BatchAssign) And Not IsNull(Me.txt_NEWBatch) Then
                      If Not .BOF And Not .EOF Then
                         While (Not .EOF)
                             If rsAssign!Selection = True Then
-                                strUpd8Batch = "UPDATE NGSTest SET WESBatch = " & rsBatch!NGSWESBatchID & " WHERE NGSTest.NGSTestID = " & rsAssign!NGStestID
+                                strUpd8Batch = "UPDATE NGSTest SET WESBatch = " & rsBatch!NGSWESBatchID & " WHERE NGSTest.NGSTestID = " & rsAssign!NGSTestID
                                 ' update the test status to nest step NextSEQ sequencing
-                                strUpd8Status = "UPDATE NGSTest SET StatusID = 1202218804 WHERE NGSTest.NGSTestID = " & rsAssign!NGStestID
+                                strUpd8Status = "UPDATE NGSTest SET StatusID = 1202218804 WHERE NGSTest.NGSTestID = " & rsAssign!NGSTestID
                                 ' update patient log
-                                strLogSQL = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" & rsAssign!InternalPatientID & ", 'NGS WES test: NGS testID " & rsAssign!NGStestID & " assigned to WES batch " + newbatch + " (ID " & rsBatch!NGSWESBatchID & "). ',#" + dt + "#,'" + usr + "','" + cmp + "')"
-                                strLogSQL2 = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" & rsAssign!InternalPatientID & ", 'NGS WES test: Status updated to NextSEQ sequencing for test requested " & rsAssign!DateRequested & " NGS testID " & rsAssign!NGStestID & ". ',#" + dt + "#,'" + usr + "','" + cmp + "')"
+                                strLogSQL = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" & rsAssign!InternalPatientID & ", 'NGS WES test: NGS testID " & rsAssign!NGSTestID & " assigned to WES batch " + newbatch + " (ID " & rsBatch!NGSWESBatchID & "). ',#" + dt + "#,'" + usr + "','" + cmp + "')"
+                                strLogSQL2 = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" & rsAssign!InternalPatientID & ", 'NGS WES test: Status updated to NextSEQ sequencing for test requested " & rsAssign!DateRequested & " NGS testID " & rsAssign!NGSTestID & ". ',#" + dt + "#,'" + usr + "','" + cmp + "')"
                                 'update NGSlogmemo
-                                strLogMemo = "INSERT INTO NGSLogMemo(InternalPatientID, Type, LinkID, LogMemoEntry, [Date], Login, PCName) VALUES(" + CStr(rsAssign!InternalPatientID) + ", 1, " + CStr(rsAssign!NGStestID) + ",'NGS WES test status updated to: NextSEQ sequencing.' ,#" + dt + "#,'" + usr + "','" + cn + "')"
+                                strLogMemo = "INSERT INTO NGSLogMemo(InternalPatientID, Type, LinkID, LogMemoEntry, [Date], Login, PCName) VALUES(" + CStr(rsAssign!InternalPatientID) + ", 1, " + CStr(rsAssign!NGSTestID) + ",'NGS WES test status updated to: NextSEQ sequencing.' ,#" + dt + "#,'" + usr + "','" + cn + "')"
     
                                 DoCmd.SetWarnings False
                                 DoCmd.RunSQL strUpd8Batch
@@ -864,7 +864,7 @@ Else
                 
                     If rsStatus!StatusID = 4 Or rsStatus!StatusID = 1202218816 Then
                         signedOffTest = signedOffTest + 1
-                        deselSQL = "Update NGSTest SET selection = False WHERE NGSTest.NGSTestID = " & rsStatus!NGStestID
+                        deselSQL = "Update NGSTest SET selection = False WHERE NGSTest.NGSTestID = " & rsStatus!NGSTestID
                         DoCmd.SetWarnings False
                         DoCmd.RunSQL deselSQL
                         DoCmd.SetWarnings True
@@ -873,7 +873,7 @@ Else
                     ElseIf rsStatus!StatusID = 1202218803 Then
                         InBatching = InBtching + 1
                         'Debug.Print "InBatching= " & InBatching
-                        deselSQL = "Update NGSTest SET selection = False WHERE NGSTest.NGSTestID = " & rsStatus!NGStestID
+                        deselSQL = "Update NGSTest SET selection = False WHERE NGSTest.NGSTestID = " & rsStatus!NGSTestID
                         DoCmd.SetWarnings False
                         DoCmd.RunSQL deselSQL
                         DoCmd.SetWarnings True
@@ -882,7 +882,7 @@ Else
                     ElseIf Me.cmb_StatusUpdate.Column(0) = 1202218803 And Not IsNull(rsStatus!WESBatch) Then
                         SetBatching = SetBatching + 1
                         'Debug.Print "SetBatching = " & SetBatching
-                        deselSQL = "Update NGSTest SET selection = False WHERE NGSTest.NGSTestID = " & rsStatus!NGStestID
+                        deselSQL = "Update NGSTest SET selection = False WHERE NGSTest.NGSTestID = " & rsStatus!NGSTestID
                         DoCmd.SetWarnings False
                         DoCmd.RunSQL deselSQL
                         DoCmd.SetWarnings True
@@ -890,7 +890,7 @@ Else
                     
                     ElseIf Me.cmb_StatusUpdate.Column(0) = 4 And rsStatus!StatusID <> 1202218814 Then
                         testComp = testComp + 1
-                        deselSQL = "Update NGSTest SET selection = False WHERE NGSTest.NGSTestID = " & rsStatus!NGStestID
+                        deselSQL = "Update NGSTest SET selection = False WHERE NGSTest.NGSTestID = " & rsStatus!NGSTestID
                         DoCmd.SetWarnings False
                         DoCmd.RunSQL deselSQL
                         DoCmd.SetWarnings True
@@ -898,7 +898,7 @@ Else
                         
                     ElseIf Me.cmb_StatusUpdate.Column(0) = 1202218816 And rsStatus!StatusID <> 1202218815 Then
                         testFail = testFail + 1
-                        deselSQL = "Update NGSTest SET selection = False WHERE NGSTest.NGSTestID = " & rsStatus!NGStestID
+                        deselSQL = "Update NGSTest SET selection = False WHERE NGSTest.NGSTestID = " & rsStatus!NGSTestID
                         DoCmd.SetWarnings False
                         DoCmd.RunSQL deselSQL
                         DoCmd.SetWarnings True
@@ -959,15 +959,15 @@ Else
                                Me.Cmb_Approver.Visible = True
                               ' Check that an authoriser ID has been entered
                                 If Not IsNull(Cmb_Approver) Then ' update test status to complete
-                                     strUpd8Status = "UPDATE NGSTest SET StatusID = " & Me!cmb_StatusUpdate.Column(0) & " , Check4ID = " & Me!Cmb_Approver & " , Check4Date =  #" + dt + "#   WHERE NGSTest.NGSTestID = " & rsStatus!NGStestID
+                                     strUpd8Status = "UPDATE NGSTest SET StatusID = " & Me!cmb_StatusUpdate.Column(0) & " , Check4ID = " & Me!Cmb_Approver & " , Check4Date =  #" + dt + "#   WHERE NGSTest.NGSTestID = " & rsStatus!NGSTestID
                                      strUpd8Patient = "UPDATE Patients SET s_StatusOverall = " & Me!cmb_StatusUpdate.Column(0) & " WHERE Patients.InternalPatientID = " & rsStatus!InternalPatientID
                                      
                                      ' update patient log
                                      strLogSQL = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" & rsStatus!InternalPatientID & ", 'Patient: Status changed to " + Me!cmb_StatusUpdate.Column(1) + ". ',#" + dt + "#,'" + usr + "','" + cmp + "')"
-                                     strLogAprov = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" & rsStatus!InternalPatientID & ", 'NGS WES test: Report approved by " & Me!Cmb_Approver.Column(0) & " for test requested " & rsStatus!DateRequested & " NGS testID " & rsStatus!NGStestID & ". ',#" + dt + "#,'" + usr + "','" + cmp + "')"
-                                     strLogSQL2 = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" & rsStatus!InternalPatientID & ", 'NGS WES test: Status updated to " + Me!cmb_StatusUpdate.Column(1) + " for test requested " & rsStatus!DateRequested & " NGS testID " & rsStatus!NGStestID & ". ',#" + dt + "#,'" + usr + "','" + cmp + "')"
+                                     strLogAprov = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" & rsStatus!InternalPatientID & ", 'NGS WES test: Report approved by " & Me!Cmb_Approver.Column(0) & " for test requested " & rsStatus!DateRequested & " NGS testID " & rsStatus!NGSTestID & ". ',#" + dt + "#,'" + usr + "','" + cmp + "')"
+                                     strLogSQL2 = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" & rsStatus!InternalPatientID & ", 'NGS WES test: Status updated to " + Me!cmb_StatusUpdate.Column(1) + " for test requested " & rsStatus!DateRequested & " NGS testID " & rsStatus!NGSTestID & ". ',#" + dt + "#,'" + usr + "','" + cmp + "')"
                                      'update NGSlogmemo
-                                     strLogMemo = "INSERT INTO NGSLogMemo(InternalPatientID, Type, LinkID, LogMemoEntry, [Date], Login, PCName) VALUES(" + CStr(rsStatus!InternalPatientID) + ", 1, " + CStr(rsStatus!NGStestID) + ",'NGS WES test status updated to: " + Me!cmb_StatusUpdate.Column(1) + "' ,#" + dt + "#,'" + usr + "','" + cn + "')"
+                                     strLogMemo = "INSERT INTO NGSLogMemo(InternalPatientID, Type, LinkID, LogMemoEntry, [Date], Login, PCName) VALUES(" + CStr(rsStatus!InternalPatientID) + ", 1, " + CStr(rsStatus!NGSTestID) + ",'NGS WES test status updated to: " + Me!cmb_StatusUpdate.Column(1) + "' ,#" + dt + "#,'" + usr + "','" + cn + "')"
                                     
                                     Debug.Print strUpd8Status
                                     
@@ -989,11 +989,11 @@ Else
                                 End If
                                 
                             Else ' just update test status and status log
-                                strUpd8Status = "UPDATE NGSTest SET StatusID = " & Me!cmb_StatusUpdate.Column(0) & " WHERE NGSTest.NGSTestID = " & rsStatus!NGStestID
+                                strUpd8Status = "UPDATE NGSTest SET StatusID = " & Me!cmb_StatusUpdate.Column(0) & " WHERE NGSTest.NGSTestID = " & rsStatus!NGSTestID
                                 ' update patient log
-                                strLogSQL2 = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" & rsStatus!InternalPatientID & ", 'NGS WES test: Status updated to " + Me!cmb_StatusUpdate.Column(1) + " for test requested " & rsStatus!DateRequested & " NGS testID " & rsStatus!NGStestID & ". ',#" + dt + "#,'" + usr + "','" + cmp + "')"
+                                strLogSQL2 = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" & rsStatus!InternalPatientID & ", 'NGS WES test: Status updated to " + Me!cmb_StatusUpdate.Column(1) + " for test requested " & rsStatus!DateRequested & " NGS testID " & rsStatus!NGSTestID & ". ',#" + dt + "#,'" + usr + "','" + cmp + "')"
                                 'update NGSlogmemo
-                                strLogMemo = "INSERT INTO NGSLogMemo(InternalPatientID, Type, LinkID, LogMemoEntry, [Date], Login, PCName) VALUES(" + CStr(rsStatus!InternalPatientID) + ", 1, " + CStr(rsStatus!NGStestID) + ",'NGS WES test status updated to: " + Me!cmb_StatusUpdate.Column(1) + "' ,#" + dt + "#,'" + usr + "','" + cn + "')"
+                                strLogMemo = "INSERT INTO NGSLogMemo(InternalPatientID, Type, LinkID, LogMemoEntry, [Date], Login, PCName) VALUES(" + CStr(rsStatus!InternalPatientID) + ", 1, " + CStr(rsStatus!NGSTestID) + ",'NGS WES test status updated to: " + Me!cmb_StatusUpdate.Column(1) + "' ,#" + dt + "#,'" + usr + "','" + cn + "')"
                                
                                 DoCmd.SetWarnings False
                                 DoCmd.RunSQL strUpd8Status
