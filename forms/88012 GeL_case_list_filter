@@ -22,28 +22,28 @@ End Sub
 Private Sub show_cases_pending_check1_Click()
     'Show 100k cases awaiting first check
     Dim stLinkCriteria As String
-    stLinkCriteria = "[Check1ID] IS Null OR [Check1Date] IS Null"
+    stLinkCriteria = "([Check1ID] IS Null OR [Check1Date] IS Null) AND [StatusID] NOT IN (4, 1202218787, 1202218816) AND ([ResultCode] IS NULL OR [ResultCode] NOT LIKE 'NN')"
     DoCmd.OpenForm "88011 GeL_case_list", acFormDS, , stLinkCriteria
 End Sub
 
 Private Sub show_cases_pending_check2_Click()
     'Show 100k cases awaiting second check
     Dim stLinkCriteria As String
-    stLinkCriteria = "([Check2ID] IS Null OR [Check2Date] IS Null) AND [Check1Date] IS NOT Null"
+    stLinkCriteria = "([Check2ID] IS Null OR [Check2Date] IS Null) AND [Check1Date] IS NOT Null AND [StatusID] NOT IN (4, 1202218787, 1202218816) AND ([ResultCode] IS NULL OR [ResultCode] NOT LIKE 'NN')"
     DoCmd.OpenForm "88011 GeL_case_list", acFormDS, , stLinkCriteria
 End Sub
 
 Private Sub show_cases_pending_report_Click()
     'Show 100k cases awaiting reporting
     Dim stLinkCriteria As String
-    stLinkCriteria = "([Check3ID] IS Null OR [Check3Date] IS Null) AND [Check2Date] IS NOT Null"
+    stLinkCriteria = "([Check3ID] IS Null OR [Check3Date] IS Null) AND [Check2Date] IS NOT Null AND [StatusID] NOT IN (4, 1202218787, 1202218816) AND ([ResultCode] IS NULL OR [ResultCode] NOT LIKE 'NN')"
     DoCmd.OpenForm "88011 GeL_case_list", acFormDS, , stLinkCriteria
 End Sub
 
 Private Sub show_cases_pending_auth_Click()
     'Show 100k cases awaiting authorisation
     Dim stLinkCriteria As String
-    stLinkCriteria = "([Check4ID] IS Null OR [Check4Date] IS Null) AND [Check3Date] IS NOT Null"
+    stLinkCriteria = "([Check4ID] IS Null OR [Check4Date] IS Null) AND [Check3Date] IS NOT Null AND [StatusID] IN (1202218814) AND ([ResultCode] IS NULL OR [ResultCode] NOT LIKE 'NN')"
     DoCmd.OpenForm "88011 GeL_case_list", acFormDS, , stLinkCriteria
 End Sub
 
