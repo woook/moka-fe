@@ -1,0 +1,9 @@
+Option Compare Database
+
+Private Sub Form_Open(Cancel As Integer)
+    Dim url As String
+    url = "http://10.188.197.57:8080/phenotips"
+    'chromeurlserv url
+    firefoxurl url
+    DoCmd.Close
+End Sub
