@@ -459,7 +459,7 @@ End Sub
 
 
 Private Sub btn_Phenotips_Click()
-    Call firefoxurl("http://10.188.197.57:8080/phenotips/bin/")
+    Call firefoxurl("http://10.189.213.28:8080/phenotips/bin/")
     'TO DO --> look up API to search for PRU
 End Sub
 
