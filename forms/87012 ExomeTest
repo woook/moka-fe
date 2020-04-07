@@ -35,7 +35,7 @@ Private Sub Clinician_NotInList(NewData As String, Response As Integer)
 End Sub
 
 Private Sub PhenotipsLaunch_Click()
-    Call firefoxurl("http://10.188.197.57:8080/phenotips/bin/")
+    Call firefoxurl("http://10.189.213.28:8080/phenotips/bin/")
 End Sub
 
 Private Sub NextButton_Click()
