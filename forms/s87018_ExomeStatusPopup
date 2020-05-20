@@ -1,6 +1,6 @@
 Option Compare Database
 
-Private Sub close_Click()
+Private Sub Close_Click()
     DoCmd.Close
 End Sub
 
@@ -11,14 +11,14 @@ End Sub
 Private Sub PanelA_DblClick(Cancel As Integer)
     'Displays popup with gene list for selected panel
     If Me![PanelA].Column(1) = "Panel" Then
-        DoCmd.OpenForm "s87014_ExomeGenePanelPopup", , , , , , Me![PanelA].Column(2) & ", " & Me![PanelA].Column(3) & ", " & Me![PanelA].Column(0)
+        DoCmd.OpenForm "s87014_ExomeGenePanelPopup", , , , , , Me![PanelA].Column(2) & ", " & Me![PanelA].Column(3) & ", " & Me![PanelA].Column(4)
     End If
 End Sub
 
 Private Sub PanelB_DblClick(Cancel As Integer)
     'Displays popup with gene list for selected panel
     If Me![PanelB].Column(1) = "Panel" Then
-        DoCmd.OpenForm "s87014_ExomeGenePanelPopup", , , , , , Me![PanelB].Column(2) & ", " & Me![PanelB].Column(3) & ", " & Me![PanelB].Column(0)
+        DoCmd.OpenForm "s87014_ExomeGenePanelPopup", , , , , , Me![PanelB].Column(2) & ", " & Me![PanelB].Column(3) & ", " & Me![PanelB].Column(4)
     End If
 End Sub
 
