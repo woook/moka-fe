@@ -1,15 +1,22 @@
 Option Compare Database
+' Form s87014_ExomeGenePanelPopup
+'   Lists all genes in an NGS panel. Acceps a string with three comma-separated values for the panel code, panel name and panel id.
+'   E.g. openArgs = "Pan2300, Familial Hypercholesterolemia, 2300"
 
 Private Sub Form_Load()
     Dim openArgs() As String
     openArgs = Split(Me.openArgs, ", ")
+    Debug.Print openArgs(0), openArgs(1), openArgs(2)
     Me![PanelCode] = openArgs(0)
     Me![PanelName] = openArgs(1)
     Me![PanelGenes].RowSource = "SELECT GenesHGNC_current.ApprovedSymbol As Symbol, GenesHGNC_current.ApprovedName As Name " _
-                              & "FROM (NGSTestPanelSelection INNER JOIN NGSPanelGenes ON cInt(NGSTestPanelSelection.SelectionID) = NGSPanelGenes.NGSPanelID) INNER JOIN GenesHGNC_current ON NGSPanelGenes.HGNCID = GenesHGNC_current.HGNCID " _
-                              & "WHERE NGSTestPanelSelection.NGSTestPanelSelectionID = " & openArgs(2) 'openArgs(2) = PanelID
+                              & "FROM GenesHGNC_current INNER JOIN NGSPanelGenes on GenesHGNC_current.HGNCID = NGSPanelGenes.HGNCID " _
+                              & "WHERE NGSPanelGenes.NGSPanelID =  " & openArgs(2)
+    Me![PanelGenes].Requery
+    Debug.Print Me![PanelGenes].RowSource
 End Sub
 
 Private Sub Close_Click()
     DoCmd.Close
 End Sub
+
