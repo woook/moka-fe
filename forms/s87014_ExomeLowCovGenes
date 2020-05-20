@@ -1,47 +1,42 @@
+Option Compare Database
+' Form s87014_ExomeLowCovGenes
+'  Lists genes where median coverage above 20X falls below a given threshold.
+'    Genes are passed to form as a comma-separated list of primary keys from GenesHGNC_current e.g. "1,3,5,64,253"
+
 Private Sub Form_Load()
-    Dim rs As New ADODB.Recordset
-    
-    'IMPORTANT: ALSO NEED TO CHANGE THRESHOLD IN LISTBOX ROW SOURCE IN BOTH HALVES OF UNION QUERY!!!!!
-    threshold = 92
+  Dim rsAll As New ADODB.Recordset
+  Dim rsLow As New ADODB.Recordset
 
-    'Pull out count of all genes and count of low coverage genes
-    sqlAllGenes = "SELECT DISTINCT GenesHGNC_current.ApprovedSymbol, NGSWESCoverageByGene.median_20x " _
-            & "FROM ((NGSTestPanelSelection INNER JOIN NGSPanelGenes ON cInt(NGSTestPanelSelection.SelectionID) = NGSPanelGenes.NGSPanelID) INNER JOIN GenesHGNC_current ON NGSPanelGenes.HGNCID = GenesHGNC_current.HGNCID) INNER JOIN NGSWESCoverageByGene ON GenesHGNC_current.HGNCID = NGSWESCoverageByGene.HGNCID " _
-            & "WHERE NGSTestPanelSelection.SelectionType = 1 AND NGSTestPanelSelection.NGSTestID = " & NGSTestID _
-            & " UNION SELECT DISTINCT GenesHGNC_current.ApprovedSymbol, NGSWESCoverageByGene.median_20x " _
-            & "FROM (NGSTestPanelSelection INNER JOIN GenesHGNC_current ON NGSTestPanelSelection.SelectionID = GenesHGNC_current.HGNCID) INNER JOIN NGSWESCoverageByGene ON GenesHGNC_current.HGNCID = NGSWESCoverageByGene.HGNCID " _
-            & "WHERE NGSTestPanelSelection.SelectionType = 2 AND NGSTestPanelSelection.NGSTestID = " & NGSTestID
-    sqlCountAllGenes = "SELECT COUNT (Genes.ApprovedSymbol) AS AllCount FROM (" & sqlAllGenes & ") As Genes"
-    sqlCountLowGenes = "SELECT COUNT (Genes.ApprovedSymbol) AS LowCount FROM (" & sqlAllGenes & ") As Genes WHERE Genes.median_20x < " & threshold
-    Set rs = New ADODB.Recordset
-    rs.Open sqlCountAllGenes, CurrentProject.Connection, adOpenKeyset
-    allGeneCount = rs.Fields("AllCount")
-    Set rs = Nothing
-    Set rs = New ADODB.Recordset
-    rs.Open sqlCountLowGenes, CurrentProject.Connection, adOpenKeyset
-    lowGeneCount = rs.Fields("LowCount")
-    Set rs = Nothing
-    'Display counts in text box
-    Me.countText.Value = "Please be aware that " & lowGeneCount & " of the " & allGeneCount & " genes requested typically have low coverage:"
+  strGeneIDs = Me.openArgs()
+  COVERAGE_THRESHOLD = "92"
+
+  ' Update list of genes and coverage values
+  Me!lowCovGenes.RowSource = "SELECT ghc.ApprovedSymbol, nwc.median_20x FROM GenesHGNC_current " _
+    & "AS ghc LEFT JOIN NGSWESCoverageByGeneTwist AS nwc ON ghc.HGNCID = nwc.HGNCID " _
+    & "WHERE ghc.GenesHGNCID in (" & strGeneIDs & ") " _
+    & "ORDER BY nwc.median_20x ASC"
+  Me!lowCovGenes.Requery
+
+  ' Update Text showing number of genes below COVERAGE_THRESHOLD
+  sqlAllCount = "SELECT COUNT (ghc.ApprovedSymbol) AS AllCount FROM GenesHGNC_current AS ghc " _
+    & "LEFT JOIN NGSWESCoverageByGeneTwist AS nwc ON ghc.HGNCID = nwc.HGNCID WHERE " _
+    & "ghc.GenesHGNCID in (" & strGeneIDs & ")"
+  sqlLowCount = "SELECT COUNT (ghc.ApprovedSymbol) AS LowCount FROM GenesHGNC_current AS ghc " _
+    & "LEFT JOIN NGSWESCoverageByGeneTwist AS nwc ON ghc.HGNCID = nwc.HGNCID WHERE " _
+    & "ghc.GenesHGNCID in (" & strGeneIDs & ")" & " And nwc.median_20x < " & COVERAGE_THRESHOLD
+  Set rsAll = New ADODB.Recordset
+  Set rsLow = New ADODB.Recordset
+  rsAll.Open sqlAllCount, CurrentProject.Connection, adOpenKeyset
+  rsLow.Open sqlLowCount, CurrentProject.Connection, adOpenKeyset
+  
+  Me.countText.Value = rsLow!LowCount & " of the " & rsAll!AllCount & " genes requested typically have low coverage <" & COVERAGE_THRESHOLD & "% at 20x:"
+
+  rsAll.Close
+  rsLow.Close
+  
 End Sub
 
-Private Sub OK_Click()
-    'If user wants to proceed with testing, record approval
-    Dim d As String
-    d = Format(Now(), "dd/mmm/yyyy Hh:Nn:ss")
-    cn = VBA.Environ("COMPUTERNAME")
-    un = VBA.Environ("USERNAME")
-    Me.BookingAuthorisedByID = Me.BookBy
-    Me.BookingAuthorisedDate = d
-    sqlPatLog = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" & Me.InternalPatientID & ", 'NGS: Low coverage genes approved.',#" + d + "#,'" + un + "','" + cn + "')"
-    sqlMemo = "INSERT INTO NGSLogMemo(InternalPatientID, Type, LinkID, LogMemoEntry, [Date], Login, PCName) VALUES(" & Me.InternalPatientID & ", 1, " & Me.NGSTestID & ",'Low coverage genes approved.' ,#" + d + "#,'" + un + "','" + cn + "')"
-    DoCmd.SetWarnings False
-    DoCmd.RunSQL sqlPatLog
-    DoCmd.RunSQL sqlMemo
-    DoCmd.SetWarnings True
-    DoCmd.Close
-End Sub
 
-Private Sub Cancel_Click()
+Private Sub Next_Click()
     DoCmd.Close
 End Sub
