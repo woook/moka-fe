@@ -1,11 +1,11 @@
 Option Compare Database
 ' Form 87010 ExomePatients
 '   Order an NGS Test for one or more patients in a family. Code in this module is organised into the following sections:
-'   - MAIN FUNCTION. The procedure called once the form is submitted and carries the logic of the form.
-'   - FORM VALIDATION. Functions used to validate user inputs.
-'   - FORM READERS. Functions that get or set data in form objects
+'   - MAIN FUNCTION. Called once the form is submitted and performs the form logic.
+'   - FORM VALIDATION. Validate user inputs.
+'   - FORM READERS. Get or set data in form objects
 '   - FORM MODELS. Functions that get or set data within the Moka DATABASE
-'   - FORM CONTROLS. Code that directly maps to form buttons used by the user or by the access application.
+'   - FORM CONTROLS. Triggered by user interface elements or by the access application.
 
 ' ### MAIN FUNCTION ###
 
@@ -72,14 +72,14 @@ Private Sub NextButton_Click()
     Next DataRow
   End With
   
-  ' Turn off waiting indicator
+  ' Turn off hourglass loading indicator
   Application.Echo True
   DoCmd.Hourglass False
   
   ' Send success message and Close Form
   MsgBox "Exome test request submitted.", vbInformation, "Test Request Submitted"
   DoCmd.Close
-  Exit Sub ' Note: Exit Sub here to avoid the default error code 0 triggering the error handler below
+  Exit Sub ' Note: Exit Sub here otherwise the default error code 0 triggers the error handler
 
 Err_NGSTestError:
   Application.Echo True
@@ -114,6 +114,7 @@ Private Sub ValidateFormInputs()
   ElseIf Me.GenePanelListBoxA.ListCount = 0 Then
     MsgBox "Please add panels or genes to the primary panel.", vbOkay, "No Primary Panel"
     Me.SubpanelA.SetFocus
+    ' Note: Secondary panel is optional so no such validation required
     End
   ElseIf SelectedPatientNGSTestExists() Then
     If MsgBox("NGS Test already exists for a selected patient." & _
@@ -167,7 +168,7 @@ Private Function AnyPatientDetailsEmpty()
 End Function
 
 Private Function InPatientListBox(PatientID As String)
-    ' Return True if a patient has already been added to the NGS Test (i.e. present in PatientListBox)
+    ' Return True if a patient has already been added to the NGS Test request list (i.e. present in PatientListBox)
     '  Arguments:
     '   ID(String): A patient PRU
     InPatientListBox = False
@@ -263,18 +264,20 @@ Private Sub AddSelectionToPanel(PanelBox As listbox, SelectionBox As ComboBox, S
 End Sub
 
 Private Function GetSelectedIDs(PanelBox As listbox, SelectionType As String)
-' Returns a comma-separated list of IDs for a given SelectionType.
-'   As these IDs are the primary key for the selection type, this string can be inserted into SQL queries.
-'   When no items for the SelectionType are present, this function returns "0". SQL queries with primary key
-'   values of "0" will not fail, but rather return an empty query result.
+' Returns a comma-separated list of primary keys for a given SelectionType.
+'   These correspond to primary keys for NGSPanel and GenesHGNC_current for Selection Type "Gene" and "Panel" respectively.
+'   These keys can be used in downstream queries. Note that when no items for the SelectionType are present, this function returns "0".
+'      SQL queries with primary key "0" return an empty query result.
 ' Arguments:
 '  PanelBox: The gene panel list box object. e.g. Me.GenePanelListBoxA
-'  SelectionBox: The selection combo box containing the item to add. E.g. Me.SubPanelA
 '  SelectionType: The type of item to insert. Options are "Gene" or "Panel"
   strIDs = ""
   With PanelBox
     For DataRow = 0 To .ListCount - 1
+      ' If the selectiontype matches
       If .Column(1, DataRow) = SelectionType Then
+        ' Return the value in the bound column of the listbox.
+        ' This is the primary key for NGSPanel or GenesHGNC_current depending on selectiontype.
         strIDs = strIDs & "," & .ItemData(DataRow)
       End If
       Next DataRow
@@ -283,7 +286,7 @@ Private Function GetSelectedIDs(PanelBox As listbox, SelectionType As String)
   If strIDs = "" Then
     GetSelectedIDs = "0" ' Enables downstream queries to run and return blank results
   Else
-    ' Remove the trailing "," from strIDs as this breaks queries.
+    ' Remove the trailing "," from strIDs as this breaks future queries.
     strIDs_clean = Replace(strIDs, ",", "", 1, 1)
     GetSelectedIDs = strIDs_clean
   End If
@@ -293,11 +296,10 @@ End Function
 ' ### FORM MODELS ###
 
 Private Function GetOrInsertItem(ItemName As String, Category As Integer)
-  ' Return ItemID if ItemName is already in the Item Table. If not, create and return new ItemID.
+' Query Item.ItemName for a given ItemName. If it present, return it's Item.ItemID, else create a new entry and return the new ItemID.
 ' Arguments:
-'   ItemName(String): Name of an entry in the item table. Foreign key to Item.ItemName
-'   Category(Integer): Category of an entry in the item table corresponding with ItemName.
-'        Foreign key to Item.CategoryIndex1ID
+'   ItemName(String): Name of an entry in Item.ItemName
+'   Category(Integer): Category of an entry in Item.CategoryIndex1ID corresponding with ItemName.
   Dim rsCheckCat As ADODB.Recordset
   Dim rsAddCat As ADODB.Recordset
   
@@ -343,7 +345,7 @@ Private Sub UpdateGeneCount(PanelBox As listbox)
   strSQLCount = "SELECT COUNT(genes.HGNCID) as gene_count from (" & strSQL & ") as genes"
   rst.Open strSQLCount, CurrentProject.Connection, adOpenKeyset
   
-  ' Assign countto the correct PanelBox based on object names
+  ' Assign count to the correct PanelBox based on object names
   If PanelBox.Name = "GenePanelListBoxA" Then
     Me.GeneCountA = rst!gene_count
   ElseIf PanelBox.Name = "GenePanelListBoxB" Then
@@ -359,7 +361,7 @@ End Sub
 Private Function GetPanelHGNCSet(PanelBox As listbox)
 ' Return a comma-delimited string of all unique HGNCIDs in a panel selection.
 '   This string can be inserted into SQL queries that require the set of unique HNGC IDs in a panel.
-'   A pre-requisite of this function is that the primary panel is not empty
+'   Pre-requisite: The primary panel must NOT be empty.
 ' Arguments:
 '   PanelBox(ListBox): A gene panel list box e.g. Me.GenePanelListBoxA
   Dim PanelIDs As String
@@ -370,8 +372,8 @@ Private Function GetPanelHGNCSet(PanelBox As listbox)
   Dim genestrSQL As String
   
   ' Get IDs for genes and panels selected in the Panel ListBox.
-  '  Note that if neither genes or panels have been selected, GetSelectedIDs returns "0". Inserting this into
-  '  SQL server queries reliably returns an empty result as expected.
+  '  Note that if neither genes or panels have been selected, GetSelectedIDs returns "0".
+  '  SQL server will return an empty result when "0" is for the primary key.
   GeneIDs = GetSelectedIDs(PanelBox, "Gene")
   PanelIDs = GetSelectedIDs(PanelBox, "Panel")
   Set dbs = CurrentDb
@@ -424,7 +426,6 @@ Private Sub InsertGWPatientIntoMoka(PatientID As String)
     Dim db As Database
     Dim gwks As DAO.Recordset
     Dim gwksg As ADODB.Recordset
-    Dim log As DAO.Recordset
     Dim usr As String
     Dim dt As String
     Dim comp As String
@@ -464,11 +465,7 @@ Private Sub InsertGWPatientIntoMoka(PatientID As String)
     strAddPatientSQL = "INSERT INTO patients (PatientID, s_StatusOverall, MokaCreated, MokaCreatedBy, MokaCreatedPC, NHSNumber, BookinLastname, BookinFirstName, BookinDoB, BookinCreatedBy, BookinCreatedDate, BookinSex)" & _
         "VALUES ('" & PatientID & "', 1202218787,'" & dt & "','" & usr & "','" & cmp & "','" & gwks!NHSNo & "','" & EscapedLastname & "','" & EscapedFirstname & "','" & gwks!DOB & "','" & gwks!CreatedByID & "','" & gwks!CreatedDate & "','" & gwks_gender & "')"
     DoCmd.RunSQL strAddPatientSQL
-    ' Query Moka for the InternalPatientID required to create the patient log entry
-    FindPIDSQL = "Select patients.InternalPatientID From Patients WHERE patients.PatientID ='" & PatientID & "'"
-    Set log = db.OpenRecordset(FindPIDSQL, dbOpenDynaset, dbSeeChanges)
-    LogPatientSQL = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" & log!InternalPatientID & ", 'Patients: Patient added to Moka. ',#" + dt + "#,'" + usr + "','" + cmp + "')"
-    DoCmd.RunSQL LogPatientSQL
+    PatientLogger PatientID, "Patients: Patient added to Moka."
     DoCmd.SetWarnings True
     gwks.Close
 
@@ -485,6 +482,7 @@ Private Sub InsertNGSTestPanelSelection(NGSTestID As String, PrimaryPanelBox As 
 
 ' Update NGS Test with primary panel selection
 With PrimaryPanelBox
+  ' For each item in the panel, insert the SelectionID and SelectionType into NGSTestPanelSelection
   For DataRow = 0 To .ListCount - 1
     If .Column(1, DataRow) = "Panel" Then
         SelectionID = .Column(0, DataRow) ' Panel ID
@@ -509,6 +507,7 @@ End With
 ' If a secondary panel has been selected (True when HasSecondaryPanel is not empty)
 If HasSecondaryPanel <> "" Then
     With SecondaryPanelBox
+    ' For each item in the panel, insert the SelectionID and SelectionType into NGSTestPanelSelection
       For DataRow = 0 To .ListCount - 1
         If .Column(1, DataRow) = "Panel" Then
             SelectionID = .Column(0, DataRow) ' Panel ID
@@ -539,10 +538,11 @@ Private Function CreateAnalysisGroup()
 Dim rst As ADODB.Recordset
 Set rst = New ADODB.Recordset
 
-' Insert into NGSAnalsisGroup table and return the GroupID for future records NGSAnalysis records
+' Insert Into NGSAnalsisGroup table to create a new analysis group primary keye
 rst.Open "INSERT INTO NGSAnalysisGroup(BookBy, DateRequested) VALUES (" & Me.Clinician.Value & _
     ",#" & Format(Now(), "dd/mmm/yyyy Hh:Nn:ss") & "#)", CurrentProject.Connection, adOpenKeyset
 rst.Open "SELECT @@IDENTITY"
+' Return the AnalysisGroupID for future records NGSAnalysis records
 CreateAnalysisGroup = rst.Fields(0).Value
 
 Set rst = Nothing
@@ -699,7 +699,7 @@ End Function
 
 Private Function GetOrCreatePanelID(PanelBox As listbox)
 ' Returns a PanelID from the NGSPanel database for a primary or secondary panel created by the user.
-'     If a single existing panel is selected, that PanelID is returned. Note that this is only true
+'     If a single existing panel is selected, that PanelID is returned. Note: This behaviour is only true
 '     for secondary panels when no genes overlap with the primary panel. In all other cases, a new NGSPanel is created.
 
 Dim PRU As String
@@ -770,7 +770,7 @@ End Function
 Private Function UniqueToSecondaryPanel(ReturnCounts As Boolean)
 ' Return a comma-separated string or count of HGNC IDs that are present in the secondary panel only.
 '   When all genes are present in the primary panel, returns "".
-' Precondition: User has made a selection for the secondary panel. An error is raised in this instance.
+' Precondition: User has made a selection for the secondary panel. An error is raised if this is not met.
 ' Arguments:
 '   ReturnCounts(Boolean): If True, this function returns an integer of HGNCIDs unique to the secondary panel
 
