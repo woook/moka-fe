@@ -21,7 +21,8 @@ Private Sub CheckedByID_AfterUpdate()
     
 ''autodate
 ResultDate = Now()
-
+Debug.Print Me!Result
+Debug.Print Me!Result
 ''email moka alert
 If (Not IsNull(Me!Result) And Not IsNull(Me!CheckedByID) And _
 Me!Result <> 5 And Me!Result <> 1190384957 And Me!Result <> 1190384958 And Me!Result <> 1190384929 And Me!Result <> 1190384930 And Me!Result <> 1190384906) Then
@@ -42,7 +43,7 @@ Me!Result <> 5 And Me!Result <> 1190384957 And Me!Result <> 1190384958 And Me!Re
     End With
     
     emailto = "Prenatal-array@gstt.nhs.uk;cytodutyscientist@gstt.nhs.uk"
-    'emailto = "joowook.ahn@gstt.nhs.uk" 'for testing
+    emailto = "joowook.ahn@gstt.nhs.uk" 'for testing
     subjectline = "Abnormal QF-PCR result for prenatal specimen " & Me!SpecimenNo
     
     emailbody = "<font face='arial' size='3'>" _
@@ -58,34 +59,47 @@ Me!Result <> 5 And Me!Result <> 1190384957 And Me!Result <> 1190384958 And Me!Re
     emailbody = emailbody & "QF-PCR request booked in: " & Me!RequestedDate & "<br />" _
     & "QF-PCR result date: " & Me!AnalysedByDate & "<br /><br /><br /><br /></font>"
     
-    Set iMsg = New CDO.Message
-    With iMsg
-    Set .Configuration = iCfg
-    .From = """Moka Alerts"" <moka.alerts@gstt.nhs.uk>"
-    .Sender = "moka.alerts@gstt.nhs.uk"
-    .ReplyTo = "Prenatal-array@gstt.nhs.uk"
-    .Subject = subjectline
-    .HTMLBody = emailbody
-    .to = emailto
-    .BCC = "moka.alerts@gstt.nhs.uk"
-    .Send
-    End With
+    
+    'Debug.Print emailbody
+    'Debug.Print emailto
+    'Debug.Print subjectline
+    'Set iMsg = New CDO.Message
+    'With iMsg
+    'Set .Configuration = iCfg
+    '.From = "aled.jones@gstt.nhs.uk"
+    '.Sender = "aled.jones@gstt.nhs.uk"
+    '.Subject = "TEST SUBJECT"
+    '.HTMLBody = "<font face='arial' size='3'>tEST bODY"
+    '.to = "aled.jones@gstt.nhs.uk"
+    'Debug.Print .HTMLBody
+    'Debug.Print .to
+    '.Send
+    
+    '.From = """Moka Alerts"" <moka.alerts@gstt.nhs.uk>"
+    '.Sender = "moka.alerts@gstt.nhs.uk"
+    '.ReplyTo = "Prenatal-array@gstt.nhs.uk"
+    '.Subject = subjectline
+    '.HTMLBody = emailbody
+    '.to = emailto
+    '.BCC = "moka.alerts@gstt.nhs.uk"
+    '.Send
+    'End With
     
     Set iMsg = Nothing
     Set iCfg = Nothing
     
-    MsgBox "Moka alert sent (will take a few minutes to arrive)", , "Don't be a dummy"
+    'MsgBox "Moka alert sent (will take a few minutes to arrive)", , "Don't be a dummy"
     
-    End If
-    
-    'if analyst and checker details are entered, set status to complete
-    If Not IsNull(Me.AnalysedByID) And Not IsNull(Me.CheckedByID) Then
-        Me.StatusID = 4
-    End If
-    
-    'if Checker is removed after status is set to complete, change status back to pending
-    If Me.StatusID = 4 And IsNull(Me.CheckedByID) Then
-        Me.StatusID = 2
-    End If
+End If
+
+'if analyst and checker details are entered, set status to complete
+If Not IsNull(Me.AnalysedByID) And Not IsNull(Me.CheckedByID) Then
+    Me.StatusID = 4
+End If
+
+'if Checker is removed after status is set to complete, change status back to pending
+If Me.StatusID = 4 And IsNull(Me.CheckedByID) Then
+    Me.StatusID = 2
+End If
     
 End Sub

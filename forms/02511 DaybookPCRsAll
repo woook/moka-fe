@@ -28,7 +28,7 @@ Me!Result <> 5 And Me!Result <> 1190384957 And Me!Result <> 1190384958 And Me!Re
     .Fields(cdoSMTPServerPort) = 25
     .Fields(cdoSendUsingMethod) = cdoSendUsingPort
     .Fields(cdoSMTPConnectionTimeout) = 200
-    .Fields.Update
+    .Fields.update
     End With
     
     emailto = "Prenatal-array@gstt.nhs.uk;cytodutyscientist@gstt.nhs.uk"
@@ -48,21 +48,21 @@ Me!Result <> 5 And Me!Result <> 1190384957 And Me!Result <> 1190384958 And Me!Re
     emailbody = emailbody & "QF-PCR request booked in: " & Me!RequestedDate & "<br />" _
     & "QF-PCR result date: " & Me!AnalysedByDate & "<br /><br /><br /><br /></font>"
     
-    Set iMsg = New CDO.Message
-    With iMsg
-    Set .Configuration = iCfg
-    .From = """Moka Alerts"" <moka.alerts@gstt.nhs.uk>"
-    .Sender = "moka.alerts@gstt.nhs.uk"
-    .ReplyTo = "Prenatal-array@gstt.nhs.uk"
-    .Subject = subjectline
-    .HTMLBody = emailbody
-    .to = emailto
-    .BCC = "moka.alerts@gstt.nhs.uk"
-    .Send
-    End With
+    'Set iMsg = New CDO.Message
+    'With iMsg
+    'Set .Configuration = iCfg
+    '.From = """Moka Alerts"" <moka.alerts@gstt.nhs.uk>"
+    '.Sender = "moka.alerts@gstt.nhs.uk"
+    '.ReplyTo = "Prenatal-array@gstt.nhs.uk"
+    '.Subject = subjectline
+    '.HTMLBody = emailbody
+    '.to = emailto
+    '.BCC = "moka.alerts@gstt.nhs.uk"
+    '.Send
+    'End With
     
-    Set iMsg = Nothing
-    Set iCfg = Nothing
+    'Set iMsg = Nothing
+    'Set iCfg = Nothing
     
     MsgBox "Moka alert sent (will take a few minutes to arrive)", , "Don't be a dummy"
     
