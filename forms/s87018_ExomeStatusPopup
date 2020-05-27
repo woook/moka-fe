@@ -5,6 +5,7 @@ Private Sub Close_Click()
 End Sub
 
 Private Sub Email_Click()
+    ' Email WES team regarding PRU under view
     Application.FollowHyperlink "mailto:wes@viapath.co.uk?subject=WES enquiry for " & Me![PRUNum]
 End Sub
 
