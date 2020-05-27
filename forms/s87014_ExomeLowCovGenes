@@ -11,7 +11,7 @@ Private Sub Form_Load()
   COVERAGE_THRESHOLD = "92"
 
   ' Update list of genes and coverage values
-  Me!lowCovGenes.RowSource = "SELECT ghc.ApprovedSymbol, nwc.median_20x FROM GenesHGNC_current " _
+  Me!lowCovGenes.RowSource = "SELECT ghc.ApprovedSymbol, nwc.median_20x as MedianCoverageAbove20X FROM GenesHGNC_current " _
     & "AS ghc LEFT JOIN NGSWESCoverageByGeneTwist AS nwc ON ghc.HGNCID = nwc.HGNCID " _
     & "WHERE ghc.GenesHGNCID in (" & strGeneIDs & ") " _
     & "ORDER BY nwc.median_20x ASC"
@@ -19,17 +19,17 @@ Private Sub Form_Load()
 
   ' Update Text showing number of genes below COVERAGE_THRESHOLD
   sqlAllCount = "SELECT COUNT (ghc.ApprovedSymbol) AS AllCount FROM GenesHGNC_current AS ghc " _
-    & "LEFT JOIN NGSWESCoverageByGeneTwist AS nwc ON ghc.HGNCID = nwc.HGNCID WHERE " _
-    & "ghc.GenesHGNCID in (" & strGeneIDs & ")"
+    & "LEFT JOIN NGSWESCoverageByGeneTwist AS nwc ON ghc.HGNCID = nwc.HGNCID " _
+    & "WHERE ghc.GenesHGNCID in (" & strGeneIDs & ")"
   sqlLowCount = "SELECT COUNT (ghc.ApprovedSymbol) AS LowCount FROM GenesHGNC_current AS ghc " _
-    & "LEFT JOIN NGSWESCoverageByGeneTwist AS nwc ON ghc.HGNCID = nwc.HGNCID WHERE " _
-    & "ghc.GenesHGNCID in (" & strGeneIDs & ")" & " And nwc.median_20x < " & COVERAGE_THRESHOLD
+    & "LEFT JOIN NGSWESCoverageByGeneTwist AS nwc ON ghc.HGNCID = nwc.HGNCID " _
+    & "WHERE ghc.GenesHGNCID in (" & strGeneIDs & ")" & " AND nwc.median_20x < " & COVERAGE_THRESHOLD
   Set rsAll = New ADODB.Recordset
   Set rsLow = New ADODB.Recordset
   rsAll.Open sqlAllCount, CurrentProject.Connection, adOpenKeyset
   rsLow.Open sqlLowCount, CurrentProject.Connection, adOpenKeyset
   
-  Me.countText.Value = rsLow!LowCount & " of the " & rsAll!AllCount & " genes requested typically have low coverage <" & COVERAGE_THRESHOLD & "% at 20x:"
+  Me.countText.Value = rsLow!LowCount & " of " & rsAll!AllCount & " panel genes typically have low coverage (<" & COVERAGE_THRESHOLD & "% at 20x):"
 
   rsAll.Close
   rsLow.Close
