@@ -80,7 +80,7 @@ Private Sub SubmitNGSTest_Click()
   
   ' Send success message and Close Form
   MsgBox "Exome test request submitted.", vbInformation, "Test Request Submitted"
-  DoCmd.Close
+  DoCmd.close
   Exit Sub ' Note: Exit Sub here otherwise the default error code 0 triggers the error handler
 
 Err_NGSTestError:
@@ -104,6 +104,11 @@ Private Sub ValidateFormInputs()
     MsgBox "Please select patients for analysis.", vbOkay, "No Patients Selected"
     Me.txFamilyTrustID.SetFocus
     End
+  ElseIf InvalidPatientCount() Then
+    MsgBox "The number of patients selected for the given referral type is invalid." & vbCrLf & _
+      "Please refer two patients for WES Duo or three patients for WES Trio. All other referrals are limited to one patient.", vbOkay, "Invalid Patient Count"
+    Me.Referral_Box.SetFocus
+    End
   ElseIf ValidProbandSelection() = False Then
     MsgBox "Please ensure that one affected Proband is present in the analysis." & vbCrLf & "Note: Multiple Probands are not permitted.", vbOkay, "Proband Error"
     Me.txFamilyTrustID.SetFocus
@@ -114,7 +119,7 @@ Private Sub ValidateFormInputs()
     End
   ElseIf Me.GenePanelListBoxA.ListCount = 0 Then
     MsgBox "Please add panels or genes to the primary panel.", vbOkay, "No Primary Panel"
-    Me.SubpanelA.SetFocus
+    Me.SubPanelA.SetFocus
     ' Note: Secondary panel is optional so no such validation required
     End
   ElseIf Me.CheckReviewedPanelA = False Or (Me.GenePanelListBoxB.ListCount > 0 And Me.CheckReviewedPanelB = False) Then
@@ -198,6 +203,35 @@ Private Function HasActiveNGSTest(PRU As String)
     HasActiveNGSTest = True
   End If
   
+End Function
+
+Private Function InvalidPatientCount()
+' Return True if the number of patients for the selected referral ID is incorrect.
+'   WES Duo must have two patients, WES Trio must have three. All other referrals must have one.
+'   Precondition: A referral type must have been selected by the user BEFORE you run this function.
+Dim Duo_ReferralID As Long
+Dim Trio_ReferralID As Long
+
+Duo_ReferralID = 1199901234
+Trio_ReferralID = 1199901233
+
+If IsNull(Me.Referral_Box.Value) Then
+    Err.Raise 1000, "No Referral For Patient Count", "A referral type must be selected to check patient count"
+End If
+
+If (Me.Referral_Box.Value = Trio_ReferralID And Me.PatientList.ListCount <> 3) Then
+  InvalidPatientCount = True
+ElseIf (Me.Referral_Box.Value = Duo_ReferralID And Me.PatientList.ListCount <> 2) Then
+  InvalidPatientCount = True
+ElseIf ( _
+    (Me.Referral_Box.Value <> Trio_ReferralID And Me.Referral_Box.Value <> Duo_ReferralID) And _
+    Me.PatientList.ListCount <> 1 _
+  ) Then
+  InvalidPatientCount = True
+Else
+  InvalidPatientCount = False
+End If
+
 End Function
 
 ' ### FORM READERS ###
@@ -349,7 +383,7 @@ Private Sub UpdateGeneCount(PanelBox As listbox)
     MsgBox "Warning: No gene panel box found."
     Err.Raise 1000, "No PanelBox Found", "GenePanelListBox names incorrect."
   End If
-  rst.Close
+  rst.close
 End Sub
 
 
@@ -361,7 +395,7 @@ Private Function GetPanelHGNCSet(PanelBox As listbox)
 '   PanelBox(ListBox): A gene panel list box e.g. Me.GenePanelListBoxA
   Dim PanelIDs As String
   Dim GeneIDs As String
-  Dim dbs As dao.Database
+  Dim Dbs As dao.Database
   Dim rst As dao.Recordset
   Dim strSQL As String
   Dim genestrSQL As String
@@ -371,14 +405,14 @@ Private Function GetPanelHGNCSet(PanelBox As listbox)
   '  SQL server will return an empty result when "0" is for the primary key.
   GeneIDs = GetSelectedIDs(PanelBox, "Gene")
   PanelIDs = GetSelectedIDs(PanelBox, "Panel")
-  Set dbs = CurrentDb
+  Set Dbs = CurrentDb
   
   ' Select GeneHGNC_current.GeneHGNCID primary key values from the overlap of unqie genes in selected Panels and genes
   geneHGNCSQL = "SELECT DISTINCT GenesHGNCID from GenesHGNC_current " & _
                 "LEFT JOIN NGSPanelGenes on GenesHGNC_current.HGNCID=NGSPanelGenes.HGNCID " & _
                 "WHERE NGSPanelID in (" & PanelIDs & ") " & _
                 "OR GenesHGNCID in (" & GeneIDs & ")"
-  Set rst = dbs.OpenRecordset(geneHGNCSQL)
+  Set rst = Dbs.OpenRecordset(geneHGNCSQL)
   
   ' Build comma-separated string of HGNCIDs
   strHGNCIDs = ""
@@ -411,7 +445,7 @@ Private Function IsInMoka(PatientID As String)
     Else
         IsInMoka = True
     End If
-    moka.Close
+    moka.close
 End Function
 
 Private Sub InsertGWPatientIntoMoka(PatientID As String)
@@ -450,7 +484,7 @@ Private Sub InsertGWPatientIntoMoka(PatientID As String)
       strGenderSQL = "SELECT GenderShort from gw_GenderTable WHERE GenderID = " & gwks!GenderID
       gwksg.Open strGenderSQL, CurrentProject.Connection, adOpenKeyset
       gwks_gender = gwksg!GenderShort
-      gwksg.Close
+      gwksg.close
     End If
     
     ' Insert Patient into Moka and log in patient log.
@@ -458,11 +492,11 @@ Private Sub InsertGWPatientIntoMoka(PatientID As String)
     '  Note: Patient is inserted with status "Not Required" as default
     DoCmd.SetWarnings False
     strAddPatientSQL = "INSERT INTO patients (PatientID, s_StatusOverall, MokaCreated, MokaCreatedBy, MokaCreatedPC, NHSNumber, BookinLastname, BookinFirstName, BookinDoB, BookinCreatedBy, BookinCreatedDate, BookinSex)" & _
-        "VALUES ('" & PatientID & "', 1202218787,'" & dt & "','" & usr & "','" & cmp & "','" & gwks!NHSNo & "','" & EscapedLastname & "','" & EscapedFirstname & "','" & gwks!DOB & "','" & gwks!CreatedByID & "','" & gwks!CreatedDate & "','" & gwks_gender & "')"
+        "VALUES ('" & PatientID & "', 1202218787,'" & dt & "','" & usr & "','" & cmp & "','" & gwks!NHSNo & "','" & EscapedLastname & "','" & EscapedFirstname & "','" & gwks!DoB & "','" & gwks!CreatedByID & "','" & gwks!CreatedDate & "','" & gwks_gender & "')"
     DoCmd.RunSQL strAddPatientSQL
     PatientLogger PatientID, "Patients: Patient added to Moka."
     DoCmd.SetWarnings True
-    gwks.Close
+    gwks.close
 
 End Sub
 
@@ -604,7 +638,7 @@ Private Function CreateNGSTest(PRU As String, PrimaryPanelID As String, Secondar
     .update ' Save NGSTest Record
     .Bookmark = .LastModified
     strNGSTestID = !NGSTestID ' Save new NGSTestID to variable
-    .Close
+    .close
   End With
 
   ' Write NGS test creation Patient Log
@@ -637,11 +671,11 @@ Private Function PRUToInternalPatientID(PRU As String)
   Set rstPatientID = New ADODB.Recordset
   rstPatientID.Open strPIDquery, CurrentProject.Connection, adOpenKeyset
   PRUToInternalPatientID = rstPatientID!InternalPatientID
-  rstPatientID.Close
+  rstPatientID.close
   
 End Function
 
-Private Function CreateNGSPanelID(PanelSuffix As String, Referrer As String, ReferrerID As Long, ProbandPRU As String, CategoryIndex As Integer, SubCategoryIndex As Integer)
+Private Function CreateNGSPanelID(panelSuffix As String, Referrer As String, referrerID As Long, ProbandPRU As String, CategoryIndex As Integer, SubCategoryIndex As Integer)
 ' Create an NGSPanel ID.
 ' Arguments:
 '   PanelSuffix(String): Suffix of the NGSPanel. "A" for Primary Panel and "B" for Secondary Panel
@@ -658,13 +692,13 @@ Private Function CreateNGSPanelID(PanelSuffix As String, Referrer As String, Ref
     ' NGSPanel.ItemCategory is a foreign key to Item.Item for the referring clinician's initials.
     categoryID = GetOrInsertItem(Referrer, CategoryIndex) 'Returns integer for item ID
     ' NGSPanel.SubCategory is a foreign key to Item.Item for the string ProbandPRU_ShortDate_PanelSuffix.
-    SubCategoryName = ProbandPRU & "_" & Format(Now(), "yymmdd") & "_" & PanelSuffix
+    SubCategoryName = ProbandPRU & "_" & Format(Now(), "yymmdd") & "_" & panelSuffix
     ' Get the Item.ItemID value for Referrer's initials. Note: GetOrInsertItem creates an ItemID if the intials are not found.
     subcategoryID = GetOrInsertItem(SubCategoryName, SubCategoryIndex) 'Returns integer for item ID
     ' NGSPanel.Panel is a concatenation of the panel and category Item.Item values
     NGSPanelName = Referrer & ": " & SubCategoryName
     ' NGSPanel.Checker1 is a foreign key to Checker.Check1ID for the referring clinician.
-    Checker1 = ReferrerID
+    Checker1 = referrerID
     ' NGSPanel.CheckDate is the current date i.e. the date Panel was made
     CheckDate = Format(Now(), "dd/mmm/yyyy Hh:Nn:ss")
     
@@ -697,27 +731,27 @@ Private Function GetOrCreatePanelID(PanelBox As listbox)
 '     for secondary panels when no genes overlap with the primary panel. In all other cases, a new NGSPanel is created.
 
 Dim PRU As String
-Dim PanelSuffix As String
+Dim panelSuffix As String
 Dim Referrer As String
-Dim ReferrerID As Long
+Dim referrerID As Long
 Dim ItemCatIndex As Integer
 Dim SubCatIndex As Integer
 
 ' Assert that the Panel ListBox name suffix is either A or B
-PanelSuffix = Right(PanelBox.Name, 1)
-If StrComp(PanelSuffix, "A") = 0 Or StrComp(PanelSuffix, "B") = 0 Then
+panelSuffix = Right(PanelBox.Name, 1)
+If StrComp(panelSuffix, "A") = 0 Or StrComp(panelSuffix, "B") = 0 Then
 Else
     Err.Raise 1000, , "Error: Panel List Box does not contain A/B suffix to determine primary/secondary."
 End If
 
 ' For Primary Panel, if a single existing Panel was selected, exit and return the PanelID.
-If StrComp(PanelSuffix, "A") = 0 And PanelBox.ListCount = 1 And PanelBox.Column(1, 0) = "Panel" Then
+If StrComp(panelSuffix, "A") = 0 And PanelBox.ListCount = 1 And PanelBox.Column(1, 0) = "Panel" Then
     GetOrCreatePanelID = PanelBox.Column(0, 0)
     Exit Function
 End If
 
 ' For Secondary Panel, if a single existing Panel was selected with completely unique genes, exit and return the PanelID.
-If StrComp(PanelSuffix, "B") = 0 And PanelBox.ListCount = 1 Then
+If StrComp(panelSuffix, "B") = 0 And PanelBox.ListCount = 1 Then
     SecondaryPanelGeneCount = Me.GeneCountB ' Note: This value is updated automatically as genes are added. See subroutine `UpdateGeneCount`
     SecondaryPanelUniqueCount = UniqueToSecondaryPanel(True)
     If SecondaryPanelGeneCount = SecondaryPanelUniqueCount Then
@@ -728,24 +762,24 @@ End If
 
 ' Else create a new NGSPanel record and add the corresponding genes
 Referrer = Me.Clinician.Column(2)
-ReferrerID = Me.Clinician.Column(0)
+referrerID = Me.Clinician.Column(0)
 PRU = GetProbandPRU()
 ItemCatIndex = 48 ' Item.ItemCategoryIndex1ID is 48 for all referrer names.
-If StrComp(PanelSuffix, "A") = 0 Then
+If StrComp(panelSuffix, "A") = 0 Then
     SubCatIndex = 49 ' Item.ItemCategoryIndex1ID is 49 for Primary Panel names
-ElseIf StrComp(PanelSuffix, "B") = 0 Then
+ElseIf StrComp(panelSuffix, "B") = 0 Then
     SubCatIndex = 58 ' Item.ItemCategoryIndex1ID is 58 for Secondary Panel names
 Else
     Err.Raise 1000, , "Error: Panel List Box does not contain A/B suffix to determine primary/secondary."
 End If
 
 ' CreateNGSPanelID Arguments: PanelSuffix, Referrer, ReferrerID, ProbandPRU, CategoryIndex, SubCategoryIndex
-PanelID = CreateNGSPanelID(PanelSuffix, Referrer, ReferrerID, PRU, ItemCatIndex, SubCatIndex)
+PanelID = CreateNGSPanelID(panelSuffix, Referrer, referrerID, PRU, ItemCatIndex, SubCatIndex)
 
 ' Insert all selected genes into created panel
-If StrComp(PanelSuffix, "A") = 0 Then
+If StrComp(panelSuffix, "A") = 0 Then
     HGNCSet = GetPanelHGNCSet(PanelBox)
-ElseIf StrComp(PanelSuffix, "B") = 0 Then
+ElseIf StrComp(panelSuffix, "B") = 0 Then
     HGNCSet = UniqueToSecondaryPanel(False) ' False returns a comma-separated string. When True, returns a count
 End If
 strSQLInsertGenes = "INSERT INTO NGSPanelGenes(NGSPanelID, HGNCID, Symbol) " & _
@@ -856,7 +890,7 @@ If Not rsGWDNAs.EOF Then
     DoCmd.SetWarnings True
     rsGWDNAs.MoveNext
   Wend
-rsGWDNAs.Close
+rsGWDNAs.close
 End If
 
 
@@ -879,8 +913,8 @@ If rsActiveDNAs.RecordCount = 0 Then
 
     ' Write DNA activation to PatientLog
     PatientLogger PRU, "DNA: Active status changed for DNA number [" & rsNewestDNA!DNAID & "]"
-    rsActiveDNAs.Close
-    rsNewestDNA.Close
+    rsActiveDNAs.close
+    rsNewestDNA.close
 End If
 
 End Sub
@@ -922,7 +956,7 @@ End Sub
 
 Private Sub btnClose_Click()
   'Close Form (X)
-  DoCmd.Close
+  DoCmd.close
 End Sub
 
 Private Sub btnFindPatient_Click()
@@ -1010,20 +1044,20 @@ Private Sub PhenotipsLaunch_Click()
 End Sub
 
 Private Sub AddPanelA_Click()
-  AddSelectionToPanel Me.GenePanelListBoxA, Me.SubpanelA, "Panel"
+  AddSelectionToPanel Me.GenePanelListBoxA, Me.SubPanelA, "Panel"
   ' Reset check that user has reviewed panel low coverage genes for accreditation purposes.
   Me.CheckReviewedPanelA.Value = False
   ' Set coverage check warning label to Red.
   Me.CoverageWarningA.BackColor = RGB(220, 165, 165)
 End Sub
-Private Sub AddGeneA_Click()
+Private Sub addGeneA_Click()
   AddSelectionToPanel Me.GenePanelListBoxA, Me.GeneSymbolA, "Gene"
   ' Reset check that user has reviewed panel low coverage genes for accreditation purposes.
   Me.CheckReviewedPanelA.Value = False
   ' Set coverage check warning label to Red.
   Me.CoverageWarningA.BackColor = RGB(220, 165, 165)
 End Sub
-Private Sub AddGeneB_Click()
+Private Sub addGeneB_Click()
   AddSelectionToPanel Me.GenePanelListBoxB, Me.GeneSymbolB, "Gene"
   ' Reset check that user has reviewed panel low coverage genes for accreditation purposes.
   Me.CheckReviewedPanelB.Value = False
@@ -1031,7 +1065,7 @@ Private Sub AddGeneB_Click()
   Me.CoverageWarningB.BackColor = RGB(220, 165, 165)
 End Sub
 Private Sub AddPanelB_Click()
-  AddSelectionToPanel Me.GenePanelListBoxB, Me.SubpanelB, "Panel"
+  AddSelectionToPanel Me.GenePanelListBoxB, Me.SubPanelB, "Panel"
   ' Reset check that user has reviewed panel low coverage genes for accreditation purposes.
   Me.CheckReviewedPanelB.Value = False
   ' Set coverage check warning label to Red.
