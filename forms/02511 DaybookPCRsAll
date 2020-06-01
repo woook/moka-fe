@@ -65,7 +65,7 @@ Me!Result <> 5 And Me!Result <> 1190384957 And Me!Result <> 1190384958 And Me!Re
     Set iMsg = Nothing
     Set iCfg = Nothing
     
-    MsgBox "Emails describing abnormal QF-PCR results are not currently being sent", , "Don't be a dummy"
+    MsgBox "Emails describing abnormal QF-PCR results are not currently being sent", , "Warning"
     
     End If
     
