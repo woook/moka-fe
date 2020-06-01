@@ -83,7 +83,7 @@ Private Sub SetEvidenceCounts()
     Next Element
     
     'Close recordset
-    rsNVA.Close
+    rsNVA.close
     
     'Set evidence counts to their respective counter objects in the form
     Me.PVS_count = PVS_count
@@ -304,7 +304,7 @@ Private Sub Calculate_Click()
         End If
     End If
 
-    rsStatus.Close
+    rsStatus.close
     DoCmd.RunCommand acCmdSaveRecord
 End Sub
 
@@ -348,7 +348,7 @@ End Sub
 
 Private Sub Close_Click()
     'Close the form
-    DoCmd.Close
+    DoCmd.close
 End Sub
 
 Private Sub rule_DblClick(Cancel As Integer)
@@ -477,6 +477,16 @@ End Sub
 
 Private Sub BP7_Label_Click()
     Open_WES_Guide ("ben_supp")
+End Sub
+
+Private Sub WESGuideBox1_DblClick(Cancel As Integer)
+  ' Open the WES guide homepage (empty string)
+  Open_WES_Guide ("")
+End Sub
+
+Private Sub WESGuideBox2_DblClick(Cancel As Integer)
+  ' Open the WES guide homepage (empty string)
+  Open_WES_Guide ("")
 End Sub
 
 ' ## *_Frame_AfterUpdate: Update the patient log with the human-readable value of the ACMG criteria tickbox selection.
@@ -995,7 +1005,7 @@ Private Function OptionBox_Log(box_name As String, box_value As String)
         Set Dbs = CurrentDb
         Set rsItem = Dbs.OpenRecordset("SELECT Item FROM Item WHERE ItemID = " & box_value)
         hrBoxValue = rsItem!Item
-        rsItem.Close
+        rsItem.close
     End If
     
     ' Define and Execute SQL
@@ -1006,3 +1016,4 @@ Private Function OptionBox_Log(box_name As String, box_value As String)
     DoCmd.RunSQL sqlPatLog
     DoCmd.SetWarnings True
 End Function
+
