@@ -31,21 +31,22 @@ Me!Result <> 5 And Me!Result <> 1190384957 And Me!Result <> 1190384958 And Me!Re
     .Fields.update
     End With
     
-    emailto = "Prenatal-array@gstt.nhs.uk;cytodutyscientist@gstt.nhs.uk"
+    'emailto = "Prenatal-array@gstt.nhs.uk;cytodutyscientist@gstt.nhs.uk"
     'emailto = "joowook.ahn@gstt.nhs.uk" 'for testing
-    subjectline = "Abnormal QF-PCR result for prenatal specimen " & Me!SpecimenNo
+    'subjectline = "Abnormal QF-PCR result for prenatal specimen " & Me!SpecimenNo
     
-    emailbody = "<font face='arial' size='3'>" _
+    'emailbody = "<font face='arial' size='3'>" _
     & "Abnormal QF-PCR result<br /><br />" _
     & "Specimen: <b>" & Me!SpecimenNo & "</b><br />" _
     & "Name: <b>" & Me!Name & "</b><br />" _
     & "Result: <b>" & Me.Result.Column(1) & "</b><br />" _
     & "Test: <b>" & Me!Referral & "</b><br /><br />"
-    If Not IsNull(Me!Comment) Then
-        emailbody = emailbody & "Any comments: " & Me!Comment & "<br /><br /><br />"
-        Else: emailbody = emailbody & "Any comments: <br /><br /><br />"
-        End If
-    emailbody = emailbody & "QF-PCR request booked in: " & Me!RequestedDate & "<br />" _
+    'If Not IsNull(Me!Comment) Then
+    '    emailbody = emailbody & "Any comments: " & Me!Comment & "<br /><br /><br />"
+    'Else:
+    '    emailbody = emailbody & "Any comments: <br /><br /><br />"
+    'End If
+    'emailbody = emailbody & "QF-PCR request booked in: " & Me!RequestedDate & "<br />" _
     & "QF-PCR result date: " & Me!AnalysedByDate & "<br /><br /><br /><br /></font>"
     
     'Set iMsg = New CDO.Message
@@ -61,19 +62,21 @@ Me!Result <> 5 And Me!Result <> 1190384957 And Me!Result <> 1190384958 And Me!Re
     '.Send
     'End With
     
-    'Set iMsg = Nothing
-    'Set iCfg = Nothing
+    Set iMsg = Nothing
+    Set iCfg = Nothing
     
-    MsgBox "Moka alert sent (will take a few minutes to arrive)", , "Don't be a dummy"
+    MsgBox "Emails describing abnormal QF-PCR results are not currently being sent", , "Don't be a dummy"
     
     End If
     
-End Sub
-
-Private Sub Result_AfterUpdate()
-''Auto status to complete
-If Me!StatusID <> 4 And Not IsNull(Me!Result) Then
-    Me.StatusID = 4
+      'if analyst and checker details are entered, set status to complete
+    If Not IsNull(Me.AnalysedByID) And Not IsNull(Me.CheckedByID) Then
+        Me.StatusID = 4
+    End If
+    
+    'if Checker is removed after status is set to complete, change status back to pending
+    If Me.StatusID = 4 And IsNull(Me.CheckedByID) Then
+        Me.StatusID = 2
     End If
     
 End Sub
