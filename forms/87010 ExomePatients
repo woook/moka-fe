@@ -1,149 +1,1197 @@
 Option Compare Database
+' Form 87010 ExomePatients
+'   Order an NGS Test for one or more patients in a family. Code in this module is organised into the following sections:
+'   - MAIN FUNCTION. Called once the form is submitted and performs the form logic.
+'   - FORM VALIDATION. Validate user inputs.
+'   - FORM READERS. Get or set data in form objects
+'   - FORM MODELS. Functions that get or set data within the Moka DATABASE
+'   - FORM CONTROLS. Triggered by user interface elements or by the access application.
 
-Private Sub btnClose_Click()
-  DoCmd.Close
-End Sub
 
-Private Sub btnFindPatient_Click()
-    Me![ListPatientFound].Requery
-    If Me![ListPatientFound].ListCount = 0 Then
-    msga = MsgBox("PRU not found." & vbNewLine & "Please search for another patient.", 0, "PRU not found")
-    End If
-    Me![txFamilyTrustID].SetFocus
+' ### MAIN FUNCTION ###
+
+Private Sub SubmitNGSTest_Click()
+' Submit NGS Test using Form Inputs
+'   The following Moka tables are affected: Patients, NGSTest, NGSPanel, NGSPanelGenes, NGSTestPanelSelection, NGSAnalysis, Item.
+  Dim PatientID As String
+  Dim AnalysisGroup As String
+  Dim PedigreeID As String
+  Dim AffectedID As String
+  Dim InternalPatientID As String
+  Dim PrimaryPanelID As String
+  Dim SecondaryPanelID As String
+  Dim PatientNGSTest As String
+  
+  ' General error handler so the test doesn't hang
+  On Error GoTo Err_NGSTestError
+
+  ' Run validation procedure on form inputs
+  ValidateFormInputs
+  
+  ' Show user hourglass to indicate that the form is loading
+  Application.Echo False
+  DoCmd.Hourglass True
     
+  ' Create or get panels from front-end selection. The same panels are applied to all patients.
+  PrimaryPanelID = GetOrCreatePanelID(Me.GenePanelListBoxA)
+  If HasSecondaryPanel() Then
+    SecondaryPanelID = GetOrCreatePanelID(Me.GenePanelListBoxB)
+  Else
+    MsgBox "Please Note: No secondary panel analysis will be performed. Either no secondary panel was selected or " & _
+        "all genes selected in the secondary panel are already included in the primary panel.", vbInformation, "No Secondary Analysis"
+    ' No secondary panel has been selected. Downstream functions will check for this empty string where Secondary Panel would otherwise be used.
+    SecondaryPanelID = ""
+  End If
+
+  ' Set the analysis group value for NGS tests ordered in this session.
+  '     Increments the highest NGSAnalysis.AnalysisGroup value by 1.
+  AnalysisGroup = CreateAnalysisGroup()
+  
+  ' Iterate over selected patients
+  With Me.PatientList
+    For DataRow = 0 To .ListCount - 1
+      PatientID = .Column(3, DataRow)
+      PedigreeID = .Column(4, DataRow)
+      AffectedID = .Column(5, DataRow)
+  
+      ' Insert Patient into Moka if not already present in Patients table
+      If Not IsInMoka(PatientID) Then
+        InsertGWPatientIntoMoka PatientID
+      End If
+      
+      ' Create Patient NGS Test.
+      PatientNGSTest = CreateNGSTest(PatientID, PrimaryPanelID, SecondaryPanelID)
+      
+      ' Add panels to NGSTestSelection. Will only include secondary panel if SecondaryPanelID <> ""
+      InsertNGSTestPanelSelection PatientNGSTest, Me.GenePanelListBoxA, Me.GenePanelListBoxB, SecondaryPanelID
+      
+      ' Create Patient NGS Analysis
+      CreateNGSAnalysis AnalysisGroup, PatientID, PedigreeID, PatientNGSTest, AffectedID
+      
+      ' Import Patient DNAs from Geneworks and ensure one DNA is active
+      ImportAndActivatePatientDNA PatientID
+      
+    Next DataRow
+  End With
+  
+  ' Turn off hourglass loading indicator
+  Application.Echo True
+  DoCmd.Hourglass False
+  
+  ' Send success message and Close Form
+  MsgBox "Exome test request submitted.", vbInformation, "Test Request Submitted"
+  DoCmd.close
+  Exit Sub ' Note: Exit Sub here otherwise the default error code 0 triggers the error handler
+
+Err_NGSTestError:
+  Application.Echo True
+  DoCmd.Hourglass False
+  strMsg = "An error occured while processing NGSTest:" & Err.Number & vbCrLf & Err.Description
+  MsgBox strMsg, vbCritical, "NGSTestError"
+  End
+
 End Sub
 
-Private Sub Form_Open(Cancel As Integer)
-    Me![txFamilyTrustID].SetFocus
+' ### FORM VALIDATION ###
+
+Private Sub ValidateFormInputs()
+  ' Form Validation. Users are unable to continue if any of the following details are incomplete.
+  If IsNull(Me.Referral_Box.Value) Or IsNull(Me.Clinician.Value) Or IsNull(Me.dept.Value) Or IsNull(Me.cost.Value) Then
+    MsgBox "Referal information is missing." & vbCrLf & "Please enter values for clinician, referral, department and cost center.", vbOkay, "Referall missing"
+    Me.Referral_Box.SetFocus
+    End
+  ElseIf Me.PatientList.ListCount = 0 Then
+    MsgBox "Please select patients for analysis.", vbOkay, "No Patients Selected"
+    Me.txFamilyTrustID.SetFocus
+    End
+  ElseIf InvalidPatientCount() Then
+    MsgBox "The number of patients selected for the given referral type is invalid." & vbCrLf & _
+      "Please refer two patients for WES Duo or three patients for WES Trio. All other referrals are limited to one patient.", vbOkay, "Invalid Patient Count"
+    Me.Referral_Box.SetFocus
+    End
+  ElseIf ValidProbandSelection() = False Then
+    MsgBox "Please ensure that one affected Proband is present in the analysis." & vbCrLf & "Note: Multiple Probands are not permitted.", vbOkay, "Proband Error"
+    Me.txFamilyTrustID.SetFocus
+    End
+  ElseIf Me.PhenotipsTick = 0 Then
+    MsgBox "Please add patients to phenotips and tick 'complete' to continue", vbOkay, "Phenotips incomplete"
+    Me.PhenotipsTick.SetFocus
+    End
+  ElseIf Me.GenePanelListBoxA.ListCount = 0 Then
+    MsgBox "Please add panels or genes to the primary panel.", vbOkay, "No Primary Panel"
+    Me.SubPanelA.SetFocus
+    ' Note: Secondary panel is optional so no such validation required
+    End
+  ElseIf Me.CheckReviewedPanelA = False Or (Me.GenePanelListBoxB.ListCount > 0 And Me.CheckReviewedPanelB = False) Then
+    MsgBox "A Primary or Secondary Panel has been created without reviewing the low coverage genes." & vbCrLf & _
+        "Please click 'Review Primary/Secondary Panel Genes' before submitting."
+    End
+  End If
+
 End Sub
 
-Private Sub ListPatientFound_DblClick(Cancel As Integer)
-'Declare the variable type
-    Dim gwks As dao.Recordset
-    Dim moka As dao.Recordset
-    Dim log As dao.Recordset
+Private Function ValidProbandSelection()
+' Returns True if:
+'    - A single patient has been assigned 'Proband' relationship. NGS tests require a single proband.
+'    - The assigned patient has been assigned 'affected' status. Probands cannot be unaffected.
+
+  ' Get Item.ItemID values for proband and affected status
+  proband_item_id = "3302"
+  affected_item_id = "3337"
+  
+  proband_count = 0
+  affected_proband_count = 0
+  NoProbandSelected = True
+  
+  With Me.PatientList
+    ' Iterate over selected patients
+    For DataRow = 0 To .ListCount - 1
+      ' If a patient the patient is selected as Proband, increment count
+      If .Column(4, DataRow) = proband_item_id Then
+        proband_count = proband_count + 1
+        ' If the patient is a proband AND they have been assigned 'affected' status
+        If .Column(5, DataRow) = affected_item_id Then
+            affected_proband_count = affected_proband_count + 1
+        End If
+      End If
+    Next DataRow
+  End With
+ 
+  If proband_count = 1 And affected_proband_count = 1 Then
+    ValidProbandSelection = True
+  Else
+    ValidProbandSelection = False
+  End If
+End Function
+
+Private Function AnyPatientDetailsEmpty()
+  ' Returns True if the user has not entered a patient, relationship or affected status before adding a patient to the NGS Test
+  AnyPatientDetailsEmpty = False
+  If IsNull(Me.PatientCombo.Column(0)) Or IsNull(Me.RelationshipCombo.Column(0)) Or IsNull(Me.AffectedCombo.Column(0)) Then
+    AnyPatientDetailsEmpty = True
+  End If
+End Function
+
+Private Function InPatientListBox(PatientID As String)
+    ' Return True if a patient has already been added to the NGS Test request list (i.e. present in PatientListBox)
+    '  Arguments:
+    '   ID(String): A patient PRU
+    InPatientListBox = False
+    ' Loop over selected patients
+    With Me.PatientList
+      For DataRow = 0 To .ListCount - 1
+        ' If patient ID of highlighted patient matches selected patient
+        If (PatientID = .Column(3, DataRow)) Then
+          InPatientListBox = True
+        End If
+      Next DataRow
+    End With
+End Function
+
+Private Function HasActiveNGSTest(PRU As String)
+  'Returns True if an active NGSTest exists for the patient
+  ' An active NGS test has a status that is not 'Complete' or 'Test Failed' and is assigned to a patient with overall status "NGS" or "NGS Pending"
+  Dim rstActiveNGSTest As ADODB.Recordset
+  Set rstActiveNGSTest = New ADODB.Recordset
+  sqlActiveNGSTest = "SELECT NGSTestID FROM NGSTest LEFT JOIN Patients on NGSTest.InternalPatientID = Patients.InternalPatientID " & _
+    "WHERE StatusID NOT IN (4, 1202218816) AND Patients.s_StatusOverall in (1202218798, 1202218799) AND Patients.PatientID = '" & PRU & "'"
+  rstActiveNGSTest.Open sqlActiveNGSTest, CurrentProject.Connection, adOpenKeyset
+  
+  If rstActiveNGSTest.RecordCount = 0 Then
+    HasActiveNGSTest = False
+  Else
+    HasActiveNGSTest = True
+  End If
+  
+End Function
+
+Private Function InvalidPatientCount()
+' Return True if the number of patients for the selected referral ID is incorrect.
+'   WES Duo must have two patients, WES Trio must have three. All other referrals must have one.
+'   Precondition: A referral type must have been selected by the user BEFORE you run this function.
+Dim Duo_ReferralID As Long
+Dim Trio_ReferralID As Long
+
+Duo_ReferralID = 1199901234
+Trio_ReferralID = 1199901233
+
+If IsNull(Me.Referral_Box.Value) Then
+    Err.Raise 1000, "No Referral For Patient Count", "A referral type must be selected to check patient count"
+End If
+
+If (Me.Referral_Box.Value = Trio_ReferralID And Me.PatientList.ListCount <> 3) Then
+  InvalidPatientCount = True
+ElseIf (Me.Referral_Box.Value = Duo_ReferralID And Me.PatientList.ListCount <> 2) Then
+  InvalidPatientCount = True
+ElseIf ( _
+    (Me.Referral_Box.Value <> Trio_ReferralID And Me.Referral_Box.Value <> Duo_ReferralID) And _
+    Me.PatientList.ListCount <> 1 _
+  ) Then
+  InvalidPatientCount = True
+Else
+  InvalidPatientCount = False
+End If
+
+End Function
+
+' ### FORM READERS ###
+
+Private Function GetProbandPRU()
+' Returns the PRU of one selected proband.
+'   This implementation complies with current requirements which limit NGS Tests to ONE proband in the relationship field.
+With Me.PatientList
+  For DataRow = 0 To .ListCount - 1
+    If .Column(4, DataRow) = "3302" Then ' 3302 is the Item.ItemID for "Proband"
+      GetProbandPRU = .Column(3, DataRow)
+    End If
+  Next DataRow
+End With
+End Function
+
+Private Function InGenePanelListBox(ID As String, SelectionType As String, PanelBox As listbox)
+' Returns True if any GenePanelListBox selection matches the given ID and SelectionType
+'  Arguments:
+'   ID(Integer): The primary key for the list box entry
+'   SelectionType(String): The panel entry selection type. e.g. Gene or Panel
+'   PanelBox(ListBox): The panel list box to query
+'  Usage:
+'    ' Returns True if Panel ID 49 has been selected for Primary Panel
+'    InGenePanelListBox("49","Panel",Me.GenePanelListBoxA)
+
+    InGenePanelListBox = False
+    With PanelBox
+      For DataRow = 0 To .ListCount - 1
+        If (ID = .ItemData(DataRow) And SelectionType = .Column(1, DataRow)) Then
+          InGenePanelListBox = True
+        End If
+      Next DataRow
+    End With
+End Function
+
+Private Sub AddSelectionToPanel(PanelBox As listbox, SelectionBox As ComboBox, SelectionType As String)
+' Add a selected gene or panel to the Panel List box
+' Arguments:
+'  PanelBox: The panel list box object. e.g. Me.GenePanelListBoxA
+'  SelectionBox: The selection combo box containing the item to add. E.g. Me.SubPanelA
+'  SelectionType: The type of item to insert. Options are "Gene" or "Panel"
+
+    ' Do nothing if the selection combo box is empty
+    If IsNull(SelectionBox.Column(0)) Then
+      Exit Sub
+    ' Else Insert item if it has not been selected before
+    ElseIf Not InGenePanelListBox(SelectionBox.Column(0), SelectionType, PanelBox) Then
+      ' Input string format for Listbox: "item_id, item_type, item_number, item_name, [hgnc_id]"
+      panel_selection = SelectionBox.Column(0) & "," & SelectionType & "," & _
+          SelectionBox.Column(1) & "," & SelectionBox.Column(2) & "," & SelectionBox.Column(3)
+      ' Insert selection at the top of the listbox
+      PanelBox.AddItem panel_selection, 0
+    End If
+    
+    ' Update the count of genes displayed above the PanelBox
+    UpdateGeneCount PanelBox
+End Sub
+
+Private Function GetSelectedIDs(PanelBox As listbox, SelectionType As String)
+' Returns a comma-separated list of primary keys for a given SelectionType.
+'   These correspond to primary keys for NGSPanel and GenesHGNC_current for Selection Type "Gene" and "Panel" respectively.
+'   These keys can be used in downstream queries. Note that when no items for the SelectionType are present, this function returns "0".
+'      SQL queries with primary key "0" return an empty query result.
+' Arguments:
+'  PanelBox: The gene panel list box object. e.g. Me.GenePanelListBoxA
+'  SelectionType: The type of item to insert. Options are "Gene" or "Panel"
+  strIDs = ""
+  With PanelBox
+    For DataRow = 0 To .ListCount - 1
+      ' If the selectiontype matches
+      If .Column(1, DataRow) = SelectionType Then
+        ' Return the value in the bound column of the listbox.
+        ' This is the primary key for NGSPanel or GenesHGNC_current depending on selectiontype.
+        strIDs = strIDs & "," & .ItemData(DataRow)
+      End If
+      Next DataRow
+  End With
+  
+  If strIDs = "" Then
+    GetSelectedIDs = "0" ' Enables downstream queries to run and return blank results
+  Else
+    ' Remove the trailing "," from strIDs as this breaks future queries.
+    strIDs_clean = Replace(strIDs, ",", "", 1, 1)
+    GetSelectedIDs = strIDs_clean
+  End If
+End Function
+
+
+' ### FORM MODELS ###
+
+Private Function GetOrInsertItem(ItemName As String, Category As Integer)
+' Query Item table for a given ItemName. If it iss present, return the
+'   Item.ItemID, else create a new entry and return the new ItemID.
+' Arguments:
+'   ItemName(String): Name of an entry in Item.ItemName
+'   Category(Integer): Category of an entry in Item.CategoryIndex1ID corresponding with ItemName.
+  Dim rsCheckCat As ADODB.Recordset
+  Dim rsAddCat As ADODB.Recordset
+  
+  ' Return ItemID if it exists under the given category.
+  Set rsCheckCat = New ADODB.Recordset
+  sqlCheckCategory = "SELECT ItemID FROM Item WHERE Item = '" & ItemName & "'"
+  rsCheckCat.Open sqlCheckCategory, CurrentProject.Connection, adOpenKeyset
+  If rsCheckCat.RecordCount > 0 Then
+    GetOrInsertItem = rsCheckCat.Fields("ItemID")
+    Set rsCheckCat = Nothing
+    Exit Function
+  Else
+  ' Else create Item and return new ItemID
+    Set rsAddCat = New ADODB.Recordset
+    sqlAddCategory = "INSERT INTO Item (Item, ItemCategoryIndex1ID) VALUES ('" & ItemName & "'," & Str(Category) & ")"
+    rsAddCat.Open sqlAddCategory, CurrentProject.Connection, adOpenKeyset
+    rsAddCat.Open "SELECT @@identity", CurrentProject.Connection, adOpenKeyset 'Get ID of new entry
+    GetOrInsertItem = rsAddCat.Fields(0).Value
+    Set rsAddCat = Nothing
+  End If
+End Function
+
+Private Sub UpdateGeneCount(PanelBox As listbox)
+  ' Update the gene counter displayed above a GenePanelListBox
+  ' Arguments:
+  '  PanelBox(ListBox): The list box to update
+  '  GeneIDs(String): A comma-separated list of GenesHGNC_current.HGNCID values. Set to 0 if None.
+  '  PanelIDs(String): A comma-separated list of NGSPanelGenes.HGNCID values. Set to 0 if None.
+  Dim rst As ADODB.Recordset
+  Dim strSQL As String
+  Dim genestrSQL As String
+  Dim GeneIDs As String
+  Dim PanelIDs As String
+  
+  ' Get comma-separated string of Primary IDs for genes and panels in PanelBox
+  GeneIDs = GetSelectedIDs(PanelBox, "Gene")
+  PanelIDs = GetSelectedIDs(PanelBox, "Panel")
+  
+  ' Query database for set of HGNCIDs
+  Set rst = New ADODB.Recordset
+  strSQL = "SELECT DISTINCT HGNCID FROM NGSPanelGenes WHERE NGSPanelID IN (" & PanelIDs & ")" & _
+   "UNION SELECT HGNCID FROM GenesHGNC_current WHERE GenesHGNCID IN (" & GeneIDs & ")"
+  strSQLCount = "SELECT COUNT(genes.HGNCID) AS gene_count FROM (" & strSQL & ") AS genes"
+  rst.Open strSQLCount, CurrentProject.Connection, adOpenKeyset
+  
+  ' Assign count to the correct PanelBox based on object names
+  If PanelBox.Name = "GenePanelListBoxA" Then
+    Me.GeneCountA = rst!gene_count
+  ElseIf PanelBox.Name = "GenePanelListBoxB" Then
+    Me.GeneCountB = rst!gene_count
+  Else
+    MsgBox "Warning: No gene panel box found."
+    Err.Raise 1000, "No PanelBox Found", "GenePanelListBox names incorrect."
+  End If
+  rst.close
+End Sub
+
+
+Private Function GetPanelHGNCSet(PanelBox As listbox)
+' Return a comma-delimited string of all unique HGNCIDs in a panel selection.
+'   This string can be inserted into SQL queries that require the set of unique HNGC IDs in a panel.
+'   Pre-requisite: The primary panel must NOT be empty.
+' Arguments:
+'   PanelBox(ListBox): A gene panel list box e.g. Me.GenePanelListBoxA
+  Dim PanelIDs As String
+  Dim GeneIDs As String
+  Dim Dbs As dao.Database
+  Dim rst As dao.Recordset
+  Dim strSQL As String
+  Dim genestrSQL As String
+  
+  ' Get IDs for genes and panels selected in the Panel ListBox.
+  '  Note that if neither genes or panels have been selected, GetSelectedIDs returns "0".
+  '  SQL server will return an empty result when "0" is for the primary key.
+  GeneIDs = GetSelectedIDs(PanelBox, "Gene")
+  PanelIDs = GetSelectedIDs(PanelBox, "Panel")
+  Set Dbs = CurrentDb
+  
+  ' Select GeneHGNC_current.GeneHGNCID primary key values from the overlap of unqie genes in selected Panels and genes
+  geneHGNCSQL = "SELECT DISTINCT GenesHGNCID from GenesHGNC_current " & _
+                "LEFT JOIN NGSPanelGenes on GenesHGNC_current.HGNCID=NGSPanelGenes.HGNCID " & _
+                "WHERE NGSPanelID in (" & PanelIDs & ") " & _
+                "OR GenesHGNCID in (" & GeneIDs & ")"
+  Set rst = Dbs.OpenRecordset(geneHGNCSQL)
+  
+  ' Build comma-separated string of HGNCIDs
+  strHGNCIDs = ""
+  With rst
+    Do While Not .EOF
+      strHGNCIDs = strHGNCIDs & "," & CStr(!GenesHGNCID)
+      .MoveNext
+    Loop
+  End With
+  
+  If strHGNCIDs <> "" Then
+    ' Remove the trailing "," from genes_string as this breaks queries downstream
+    strHGNCIDs_clean = Replace(strHGNCIDs, ",", "", 1, 1)
+    GetPanelHGNCSet = strHGNCIDs_clean
+  Else
+    MsgBox "Warning: No genes found from Primary or Secondary panel selection"
+    GetPanelHGNCSet = ""
+  End If
+
+End Function
+
+Private Function IsInMoka(PatientID As String)
+    ' Return True if a patient is present in the Moka Patients table
+    Dim moka As ADODB.Recordset
+    strPatientQuery = "SELECT patients.PatientID FROM patients WHERE patients.PatientID ='" & PatientID & "'"
+    Set moka = New ADODB.Recordset
+    moka.Open strPatientQuery, CurrentProject.Connection, adOpenKeyset
+    If moka.RecordCount = 0 Then
+        IsInMoka = False
+    Else
+        IsInMoka = True
+    End If
+    moka.close
+End Function
+
+Private Sub InsertGWPatientIntoMoka(PatientID As String)
+' Insert a Patient present in Geneworks into Moka via PatientID
+' Arguments:
+'   PatientID(String): The ID of the patient to insert e.g. 451880:01
     Dim db As Database
+    Dim gwks As dao.Recordset
+    Dim gwksg As ADODB.Recordset
     Dim usr As String
     Dim dt As String
-    Dim comp As String
+    Dim cmp As String
     
+    ' Set context for insert statement
     dt = Format(Now, "dd/mmm/yyyy Hh:Nn:ss")
     usr = VBA.Environ("USERNAME")
     cmp = VBA.Environ("COMPUTERNAME")
-    
-    ' Test for geneworks DNA Number if Null then 'Send sample msg'
-    ' Set the database to current database ready to runSQL query
-    Set db = CurrentDb
-    
-    ' Query if patient PRU is associated with a DNA number
-    strDNASQL = "SELECT dbo_DNANumber2016.DNANo, dbo_PatientLinked.LastName, dbo_PatientLinked.FirstName, dbo_PatientLinked.DoB, dbo_PatientLinked.CreatedByID, dbo_PatientLinked.CreatedDate, dbo_PatientLinked.NHSNo, gw_GenderTable.GenderShort " & _
-                "FROM ((dbo_DNANumber2016 INNER JOIN dbo_SpecimenLinked ON dbo_DNANumber2016.SpecimenID = dbo_SpecimenLinked.SpecimenID) INNER JOIN dbo_PatientLinked ON dbo_SpecimenLinked.PatientID = dbo_PatientLinked.PatientID) LEFT JOIN gw_GenderTable ON dbo_PatientLinked.GenderID = gw_GenderTable.GenderID " & _
-                "WHERE (((dbo_PatientLinked.PatientTrustID)='" & Me.ListPatientFound.Value & "') AND ((dbo_PatientLinked.GenderID) Is Not Null)) " & _
-                "UNION SELECT dbo_DNANumber2016.DNANo, dbo_PatientLinked.LastName, dbo_PatientLinked.FirstName, dbo_PatientLinked.DoB, dbo_PatientLinked.CreatedByID, dbo_PatientLinked.CreatedDate, dbo_PatientLinked.NHSNo, 'unknown' AS GenderShort " & _
-                "FROM ((dbo_DNANumber2016 INNER JOIN dbo_SpecimenLinked ON dbo_DNANumber2016.SpecimenID = dbo_SpecimenLinked.SpecimenID) INNER JOIN dbo_PatientLinked ON dbo_SpecimenLinked.PatientID = dbo_PatientLinked.PatientID) LEFT JOIN gw_GenderTable ON dbo_PatientLinked.GenderID = gw_GenderTable.GenderID " & _
-                "WHERE (((dbo_PatientLinked.PatientTrustID)='" & Me.ListPatientFound.Value & "') AND ((dbo_PatientLinked.GenderID) Is Null));"
-    
-'    "SELECT dbo_DNANumber2016.DNANo, dbo_PatientLinked.LastName, dbo_PatientLinked.FirstName, dbo_PatientLinked.DoB, dbo_PatientLinked.CreatedbyID, dbo_PatientLinked.CreatedDate, dbo_PatientLinked.NHSno, gw_GenderTable.GenderShort " & _
-'                "FROM ((dbo_DNANumber2016 RIGHT JOIN dbo_SpecimenLinked ON dbo_DNANumber2016.SpecimenID = dbo_SpecimenLinked.SpecimenID) RIGHT JOIN dbo_PatientLinked ON dbo_SpecimenLinked.PatientID = dbo_PatientLinked.PatientID) LEFT JOIN gw_GenderTable ON dbo_PatientLinked.GenderID = gw_GenderTable.GenderID " & _
-'                "WHERE dbo_PatientLinked.patienttrustID = '" & Me.ListPatientFound.Value & "' AND dbo_PatientLinked.GenderID IS NOT NULL " & _
-'                "UNION SELECT dbo_DNANumber2016.DNANo, dbo_PatientLinked.LastName, dbo_PatientLinked.FirstName, dbo_PatientLinked.DoB, dbo_PatientLinked.CreatedbyID, dbo_PatientLinked.CreatedDate, dbo_PatientLinked.NHSno, 'unknown' AS GenderShort " & _
-'                "FROM ((dbo_DNANumber2016 RIGHT JOIN dbo_SpecimenLinked ON dbo_DNANumber2016.SpecimenID = dbo_SpecimenLinked.SpecimenID) RIGHT JOIN dbo_PatientLinked ON dbo_SpecimenLinked.PatientID = dbo_PatientLinked.PatientID) LEFT JOIN gw_GenderTable ON dbo_PatientLinked.GenderID = gw_GenderTable.GenderID " & _
-'                "WHERE dbo_PatientLinked.patienttrustID = '" & Me.ListPatientFound.Value & "' AND dbo_PatientLinked.GenderID IS NULL"
-    
-    ' Query if patient is in MOKA and pull out associated status
-    ' Extra SQL-not sure why the join is there "SELECT patients.PatientID, patients.InternalPatientID, patients.s_StatusOverall, status.status  FROM (patients RIGHT JOIN status ON patients.s_StatusOverall = status.statusID)WHERE patients.PatientID ='" & Me.ListPatientFound.Value & "'"
-    strMokaCheckSQL = "SELECT patients.PatientID, patients.InternalPatientID, patients.s_StatusOverall FROM patients WHERE patients.PatientID ='" & Me.ListPatientFound.Value & "'"
-    
-    ' Set genewks recordset to show DNASQL query results and moka recordset to show MokacheckSQL
-    Set gwks = db.OpenRecordset(strDNASQL, dbOpenDynaset, dbSeeChanges)
-    Set moka = db.OpenRecordset(strMokaCheckSQL, dbOpenDynaset, dbSeeChanges)
-    
-    ' escape any apostrophes in names using public function
-    escaped_lastname = EscapeCharacters(gwks!LastName)
-    escaped_firstname = EscapeCharacters(gwks!FirstName)
-            
-    ' Test that a patient has been selected
-    If Not IsNull(Me.ListPatientFound.Value) Then
-    
-    ' Test is there is geneworks DNA record for selected patient, NO DNA record displays a pop up box with instructuions
-    If IsNull(gwks!DNANo) Then
-        msga = MsgBox("There is insufficient DNA to perform this test." & vbNewLine & "Please send a blood sample (EDTA) to the lab.", VbMsgBoxStyle.vbOKOnly Or VbMsgBoxStyle.vbExclamation, "No DNA recorded")
 
-    ' Check if the MOKA SQL query has returned any results. A recored = patient in moka
+    ' Get patient record from Geneworks
+    Set db = CurrentDb
+    strGWSQL = "SELECT * FROM dbo_PatientLinked WHERE dbo_PatientLinked.PatientTrustID ='" & PatientID & "'"
+    Set gwks = db.OpenRecordset(strGWSQL)
     
-    ' If patient is not in Moka, add into Moka then progess to ordering of exome
-    ElseIf moka.RecordCount = 0 Then
-        msgb = MsgBox("You are about to order WES for:" & vbNewLine & vbNewLine & Me.ListPatientFound.Value & " " & gwks!FirstName & " " & gwks!LastName & vbNewLine & vbNewLine & "Do you wish to continue?", VbMsgBoxStyle.vbYesNo Or VbMsgBoxStyle.vbInformation, "Do you wish to proceed?")
-        If msgb = vbYes Then
-            strAddPatientSQL = "INSERT INTO patients (PatientID, s_StatusOverall, MokaCreated, MokaCreatedBy, MokaCreatedPC, NHSNumber, BookinLastname, BookinFirstName, BookinDoB, BookinCreatedBy, BookinCreatedDate, BookinSex)" & _
-                               "VALUES ('" & Me.ListPatientFound.Value & "', 1202218787,'" & dt & "','" & usr & "','" & cmp & "','" & gwks!NHSNo & "','" & escaped_lastname & "','" & escaped_firstname & "','" & gwks!DOB & "','" & gwks!CreatedByID & "','" & gwks!CreatedDate & "','" & gwks!GenderShort & "')"
-             Debug.Print strAddPatientSQL
-             DoCmd.SetWarnings False
-             DoCmd.RunSQL strAddPatientSQL
-             DoCmd.SetWarnings True
-             
-             'Insert record of Patient added nto patient log
-             FindPIDSQL = "Select patients.InternalPatientID From Patients WHERE patients.PatientID ='" & Me.ListPatientFound.Value & "'"
-             Set log = db.OpenRecordset(FindPIDSQL, dbOpenDynaset, dbSeeChanges)
-             sql5 = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" & log!InternalPatientID & ", 'Patients: Patient added to Moka. ',#" + dt + "#,'" + usr + "','" + cmp + "')"
-             DoCmd.SetWarnings False
-             DoCmd.RunSQL sql5
-             DoCmd.SetWarnings True
-             
-             'PASS Paitent PRU to Form_exomeTest and close active form
-             PatientPRU = Me.ListPatientFound.Value
-             DoCmd.Close acForm, Me.Name
-             DoCmd.OpenForm "87012 ExomeTest", , , , acFormAdd, , PatientPRU
-                         
-        ElseIf mc = vbNo Then Exit Sub
+    ' Clean patient name. Removes apostrophes that are problematic in future queries.
+    '  Note: EscapeCharacters is a VBA Module
+    EscapedLastname = EscapeCharacters(gwks!LastName)
+    EscapedFirstname = EscapeCharacters(gwks!FirstName)
+    
+    ' Set Gender variable for record in patient table
+    ' Patients.BookInSex field maps to gw_GenderTable.GenderShort. It is 'unknown' when the Gender Field is Null.
+    If IsNull(gwks!GenderID) Then
+      gwks_gender = "unknown"
+    Else
+      ' Get the short name for a patient's gender from the GeneWorks gender table
+      Set gwksg = New ADODB.Recordset
+      strGenderSQL = "SELECT GenderShort from gw_GenderTable WHERE GenderID = " & gwks!GenderID
+      gwksg.Open strGenderSQL, CurrentProject.Connection, adOpenKeyset
+      gwks_gender = gwksg!GenderShort
+      gwksg.close
+    End If
+    
+    ' Insert Patient into Moka and log in patient log.
+    '  Set warnings false to stop popups for user when records are inserted.
+    '  Note: Patient is inserted with status "Not Required" as default
+    DoCmd.SetWarnings False
+    strAddPatientSQL = "INSERT INTO patients (PatientID, s_StatusOverall, MokaCreated, MokaCreatedBy, MokaCreatedPC, NHSNumber, BookinLastname, BookinFirstName, BookinDoB, BookinCreatedBy, BookinCreatedDate, BookinSex)" & _
+        "VALUES ('" & PatientID & "', 1202218787,'" & dt & "','" & usr & "','" & cmp & "','" & gwks!NHSNo & "','" & EscapedLastname & "','" & EscapedFirstname & "','" & gwks!DoB & "','" & gwks!CreatedByID & "','" & gwks!CreatedDate & "','" & gwks_gender & "')"
+    DoCmd.RunSQL strAddPatientSQL
+    PatientLogger PatientID, "Patients: Patient added to Moka."
+    DoCmd.SetWarnings True
+    gwks.close
+
+End Sub
+
+Private Sub InsertNGSTestPanelSelection(NGSTestID As String, PrimaryPanelBox As listbox, SecondaryPanelBox As listbox, HasSecondaryPanel As String)
+' Update the NGSTest with all selected panels and genes
+' Arguments:
+'   NGSTestID(String): The NGSTest to update. Matches primary key of NGSTest table
+'   PrimaryPanelBox(ListBox): The object containing primary panel data
+'   SecondaryPanelBox(ListBox): The object containing secondary panel data
+'   HasSecondaryPanel(String): When this string is not empty, the logic for adding a secondary panel is exectued.
+
+' Update NGS Test with primary panel selection
+With PrimaryPanelBox
+  ' For each item in the panel, insert the SelectionID and SelectionType into NGSTestPanelSelection
+  For DataRow = 0 To .ListCount - 1
+    If .Column(1, DataRow) = "Panel" Then
+        SelectionID = .Column(0, DataRow) ' Panel ID
+        SelectionType = "1"
+    ElseIf .Column(1, DataRow) = "Gene" Then
+        SelectionID = .Column(4, DataRow) ' HGNCID
+        SelectionType = "2"
+    Else
+        Err.Raise 1000, "Panel Selection Issue", "Gene or Panel not selected as ListBox entry"
+    End If
+
+    ' SelectionType 1 is a Panel and SelectionType 2 is a Gene.
+    ' AnalysisAB 1 is the Primary Panel and AnalysisAB 2 is the Secondary Panel.
+    strSQLInsertSelection = "INSERT INTO NGSTestPanelSelection(NGSTestID, SelectionType, SelectionID, AnalysisAB) VALUES " & _
+          "(" & NGSTestID & "," & SelectionType & ",'" & SelectionID & "',1)"
+    DoCmd.SetWarnings False
+    DoCmd.RunSQL strSQLInsertSelection
+    DoCmd.SetWarnings True
+  Next DataRow
+End With
+
+' If a secondary panel has been selected (True when HasSecondaryPanel is not empty)
+If HasSecondaryPanel <> "" Then
+    With SecondaryPanelBox
+    ' For each item in the panel, insert the SelectionID and SelectionType into NGSTestPanelSelection
+      For DataRow = 0 To .ListCount - 1
+        If .Column(1, DataRow) = "Panel" Then
+            SelectionID = .Column(0, DataRow) ' Panel ID
+            SelectionType = "1"
+        ElseIf .Column(1, DataRow) = "Gene" Then
+            SelectionID = .Column(4, DataRow) ' HGNCID
+            SelectionType = "2"
+        Else
+            Err.Raise 1000, "Panel Selection Issue", "Gene or Panel not selected as ListBox entry"
         End If
         
-    ' If patient is in Moka check to see if NGS has already been ordered pending 1202218799 or approved status number 1202218798
-    ' If NGS has not been previously requested, pass patient PRU to exome test form
-    ElseIf moka.RecordCount > 0 And moka!s_StatusOverall <> 1202218798 And moka!s_StatusOverall <> 1202218799 Then
-            msgc = MsgBox("You are about to order WES for:" & vbNewLine & vbNewLine & moka!PatientID & " " & gwks!FirstName & " " & gwks!LastName & vbNewLine & vbNewLine & "Do you wish to continue?", VbMsgBoxStyle.vbYesNo Or VbMsgBoxStyle.vbInformation, "Do you wish to proceed?")
-            If msgc = vbYes Then
-'                  strStatSQL = "UPDATE patients SET s_StatusOverall = 1202218799 WHERE patients.patientID ='" & Me.ListPatientFound.Value & "'"
-'                  ''" & Me.ListPatientFound.Value & "'"
-'                  DoCmd.SetWarnings False
-'                  DoCmd.RunSQL strStatSQL
-'                  DoCmd.SetWarnings True
-'
-'                  'Insert record of Patient status updated into patient log
-'                  sql5 = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" & moka!InternalPatientID & ", 'Patients: Status changed to NGS Pending ',#" + dt + "#,'" + usr + "','" + cmp + "')"
-'                  DoCmd.SetWarnings False
-'                  DoCmd.RunSQL sql5
-'                  DoCmd.SetWarnings True
-                  
-                  'PASS Paitent PRU to Form_exomeTest and close active form
-                  PatientPRU = Me.ListPatientFound.Value
-                  DoCmd.Close acForm, Me.Name
-                  DoCmd.OpenForm "87012 ExomeTest", , , , acFormAdd, , PatientPRU
+        ' SelectionType 1 is a Panel and SelectionType 2 is a Gene.
+        ' AnalysisAB 1 is the Primary Panel and AnalysisAB 2 is the Secondary Panel.
+        strSQLInsertSelection = "INSERT INTO NGSTestPanelSelection(NGSTestID, SelectionType, SelectionID, AnalysisAB) VALUES " & _
+              "(" & NGSTestID & "," & SelectionType & ",'" & SelectionID & "',2)"
+        DoCmd.SetWarnings False
+        DoCmd.RunSQL strSQLInsertSelection
+        DoCmd.SetWarnings True
+  
+      Next DataRow
+    End With
+End If
 
-            ElseIf mc = vbNo Then Exit Sub
-            End If
-            
-    ' If NGS has already been previouly ordered or approved for patient, display error message
-    ElseIf moka.RecordCount > 0 And moka!s_StatusOverall = 1202218799 Then
-            msgd = MsgBox("WES has already been ordered for " & vbNewLine & vbNewLine & moka!PatientID & " " & gwks!FirstName & " " & gwks!LastName & vbNewLine & vbNewLine & "Would you like to email the lab duty scientist regarding this patient?", VbMsgBoxStyle.vbYesNo Or VbMsgBoxStyle.vbExclamation, "ATTENTION!")
-             If msgd = vbYes Then
-                Application.FollowHyperlink "mailto:wes@viapath.co.uk?subject=WES enquiry for " & moka!PatientID
-             Else
-                Exit Sub
-            End If
-
-    ElseIf moka.RecordCount > 0 And moka!s_StatusOverall = 1202218798 Then
-            ' msgd = MsgBox("ATTENTION!" & vbNewLine & "WES has already been ordered for this patient." & vbNewLine & "Please contact the lab for more information.", VbMsgBoxStyle.vbOKOnly Or VbMsgBoxStyle.vbExclamation, "ATTENTION")
-            ' Exit Sub
-            msgd = MsgBox("WES has already been ordered for " & vbNewLine & vbNewLine & moka!PatientID & " " & gwks!FirstName & " " & gwks!LastName & vbNewLine & vbNewLine & "Would you like to email the lab duty scientist regarding this patient?", VbMsgBoxStyle.vbYesNo Or VbMsgBoxStyle.vbExclamation, "ATTENTION!")
-             If msgd = vbYes Then
-                Application.FollowHyperlink "mailto:wes@viapath.co.uk?subject=WES enquiry for " & moka!PatientID
-             Else
-                Exit Sub
-            End If
-
-    End If
-    End If
-Set moka = Nothing
-Set gwks = Nothing
 End Sub
+
+Private Function CreateAnalysisGroup()
+' Return a new NGSAnalysis.AnalysisID value to assign to all NGS Tests
+Dim rst As ADODB.Recordset
+Set rst = New ADODB.Recordset
+
+' Insert Into NGSAnalsisGroup table to create a new analysis group primary keye
+rst.Open "INSERT INTO NGSAnalysisGroup(BookBy, DateRequested) VALUES (" & Me.Clinician.Value & _
+    ",#" & Format(Now(), "dd/mmm/yyyy Hh:Nn:ss") & "#)", CurrentProject.Connection, adOpenKeyset
+rst.Open "SELECT @@IDENTITY"
+' Return the AnalysisGroupID for future records NGSAnalysis records
+CreateAnalysisGroup = rst.Fields(0).Value
+
+Set rst = Nothing
+End Function
+
+Private Sub CreateNGSAnalysis(AnalysisGroup As String, PRU As String, RelationshipID As String, NGSTestID As String, AffectedID As String)
+' Insert a record into the NGSAnalysis table
+' Arguments:
+'   AnalysisGroup(String): An NGSAnalysis.AnalysisGroup value
+'   PatientID(String): An internal patient ID
+'   RelationshipID(String): Pedigree/Relationship ID linked to Item.ItemID
+'   NGSTestID(String): The NGSTest.NGSTestID for the analysis entry
+'   AffectedID(String): Affected status for the analysis linked to Item.ItemID
+
+  Dim db As dao.Database
+  Dim rst As dao.Recordset
+  Dim InternalPatientID As String
+  InternalPatientID = PRUToInternalPatientID(PRU)
+  strInsertAnalysis = "INSERT INTO NGSAnalysis(NGSAnalysisGroupID,InternalPatientID,NGSTestID,BookBy,DateRequested,Pedigree,AffectedStatus) Values(" & _
+       AnalysisGroup & "," & InternalPatientID & "," & NGSTestID & "," & Me.Clinician.Value & ",#" & Format(Now(), "dd/mmm/yyyy Hh:Nn:ss") & "#," & _
+       RelationshipID & "," & AffectedID & ")"
+  DoCmd.SetWarnings False
+  DoCmd.RunSQL strInsertAnalysis
+  DoCmd.SetWarnings True
+
+End Sub
+
+Private Function CreateNGSTest(PRU As String, PrimaryPanelID As String, SecondaryPanelID As String)
+  ' Creates NGS Test for the given patient and return NGSTestID
+  ' Arguments:
+  '    PRU(String): Patient ID e.g. 451880:01
+  '    PrimaryPanelID(String): The ID for the primary panel. Matches Moka database NGSPanel.NGSPanelID
+  '    SecondaryPanelID(String): The ID for the secondary panel. Matches Moka database NGSPanel.NGSPanelID
+  
+  Dim InternalID As String
+  Dim strNGSTestID As String
+  Dim strPatLogNGS As String
+  Dim strPatLogStatus As String
+  Dim db As dao.Database
+  Dim rstNGS As dao.Recordset
+  Set db = CurrentDb
+  
+  ' Get NGSTest values that are not currently set in form.
+  InternalID = PRUToInternalPatientID(PRU)
+  DateRequested = Format(Now(), "dd/mmm/yyyy Hh:Nn:ss")
+  
+  ' Open NGS Test table as recordset
+  Set rstNGS = db.OpenRecordset("NGSTest", dbOpenDynaset, dbSeeChanges)
+  
+  With rstNGS
+    .AddNew ' Create NGSTest
+    !InternalPatientID = InternalID
+    !ReferralID = Me.Referral_Box.Value
+    !NGSPanelID = PrimaryPanelID
+    If SecondaryPanelID <> "" Then ' Add secondary panel if present
+        !NGSPanelID_B = SecondaryPanelID
+    End If
+    !StatusID = 1202218800 ' Status set to DNA QC
+    !DateRequested = DateRequested
+    !BookBy = Me.Clinician.Value
+    !BookingAuthorisedByID = Me.Clinician.Value
+    !BookingAuthorisedDate = DateRequested
+    !CostCentre = Me.cost.Value
+    !Department = Me.dept.Value
+    .update ' Save NGSTest Record
+    .Bookmark = .LastModified
+    strNGSTestID = !NGSTestID ' Save new NGSTestID to variable
+    .close
+  End With
+
+  ' Write NGS test creation Patient Log
+  strPatLogNGS = "NGS: " & Me.Referral_Box.Column(1) & " test request added. NGSTest ID: " & _
+    strNGSTestID & ". Primary panel: " & PrimaryPanelID & ". Secondary panel: " & SecondaryPanelID
+  PatientLogger PRU, strPatLogNGS
+  
+  ' Set patient's overall status to NGS Pending
+  sqlChangeStatus = "UPDATE Patients SET s_StatusOverall = 1202218798 WHERE InternalPatientID = " & InternalID
+  DoCmd.SetWarnings False
+  DoCmd.RunSQL sqlChangeStatus
+  DoCmd.SetWarnings True
+  
+  ' Write status change to Patient Log
+  strPatLogStatus = "Patients: Status changed to NGS"
+  PatientLogger PRU, strPatLogStatus
+  
+  ' Return new NGSTestID
+  CreateNGSTest = strNGSTestID
+  
+End Function
+
+Private Function PRUToInternalPatientID(PRU As String)
+  ' Return the InternalPatientID for a given PRU in Moka
+  ' Arguments:
+  '     PRU(String): Patient ID in PRU format e.g. "451880:01".
+  Dim rstPatientID As ADODB.Recordset
+
+  strPIDquery = "SELECT InternalPatientID FROM Patients WHERE PatientID = '" & PRU & "'"
+  Set rstPatientID = New ADODB.Recordset
+  rstPatientID.Open strPIDquery, CurrentProject.Connection, adOpenKeyset
+  PRUToInternalPatientID = rstPatientID!InternalPatientID
+  rstPatientID.close
+  
+End Function
+
+Private Function CreateNGSPanelID(panelSuffix As String, Referrer As String, referrerID As Long, ProbandPRU As String, CategoryIndex As Integer, SubCategoryIndex As Integer)
+' Create an NGSPanel ID.
+' Arguments:
+'   PanelSuffix(String): Suffix of the NGSPanel. "A" for Primary Panel and "B" for Secondary Panel
+'   Referrer(String): The initials of the referring clinician. E.g "AB"
+'   ReferrerID(Long): The item ID for the initials of the referring clinician. Foreign key to Item.ItemID
+'   ProbandPRU(String): The patient ID for the proband e.g. 451880:01
+'   CategoryIndex(Integer): The Item.ItemCategoryIndex1ID value for the panel name in the format: ProbandPRU_ShortDate_PanelSuffix
+'   SubCategoryIndex(Integer): The Item.ItemCategoryIndex1ID value for the referrer's initials
+
+    ' Declare variables assigned from functions to avoid compile errors
+    Dim SubCategoryName As String
+    Dim rsCreatePanel As ADODB.Recordset
+    
+    ' NGSPanel.ItemCategory is a foreign key to Item.Item for the referring clinician's initials.
+    categoryID = GetOrInsertItem(Referrer, CategoryIndex) 'Returns integer for item ID
+    ' NGSPanel.SubCategory is a foreign key to Item.Item for the string ProbandPRU_ShortDate_PanelSuffix.
+    SubCategoryName = ProbandPRU & "_" & Format(Now(), "yymmdd") & "_" & panelSuffix
+    ' Get the Item.ItemID value for Referrer's initials. Note: GetOrInsertItem creates an ItemID if the intials are not found.
+    subcategoryID = GetOrInsertItem(SubCategoryName, SubCategoryIndex) 'Returns integer for item ID
+    ' NGSPanel.Panel is a concatenation of the panel and category Item.Item values
+    NGSPanelName = Referrer & ": " & SubCategoryName
+    ' NGSPanel.Checker1 is a foreign key to Checker.Check1ID for the referring clinician.
+    Checker1 = referrerID
+    ' NGSPanel.CheckDate is the current date i.e. the date Panel was made
+    CheckDate = Format(Now(), "dd/mmm/yyyy Hh:Nn:ss")
+    
+    ' Run the query to create the panel
+    Set rsCreatePanel = New ADODB.Recordset
+    ' Note: NGSPanel.PanelType is set to 1 for custom panels. NGSPanel.Active defaults to 1 for active and therefore isn't included in this query.
+    sqlCreatePanel = "INSERT INTO NGSPanel (Category, SubCategory, Panel, Checker1, PanelType, CheckDate) VALUES (" & categoryID & ", " & _
+        subcategoryID & ", '" & NGSPanelName & "', " & Checker1 & "," & "1" & ", #" & CheckDate & "#)"
+    rsCreatePanel.Open sqlCreatePanel, CurrentProject.Connection, adOpenKeyset
+    'Retrieve NGSPanelID for newly created record
+    rsCreatePanel.Open "SELECT @@identity", CurrentProject.Connection, adOpenKeyset
+    PanelID = rsCreatePanel.Fields(0).Value
+    Set rsCreatePanel = Nothing
+    
+    ' Build human-readable field for new NGSPanel and update the NGSPanel record.
+    PanelCode = "Pan" & PanelID
+    sqlUpdateCode = "UPDATE NGSPanel SET PanelCode = '" & PanelCode & "' WHERE NGSPanelID = " & PanelID
+    DoCmd.SetWarnings False
+    DoCmd.RunSQL sqlUpdateCode
+    DoCmd.SetWarnings True
+
+' Return Panel ID
+CreateNGSPanelID = PanelID
+End Function
+
+
+Private Function GetOrCreatePanelID(PanelBox As listbox)
+' Returns a PanelID from the NGSPanel database for a primary or secondary panel created by the user.
+'     If a single existing panel is selected, that PanelID is returned. Note: This behaviour is only true
+'     for secondary panels when no genes overlap with the primary panel. In all other cases, a new NGSPanel is created.
+
+Dim PRU As String
+Dim panelSuffix As String
+Dim Referrer As String
+Dim referrerID As Long
+Dim ItemCatIndex As Integer
+Dim SubCatIndex As Integer
+
+' Assert that the Panel ListBox name suffix is either A or B
+panelSuffix = Right(PanelBox.Name, 1)
+If StrComp(panelSuffix, "A") = 0 Or StrComp(panelSuffix, "B") = 0 Then
+Else
+    Err.Raise 1000, , "Error: Panel List Box does not contain A/B suffix to determine primary/secondary."
+End If
+
+' For Primary Panel, if a single existing Panel was selected, exit and return the PanelID.
+If StrComp(panelSuffix, "A") = 0 And PanelBox.ListCount = 1 And PanelBox.Column(1, 0) = "Panel" Then
+    GetOrCreatePanelID = PanelBox.Column(0, 0)
+    Exit Function
+End If
+
+' For Secondary Panel, if a single existing Panel was selected with completely unique genes, exit and return the PanelID.
+If StrComp(panelSuffix, "B") = 0 And PanelBox.ListCount = 1 Then
+    SecondaryPanelGeneCount = Me.GeneCountB ' Note: This value is updated automatically as genes are added. See subroutine `UpdateGeneCount`
+    SecondaryPanelUniqueCount = UniqueToSecondaryPanel(True)
+    If SecondaryPanelGeneCount = SecondaryPanelUniqueCount Then
+        GetOrCreatePanelID = PanelBox.Column(0, 0)
+        Exit Function
+    End If
+End If
+
+' Else create a new NGSPanel record and add the corresponding genes
+Referrer = Me.Clinician.Column(2)
+referrerID = Me.Clinician.Column(0)
+PRU = GetProbandPRU()
+ItemCatIndex = 48 ' Item.ItemCategoryIndex1ID is 48 for all referrer names.
+If StrComp(panelSuffix, "A") = 0 Then
+    SubCatIndex = 49 ' Item.ItemCategoryIndex1ID is 49 for Primary Panel names
+ElseIf StrComp(panelSuffix, "B") = 0 Then
+    SubCatIndex = 58 ' Item.ItemCategoryIndex1ID is 58 for Secondary Panel names
+Else
+    Err.Raise 1000, , "Error: Panel List Box does not contain A/B suffix to determine primary/secondary."
+End If
+
+' CreateNGSPanelID Arguments: PanelSuffix, Referrer, ReferrerID, ProbandPRU, CategoryIndex, SubCategoryIndex
+PanelID = CreateNGSPanelID(panelSuffix, Referrer, referrerID, PRU, ItemCatIndex, SubCatIndex)
+
+' Insert all selected genes into created panel
+If StrComp(panelSuffix, "A") = 0 Then
+    HGNCSet = GetPanelHGNCSet(PanelBox)
+ElseIf StrComp(panelSuffix, "B") = 0 Then
+    HGNCSet = UniqueToSecondaryPanel(False) ' False returns a comma-separated string. When True, returns a count
+End If
+strSQLInsertGenes = "INSERT INTO NGSPanelGenes(NGSPanelID, HGNCID, Symbol) " & _
+    "SELECT " & PanelID & " as NGSPanelID, HGNCID, ApprovedSymbol FROM GenesHGNC_current " & _
+    "WHERE GenesHGNCID in (" & HGNCSet & ")"
+DoCmd.SetWarnings False
+DoCmd.RunSQL strSQLInsertGenes
+DoCmd.SetWarnings True
+
+' Return PanelID
+GetOrCreatePanelID = PanelID
+
+End Function
+
+Private Function UniqueToSecondaryPanel(ReturnCounts As Boolean)
+' Return a comma-separated string or count of HGNC IDs that are present in the secondary panel only.
+'   When all genes are present in the primary panel, returns "".
+' Precondition: User has made a selection for the secondary panel. An error is raised if this is not met.
+' Arguments:
+'   ReturnCounts(Boolean): If True, this function returns an integer of HGNCIDs unique to the secondary panel
+
+PrimaryIDs = GetPanelHGNCSet(Me.GenePanelListBoxA)
+SecondaryIDs = GetPanelHGNCSet(Me.GenePanelListBoxB) ' Currently returns blank if blank??
+
+If SecondaryIDs = "" Then
+    Err.Raise 1000, "No Secondary Panel Selection", "No Secondary Panel Selection"
+End If
+
+' Perform query for genes unique to secondary panel
+sqlUniqueSecondary = "SELECT GenesHGNCID from GenesHGNC_current WHERE " & _
+    "GenesHGNCID IN (" & SecondaryIDs & ") " & _
+    "AND GenesHGNCID NOT IN (" & PrimaryIDs & ")"
+Set rsSecondary = New ADODB.Recordset
+rsSecondary.Open sqlUniqueSecondary, CurrentProject.Connection, adOpenKeyset
+
+' Return RecordCount if ReturnCounts
+If ReturnCounts = True Then
+  UniqueToSecondaryPanel = rsSecondary.RecordCount
+  Set rsSecondary = Nothing
+  Exit Function
+Else
+' Else return the string of unique IDs found in query
+  strIDList = ""
+  With rsSecondary
+    Do While Not .EOF
+      strIDList = strIDList & "," & CStr(!GenesHGNCID)
+      .MoveNext
+    Loop
+  End With
+  UniqueToSecondaryPanel = Replace(strIDList, ",", "", 1, 1)
+  Set rsSecondary = Nothing
+End If
+
+End Function
+
+Private Function HasSecondaryPanel()
+' Returns True if a valid secondary panel has been requested for this case.
+'    A valid secondary panel has not been requested if:
+'        - No genes have been selected
+'        - All genes selected are present in the primary panel
+
+If Me.GenePanelListBoxB.ListCount = 0 Then
+    HasSecondaryPanel = False
+' UniqueToSecondaryPanel accepts a Boolean argument. When True, it returns a count of unique Secondary Panel genes
+ElseIf UniqueToSecondaryPanel(True) = 0 Then
+    HasSecondaryPanel = False
+Else
+    HasSecondaryPanel = True
+End If
+End Function
+
+Private Sub ImportAndActivatePatientDNA(PRU As String)
+' ImportPatientDNAs from Geneworks and ensure one DNA is active
+' Arguments:
+'   PRU(String): Patient ID in PRU format e.g. "451880:01"
+
+Dim InternalPatientID As String
+Dim rsGWDNAs As ADODB.Recordset
+Dim rsActiveDNAs As ADODB.Recordset
+Dim rsNewestDNA As ADODB.Recordset
+
+' Set Internal Patient ID
+InternalPatientID = PRUToInternalPatientID(PRU)
+
+' Query all DNAs for the PRU that are in Geneworks but not in the Moka DNA table
+sqlDNAsToImport = "SELECT gwd.DNANo, gws.Concentration FROM (dbo_dnanumberlinked as gwd " & _
+    "LEFT JOIN dbo_patientlinked as gwp ON gwd.PatientID = gwp.PatientID) " & _
+    "LEFT JOIN dbo_dnaspecimenlinked as gws ON gwd.SpecimenID = gws.SpecimenID " & _
+    "WHERE PatientTrustID = '" & PRU & "' AND gwd.DNANo NOT IN (SELECT DNANumber FROM DNA WHERE InternalPatientID = " & _
+    "(SELECT InternalPatientID from Patients WHERE PatientID = '" & PRU & "'))"
+Set rsGWDNAs = New ADODB.Recordset
+rsGWDNAs.Open sqlDNAsToImport, CurrentProject.Connection, adOpenKeyset
+
+' If there are Patient DNAs in Geneworks to import into Moka, import them.
+If Not rsGWDNAs.EOF Then
+  ' Loop through Geneworks DNAs to Import
+  While Not rsGWDNAs.EOF
+    Concentration = rsGWDNAs!Concentration
+    ' If no concentration value, set to NULL string for downstream SQL queries
+    If IsNull(Concentration) Then
+        Concentration = "NULL"
+    End If
+    ' Insert Patient DNA into Moka
+    sqlImportDNA = "INSERT INTO DNA(InternalPatientID, DNANumber, GelQualityID, DNACheckRun, DNAComment, Concentration, Active) " & _
+        "VALUES (" & InternalPatientID & "," & rsGWDNAs!DNANo & ",5,'-','NGS'," & Concentration & ", False)"
+    DoCmd.SetWarnings False
+    DoCmd.RunSQL sqlImportDNA
+    DoCmd.SetWarnings True
+    rsGWDNAs.MoveNext
+  Wend
+rsGWDNAs.close
+End If
+
+
+' If no DNAs are active
+sqlActiveDNAs = "SELECT DNAID FROM DNA WHERE InternalPatientID = " & InternalPatientID & " AND Active = True"
+Set rsActiveDNAs = New ADODB.Recordset
+rsActiveDNAs.Open sqlActiveDNAs, CurrentProject.Connection, adOpenKeyset
+If rsActiveDNAs.RecordCount = 0 Then
+    ' Set the patient's most recent DNA to Active
+    sqlNewestDNA = "SELECT DNAID FROM (DNA " & _
+        "INNER JOIN dbo_dnanumberlinked as gwd on gwd.DNANo = DNA.DNANumber) " & _
+        "INNER JOIN dbo_dnaspecimenlinked as gws on gws.SpecimenID = gwd.SpecimenID " & _
+        "WHERE InternalPatientID = " & InternalPatientID & " ORDER BY gws.DateReceived DESC"
+    Set rsNewestDNA = New ADODB.Recordset
+    rsNewestDNA.Open sqlNewestDNA, CurrentProject.Connection, adOpenKeyset
+    sqlUpdateDNA = "UPDATE DNA SET Active = True WHERE DNAID = " & rsNewestDNA!DNAID
+    DoCmd.SetWarnings False
+    DoCmd.RunSQL sqlUpdateDNA
+    DoCmd.SetWarnings True
+
+    ' Write DNA activation to PatientLog
+    PatientLogger PRU, "DNA: Active status changed for DNA number [" & rsNewestDNA!DNAID & "]"
+    rsActiveDNAs.close
+    rsNewestDNA.close
+End If
+
+End Sub
+
+Private Sub PatientLogger(PRU As String, LogEntry As String)
+' Write an entry to the PatientLog
+' Arguments:
+'   PatientID(String): A patient ID in PRU format e.g.
+'   LogEntry(String): The string to enter into the patient log
+    Dim InternalPatientID As String
+    Dim UserLogin As String
+    Dim PCName As String
+    Dim Timestamp As String
+  
+    ' Set variables for log entry
+    InternalPatientID = PRUToInternalPatientID(PRU)
+    UserLogin = VBA.Environ("USERNAME")
+    PCName = VBA.Environ("COMPUTERNAME")
+    Timestamp = Format(Now(), "dd/mmm/yyyy Hh:Nn:ss")
+    
+    ' Write to patient log
+    sqlPatLog = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES (" & _
+        InternalPatientID & ",'" & LogEntry & "',#" & Timestamp & "#,'" & UserLogin & "','" & PCName & "')"
+    DoCmd.SetWarnings False
+    DoCmd.RunSQL sqlPatLog
+    DoCmd.SetWarnings True
+  
+End Sub
+
+' ### FORM CONTROLS ###
+
+Private Sub Form_Load()
+  ' Clear the Patient Selection and Patient List Box
+  Clear_Relations_Click
+  ' Clear the Gene Panel selection boxes
+  RemoveAllA_Click
+  RemoveAllB_Click
+End Sub
+
+Private Sub btnClose_Click()
+  'Close Form (X)
+  DoCmd.close
+End Sub
+
+Private Sub btnFindPatient_Click()
+' Searches for patients based on user entry in txFamilyTrustID textbox.
+'   Patients found are displayed in the patient selection combo box, otherwise a warning is displayed.
+
+  ' Clear any values in the patient selection form
+  Clear_Relations_Click
+  ' Find patients matching the family trust ID entered by the user
+  Me.FamilyTrustID = Me.txFamilyTrustID.Value
+  Me.PatientCombo.Requery
+  ' Display patient names if any patients with recorded DNA are found.
+  If Not IsNull(Me.PatientCombo.Column(1, 0)) Then
+    Me.PatientCombo.SetFocus
+    Me.PatientCombo.Text = Me.PatientCombo.Column(1, 0)
+  Else
+  ' Else inform the user no patients found.
+    MsgBox "No patients found. Please try again with first 6 digits of PRU only." & _
+        vbCrLf & "Note: Only patients with DNA samples sent to the lab are shown.", _
+        vbOKOnly, "No Patients Found"
+    Me.txFamilyTrustID.SetFocus
+  End If
+
+End Sub
+
+Private Sub btnAddPatient_Click()
+' Assigns a patient to the analysis using user-selected details in the patient selection ComboBoxes
+    If AnyPatientDetailsEmpty() Then
+      MsgBox "Help: Patient name, pedigree or status details have not been selected.", , "Patient Details Missing"
+      Exit Sub
+    ElseIf InPatientListBox(Me.PatientCombo.Column(0)) Then
+      MsgBox "Warning: Patients cannot be selected multiple times for testing. Press clear to change details.", , "Warning: Same Patient"
+      Exit Sub
+    ' If the selection is Mother or Father, and the patient's gender is not female or male respectively in geneworks, warn user.
+    ElseIf ( _
+        (Me.RelationshipCombo.Column(0) = 3303 And Me.PatientCombo.Column(2) <> 2) Or _
+        (Me.RelationshipCombo.Column(0) = 3304 And Me.PatientCombo.Column(2) <> 1) _
+    ) Then
+        ans = MsgBox("You have selected a patient as 'Mother' or 'Father' but this selection does not match their gender in geneworks." & _
+            vbCrLf & vbCrLf & "Do you wish to continue?", vbOKCancel, "Geneworks Gender Check")
+        If ans = vbOK Then
+        Else
+            Exit Sub
+        End If
+    ' If an NGS Test is active for the selected patient
+    ElseIf HasActiveNGSTest(Me.PatientCombo.Column(0)) Then
+        ' Users cannot proceed with ordering tests. Offer to email WES and stop the submission.
+        ans = MsgBox("ERROR: We cannot add this patient as an NGS test is already in progress." & _
+        vbCrLf & "Do you wish to email the WES duty scientist for more information?", VbMsgBoxStyle.vbYesNo Or VbMsgBoxStyle.vbExclamation, "NGS Test exists")
+        If ans = vbYes Then
+            Application.FollowHyperlink "mailto:wes@viapath.co.uk?subject=WES enquiry for " & Me.PatientCombo.Column(0)
+            ' Clear selected patients so users are not mistaken
+        End If
+        ' Clear patient selection so users are not mistaken that the patient has been added to the test.
+        Clear_Relations_Click
+        Exit Sub
+    End If
+    
+    ' Add patient to the Patient details to PatientList ListBox for testing
+    ' Format: strPatientName,strRelationship,strStatus,strPatientID,strRelationshipItemID,strStatusItemID
+    ' Example: Wesley Test BINFX TESTING,Proband,Affected,451880:01,3302,3337
+    PatientListInput = Me.PatientCombo.Column(1) & "," & Me.RelationshipCombo.Column(1) & "," & Me.AffectedCombo.Column(1) & _
+        "," & Me.PatientCombo.Column(0) & "," & Me.RelationshipCombo.Column(0) & "," & Me.AffectedCombo.Column(0)
+    Me.PatientList.AddItem PatientListInput, 0
+End Sub
+
+Private Sub Clear_Relations_Click()
+    With Me.PatientList
+      For DataRow = 0 To .ListCount - 1
+         .RemoveItem 0
+      Next DataRow
+    End With
+    
+    ' Clear text in the patient selection lists. Future queries responsively update these lists to indicate new patients found.
+    Me.PatientCombo.SetFocus
+    Me.PatientCombo.Text = ""
+    Me.RelationshipCombo.SetFocus
+    Me.RelationshipCombo.Text = ""
+    Me.AffectedCombo.SetFocus
+    Me.AffectedCombo.Text = ""
+End Sub
+
+Private Sub PhenotipsLaunch_Click()
+    Call firefoxurl("http://10.189.213.28:8080/phenotips/")
+End Sub
+
+Private Sub AddPanelA_Click()
+  AddSelectionToPanel Me.GenePanelListBoxA, Me.SubPanelA, "Panel"
+  ' Reset check that user has reviewed panel low coverage genes for accreditation purposes.
+  Me.CheckReviewedPanelA.Value = False
+  ' Set coverage check warning label to Red.
+  Me.CoverageWarningA.BackColor = RGB(220, 165, 165)
+End Sub
+Private Sub addGeneA_Click()
+  AddSelectionToPanel Me.GenePanelListBoxA, Me.GeneSymbolA, "Gene"
+  ' Reset check that user has reviewed panel low coverage genes for accreditation purposes.
+  Me.CheckReviewedPanelA.Value = False
+  ' Set coverage check warning label to Red.
+  Me.CoverageWarningA.BackColor = RGB(220, 165, 165)
+End Sub
+Private Sub addGeneB_Click()
+  AddSelectionToPanel Me.GenePanelListBoxB, Me.GeneSymbolB, "Gene"
+  ' Reset check that user has reviewed panel low coverage genes for accreditation purposes.
+  Me.CheckReviewedPanelB.Value = False
+  ' Set coverage check warning label to Red.
+  Me.CoverageWarningB.BackColor = RGB(220, 165, 165)
+End Sub
+Private Sub AddPanelB_Click()
+  AddSelectionToPanel Me.GenePanelListBoxB, Me.SubPanelB, "Panel"
+  ' Reset check that user has reviewed panel low coverage genes for accreditation purposes.
+  Me.CheckReviewedPanelB.Value = False
+  ' Set coverage check warning label to Red.
+  Me.CoverageWarningB.BackColor = RGB(220, 165, 165)
+End Sub
+Private Sub HGNCLaunchA_Click()
+    Call firefoxurl("http://www.genenames.org/")
+End Sub
+Private Sub HGNCLaunchB_Click()
+    Call firefoxurl("http://www.genenames.org/")
+End Sub
+Private Sub PanelAppLaunchA_Click()
+    Call firefoxurl("https://panelapp.genomicsengland.co.uk/panels/")
+End Sub
+Private Sub PanelAppLaunchB_Click()
+    Call firefoxurl("https://panelapp.genomicsengland.co.uk/panels/")
+End Sub
+Private Sub CoverageLaunchA_Click()
+    Call firefoxurl("https://mokaguys.shinyapps.io/covapp_twist/")
+End Sub
+Private Sub CoverageLaunchB_Click()
+    Call firefoxurl("https://mokaguys.shinyapps.io/covapp_twist/")
+End Sub
+
+Private Sub GenePanelListBoxA_DblClick(Cancel As Integer)
+    'Display a the ExomeGenePanelPopup if the double-clicked item is a Panel
+    If Me.GenePanelListBoxA.Column(1) = "Panel" Then
+        DoCmd.OpenForm "s87014_ExomeGenePanelPopup", , , , acFormAdd, , Me.GenePanelListBoxA.Column(2) & ", " & _
+          Me.GenePanelListBoxA.Column(3) & ", " & Me.GenePanelListBoxA.Column(0)
+    End If
+End Sub
+
+Private Sub GenePanelListBoxB_DblClick(Cancel As Integer)
+    'Displays popup with gene list for selected panel
+    If Me.GenePanelListBoxB.Column(1) = "Panel" Then
+        DoCmd.OpenForm "s87014_ExomeGenePanelPopup", , , , acFormAdd, , Me.GenePanelListBoxB.Column(2) & ", " & _
+          Me.GenePanelListBoxB.Column(3) & ", " & Me.GenePanelListBoxB.Column(0)
+    End If
+End Sub
+
+Private Sub RemoveAllA_Click()
+    ' Remove all items from primary panel selection
+    With Me.GenePanelListBoxA
+      For DataRow = 0 To .ListCount - 1
+         .RemoveItem 0
+      Next DataRow
+    End With
+    ' Reset check that user has reviewed panel low coverage genes for accreditation purposes.
+    Me.CheckReviewedPanelA.Value = False
+    ' Set coverage check warning label to Red.
+    Me.CoverageWarningA.BackColor = RGB(220, 165, 165)
+    UpdateGeneCount Me.GenePanelListBoxA
+End Sub
+
+Private Sub RemoveAllB_Click()
+    ' Remove all items from secondary panel selection
+    With Me.GenePanelListBoxB
+      For DataRow = 0 To .ListCount - 1
+         .RemoveItem 0
+      Next DataRow
+    End With
+    ' Reset check that user has reviewed panel low coverage genes for accreditation purposes.
+    Me.CheckReviewedPanelB.Value = False
+    ' Set coverage check warning label to Grey, indicating that a check is not required for the empty secondary panel.
+    Me.CoverageWarningB.BackColor = RGB(204, 200, 194)
+    UpdateGeneCount Me.GenePanelListBoxB
+End Sub
+
+Private Sub RemoveOneA_Click()
+    ' Clear selected item from primary panel
+  If Not Me.GenePanelListBoxA.ListIndex < 0 Then
+    Me.GenePanelListBoxA.RemoveItem Me.GenePanelListBoxA.ListIndex
+    ' Reset check that user has reviewed panel low coverage genes for accreditation purposes.
+    Me.CheckReviewedPanelA.Value = False
+    ' Set coverage check warning label to Red as a check is always required for the primary panel.
+    Me.CoverageWarningA.BackColor = RGB(220, 165, 165)
+  End If
+  UpdateGeneCount Me.GenePanelListBoxA
+End Sub
+
+Private Sub RemoveOneB_Click()
+  ' Clear selected item from secondary panel
+  If Not Me.GenePanelListBoxB.ListIndex < 0 Then
+    Me.GenePanelListBoxB.RemoveItem Me.GenePanelListBoxB.ListIndex
+    ' Reset check that user has reviewed panel low coverage genes for accreditation purposes.
+    Me.CheckReviewedPanelB.Value = False
+  End If
+  
+  UpdateGeneCount Me.GenePanelListBoxB
+  
+  If Me.GeneCountB = 0 Then
+    ' Set coverage check warning label to Grey, indicating that a check is not required for the empty secondary panel.
+    Me.CoverageWarningB.BackColor = RGB(204, 200, 194)
+  Else
+    ' Set coverage check warning label to Red.
+    Me.CoverageWarningB.BackColor = RGB(220, 165, 165)
+  End If
+End Sub
+
+Private Sub PrimaryLowCovCheck_Click()
+  hgnc_ids = GetPanelHGNCSet(Me.GenePanelListBoxA)
+  If hgnc_ids <> "" Then
+     ' Set an invisible checkbox to True, indicating that the user has reviewed the low coverage primary panel genes.
+     ' This is for accreditation purposes as flexible scope requires us to ensure users have reviewed panel coverage.
+     Me.CheckReviewedPanelA.Value = True
+     ' Set coverage check warning label to Green.
+     Me.CoverageWarningA.BackColor = RGB(205, 220, 175)
+     ' Open the primary panel low coverage list form
+     DoCmd.OpenForm "s87014_ExomeLowCovGenes", , , , , , hgnc_ids
+  Else
+     MsgBox "Please select panels/genes to view low coverage genes."
+  End If
+End Sub
+
+Private Sub SecondaryLowCovCheck_Click()
+  ' Open the secondary panel low coverage list form
+  hgnc_ids = GetPanelHGNCSet(Me.GenePanelListBoxB)
+  If hgnc_ids <> "" Then
+     ' Set an invisible checkbox to True, indicating that the user has reviewed the low coverage secondary panel genes.
+     ' This is for accreditation purposes as flexible scope requires us to ensure users have reviewed panel coverage.
+     Me.CheckReviewedPanelB.Value = True
+     ' Set coverage check warning label to Green.
+     Me.CoverageWarningB.BackColor = RGB(205, 220, 175)
+     DoCmd.OpenForm "s87014_ExomeLowCovGenes", , , , , , hgnc_ids
+  Else
+     MsgBox "Please select panels/genes to view low coverage genes."
+  End If
+End Sub
+
