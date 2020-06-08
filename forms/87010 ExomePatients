@@ -492,7 +492,7 @@ Private Sub InsertGWPatientIntoMoka(PatientID As String)
     '  Note: Patient is inserted with status "Not Required" as default
     DoCmd.SetWarnings False
     strAddPatientSQL = "INSERT INTO patients (PatientID, s_StatusOverall, MokaCreated, MokaCreatedBy, MokaCreatedPC, NHSNumber, BookinLastname, BookinFirstName, BookinDoB, BookinCreatedBy, BookinCreatedDate, BookinSex)" & _
-        "VALUES ('" & PatientID & "', 1202218787,'" & dt & "','" & usr & "','" & cmp & "','" & gwks!NHSNo & "','" & EscapedLastname & "','" & EscapedFirstname & "','" & gwks!DoB & "','" & gwks!CreatedByID & "','" & gwks!CreatedDate & "','" & gwks_gender & "')"
+        "VALUES ('" & PatientID & "', 1202218787,'" & dt & "','" & usr & "','" & cmp & "','" & gwks!NHSNo & "','" & EscapedLastname & "','" & EscapedFirstname & "','" & gwks!DOB & "','" & gwks!CreatedByID & "','" & gwks!CreatedDate & "','" & gwks_gender & "')"
     DoCmd.RunSQL strAddPatientSQL
     PatientLogger PatientID, "Patients: Patient added to Moka."
     DoCmd.SetWarnings True
@@ -704,9 +704,10 @@ Private Function CreateNGSPanelID(panelSuffix As String, Referrer As String, ref
     
     ' Run the query to create the panel
     Set rsCreatePanel = New ADODB.Recordset
-    ' Note: NGSPanel.PanelType is set to 1 for custom panels. NGSPanel.Active defaults to 1 for active and therefore isn't included in this query.
+    ' Note: NGSPanel.PanelType is set to NULL for custom panels to exclude them from Panel selection dropdown menus.
+    '    NGSPanel.Active defaults to 1 for active and therefore isn't included in this query.
     sqlCreatePanel = "INSERT INTO NGSPanel (Category, SubCategory, Panel, Checker1, PanelType, CheckDate) VALUES (" & categoryID & ", " & _
-        subcategoryID & ", '" & NGSPanelName & "', " & Checker1 & "," & "1" & ", #" & CheckDate & "#)"
+        subcategoryID & ", '" & NGSPanelName & "', " & Checker1 & "," & "NULL" & ", #" & CheckDate & "#)"
     rsCreatePanel.Open sqlCreatePanel, CurrentProject.Connection, adOpenKeyset
     'Retrieve NGSPanelID for newly created record
     rsCreatePanel.Open "SELECT @@identity", CurrentProject.Connection, adOpenKeyset
