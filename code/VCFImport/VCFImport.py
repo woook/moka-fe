@@ -23,7 +23,7 @@ from ConfigParser import ConfigParser
 
 class MokaVCF(object):
     """Parses Ingenuity VCF output file and enters each variant into Moka NGSVariants Table"""
-    def __init__(self, moka_server, moka_db_name, patID, ngsTestID):
+    def __init__(self, moka_server, moka_db_name, patID, ngsTestID, DNA):
         # THE LIST BELOW CONTAINS EACH ID FROM THE INGENUITY OUTPUT VCF INFO FIELD THAT WILL BE ADDED TO DATABASE.
         # TO INCLUDE ADDITIONAL ANNOTATIONS, ADD THE CORRESPONDING INFO FIELD ID TO THE LIST BELOW AND ENSURE THERE
         # IS A FIELD WITH THE SAME NAME IN THE NGSVariantAnnotations TABLE IN MOKA
@@ -69,6 +69,7 @@ class MokaVCF(object):
         self.vars = {}
         self.patID = patID
         self.ngsTestID = ngsTestID
+        self.DNA = DNA
         self.datetime = time.strftime("%Y%m%d %H:%M:%S %p") # date/time in format: yyyymmdd hh:mm:ss AM/PM
 
     def makeVCFdict(self, vcfPathLst):
@@ -167,10 +168,10 @@ class MokaVCF(object):
                 alt = "'{}'".format(str(row.ALT[0])) # alt sequence
                 # Only continue if variant is not already associated with this test in Moka.
                 if (mokaChrID, position, ref, alt) not in self.prevVars:
-                    gt = "'{}'".format(row.samples[0]['GT']) # Genotype
+                    gt = "'{}'".format(row.genotype(self.DNA)['GT']) # Genotype
                     #If read depth is present, capture it, otherwise set to 'Null'
-                    if row.samples[0]['DP'] is not None:
-                        rd = str(row.samples[0]['DP']) # Read depth
+                    if row.genotype(self.DNA)['DP'] is not None:
+                        rd = str(row.genotype(self.DNA)['DP']) # Read depth
                     else:
                         rd = 'Null'
                     #If QUAL is present, capture it, otherwise set to 'Null'
@@ -179,23 +180,23 @@ class MokaVCF(object):
                     else:
                         cq = 'Null'
                     #Capture the allele fraction
-                    af = row.samples[0]['ING_AF'] # Ingenuity inferred allele fraction (percentage).
+                    af = row.genotype(self.DNA)['ING_AF'] # Ingenuity inferred allele fraction (percentage).
                     #Sometimes allele fraction has an NaN value rather than None, so check for this and record as 'Null' if present.
                     if not af or math.isnan(af):
                         af = 'Null' # Adds Null value to SQL statement
                     #If allele depth for ref allele is present, capture it, otherwise set to 'Null'
-                    if row.samples[0]['AD'][0] is not None:
-                        ref_ad = row.samples[0]['AD'][0] # Reference Allele Depth
+                    if row.genotype(self.DNA)['AD'][0] is not None:
+                        ref_ad = row.genotype(self.DNA)['AD'][0] # Reference Allele Depth
                     else:
                         ref_ad = 'Null'
                     #If allele depth for alt allele is present, capture it, otherwise set to 'Null'
-                    if row.samples[0]['AD'][1] is not None:
-                        alt_ad = row.samples[0]['AD'][1] # Alt Allele Depth
+                    if row.genotype(self.DNA)['AD'][1] is not None:
+                        alt_ad = row.genotype(self.DNA)['AD'][1] # Alt Allele Depth
                     else:
                         alt_ad = 'Null'
                     #If genotype quality is present, capture it, otherwise set to 'Null'
-                    if row.samples[0]['GQ'] is not None:
-                        gq = row.samples[0]['GQ'] # Genotype quality
+                    if row.genotype(self.DNA)['GQ'] is not None:
+                        gq = row.genotype(self.DNA)['GQ'] # Genotype quality
                     else:
                         gq = 'Null'
                     # Stores each variant as a string that can be used in VALUES section of SQL insert statement (see below).
@@ -210,12 +211,12 @@ class MokaVCF(object):
                         annot.append("'{}'".format(self.mokaHGNC[row.INFO['GENE_SYMBOL'][0]]))
                     except KeyError:
                         annot.append("Null") # If no HGNCID found, a Null value will be added.
-                    if row.samples[0]['ING_CH']:
-                        annot.append("'{}'".format(row.samples[0]['ING_CH'])) # Gets the inferred compound heterozygosity from VCF sample field
+                    if row.genotype(self.DNA)['ING_CH']:
+                        annot.append("'{}'".format(row.genotype(self.DNA)['ING_CH'])) # Gets the inferred compound heterozygosity from VCF sample field
                     else:
                         annot.append("Null")
-                    if row.samples[0]['ING_IA']:
-                        annot.append("'{}'".format(row.samples[0]['ING_IA'])) # Gets the inferred activity (e.g. gain, loss, normal) from VCF sample field
+                    if row.genotype(self.DNA)['ING_IA']:
+                        annot.append("'{}'".format(row.genotype(self.DNA)['ING_IA'])) # Gets the inferred activity (e.g. gain, loss, normal) from VCF sample field
                     else:
                         annot.append("Null")
                     # Loop through VCF annotation fields and add to string to be used in SQL query. If field is not in VCF, add a NULL value.
@@ -277,11 +278,12 @@ if __name__ == "__main__":
     vcfPathLst = sys.argv[1].split(",")
     patID = sys.argv[2]
     ngsTestID = sys.argv[3]
+    DNA = sys.argv[4]
     # Read config file
     config = ConfigParser()
     config.read(os.path.join(os.path.dirname(os.path.realpath(__file__)), "config.ini"))
     # Insert variants to Moka
-    mv = MokaVCF(config.get("MOKA", "SERVER"), config.get("MOKA", "DATABASE"), patID, ngsTestID)
+    mv = MokaVCF(config.get("MOKA", "SERVER"), config.get("MOKA", "DATABASE"), patID, ngsTestID, DNA)
     mv.makeVCFdict(vcfPathLst)
     mv.lookupPrevVars()
     mv.lookupChr() # Retrieve IDs from Moka Chromosome table
