@@ -1,0 +1,6 @@
+SELECT ArrayTest.InternalPatientID, ArrayTest.SpecimenNo, ArrayTest.GWSpecID, [dbo_SpecimenDayBookLinked].[LastName] & " " & [dbo_SpecimenDayBookLinked].[Firstname] AS Name, Referral.Referral, Status.Status, ArrayTest.RequestedDate, Checker.Initials, dbo_SpecimenLinked.PatientID AS InGeneworks, Referral_1.Referral AS [QF-PCR], Status_1.Status AS [QF-PCRStatus], Change.Change AS [QF-PCRResult], DaybookTest.Comments
+FROM (((((((((ArrayTest INNER JOIN Referral ON ArrayTest.ReferralID = Referral.ReferralID) INNER JOIN Status ON ArrayTest.StatusID = Status.StatusID) INNER JOIN Checker ON ArrayTest.BookedByID = Checker.Check1ID) INNER JOIN dbo_SpecimenDayBookLinked ON ArrayTest.GWSpecID = dbo_SpecimenDayBookLinked.SpecimenID) INNER JOIN dbo_SpecimenLinked ON dbo_SpecimenDayBookLinked.SpecimenID = dbo_SpecimenLinked.SpecimenID) LEFT JOIN QFPCRRequest ON ArrayTest.GWSpecID = QFPCRRequest.GWSpecID) LEFT JOIN Referral AS Referral_1 ON QFPCRRequest.ReferralID = Referral_1.ReferralID) LEFT JOIN Status AS Status_1 ON QFPCRRequest.StatusID = Status_1.StatusID) LEFT JOIN Change ON QFPCRRequest.Result = Change.ChangeID) INNER JOIN DaybookTest ON ArrayTest.GWSpecID = DaybookTest.GWSpecID
+WHERE (((ArrayTest.InternalPatientID) Is Null))
+ORDER BY ArrayTest.RequestedDate;
+
+
