@@ -798,20 +798,6 @@ Else
 End If
 End Sub
 
-Private Function GetNGSTestsAndPatientsInAnalysis(NGSTestID As Integer) As Variant
-    ' Returns an array listing all NGS tests that share a group id (NGSAnalysis.NGSAnalysisGroupID) with the input NGSTestID
-    '    Data is returned as an array with ngstests in the first column. First test is accessed with myarray(0,0), second with myarray(0,1) etc.
-    Dim rsTestGroup As ADODB.Recordset
-    Dim Result(10) As Integer
-    Set rsTestGroup = New ADODB.Recordset
-    sqlGroupedNGSTests = "SELECT ngstestid, internalpatientid FROM ngsanalysis WHERE ngsanalysisgroupid = (" & _
-      "SELECT ngsanalysisgroupid FROM ngsanalysis " & _
-      "  LEFT JOIN ngstest ON ngstest.ngstestid = ngsanalysis.ngstestid " & _
-      " WHERE ngstest.ngstestid = " & NGSTestID & " ) "
-    rsTestGroup.Open sqlGroupedNGSTests, CurrentProject.Connection, adOpenKeyset
-    GetNGSTestsAndPatientsInAnalysis = rsTestGroup.GetRows()
-    rsTestGroup.Close
-End Function
 
 Private Sub btn_UpdateStatus_Click()
 Dim rsStatus As dao.Recordset
@@ -829,6 +815,7 @@ Dim strLogSQL As String
 Dim strLogAprov As String
 Dim strLogSQL2 As String
 Dim strLogMemo As String
+Dim rsTestGroup As ADODB.Recordset
 
 dt = Format(Now, "dd/mmm/yyyy Hh:Nn:ss")
 cmp = VBA.Environ("COMPUTERNAME")
@@ -973,39 +960,57 @@ Else
                                Me.Cmb_Approver.Visible = True
                               ' Check that an authoriser ID has been entered
                                 If Not IsNull(Cmb_Approver) Then
+                                     ' Iterate over all NGSTests linked by NGSAnalysis and update test status to complete or test failed.
+                                     ' This implements an in-house requirement for all NGSTests in an NGS analysis to be completed or failed
+                                     ' together via the WES dashboard. Therefore, this section make sure no tests in the same NGS analysis remain in progress incorrectly.
+                                     
+                                     ' Get an array of all ngstests with the same NGSAnalysis group ID as the current NGSTestID
+                                    Set rsTestGroup = New ADODB.Recordset
+                                    sqlGroupedNGSTests = "" & _
+                                      "SELECT ngstestid, internalpatientid FROM ngsanalysis WHERE ngsanalysisgroupid = (" & _
+                                                "SELECT ngsanalysisgroupid FROM ngsanalysis " & _
+                                                "  LEFT JOIN ngstest ON ngstest.ngstestid = ngsanalysis.ngstestid " & _
+                                                " WHERE ngstest.ngstestid = " & rsStatus!NGSTestID & " ) "
+                                    rsTestGroup.Open sqlGroupedNGSTests, CurrentProject.Connection, adOpenKeyset
                                     
-                                     ' Iterate over all NGSTests linked by NGSAnalysis and update test status to complete or test failed
-                                     allTestsInAnalysis = GetNGSTestsAndPatientsInAnalysis(rsStatus!NGSTestID)
-                                     allTestsCount = UBound(allTestsInAnalysis, 2) + 1
-                                     If (allTestsCount > 1) And MsgBox("NGSTestID " & rsStatus!NGSTestID & " is in a group of " & allTestsCount & " tests. You are about to update the status of all tests in this group. Continue?", vbYesNo Or vbExclamation, "Update all tests in referral group?") = vbNo Then
+                                     If (rsTestGroup.RecordCount > 1) And MsgBox("NGSTestID " & rsStatus!NGSTestID & " is in a group of " & rsTestGroup.RecordCount & " tests. You are about to update the status of all tests in this group. Continue?", vbYesNo Or vbExclamation, "Update all tests in referral group?") = vbNo Then
                                          Cancel = True
                                          Exit Sub
                                      End If
-                                    For i = 0 To UBound(allTestsInAnalysis, 2)
-                                      NGSTestID = allTestsInAnalysis(0, i)
-                                      InternalPatientID = allTestsInAnalysis(1, i)
-                                      strUpd8Status = "UPDATE NGSTest SET StatusID = " & Me!cmb_StatusUpdate.Column(0) & " , Check4ID = " & Me!Cmb_Approver & " , Check4Date =  #" + dt + "#   WHERE NGSTest.NGSTestID = " & NGSTestID
-                                      strUpd8Patient = "UPDATE Patients SET s_StatusOverall = " & Me!cmb_StatusUpdate.Column(0) & " WHERE Patients.InternalPatientID = " & InternalPatientID
-                                      
-                                      ' update patient log
-                                      strLogSQL = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" & InternalPatientID & ", 'Patient: Status changed to " + Me!cmb_StatusUpdate.Column(1) + ". ',#" + dt + "#,'" + usr + "','" + cmp + "')"
-                                      strLogAprov = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" & InternalPatientID & ", 'NGS WES test: Report approved by " & Me!Cmb_Approver.Column(0) & " for test requested " & rsStatus!DateRequested & " NGS testID " & NGSTestID & ". ',#" + dt + "#,'" + usr + "','" + cmp + "')"
-                                      strLogSQL2 = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" & InternalPatientID & ", 'NGS WES test: Status updated to " + Me!cmb_StatusUpdate.Column(1) + " for test requested " & rsStatus!DateRequested & " NGS testID " & NGSTestID & ". ',#" + dt + "#,'" + usr + "','" + cmp + "')"
-                                      'update NGSlogmemo
-                                      strLogMemo = "INSERT INTO NGSLogMemo(InternalPatientID, Type, LinkID, LogMemoEntry, [Date], Login, PCName) VALUES(" + CStr(InternalPatientID) + ", 1, " + CStr(NGSTestID) + ",'NGS WES test status updated to: " + Me!cmb_StatusUpdate.Column(1) + "' ,#" + dt + "#,'" + usr + "','" + cn + "')"
                                      
-                                     Debug.Print strUpd8Status
+                                     ' Iterate over all NGSTests linked by NGSAnalysis and update their status to complete or test failed
+                                     ' This is done to meet the requirement that any NGStest closed or failed via the WES dashboard also
+                                     '   closes or fails tests in the same NGS analysis.
+                                     With rsTestGroup
+                                       While Not .EOF
+                                       
+                                         strUpd8Status = "UPDATE NGSTest SET StatusID = " & Me!cmb_StatusUpdate.Column(0) & " , Check4ID = " & Me!Cmb_Approver & " , Check4Date =  #" + dt + "#   WHERE NGSTest.NGSTestID = " & rsTestGroup!NGSTestID
+                                         strUpd8Patient = "UPDATE Patients SET s_StatusOverall = " & Me!cmb_StatusUpdate.Column(0) & " WHERE Patients.InternalPatientID = " & rsTestGroup!InternalPatientID
+                                         
+                                         ' update patient log
+                                         strLogSQL = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" & rsTestGroup!InternalPatientID & ", 'Patient: Status changed to " + Me!cmb_StatusUpdate.Column(1) + ". ',#" + dt + "#,'" + usr + "','" + cmp + "')"
+                                         strLogAprov = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" & rsTestGroup!InternalPatientID & ", 'NGS WES test: Report approved by " & Me!Cmb_Approver.Column(0) & " for test requested " & rsStatus!DateRequested & " NGS testID " & rsTestGroup!NGSTestID & ". ',#" + dt + "#,'" + usr + "','" + cmp + "')"
+                                         strLogSQL2 = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" & rsTestGroup!InternalPatientID & ", 'NGS WES test: Status updated to " + Me!cmb_StatusUpdate.Column(1) + " for test requested " & rsStatus!DateRequested & " NGS testID " & rsTestGroup!NGSTestID & ". ',#" + dt + "#,'" + usr + "','" + cmp + "')"
+                                         'update NGSlogmemo
+                                         strLogMemo = "INSERT INTO NGSLogMemo(InternalPatientID, Type, LinkID, LogMemoEntry, [Date], Login, PCName) VALUES(" + CStr(rsTestGroup!InternalPatientID) + ", 1, " + CStr(rsTestGroup!NGSTestID) + ",'NGS WES test status updated to: " + Me!cmb_StatusUpdate.Column(1) + "' ,#" + dt + "#,'" + usr + "','" + cn + "')"
+                                        
+                                         DoCmd.SetWarnings False
+                                         DoCmd.RunSQL strUpd8Status
+                                         DoCmd.RunSQL strUpd8Patient
+                                         DoCmd.RunSQL strLogSQL
+                                         DoCmd.RunSQL strLogAprov
+                                         DoCmd.RunSQL strLogSQL2
+                                         DoCmd.RunSQL strLogMemo
+                                         DoCmd.SetWarnings True
+                                         .MoveNext
+                                       Wend
+                                     End With
                                      
-                                      DoCmd.SetWarnings False
-                                      DoCmd.RunSQL strUpd8Status
-                                      DoCmd.RunSQL strUpd8Patient
-                                      DoCmd.RunSQL strLogSQL
-                                      DoCmd.RunSQL strLogAprov
-                                      DoCmd.RunSQL strLogSQL2
-                                      DoCmd.RunSQL strLogMemo
-                                      DoCmd.SetWarnings True
-    
-                                    Next i
+                                     ' Clear the rsTestGroup recordset for reuse in future loops
+                                     rsTestGroup.Close
+                                     Set rsTestGroup = Nothing
+
+                                    ' Go to the next NGSTest selected by the user on the WES dashboard
                                     .MoveNext
                                 Else
                                     A = MsgBox("Approver ID is required to batch update test status to " & Me!cmb_StatusUpdate.Column(1), vbOKOnly Or vbExclamation, "Approver ID required")
@@ -1072,6 +1077,7 @@ End Sub
 Private Sub btn_refresh_Click()
     Call update_referral
     Call update_display
+'Form!s87020_ExomeLabList.Requery
 End Sub
 
 Private Sub user_group_clear_Click()
