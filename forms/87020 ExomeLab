@@ -32,7 +32,7 @@ Dim unsel As String
     DoCmd.SetWarnings True
     'Save record
     'DoCmd.DoMenuItem acFormBar, acRecordsMenu, 5, , acMenuVer70
-            
+
 End Function
 
 Private Sub Form_Current()
@@ -972,28 +972,28 @@ Else
                                                 "  LEFT JOIN ngstest ON ngstest.ngstestid = ngsanalysis.ngstestid " & _
                                                 " WHERE ngstest.ngstestid = " & rsStatus!NGSTestID & " ) "
                                     rsTestGroup.Open sqlGroupedNGSTests, CurrentProject.Connection, adOpenKeyset
-                                    
+
                                      If (rsTestGroup.RecordCount > 1) And MsgBox("NGSTestID " & rsStatus!NGSTestID & " is in a group of " & rsTestGroup.RecordCount & " tests. You are about to update the status of all tests in this group. Continue?", vbYesNo Or vbExclamation, "Update all tests in referral group?") = vbNo Then
                                          Cancel = True
                                          Exit Sub
                                      End If
-                                     
+
                                      ' Iterate over all NGSTests linked by NGSAnalysis and update their status to complete or test failed
                                      ' This is done to meet the requirement that any NGStest closed or failed via the WES dashboard also
                                      '   closes or fails tests in the same NGS analysis.
                                      With rsTestGroup
                                        While Not .EOF
-                                       
+
                                          strUpd8Status = "UPDATE NGSTest SET StatusID = " & Me!cmb_StatusUpdate.Column(0) & " , Check4ID = " & Me!Cmb_Approver & " , Check4Date =  #" + dt + "#   WHERE NGSTest.NGSTestID = " & rsTestGroup!NGSTestID
                                          strUpd8Patient = "UPDATE Patients SET s_StatusOverall = " & Me!cmb_StatusUpdate.Column(0) & " WHERE Patients.InternalPatientID = " & rsTestGroup!InternalPatientID
-                                         
+
                                          ' update patient log
                                          strLogSQL = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" & rsTestGroup!InternalPatientID & ", 'Patient: Status changed to " + Me!cmb_StatusUpdate.Column(1) + ". ',#" + dt + "#,'" + usr + "','" + cmp + "')"
                                          strLogAprov = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" & rsTestGroup!InternalPatientID & ", 'NGS WES test: Report approved by " & Me!Cmb_Approver.Column(0) & " for test requested " & rsStatus!DateRequested & " NGS testID " & rsTestGroup!NGSTestID & ". ',#" + dt + "#,'" + usr + "','" + cmp + "')"
                                          strLogSQL2 = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" & rsTestGroup!InternalPatientID & ", 'NGS WES test: Status updated to " + Me!cmb_StatusUpdate.Column(1) + " for test requested " & rsStatus!DateRequested & " NGS testID " & rsTestGroup!NGSTestID & ". ',#" + dt + "#,'" + usr + "','" + cmp + "')"
                                          'update NGSlogmemo
                                          strLogMemo = "INSERT INTO NGSLogMemo(InternalPatientID, Type, LinkID, LogMemoEntry, [Date], Login, PCName) VALUES(" + CStr(rsTestGroup!InternalPatientID) + ", 1, " + CStr(rsTestGroup!NGSTestID) + ",'NGS WES test status updated to: " + Me!cmb_StatusUpdate.Column(1) + "' ,#" + dt + "#,'" + usr + "','" + cn + "')"
-                                        
+
                                          DoCmd.SetWarnings False
                                          DoCmd.RunSQL strUpd8Status
                                          DoCmd.RunSQL strUpd8Patient
@@ -1005,7 +1005,7 @@ Else
                                          .MoveNext
                                        Wend
                                      End With
-                                     
+
                                      ' Clear the rsTestGroup recordset for reuse in future loops
                                      rsTestGroup.Close
                                      Set rsTestGroup = Nothing
@@ -1016,16 +1016,16 @@ Else
                                     A = MsgBox("Approver ID is required to batch update test status to " & Me!cmb_StatusUpdate.Column(1), vbOKOnly Or vbExclamation, "Approver ID required")
                                     Me.Cmb_Approver.SetFocus
                                     Exit Sub
-                                    
+
                                 End If
-                                
+
                             Else ' just update test status and status log
                                 strUpd8Status = "UPDATE NGSTest SET StatusID = " & Me!cmb_StatusUpdate.Column(0) & " WHERE NGSTest.NGSTestID = " & rsStatus!NGSTestID
                                 ' update patient log
                                 strLogSQL2 = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" & rsStatus!InternalPatientID & ", 'NGS WES test: Status updated to " + Me!cmb_StatusUpdate.Column(1) + " for test requested " & rsStatus!DateRequested & " NGS testID " & rsStatus!NGSTestID & ". ',#" + dt + "#,'" + usr + "','" + cmp + "')"
                                 'update NGSlogmemo
                                 strLogMemo = "INSERT INTO NGSLogMemo(InternalPatientID, Type, LinkID, LogMemoEntry, [Date], Login, PCName) VALUES(" + CStr(rsStatus!InternalPatientID) + ", 1, " + CStr(rsStatus!NGSTestID) + ",'NGS WES test status updated to: " + Me!cmb_StatusUpdate.Column(1) + "' ,#" + dt + "#,'" + usr + "','" + cn + "')"
-                               
+
                                 DoCmd.SetWarnings False
                                 DoCmd.RunSQL strUpd8Status
                                 DoCmd.RunSQL strLogSQL2
@@ -1041,7 +1041,7 @@ Else
                     Else
                         .MoveNext
                     End If
-                    
+
                     msg6 = MsgBox("The status of " & selTotal & " WES tests has been updated to " + Me.cmb_StatusUpdate.Column(1), vbOKOnly, "Status update Sucessful")
 
                     End If
@@ -1049,7 +1049,7 @@ Else
             End With
         End If
     End If
-    
+
 ' Refresh form, clear filter settings recount samples
 Call Unselect
 Form![s87020_ExomeLabList]![StatusID].Requery
