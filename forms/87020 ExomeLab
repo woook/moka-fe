@@ -963,7 +963,7 @@ Else
                                      ' Iterate over all NGSTests linked by NGSAnalysis and update test status to complete or test failed.
                                      ' This implements an in-house requirement for all NGSTests in an NGS analysis to be completed or failed
                                      ' together via the WES dashboard. Therefore, this section make sure no tests in the same NGS analysis remain in progress incorrectly.
-                                     
+
                                      ' Get an array of all ngstests with the same NGSAnalysis group ID as the current NGSTestID
                                     Set rsTestGroup = New ADODB.Recordset
                                     sqlGroupedNGSTests = "" & _
