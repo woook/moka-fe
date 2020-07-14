@@ -80,7 +80,7 @@ Private Sub SubmitNGSTest_Click()
   
   ' Send success message and Close Form
   MsgBox "Exome test request submitted.", vbInformation, "Test Request Submitted"
-  DoCmd.close
+  DoCmd.Close
   Exit Sub ' Note: Exit Sub here otherwise the default error code 0 triggers the error handler
 
 Err_NGSTestError:
@@ -383,7 +383,7 @@ Private Sub UpdateGeneCount(PanelBox As listbox)
     MsgBox "Warning: No gene panel box found."
     Err.Raise 1000, "No PanelBox Found", "GenePanelListBox names incorrect."
   End If
-  rst.close
+  rst.Close
 End Sub
 
 
@@ -445,7 +445,7 @@ Private Function IsInMoka(PatientID As String)
     Else
         IsInMoka = True
     End If
-    moka.close
+    moka.Close
 End Function
 
 Private Sub InsertGWPatientIntoMoka(PatientID As String)
@@ -484,7 +484,7 @@ Private Sub InsertGWPatientIntoMoka(PatientID As String)
       strGenderSQL = "SELECT GenderShort from gw_GenderTable WHERE GenderID = " & gwks!GenderID
       gwksg.Open strGenderSQL, CurrentProject.Connection, adOpenKeyset
       gwks_gender = gwksg!GenderShort
-      gwksg.close
+      gwksg.Close
     End If
     
     ' Insert Patient into Moka and log in patient log.
@@ -496,7 +496,7 @@ Private Sub InsertGWPatientIntoMoka(PatientID As String)
     DoCmd.RunSQL strAddPatientSQL
     PatientLogger PatientID, "Patients: Patient added to Moka."
     DoCmd.SetWarnings True
-    gwks.close
+    gwks.Close
 
 End Sub
 
@@ -638,7 +638,7 @@ Private Function CreateNGSTest(PRU As String, PrimaryPanelID As String, Secondar
     .update ' Save NGSTest Record
     .Bookmark = .LastModified
     strNGSTestID = !NGSTestID ' Save new NGSTestID to variable
-    .close
+    .Close
   End With
 
   ' Write NGS test creation Patient Log
@@ -671,7 +671,7 @@ Private Function PRUToInternalPatientID(PRU As String)
   Set rstPatientID = New ADODB.Recordset
   rstPatientID.Open strPIDquery, CurrentProject.Connection, adOpenKeyset
   PRUToInternalPatientID = rstPatientID!InternalPatientID
-  rstPatientID.close
+  rstPatientID.Close
   
 End Function
 
@@ -891,7 +891,7 @@ If Not rsGWDNAs.EOF Then
     DoCmd.SetWarnings True
     rsGWDNAs.MoveNext
   Wend
-rsGWDNAs.close
+rsGWDNAs.Close
 End If
 
 
@@ -914,8 +914,8 @@ If rsActiveDNAs.RecordCount = 0 Then
 
     ' Write DNA activation to PatientLog
     PatientLogger PRU, "DNA: Active status changed for DNA number [" & rsNewestDNA!DNAID & "]"
-    rsActiveDNAs.close
-    rsNewestDNA.close
+    rsActiveDNAs.Close
+    rsNewestDNA.Close
 End If
 
 End Sub
@@ -957,7 +957,7 @@ End Sub
 
 Private Sub btnClose_Click()
   'Close Form (X)
-  DoCmd.close
+  DoCmd.Close
 End Sub
 
 Private Sub btnFindPatient_Click()
@@ -1019,7 +1019,7 @@ Private Sub btnAddPatient_Click()
     ' Add patient to the Patient details to PatientList ListBox for testing
     ' Format: strPatientName,strRelationship,strStatus,strPatientID,strRelationshipItemID,strStatusItemID
     ' Example: Wesley Test BINFX TESTING,Proband,Affected,451880:01,3302,3337
-    PatientListInput = Me.PatientCombo.Column(1) & "," & Me.RelationshipCombo.Column(1) & "," & Me.AffectedCombo.Column(1) & _
+    PatientListInput = "'" & Me.PatientCombo.Column(1) & "'" & "," & Me.RelationshipCombo.Column(1) & "," & Me.AffectedCombo.Column(1) & _
         "," & Me.PatientCombo.Column(0) & "," & Me.RelationshipCombo.Column(0) & "," & Me.AffectedCombo.Column(0)
     Me.PatientList.AddItem PatientListInput, 0
 End Sub
