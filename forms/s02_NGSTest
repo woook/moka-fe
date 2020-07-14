@@ -67,7 +67,7 @@ Private Sub DNA_Enter()
 End Sub
 
 Private Sub ReferralID_DblClick(Cancel As Integer)
-' Fail and NGSTest and create a new test with the same details. This function is activated by double-clicking the referall column in the NGSTest tab of
+' Fail NGSTest and create a new test with the same details. This function is activated by double-clicking the referall column in the NGSTest tab of
 '    the patient details page.
 Dim rsCopyNGSTest As ADODB.Recordset
 Dim Sql As String
@@ -103,38 +103,40 @@ Set rsCopyNGSTest = Nothing
 
 '   Copy all ngstest files, adding a prefix to description to make it clear copied from prev test
 copyNGSTestSQL = "INSERT INTO ngstestfile(ngstestid,description,ngstestfile,dateadded,vcf_filter_import) " & _
-      "SELECT " & NewTestID & ",'copy_from_NGSTest'+'" & Me.NGSTestID & "'+'_'+description, ngstestfile, dateadded, vcf_filter_import " & _
-        "FROM ngstestfile " & _
-       "WHERE ngstestid = " & Me.NGSTestID
+                 "SELECT " & NewTestID & ",'copy_from_NGSTest'+'" & Me.NGSTestID & "'+'_'+description, ngstestfile, dateadded, vcf_filter_import " & _
+                 "  FROM ngstestfile " & _
+                 " WHERE ngstestid = " & Me.NGSTestID
 
 '   Copy panels in NGSTestPanelSelection
 copyNGSTestPanelSQL = "INSERT INTO ngstestpanelselection(ngstestid, selectiontype, selectionid, analysisab) " & _
-      "SELECT " & NewTestID & ", selectiontype, selectionid, analysisab " & _
-        "FROM ngstestpanelselection " & _
-       "WHERE ngstestid = " & Me.NGSTestID
+                      "SELECT " & NewTestID & ", selectiontype, selectionid, analysisab " & _
+                      "  FROM ngstestpanelselection " & _
+                      " WHERE ngstestid = " & Me.NGSTestID
 
 '   Update patient log to say new test copied from a failed test
 copyNGSTestLogEntry = "NGS: New test request (NGSTestID" & NewTestID & ") created from failed NGSTestID" & Me.NGSTestID & " (including testfiles)"
 copyNGSTestPatientLogEntrySQL = "INSERT INTO patientlog(internalpatientid, logentry, [date], login, pcname) " & _
-      "VALUES (" & CStr(Me![InternalPatientID]) & ",'" + copyNGSTestLogEntry + "',#" + date_now + "#,'" + UserName + "','" + computername + "')"
+                                "VALUES (" & CStr(Me![InternalPatientID]) & ",'" + copyNGSTestLogEntry + "',#" + date_now + "#,'" + UserName + "','" + computername + "')"
 
 '   Update the NGSAnalysis for the failed test with the new test ID
-updateNGSAnalysisSQL = "UPDATE NGSAnalysis Set NGSTestID = " & NewTestID & " WHERE NGSTestID = " & NGSTestID
+updateNGSAnalysisSQL = "UPDATE NGSAnalysis " & _
+                       "   SET NGSTestID = " & NewTestID & _
+                       " WHERE NGSTestID = " & NGSTestID
 
 '   Update patient log to say that NGS analysis ID has been updated
 updateNGSAnalysisLogEntry = "NGS: New test request (NGSTestID" & NewTestID & ") created from failed NGSTestID" & Me.NGSTestID & " (including testfiles)"
 updateNGSAnalysisLogEntrySQL = "INSERT INTO patientlog(internalpatientid, logentry, [date], login, pcname) " & _
-      "VALUES (" & CStr(Me![InternalPatientID]) & ",'" + updateNGSAnalysisLogEntry + "',#" + date_now + "#,'" + UserName + "','" + computername + "')"
+                               "VALUES (" & CStr(Me![InternalPatientID]) & ",'" + updateNGSAnalysisLogEntry + "',#" + date_now + "#,'" + UserName + "','" + computername + "')"
 
 '  Deactivate failed test by settings NGSTest status to 'Test Failed' (1202218816)
 failNGSTestSQL = "UPDATE ngstest " & _
-         "SET statusid = 1202218816 " & _
-       "WHERE NGSTestID = " & Me.NGSTestID
+                 "   SET statusid = 1202218816 " & _
+                 " WHERE NGSTestID = " & Me.NGSTestID
 
 '  Update patient log to say test status set to failed
 failNGSTestLogEntry = "NGS: Status changed to ""test failed"" for NGSTestID" & Me.NGSTestID
 failNGSTestLogEntrySQL = "INSERT INTO patientlog(internalpatientid, logentry, [date], login, pcname) " & _
-      "VALUES (" + CStr(Me![InternalPatientID]) + ",'" + failNGSTestLogEntry + "',#" + date_now + "#,'" + UserName + "','" + computername + "')"
+                         "VALUES (" + CStr(Me![InternalPatientID]) + ",'" + failNGSTestLogEntry + "',#" + date_now + "#,'" + UserName + "','" + computername + "')"
 
 ' Run SQL commands
 '   Turn off warnings so doesn't warn about appending rows
