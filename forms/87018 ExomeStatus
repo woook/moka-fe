@@ -1,5 +1,6 @@
 Private sqlSelectFrom As String
 Private includeReferrals As String
+
 Private Sub Form_Load()
     'So doesnt show records on form open
     Dim sqlNull As String
@@ -16,6 +17,7 @@ Private Sub Form_Load()
     sqlNull = "SELECT Null AS NGSTestID, Null AS PatientTrustID, Null AS LastName, Null AS FirstName, Null AS DateRequested, Null AS StatusID, Null AS Status, Null AS RefName, Null AS BatchName;"
     [Form_s87018_ExomeStatus].RecordSource = sqlNull
 End Sub
+
 Private Sub Search_Click()
     Dim sqlSearchPatient As String
     'Set subform RecordSet to retrieve all WES tests that match PRU number
@@ -24,24 +26,29 @@ Private Sub Search_Click()
         [Form_s87018_ExomeStatus].Form.RecordSource = sqlSearchPatient
     End If
 End Sub
+
 Private Sub AllInProgress_Click()
     Dim sqlInProgress As String
     'Set subform RecordSet to retrieve all in progress WES tests
     sqlInProgress = sqlSelectFrom & "WHERE " & includeReferrals & " And Status.StatusID <> 2 And Status.StatusID <> 4 And Status.StatusID <> 5 And Status.StatusID <> 1202218787 ORDER BY NGSTest.DateRequested;"
     [Form_s87018_ExomeStatus].Form.RecordSource = sqlInProgress
 End Sub
+
 Private Sub AllApproval_Click()
     Dim sqlApproval As String
     'Set subform RecordSet to retrieve all in progress WES tests
     sqlApproval = sqlSelectFrom & "WHERE " & includeReferrals & " And Status.StatusID = 1202218801 ORDER BY NGSTest.DateRequested;"
     [Form_s87018_ExomeStatus].Form.RecordSource = sqlApproval
 End Sub
+
 Private Sub Form_Unload(Cancel As Integer)
     'Reset to null query so form doesn't try to load records next time form is opened
     Dim sqlNull As String
     sqlNull = "SELECT Null AS NGSTestID, Null AS PatientTrustID, Null AS LastName, Null AS FirstName, Null AS DateRequested, Null AS StatusID, Null AS Status, Null AS RefName, Null AS BatchName;"
     [Form_s87018_ExomeStatus].RecordSource = sqlNull
 End Sub
+
 Private Sub Close_Click()
     DoCmd.Close
 End Sub
+
