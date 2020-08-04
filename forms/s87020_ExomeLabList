@@ -11,6 +11,12 @@ stDocName = "0901 ExomeNGSResults"
     End If
 End Sub
 
+Private Sub Priority_gotfocus()
+
+A = MsgBox("Test priority may not be set in the Dashboard " & vbNewLine & "Assign priority in results form", vbOKOnly Or vbExclamation, "Unavailable option")
+
+End Sub
+
 Private Sub PRU_DblClick(Cancel As Integer)
 Dim stDocName As String
 Dim stLinkCriteria As String
