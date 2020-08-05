@@ -4,9 +4,22 @@ Private Sub Close_Click()
     DoCmd.Close
 End Sub
 
+Private Sub Coverage_Click()
+    'Open trio coverage popup'
+    Dim OpenArgs As String
+    If Not IsNull(Me![NGSTestID]) Then
+        DoCmd.OpenForm "s87018_NGSTrioCoverage", , , , , , Me.NGSTestID
+    End If
+End Sub
+
 Private Sub Email_Click()
     ' Email WES team regarding PRU under view
     Application.FollowHyperlink "mailto:wes@viapath.co.uk?subject=WES enquiry for " & Me![PRUNum]
+End Sub
+
+Private Sub Form_Close()
+    'closes Trio Coverage form when closing ExomeStatusPopup'
+    DoCmd.Close acForm, "s87018_NGSTrioCoverage"
 End Sub
 
 Private Sub PanelA_DblClick(Cancel As Integer)
@@ -22,4 +35,3 @@ Private Sub PanelB_DblClick(Cancel As Integer)
         DoCmd.OpenForm "s87014_ExomeGenePanelPopup", , , , , , Me![PanelB].Column(2) & ", " & Me![PanelB].Column(3) & ", " & Me![PanelB].Column(4)
     End If
 End Sub
-
