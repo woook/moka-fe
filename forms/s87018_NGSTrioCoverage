@@ -1,0 +1,91 @@
+Option Compare Database
+Option Explicit
+
+Private Sub Form_Load()
+    Dim sqlNull As String
+    Dim strSQL As String
+    'make the NGSTestID textbox invisible'
+    Hidden_NGSTestID.Visible = False
+    
+    'if a NGSTestID value is passed from the Exome Status Popup form then input the NGSTestID into a hidden textbox'
+    If Not IsNull(Me.OpenArgs) Then
+        Dim inputNGSTestID As Integer
+        inputNGSTestID = Me.OpenArgs
+        Hidden_NGSTestID.Value = inputNGSTestID
+    End If
+
+    'set datasheet as empty upon load, otherwise shows #Name? in every field'
+    sqlNull = "SELECT Null AS PatientID, Null AS ApprovedSymbol, Null AS above20x, Null as trio_above20X"
+    Me.s87018_NGSTrioCoverageDatasheet.Form.RecordSource = sqlNull
+    
+    'update dropdown rowsource based on inputNGSTestID - returns gene list specific to the analysis'
+    'select unique gene names from a table made up of inner joining NGSCoverage, NGSAnalysis and Genes'
+    'where the NGSTestID equals that of the selected analysis"
+    strSQL = "SELECT DISTINCT GenesHGNC_current.ApprovedSymbol FROM " _
+            & "(NGSCoverage INNER JOIN NGSAnalysis ON NGSCoverage.NGSTestID = NGSAnalysis.NGSTestID) " _
+            & "INNER JOIN GenesHGNC_current ON NGSCoverage.GeneSymbol = GenesHGNC_current.EntrezGeneIDmapped " _
+            & "WHERE NGSAnalysis.NGSTestID = " & Hidden_NGSTestID.Value
+    'add hourglass cursor'
+    DoCmd.Hourglass True
+    'set sql statement as rowsource'
+    Me.gene_name_dropdown.RowSource = strSQL
+    'remove hourglass cursor'
+    DoCmd.Hourglass False
+    'set rowsource type'
+    Me.gene_name_dropdown.RowSourceType = "Table/Query"
+    'specify textbox and combobox labels'
+    Me.gene_name_dropdown = "Type or select gene name"
+End Sub
+
+Private Sub coverage_button_Click()
+    'button that updates subform datasheet with user specified results'
+    'if either textbox or combobox inputs are left empty, throw error message'
+    If Me.gene_name_dropdown = "" Or Me.gene_name_dropdown = "Type or select gene name" Then
+        MsgBox "Gene Name input required"
+              
+    Else:
+        'otherwise update subform with results corresponding to inputs'
+        'add hourglass cursor'
+        DoCmd.Hourglass True
+        update_subform_recordset
+        'remove hourglass cursor'
+        DoCmd.Hourglass False
+    End If
+End Sub
+
+Private Function update_subform_recordset()
+'Updates recordsource for subform datasheet'
+    Dim strSQL As String
+    Dim strSQLtrio As String
+    'SQL statement to select the trio coverage metric'
+    'Int rounds a value down to an integer'
+    strSQLtrio = "SELECT 'Analysis Group' AS PatientID, GenesHGNC_current.ApprovedSymbol, Int(NGSCoverage.above20x) AS above20X " _
+                & "FROM (((NGSCoverage INNER JOIN NGSAnalysis ON NGSCoverage.NGSAnalysisGroupID = NGSAnalysis.NGSAnalysisGroupID) " _
+                & "INNER JOIN GenesHGNC_current ON NGSCoverage.GeneSymbol = GenesHGNC_current.EntrezGeneIDmapped) " _
+                & "INNER JOIN Patients ON NGSAnalysis.InternalPatientID = Patients.InternalPatientID) " _
+                & "WHERE NGSCoverage.NGSAnalysisGroupID = " _
+                & "(SELECT DISTINCT NGSAnalysisGroupID FROM NGSAnalysis WHERE NGSAnalysis.NGSTestID = " & Hidden_NGSTestID.Value & ")" _
+                & "AND GenesHGNC_current.ApprovedSymbol = '" & Me.gene_name_dropdown & "'"
+    'SQL statement to select the coverage metric for each patient'
+    'select PRU, gene symbol, average coverage metric and above20X metric'
+    'from: a table made up of inner joining NGSCoverage and NGSAnalysis on NGSTestID'
+    'then inner joining the genes table to this on gene ID'
+    'then inner joining the patients table to this on internalpatientID'
+    'where the analysis group ID corresponds to the NGSTestID of the selected analysis, and the gene name is equal to the selected gene name'
+    strSQL = "SELECT Patients.PatientID, GenesHGNC_current.ApprovedSymbol, Int(NGSCoverage.above20x) AS above20X " _
+                & "FROM (((NGSCoverage INNER JOIN NGSAnalysis ON NGSCoverage.NGSTestID = NGSAnalysis.NGSTestID) " _
+                & "INNER JOIN GenesHGNC_current ON NGSCoverage.GeneSymbol = GenesHGNC_current.EntrezGeneIDmapped) " _
+                & "INNER JOIN Patients ON NGSAnalysis.InternalPatientID = Patients.InternalPatientID) " _
+                & "WHERE NGSAnalysis.NGSAnalysisGroupID = " _
+                & "(SELECT DISTINCT NGSAnalysisGroupID FROM NGSAnalysis WHERE NGSAnalysis.NGSTestID = " & Hidden_NGSTestID.Value & ")" _
+                & "AND GenesHGNC_current.ApprovedSymbol = '" & Me.gene_name_dropdown & "'"
+    'update the recordsource as this statement'
+    Me.s87018_NGSTrioCoverageDatasheet.Form.RecordSource = strSQLtrio & " UNION " & strSQL
+End Function
+
+Private Sub gene_name_dropdown_NotInList(NewData As String, Response As Integer)
+    'If user selects a gene that isn't in the coverage table for that patient, show an error message'
+    'Ignores the standard error message and show custom message instead, after which they must select a different combobox item'
+    Response = acDataErrContinue
+    MsgBox "The gene input you chose (" & NewData & ") is not available for the trio. Please select a different gene."
+End Sub
