@@ -1,0 +1,12 @@
+Option Compare Database
+
+Private Sub NGSTestID_DblClick(Cancel As Integer)
+    'opens s0901_WESTestResults using the selected NGSTestID'
+    Dim stDocName As String
+    Dim stLinkCriteria As String
+    stDocName = "0901 ExomeNGSResults"
+    If Not IsNull(Me.[NGSTestID]) Then
+        stLinkCriteria = "[NGSTestID]=" & Me![NGSTestID]
+        DoCmd.OpenForm stDocName, , , stLinkCriteria
+    End If
+End Sub

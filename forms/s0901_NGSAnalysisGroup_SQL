@@ -1,0 +1,2 @@
+SELECT Patients.PatientID, [BookinLastName] & " " & [BookInFirstName] AS FullName, NGSAnalysis.NGSTestID, Pedigree.Item AS Pedigree, AffectedStatus.Item AS AffectedStatus, NGSAnalysis.NGSAnalysisGroupID
+FROM ((NGSAnalysis INNER JOIN Patients ON NGSAnalysis.InternalPatientID = Patients.InternalPatientID) INNER JOIN Item AS Pedigree ON NGSAnalysis.Pedigree = Pedigree.ItemID) INNER JOIN Item AS AffectedStatus ON NGSAnalysis.AffectedStatus = AffectedStatus.ItemID;
