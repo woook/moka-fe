@@ -38,7 +38,7 @@ End Sub
 Private Sub coverage_button_Click()
     'button that updates subform datasheet with user specified results
     'if either textbox or combobox inputs are left empty, throw error message
-    If Me.gene_name_dropdown = "" Or Me.gene_name_dropdown = "Type or select gene name" Then
+    If IsNull(Me.gene_name_dropdown) Or Me.gene_name_dropdown = "Type or select gene name" Then
         MsgBox "Gene Name input required"
     Else
         'otherwise update subform with results corresponding to inputs
