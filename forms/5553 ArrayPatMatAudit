@@ -1,0 +1,6 @@
+''When user double clicks Array with Pat/Mat studies on the menu open this query
+Private Sub Status_DblClick(Cancel As Integer)
+    Dim stDocName As String
+    stDocName = "5553 ArrayPatMatAudit"
+    DoCmd.OpenForm stDocName
+End Sub
