@@ -7,8 +7,8 @@ End Sub
 Private Sub Coverage_Click()
     'Open trio coverage popup'
     Dim OpenArgs As String
-    If Not IsNull(Me![NGSTestID]) Then
-        DoCmd.OpenForm "s87018_NGSTrioCoverage", , , , , , Me.NGSTestID
+    If Not IsNull(Me!NGSTestID) Then
+        DoCmd.OpenForm "s87018_NGSTrioCoverage", , , , , , Me!NGSTestID
     End If
 End Sub
 
