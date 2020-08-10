@@ -57,6 +57,7 @@ Private Function update_subform_recordset()
 'Updates recordsource for subform datasheet'
     Dim strSQL As String
     Dim strSQLtrio As String
+    Dim strSQLtwist As String
     'SQL statement to select the trio coverage metric'
     'Int rounds a value down to an integer'
     strSQLtrio = "SELECT 'Analysis Group' AS PatientID, GenesHGNC_current.ApprovedSymbol, Int(NGSCoverage.above20x) AS above20X " _
@@ -79,8 +80,14 @@ Private Function update_subform_recordset()
                 & "WHERE NGSAnalysis.NGSAnalysisGroupID = " _
                 & "(SELECT DISTINCT NGSAnalysisGroupID FROM NGSAnalysis WHERE NGSAnalysis.NGSTestID = " & Hidden_NGSTestID.Value & ")" _
                 & "AND GenesHGNC_current.ApprovedSymbol = '" & Me.gene_name_dropdown & "'"
+    'Take the input from the drop down gene selection return the median 20x coverage from twist data set'
+    'using the stable identifier as HGNCID'
+    'Display this underneath the other generated results'
+    strSQLtwist = "SELECT 'Predicted Coverage' AS PatientID, GenesHGNC_current.ApprovedSymbol, Int(NGSWESCoverageByGeneTwist.median_20x) AS above20X " _
+                & "FROM NGSWESCoverageByGeneTwist INNER JOIN GenesHGNC_current ON NGSWESCoverageByGeneTwist.HGNCID = GenesHGNC_current.HGNCID " _
+                & "WHERE GenesHGNC_current.ApprovedSymbol = '" & Me.gene_name_dropdown & "'"
     'update the recordsource as this statement'
-    Me.s87018_NGSTrioCoverageDatasheet.Form.RecordSource = strSQLtrio & " UNION " & strSQL
+    Me.s87018_NGSTrioCoverageDatasheet.Form.RecordSource = strSQLtrio & " UNION " & strSQL & " UNION " & strSQLtwist
 End Function
 
 Private Sub gene_name_dropdown_NotInList(NewData As String, Response As Integer)
