@@ -18,10 +18,9 @@ Private Sub Form_Load()
     [Form_s87018_ExomeStatus].RecordSource = sqlNull
 End Sub
 
-
 Private Sub Search_Click()
     Dim sqlSearchPatient As String
-    'resets form to Null so removes any previously searched patients'
+    'resets form to Null so removes any previously searched patients
     Dim sqlNull As String
     sqlNull = "SELECT Null AS NGSTestID, Null AS PatientTrustID, Null AS LastName, Null AS FirstName, Null AS DateRequested, Null AS StatusID, Null AS Status, Null AS RefName, Null AS BatchName;"
     [Form_s87018_ExomeStatus].RecordSource = sqlNull
@@ -31,7 +30,6 @@ Private Sub Search_Click()
         [Form_s87018_ExomeStatus].Form.RecordSource = sqlSearchPatient
     End If
 End Sub
-
 
 Private Sub AllInProgress_Click()
     Dim sqlInProgress As String
