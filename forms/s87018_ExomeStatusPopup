@@ -5,7 +5,7 @@ Private Sub Close_Click()
 End Sub
 
 Private Sub Coverage_Click()
-    'Open trio coverage popup'
+    'Open trio coverage popup
     Dim OpenArgs As String
     If Not IsNull(Me!NGSTestID) Then
         DoCmd.OpenForm "s87018_NGSTrioCoverage", , , , , , Me!NGSTestID
@@ -18,7 +18,7 @@ Private Sub Email_Click()
 End Sub
 
 Private Sub Form_Close()
-    'closes Trio Coverage form when closing ExomeStatusPopup'
+    'closes Trio Coverage form when closing ExomeStatusPopup
     DoCmd.Close acForm, "s87018_NGSTrioCoverage"
 End Sub
 
