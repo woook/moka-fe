@@ -1,6 +1,6 @@
 TRANSFORM Count(Checker.Initials) AS CountOfInitials
 SELECT ResultCode_1.ResultCode
 FROM ((((ArrayTest INNER JOIN Checker ON ArrayTest.Check2ID = Checker.Check1ID) INNER JOIN ResultCode ON ArrayTest.ArrayResultCodeID = ResultCode.ResultCodeID) INNER JOIN Patients ON ArrayTest.InternalPatientID = Patients.InternalPatientID) INNER JOIN ResultCode AS ResultCode_1 ON Patients.OverallResultCodeID = ResultCode_1.ResultCodeID) INNER JOIN Referral ON ArrayTest.ReferralID = Referral.ReferralID
-WHERE (((Checker.Initials)="AFD" Or (Checker.Initials) Like "CVL" Or (Checker.Initials) Like "AC" Or (Checker.Initials) Like "SCH" Or (Checker.Initials) Like "AFD" Or (Checker.Initials) Like "SB" Or (Checker.Initials) Like "CD" Or (Checker.Initials) Like "APW") AND ((ArrayTest.Service)=True))
+WHERE (((Checker.Initials)="AFD" Or (Checker.Initials) Like "CVL" Or (Checker.Initials) Like "AC" Or (Checker.Initials) Like "SCH" Or (Checker.Initials) Like "AFD" Or (Checker.Initials) Like "SB" Or (Checker.Initials) Like "CD" Or (Checker.Initials) Like "APW" Or (Checker.Initials) Like "CJB" Or (Checker.Initials) Like "PCM" Or (Checker.Initials) Like "LW" Or (Checker.Initials) Like "LS" Or (Checker.Initials) Like "HM" Or (Checker.Initials) Like "AT") AND ((ArrayTest.Service)=True))
 GROUP BY ResultCode_1.ResultCode
 PIVOT Checker.Initials;
