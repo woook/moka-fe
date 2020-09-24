@@ -9,20 +9,20 @@ End Sub
 Private Sub BlockAutomatedReporting_AfterUpdate()
     'Record in patient log when this field is updated
     Dim today_date As String
-    Dim username As String
+    Dim UserName As String
     Dim computer_name As String
     Dim sql_pat_log As String
-    username = VBA.Environ("USERNAME")
+    UserName = VBA.Environ("USERNAME")
     computer_name = VBA.Environ("COMPUTERNAME")
     today_date = Format(Now(), "dd/mmm/yyyy Hh:Nn:ss")
     If Me.BlockAutomatedReporting = 0 Then
         sql_pat_log = "INSERT INTO PatientLog (InternalPatientID, LogEntry, [Date], Login, PCName) " & _
         "VALUES (" & Me.InternalPatientID & ", 'NGS: User unblocked auto reporting of 100k case', #" & today_date & "#,'" & _
-        username & "','" & computer_name & "')"
+        UserName & "','" & computer_name & "')"
     Else
         sql_pat_log = "INSERT INTO PatientLog (InternalPatientID, LogEntry, [Date], Login, PCName) " & _
         "VALUES (" & Me.InternalPatientID & ", 'NGS: User blocked auto reporting of 100k case: " & Me.BlockAutomatedReporting.Column(1) & "', #" & today_date & "#,'" & _
-        username & "','" & computer_name & "')"
+        UserName & "','" & computer_name & "')"
     End If
     DoCmd.SetWarnings False
     DoCmd.RunSQL sql_pat_log
@@ -51,9 +51,9 @@ Private Sub Ctl100k_cover_sheet_Click()
     Dim script_command As String
     Dim negneg_skip_auto_close As Boolean
     negneg_skip_auto_close = False
-    ' Check that result code is negative, negative negative or previously reported variant
-    If Me.ResultCode <> 1 And Me.ResultCode <> 1189679670 And Me.ResultCode <> 1189679668 Then
-        MsgBox "Cover reports can only be generated for reports that have result code of negative (N), negative negative (NN) or previously reported variant (PRV)"
+    ' Check that result code is negative, negative negative, previously reported variant or other
+    If Me.ResultCode <> 1 And Me.ResultCode <> 1189679670 And Me.ResultCode <> 1189679668 And Me.ResultCode <> 1189679598 Then
+        MsgBox "Cover reports can only be generated for reports that have result code of negative (N), negative negative (NN), previously reported variant (PRV) or other (O)"
         Exit Sub
     End If
     confirmation_message = "RESULT CODE: " & Me.Parent.result_code.Column(2) & vbNewLine & vbNewLine & "Generate 100k cover sheet for this case?"
@@ -316,19 +316,19 @@ End Sub
 Private Sub GWWorksheet_AfterUpdate()
     'Record in patient log when this field is updated
     Dim today_date As String
-    Dim username As String
+    Dim UserName As String
     Dim computer As String
-    Dim sql As String
+    Dim Sql As String
     today_date = Format(Now, "dd/mmm/yyyy Hh:Nn:ss")
-    username = VBA.Environ("USERNAME")
+    UserName = VBA.Environ("USERNAME")
     computer = VBA.Environ("COMPUTERNAME")
     If IsNull(Me.GWWorksheet) Then
-        sql = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" & CStr(Me![InternalPatientID]) & ",'NGS: Geneworks Worksheet number deleted for test requested " & CStr(Me![DateRequested]) & "',#" & today_date + "#,'" & username & "','" & computer & "')"
+        Sql = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" & CStr(Me![InternalPatientID]) & ",'NGS: Geneworks Worksheet number deleted for test requested " & CStr(Me![DateRequested]) & "',#" & today_date + "#,'" & UserName & "','" & computer & "')"
     Else
-        sql = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" & CStr(Me![InternalPatientID]) & ",'NGS: Geneworks Worksheet number changed to " & CStr(Me.GWWorksheet) & " for test requested " & CStr(Me![DateRequested]) & "',#" & today_date + "#,'" & username & "','" & computer & "')"
+        Sql = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" & CStr(Me![InternalPatientID]) & ",'NGS: Geneworks Worksheet number changed to " & CStr(Me.GWWorksheet) & " for test requested " & CStr(Me![DateRequested]) & "',#" & today_date + "#,'" & UserName & "','" & computer & "')"
     End If
     DoCmd.SetWarnings False
-    DoCmd.RunSQL sql
+    DoCmd.RunSQL Sql
     DoCmd.SetWarnings True
 End Sub
 
@@ -376,21 +376,22 @@ End Sub
 Private Sub MDTdate_AfterUpdate()
     'Record in patient log when this field is updated
     Dim today_date As String
-    Dim username As String
+    Dim UserName As String
     Dim computer As String
-    Dim sql As String
+    Dim Sql As String
     today_date = Format(Now, "dd/mmm/yyyy Hh:Nn:ss")
-    username = VBA.Environ("USERNAME")
+    UserName = VBA.Environ("USERNAME")
     computer = VBA.Environ("COMPUTERNAME")
     If IsNull(Me.MDTdate) Then
-        sql = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" & CStr(Me![InternalPatientID]) & ",'NGS: MDT date deleted for test requested " & CStr(Me![DateRequested]) & "',#" & today_date + "#,'" & username & "','" & computer & "')"
+        Sql = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" & CStr(Me![InternalPatientID]) & ",'NGS: MDT date deleted for test requested " & CStr(Me![DateRequested]) & "',#" & today_date + "#,'" & UserName & "','" & computer & "')"
     Else
-        sql = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" & CStr(Me![InternalPatientID]) & ",'NGS: MDT date changed to " & CStr(Me.MDTdate) & " for test requested " & CStr(Me![DateRequested]) & "',#" & today_date + "#,'" & username & "','" & computer & "')"
+        Sql = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" & CStr(Me![InternalPatientID]) & ",'NGS: MDT date changed to " & CStr(Me.MDTdate) & " for test requested " & CStr(Me![DateRequested]) & "',#" & today_date + "#,'" & UserName & "','" & computer & "')"
     End If
     DoCmd.SetWarnings False
-    DoCmd.RunSQL sql
+    DoCmd.RunSQL Sql
     DoCmd.SetWarnings True
 End Sub
+
 
 Private Sub Primary_Panel_DblClick(Cancel As Integer)
     If Not IsNull(Me.PrimaryPanelID) Then
@@ -412,16 +413,16 @@ Private Sub Primary_Panel_DblClick(Cancel As Integer)
         'Write header line to text file
         txtfile.WriteLine ("#Created by Moka " & datetime)
         'Pull out panel genes into recordset (rst)
-        Dim Rst As dao.Recordset
-        Set Rst = CurrentDb.OpenRecordset("SELECT NGSPanelGenes.Symbol, NGSPanelGenes.NGSPanelID From NGSPanelGenes WHERE NGSPanelGenes.NGSPanelID=" + PanID, dbOpenSnapshot)
+        Dim rst As DAO.Recordset
+        Set rst = CurrentDb.OpenRecordset("SELECT NGSPanelGenes.Symbol, NGSPanelGenes.NGSPanelID From NGSPanelGenes WHERE NGSPanelGenes.NGSPanelID=" + PanID, dbOpenSnapshot)
         'Loop through the genes and write the gene symbol to the text file
-        Do While Not Rst.EOF
-            txtfile.WriteLine (Rst!Symbol)
-            Rst.MoveNext
+        Do While Not rst.EOF
+            txtfile.WriteLine (rst!Symbol)
+            rst.MoveNext
         Loop
         'Close the connection to database
-        Rst.Close
-        Set Rst = Nothing
+        rst.Close
+        Set rst = Nothing
         
     'Open folder containing file
         Shell "explorer.exe """ & DestFolder & "", vbNormalFocus
@@ -448,16 +449,16 @@ Private Sub Secondary_Panel_DblClick(Cancel As Integer)
         'Write header line to text file
         txtfile.WriteLine ("#Created by Moka " & datetime)
         'Pull out panel genes into recordset (rst)
-        Dim Rst As dao.Recordset
-        Set Rst = CurrentDb.OpenRecordset("SELECT NGSPanelGenes.Symbol, NGSPanelGenes.NGSPanelID From NGSPanelGenes WHERE NGSPanelGenes.NGSPanelID=" + PanID, dbOpenSnapshot)
+        Dim rst As DAO.Recordset
+        Set rst = CurrentDb.OpenRecordset("SELECT NGSPanelGenes.Symbol, NGSPanelGenes.NGSPanelID From NGSPanelGenes WHERE NGSPanelGenes.NGSPanelID=" + PanID, dbOpenSnapshot)
         'Loop through the genes and write the gene symbol to the text file
-        Do While Not Rst.EOF
-            txtfile.WriteLine (Rst!Symbol)
-            Rst.MoveNext
+        Do While Not rst.EOF
+            txtfile.WriteLine (rst!Symbol)
+            rst.MoveNext
         Loop
         'Close the connection to database
-        Rst.Close
-        Set Rst = Nothing
+        rst.Close
+        Set rst = Nothing
         
     'Open folder containing file
         Shell "explorer.exe """ & DestFolder & "", vbNormalFocus
@@ -469,10 +470,10 @@ Private Sub skip_labkey_Click()
     'This is required for pilot cases (which aren't in Labkey) or for rare cases where there is no DoB/NHS num avaialble in Geneworks e.g. because it's a fetal sample
     'In these cases, the user generating the report must double check that GeL details entered to Moka are correct, to ensure that the correct summary of findings is pulled from the CIP API
     Dim sql_pat_log As String
-    Dim username As String
+    Dim UserName As String
     Dim computer_name As String
     Dim today_date As String
-    username = VBA.Environ("USERNAME")
+    UserName = VBA.Environ("USERNAME")
     computer_name = VBA.Environ("COMPUTERNAME")
     today_date = Format(Now(), "dd/mmm/yyyy Hh:Nn:ss")
     'If skip labkey box is ticked, get user to confirm that they have checked details entered to Moka are correct and record in patient log
@@ -480,7 +481,7 @@ Private Sub skip_labkey_Click()
         If vbYes = MsgBox("Have you checked the GeL participant ID and interpretation request ID have been entered to Moka correctly?", vbExclamation + vbYesNo, "IMPORTANT!") Then
             sql_pat_log = "INSERT INTO PatientLog (InternalPatientID, LogEntry, [Date], Login, PCName) " & _
             "VALUES (" & Me.InternalPatientID & ", 'NGS: User ticked skip labkey box and confirmed that GeL details entered correctly in Moka', #" & today_date & "#,'" & _
-            username & "','" & computer_name & "')"
+            UserName & "','" & computer_name & "')"
             DoCmd.SetWarnings False
             DoCmd.RunSQL sql_pat_log
             DoCmd.SetWarnings True
@@ -492,7 +493,7 @@ Private Sub skip_labkey_Click()
     Else
         sql_pat_log = "INSERT INTO PatientLog (InternalPatientID, LogEntry, [Date], Login, PCName) " & _
         "VALUES (" & Me.InternalPatientID & ", 'NGS: User unticked skip labkey box.', #" & today_date & "#,'" & _
-        username & "','" & computer_name & "')"
+        UserName & "','" & computer_name & "')"
         DoCmd.SetWarnings False
         DoCmd.RunSQL sql_pat_log
         DoCmd.SetWarnings True
@@ -519,16 +520,16 @@ Private Sub TertiaryPanel_DblClick(Cancel As Integer)
         'Write header line to text file
         txtfile.WriteLine ("#Created by Moka " & datetime)
         'Pull out panel genes into recordset (rst)
-        Dim Rst As dao.Recordset
-        Set Rst = CurrentDb.OpenRecordset("SELECT NGSPanelGenes.Symbol, NGSPanelGenes.NGSPanelID From NGSPanelGenes WHERE NGSPanelGenes.NGSPanelID=" + PanID, dbOpenSnapshot)
+        Dim rst As DAO.Recordset
+        Set rst = CurrentDb.OpenRecordset("SELECT NGSPanelGenes.Symbol, NGSPanelGenes.NGSPanelID From NGSPanelGenes WHERE NGSPanelGenes.NGSPanelID=" + PanID, dbOpenSnapshot)
         'Loop through the genes and write the gene symbol to the text file
-        Do While Not Rst.EOF
-            txtfile.WriteLine (Rst!Symbol)
-            Rst.MoveNext
+        Do While Not rst.EOF
+            txtfile.WriteLine (rst!Symbol)
+            rst.MoveNext
         Loop
         'Close the connection to database
-        Rst.Close
-        Set Rst = Nothing
+        rst.Close
+        Set rst = Nothing
         
     'Open folder containing file
         Shell "explorer.exe """ & DestFolder & "", vbNormalFocus
@@ -1510,7 +1511,7 @@ Private Sub Checker4_AfterUpdate()
         U.Open v, CurrentProject.Connection
         
         'check is patient status had been updated is so, revert to NGS upon intial deleation
-        If Me.Parent.[Patient Status] = "Complete" Or Me.Parent.[Patient Status] = "Test Failed" Then
+        If Me.Parent.[Patient status] = "Complete" Or Me.Parent.[Patient status] = "Test Failed" Then
             Set P = New ADODB.Recordset
             strUpd8Patient = "UPDATE Patients SET s_StatusOverall = 1202218798 WHERE Patients.InternalPatientID = " & Me![InternalPatientID]
             p8 = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + ",'Patient: Status changed to: NGS " + CStr(Me![DateRequested]) + "',#" + dt + "#,'" + usr + "','" + cn + "')"
