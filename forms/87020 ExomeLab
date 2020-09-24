@@ -15,10 +15,10 @@ Function ParentVisibility()
 'If the parents status appears in this If, there results will be included
 'If their status is not equal to one of these, their results will not be returned.
 
-    If NGSTest.StatusID Like "*12022188008*" Or NGSTest.StatusID Like "*1202218801*" Then
-        ParentsStatusesFilter = "NGSTest.StatusID in (SELECT NGSTest.StatusID FROM NGSTest WHERE ((NGSTest.StatusID) In (1202218800,1202218801))"
+    If NGSTest.StatusID = "12022188008" Or NGSTest.StatusID = "1202218801" Then
+        ParentsStatusesFilter = "NGSTest.StatusID in (SELECT NGSTest.StatusID FROM NGSTest WHERE ((NGSTest.StatusID) In (1202218800,1202218801)))"
     Else
-        ParentsStatusesFilter = "NGSTest.StatusID in (SELECT NGSTest.StatusID FROM NGSTest WHERE ((NGSTest.StatusID) NOT (1202218800,1202218801))"
+        ParentsStatusesFilter = "NGSTest.StatusID in (SELECT NGSTest.StatusID FROM NGSTest WHERE ((NGSTest.StatusID) NOT (1202218800,1202218801)))"
     End If
      
 'ParentsVisibleStatuses = Array(1202218800, 1202218801, 1202218802, 1202218803, 1202218804, 1202218805, 1202218806)
@@ -246,12 +246,14 @@ subfrmSQL = "SELECT DISTINCT NGSTest.Selection, Patients.PatientID AS PRU, NGSTe
              "FROM ((((((((((((((((NGSTest INNER JOIN Patients ON NGSTest.InternalPatientID = Patients.InternalPatientID) INNER JOIN Referral ON NGSTest.ReferralID = Referral.ReferralID) INNER JOIN Checker ON NGSTest.BookBy = Checker.Check1ID) INNER JOIN NGSPanel ON NGSTest.NGSPanelID = NGSPanel.NGSPanelID) LEFT JOIN NGSPanel AS NGSPanel_1 ON NGSTest.NGSPanelID_B = NGSPanel_1.NGSPanelID) INNER JOIN Status ON NGSTest.StatusID = Status.StatusID) " & _
              "INNER JOIN dbo_Patient_table ON Patients.PatientID = dbo_Patient_table.PatientTrustID) LEFT JOIN DNA ON NGSTest.DNA = DNA.DNANumber) INNER JOIN Status AS Status_1 ON Patients.s_StatusOverall = Status_1.StatusID) LEFT JOIN gw_GenderTable ON dbo_Patient_table.GenderID = gw_GenderTable.GenderID) LEFT JOIN NGSWESBatch ON NGSTest.WESBatch = NGSWESBatch.NGSWESBatchID) LEFT JOIN Checker AS Checker_1 ON NGSTest.Check1ID = Checker_1.Check1ID) " & _
              "LEFT JOIN Checker AS Checker_2 ON NGSTest.Check2ID = Checker_2.Check1ID) LEFT JOIN Checker AS Checker_3 ON NGSTest.Check3ID = Checker_3.Check1ID) LEFT JOIN NGSPanel AS NGSPanel_2 ON NGSTest.NGSPanelID_C = NGSPanel_2.NGSPanelID) LEFT JOIN Checker AS Checker_4 ON NGSTest.Check4ID = Checker_4.Check1ID) INNER JOIN NGSAnalysis ON Patients.InternalPatientID = NGSAnalysis.InternalPatientID " & _
-             "WHERE " & includeReferrals & " And (((Status.StatusID)<>1202218787 And (Status.StatusID)<>4 And (Status.StatusID)<>1202218816)) " & _
+             "WHERE " & includeReferrals & "  And " & ParentsStatusesFilter & " And (((Status.StatusID)<>1202218787 And (Status.StatusID)<>4 And (Status.StatusID)<>1202218816)) " & _
              "ORDER BY NGSTest.Priority, NGSTest.DateRequested;"
 
-Debug.Print subfrmSQL
+
+'Debug.Print subfrmSQL
 
 [Form_s87020_ExomeLabList].Form.RecordSource = subfrmSQL
+
 
 'refresh selection and total count
 AllTotal = DCount("NGSTestID", "s87020_ListWESSamples", "[s_StatusOverall] = 1202218798")
