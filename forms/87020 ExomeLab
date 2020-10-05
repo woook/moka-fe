@@ -5,21 +5,19 @@ Private Sub btn_ExomeStatus_Click()
     DoCmd.OpenForm "87018 ExomeStatus"
 End Sub
 '
-'Function ParentVisibility()
-''This function removes the non-probands from any trio results when the statuses below are selected from the drop down menu
+Function ParentVisibility()
+''This function removes the non-probands from any trio when the statuses do not equal those listed below
 ''When any other statuses are selected, the non-probands will be displayed
 ''displayparentinfo will in the near future facilitate using the update_display function to warn users
 ''that non-probands wont be shown for the selected statuses
-'If Me.cmb_StatusView = "1202218803" Or Me.cmb_StatusView = "1202218808" Or Me.cmb_StatusView = "1202218809" Or Me.cmb_StatusView = "1202218810" Or Me.cmb_StatusView = "1202218811" Or Me.cmb_StatusView = "1202218812" Or Me.cmb_StatusView = "1202218813" Or Me.cmb_StatusView = "1202218814" Or Me.cmb_StatusView = "1202218815" Or Me.cmb_StatusView = "1202218816" Or Me.cmb_StatusView = "1202218822" Or Me.cmb_StatusView = "1202218857" Or Me.cmb_StatusView = "1202218863" Or Me.cmb_StatusView = "1202218864" Or Me.cmb_StatusView = "1202218865" Or Me.cmb_StatusView = "1202218866" Or Me.cmb_StatusView = "1202218867" Or Me.cmb_StatusView = "1202218868" Or Me.cmb_StatusView = "1202218869" Or Me.cmb_StatusView = "1202218870" Or Me.cmb_StatusView = "2" Or Me.cmb_StatusView = "4" Then
-'    ParentsStatusesFilter = "NGSAnalysis.Pedigree in (SELECT NGSAnalysis.Pedigree FROM NGSAnalysis WHERE NGSAnalysis.Pedigree = 3302)"
-'    displayparentinfo = True
-'Else
-'    ParentsStatusesFilter = "NGSAnalysis.Pedigree in (SELECT NGSAnalysis.Pedigree FROM NGSAnalysis WHERE NGSAnalysis.Pedigree IN (3302,3303,3304))"
-'    displayparentinfo = False
-'End If
-'
-'
-'End Function
+If Me.WES_user_group.Column(0) = 1199901235 Then
+    ParentsStatusesFilter = "NGSAnalysis.Pedigree in (SELECT NGSAnalysis.Pedigree FROM NGSAnalysis INNER JOIN NGSTest ON NGSAnalysis.NGSTestID = NGSTest.NGSTestID WHERE NGSAnalysis.Pedigree In (SELECT NGSAnalysis.Pedigree FROM NGSAnalysis INNER JOIN NGSTest ON NGSAnalysis.NGSTestID = NGSTest.NGSTestID WHERE((NGSTest.StatusID)=1202218803 AND (NGSAnalysis.Pedigree)=3303 OR (NGSAnalysis.Pedigree)=3304) OR (NGSAnalysis.Pedigree)=3302))"
+    displayparentinfo = True
+End If
+
+'((NGSAnalysis.Pedigree)=3302)
+
+End Function
 Private Sub Form_Load()
 txt_SelectionCount.Value = 0
 Me.Check_selectAll.Value = 0
@@ -228,7 +226,7 @@ Private Sub btn_ViewAll_Click()
 
 Dim subfrmSQL As String
 Dim AllTotal As Long
-'Call ParentVisibility
+Call ParentVisibility
 
 'Call Unselect
 
@@ -236,19 +234,28 @@ Dim AllTotal As Long
 ' Will not show patients who's statuses are not required, test failed or completed
 ' will not show the parents in a trio unless their statuses are 1202218800, 1202218801, 1202218802, 1202218803, 1202218804, 1202218805, 1202218806
 
+If Me.WES_user_group.Column(0) = 1199901235 Then
+        subfrmSQL = "SELECT DISTINCT NGSTest.Selection, Patients.PatientID AS PRU, NGSTest.NGSTestID, dbo_Patient_table.LastName, dbo_Patient_table.FirstName, dbo_Patient_table.DoB, gw_GenderTable.GenderShort, Referral.Referral, NGSTest.DateRequested, Checker.Name AS RefName, Checker.Initials AS Referrer, NGSPanel.Panel AS PanelA, NGSPanel_1.Panel AS PanelB, Status_1.StatusID AS PatientStatus, NGSWESBatch.BatchName AS WESBatch, Status.StatusID, NGSTest.StatusID, " & _
+                      "NGSAnalysis.Pedigree, Status.Status AS TestStatus, NGSTest.ResultComment, Patients.InternalPatientID, Checker_1.Initials AS Checker1, NGSTest.Check1Date, Checker_2.Initials AS Checker2, NGSTest.Check2Date, Checker_3.Initials AS ReportApproved, NGSTest.Check3Date, Patients.s_StatusOverall, NGSPanel.PanelCode AS [Primary], NGSPanel_1.PanelCode AS Secondary, NGSTest.DNA, NGSTest.Priority, NGSTest.Result AS TestResult, NGSPanel_2.PanelCode AS Tertiary, " & _
+                      "Checker_4.Initials AS check4ID, NGSTest.Check4Date, NGSTest.GWWorksheet " & _
+                     "FROM ((((((((((((((((NGSTest INNER JOIN Patients ON NGSTest.InternalPatientID = Patients.InternalPatientID) INNER JOIN Referral ON NGSTest.ReferralID = Referral.ReferralID) INNER JOIN Checker ON NGSTest.BookBy = Checker.Check1ID) INNER JOIN NGSPanel ON NGSTest.NGSPanelID = NGSPanel.NGSPanelID) LEFT JOIN NGSPanel AS NGSPanel_1 ON NGSTest.NGSPanelID_B = NGSPanel_1.NGSPanelID) INNER JOIN Status ON NGSTest.StatusID = Status.StatusID) " & _
+                     "INNER JOIN dbo_Patient_table ON Patients.PatientID = dbo_Patient_table.PatientTrustID) LEFT JOIN DNA ON NGSTest.DNA = DNA.DNANumber) INNER JOIN Status AS Status_1 ON Patients.s_StatusOverall = Status_1.StatusID) LEFT JOIN gw_GenderTable ON dbo_Patient_table.GenderID = gw_GenderTable.GenderID) LEFT JOIN NGSWESBatch ON NGSTest.WESBatch = NGSWESBatch.NGSWESBatchID) LEFT JOIN Checker AS Checker_1 ON NGSTest.Check1ID = Checker_1.Check1ID) " & _
+                     "LEFT JOIN Checker AS Checker_2 ON NGSTest.Check2ID = Checker_2.Check1ID) LEFT JOIN Checker AS Checker_3 ON NGSTest.Check3ID = Checker_3.Check1ID) LEFT JOIN NGSPanel AS NGSPanel_2 ON NGSTest.NGSPanelID_C = NGSPanel_2.NGSPanelID) LEFT JOIN Checker AS Checker_4 ON NGSTest.Check4ID = Checker_4.Check1ID) INNER JOIN NGSAnalysis ON Patients.InternalPatientID = NGSAnalysis.InternalPatientID " & _
+                     "WHERE " & includeReferrals & " And " & ParentsStatusesFilter & " And (((Status.StatusID)<>1202218787 And (Status.StatusID)<>4 And (Status.StatusID)<>1202218816)) " & _
+                     "ORDER BY NGSTest.Priority, NGSTest.DateRequested;"
+Else
+      subfrmSQL = "SELECT DISTINCT NGSTest.Selection, Patients.PatientID AS PRU, NGSTest.NGSTestID, dbo_Patient_table.LastName, dbo_Patient_table.FirstName, dbo_Patient_table.DoB, gw_GenderTable.GenderShort, Referral.Referral, NGSTest.DateRequested, Checker.Name AS RefName, Checker.Initials AS Referrer, NGSPanel.Panel AS PanelA, NGSPanel_1.Panel AS PanelB, Status_1.StatusID AS PatientStatus, NGSWESBatch.BatchName AS WESBatch, Status.StatusID, NGSTest.StatusID, " & _
+                      "NGSAnalysis.Pedigree, Status.Status AS TestStatus, NGSTest.ResultComment, Patients.InternalPatientID, Checker_1.Initials AS Checker1, NGSTest.Check1Date, Checker_2.Initials AS Checker2, NGSTest.Check2Date, Checker_3.Initials AS ReportApproved, NGSTest.Check3Date, Patients.s_StatusOverall, NGSPanel.PanelCode AS [Primary], NGSPanel_1.PanelCode AS Secondary, NGSTest.DNA, NGSTest.Priority, NGSTest.Result AS TestResult, NGSPanel_2.PanelCode AS Tertiary, " & _
+                      "Checker_4.Initials AS check4ID, NGSTest.Check4Date, NGSTest.GWWorksheet " & _
+                     "FROM ((((((((((((((((NGSTest INNER JOIN Patients ON NGSTest.InternalPatientID = Patients.InternalPatientID) INNER JOIN Referral ON NGSTest.ReferralID = Referral.ReferralID) INNER JOIN Checker ON NGSTest.BookBy = Checker.Check1ID) INNER JOIN NGSPanel ON NGSTest.NGSPanelID = NGSPanel.NGSPanelID) LEFT JOIN NGSPanel AS NGSPanel_1 ON NGSTest.NGSPanelID_B = NGSPanel_1.NGSPanelID) INNER JOIN Status ON NGSTest.StatusID = Status.StatusID) " & _
+                     "INNER JOIN dbo_Patient_table ON Patients.PatientID = dbo_Patient_table.PatientTrustID) LEFT JOIN DNA ON NGSTest.DNA = DNA.DNANumber) INNER JOIN Status AS Status_1 ON Patients.s_StatusOverall = Status_1.StatusID) LEFT JOIN gw_GenderTable ON dbo_Patient_table.GenderID = gw_GenderTable.GenderID) LEFT JOIN NGSWESBatch ON NGSTest.WESBatch = NGSWESBatch.NGSWESBatchID) LEFT JOIN Checker AS Checker_1 ON NGSTest.Check1ID = Checker_1.Check1ID) " & _
+                     "LEFT JOIN Checker AS Checker_2 ON NGSTest.Check2ID = Checker_2.Check1ID) LEFT JOIN Checker AS Checker_3 ON NGSTest.Check3ID = Checker_3.Check1ID) LEFT JOIN NGSPanel AS NGSPanel_2 ON NGSTest.NGSPanelID_C = NGSPanel_2.NGSPanelID) LEFT JOIN Checker AS Checker_4 ON NGSTest.Check4ID = Checker_4.Check1ID) INNER JOIN NGSAnalysis ON Patients.InternalPatientID = NGSAnalysis.InternalPatientID " & _
+                     "WHERE " & includeReferrals & " And (((Status.StatusID)<>1202218787 And (Status.StatusID)<>4 And (Status.StatusID)<>1202218816)) " & _
+                     "ORDER BY NGSTest.Priority, NGSTest.DateRequested;"
+End If
+    
 
-
-
-subfrmSQL = "SELECT DISTINCT NGSTest.Selection, Patients.PatientID AS PRU, NGSTest.NGSTestID, dbo_Patient_table.LastName, dbo_Patient_table.FirstName, dbo_Patient_table.DoB, gw_GenderTable.GenderShort, Referral.Referral, NGSTest.DateRequested, Checker.Name AS RefName, Checker.Initials AS Referrer, NGSPanel.Panel AS PanelA, NGSPanel_1.Panel AS PanelB, Status_1.StatusID AS PatientStatus, NGSWESBatch.BatchName AS WESBatch, Status.StatusID, NGSTest.StatusID, " & _
-              "NGSAnalysis.Pedigree, Status.Status AS TestStatus, NGSTest.ResultComment, Patients.InternalPatientID, Checker_1.Initials AS Checker1, NGSTest.Check1Date, Checker_2.Initials AS Checker2, NGSTest.Check2Date, Checker_3.Initials AS ReportApproved, NGSTest.Check3Date, Patients.s_StatusOverall, NGSPanel.PanelCode AS [Primary], NGSPanel_1.PanelCode AS Secondary, NGSTest.DNA, NGSTest.Priority, NGSTest.Result AS TestResult, NGSPanel_2.PanelCode AS Tertiary, " & _
-              "Checker_4.Initials AS check4ID, NGSTest.Check4Date, NGSTest.GWWorksheet " & _
-             "FROM ((((((((((((((((NGSTest INNER JOIN Patients ON NGSTest.InternalPatientID = Patients.InternalPatientID) INNER JOIN Referral ON NGSTest.ReferralID = Referral.ReferralID) INNER JOIN Checker ON NGSTest.BookBy = Checker.Check1ID) INNER JOIN NGSPanel ON NGSTest.NGSPanelID = NGSPanel.NGSPanelID) LEFT JOIN NGSPanel AS NGSPanel_1 ON NGSTest.NGSPanelID_B = NGSPanel_1.NGSPanelID) INNER JOIN Status ON NGSTest.StatusID = Status.StatusID) " & _
-             "INNER JOIN dbo_Patient_table ON Patients.PatientID = dbo_Patient_table.PatientTrustID) LEFT JOIN DNA ON NGSTest.DNA = DNA.DNANumber) INNER JOIN Status AS Status_1 ON Patients.s_StatusOverall = Status_1.StatusID) LEFT JOIN gw_GenderTable ON dbo_Patient_table.GenderID = gw_GenderTable.GenderID) LEFT JOIN NGSWESBatch ON NGSTest.WESBatch = NGSWESBatch.NGSWESBatchID) LEFT JOIN Checker AS Checker_1 ON NGSTest.Check1ID = Checker_1.Check1ID) " & _
-             "LEFT JOIN Checker AS Checker_2 ON NGSTest.Check2ID = Checker_2.Check1ID) LEFT JOIN Checker AS Checker_3 ON NGSTest.Check3ID = Checker_3.Check1ID) LEFT JOIN NGSPanel AS NGSPanel_2 ON NGSTest.NGSPanelID_C = NGSPanel_2.NGSPanelID) LEFT JOIN Checker AS Checker_4 ON NGSTest.Check4ID = Checker_4.Check1ID) INNER JOIN NGSAnalysis ON Patients.InternalPatientID = NGSAnalysis.InternalPatientID " & _
-             "WHERE " & includeReferrals & " And " & ParentsStatusesFilter & " And (((Status.StatusID)<>1202218787 And (Status.StatusID)<>4 And (Status.StatusID)<>1202218816)) " & _
-             "ORDER BY NGSTest.Priority, NGSTest.DateRequested;"
-
-Debug.Print subfrmSQL
+'Debug.Print subfrmSQL
 
 [Form_s87020_ExomeLabList].Form.RecordSource = subfrmSQL
 
@@ -1156,15 +1163,10 @@ Function update_referral(Optional CallBtnView As Boolean = True)
         includeReferrals = "NGSTest.ReferralID in (SELECT referralid FROM referral WHERE grouptypeid = 14)"
     Else
         ' if the WES_user_group.Value is not null add this to the variable to select for EB lab or WES
-        If Me.WES_user_group.Column(0) Then
-            ParentsStatusesFilter = "NGSAnalysis.Pedigree in (SELECT NGSAnalysis.Pedigree FROM NGSAnalysis INNER JOIN NGSTest ON NGSAnalysis.NGSTestID = NGSTest.NGSTestID WHERE (((NGSAnalysis.Pedigree)=3302) AND ((NGSTest.StatusID)=1202218803 Or (NGSTest.StatusID)=1202218800)))"
-            includeReferrals = "NGSTest.ReferralID in (SELECT referralid FROM referral WHERE prioritysorting = " & Me.WES_user_group.Column(0) & ")"
-        Else
-          includeReferrals = "NGSTest.ReferralID in (SELECT referralid FROM referral WHERE prioritysorting = " & Me.WES_user_group.Column(0) & ")"
-        End If
+        includeReferrals = "NGSTest.ReferralID in (SELECT referralid FROM referral WHERE prioritysorting = " & Me.WES_user_group.Column(0) & ")"
     End If
-    Debug.Print "This is what WES_user_group: " & Me.WES_user_group.Column(0)
-    Debug.Print "This is what parent status " & ParentsStatusesFilter
+    'Debug.Print "This is what WES_user_group: " & Me.WES_user_group.Column(0)
+    'Debug.Print "This is what parent status " & ParentsStatusesFilter
     ' call the function which refreshes the subform, using the new includeReferral variable
     ' If CallBtnViewAll = True this function will call btn_ViewAll_Click
    If CallBtnView Then
