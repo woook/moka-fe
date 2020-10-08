@@ -10,7 +10,7 @@ Private Function update_recordsource()
     start_date_formatted = Format(Me.start_date, "mm/dd/yyyy")
     end_date_formatted = Format(Me.end_date, "mm/dd/yyyy")
     
-    'SQL to pull out checking counts for each analyst grouped by result code based on the referral type and date range entered in form
+    'SQL to pull out authorising counts for each authoriser grouped by result code based on the referral type and date range entered in form (count from both the first and second authoriser)
     sql_record_source = "TRANSFORM Count(Checker.Initials) AS CountOfInitials " _
     & "SELECT ResultCode_1.ResultCode " _
     & "FROM " _
@@ -20,7 +20,7 @@ Private Function update_recordsource()
     & "AND ((arraytest.Service) = True) And ((Referral.ReferralID) = " & Me.referral_combo & ") And ((arraytest.ArrayResultDate) >= #" & start_date_formatted & "#) And ((arraytest.ArrayResultDate) <= #" & end_date_formatted & "#)) " _
     & "UNION ALL " _
     & "SELECT ResultCode_1.ResultCode, Checker.Initials " _
-    & "FROM ((((ArrayTest INNER JOIN Checker ON ArrayTest.Check4ID = Checker.Check1ID) INNER JOIN ResultCode ON ArrayTest.ArrayResultCodeID = ResultCode.ResultCodeID) INNER JOIN Patients ON ArrayTest.InternalPatientID = Patients.InternalPatientID) INNER JOIN ResultCode AS ResultCode_1 ON Patients.OverallResultCodeID = ResultCode_1.ResultCodeID) INNER JOIN Referral ON ArrayTest.ReferralID = Referral.ReferralID " _
+    & "FROM ((((ArrayTest INNER JOIN Checker ON ArrayTest.Check5ID = Checker.Check1ID) INNER JOIN ResultCode ON ArrayTest.ArrayResultCodeID = ResultCode.ResultCodeID) INNER JOIN Patients ON ArrayTest.InternalPatientID = Patients.InternalPatientID) INNER JOIN ResultCode AS ResultCode_1 ON Patients.OverallResultCodeID = ResultCode_1.ResultCodeID) INNER JOIN Referral ON ArrayTest.ReferralID = Referral.ReferralID " _
     & "WHERE (((Checker.Initials) Like 'KJM' Or (Checker.Initials) Like 'KM' Or (Checker.Initials) Like 'CD' Or (Checker.Initials) Like 'SCH' Or (Checker.Initials) Like 'CO' Or (Checker.Initials) Like 'AB' Or (Checker.Initials) Like 'SB') " _
     & "AND ((arraytest.Service) = True) And ((Referral.ReferralID) = " & Me.referral_combo & ") And ((arraytest.ArrayResultDate) >= #" & start_date_formatted & "#) And ((arraytest.ArrayResultDate) <= #" & end_date_formatted & "#))) " _
     & "GROUP BY ResultCode_1.ResultCode " _
