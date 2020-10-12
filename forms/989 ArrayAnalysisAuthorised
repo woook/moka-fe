@@ -1,0 +1,43 @@
+Option Compare Database
+Option Explicit
+
+Private Function update_recordsource()
+    Dim start_date_formatted As String
+    Dim end_date_formatted As String
+    Dim sql_record_source As String
+    Dim user_list As String
+    
+    'Date must be formatted in US style for query
+    start_date_formatted = Format(Me.start_date, "mm/dd/yyyy")
+    end_date_formatted = Format(Me.end_date, "mm/dd/yyyy")
+    
+    user_list = " (((Checker.Initials) LIKE 'KJM' OR (Checker.Initials) LIKE 'KM' OR (Checker.Initials) LIKE 'CD' OR (Checker.Initials) LIKE 'SCH' OR (Checker.Initials) LIKE 'CO' OR (Checker.Initials) LIKE 'AB' OR (Checker.Initials) LIKE 'SB')"
+
+    'SQL to pull out authorising counts for each authoriser grouped by result code based on the referral type and date range entered in form (count from both the first and second authoriser)
+    sql_record_source = "TRANSFORM Count(Checker.Initials) AS CountOfInitials " _
+    & "SELECT ResultCode_1.ResultCode " _
+    & "FROM (SELECT ResultCode_1.ResultCode, Checker.Initials " _
+    & "FROM ((((ArrayTest INNER JOIN Checker ON ArrayTest.Check4ID = Checker.Check1ID) INNER JOIN ResultCode ON ArrayTest.ArrayResultCodeID = ResultCode.ResultCodeID) INNER JOIN Patients ON ArrayTest.InternalPatientID = Patients.InternalPatientID) INNER JOIN ResultCode AS ResultCode_1 ON Patients.OverallResultCodeID = ResultCode_1.ResultCodeID) INNER JOIN Referral ON ArrayTest.ReferralID = Referral.ReferralID " _
+    & "WHERE " & user_list & " AND ((arraytest.Service) = True) AND ((Referral.ReferralID) = " & Me.referral_combo & ") AND ((arraytest.ArrayResultDate) >= #" & start_date_formatted & "#) AND ((arraytest.ArrayResultDate) <= #" & end_date_formatted & "#)) " _
+    & "AND ((arraytest.ArrayResultDate) >= #" & start_date_formatted & "#) AND ((arraytest.ArrayResultDate) <= #" & end_date_formatted & "#) " _
+    & "UNION ALL " _
+    & "SELECT ResultCode_1.ResultCode, Checker.Initials " _
+    & "FROM ((((ArrayTest INNER JOIN Checker ON ArrayTest.Check5ID = Checker.Check1ID) INNER JOIN ResultCode ON ArrayTest.ArrayResultCodeID = ResultCode.ResultCodeID) INNER JOIN Patients ON ArrayTest.InternalPatientID = Patients.InternalPatientID) INNER JOIN ResultCode AS ResultCode_1 ON Patients.OverallResultCodeID = ResultCode_1.ResultCodeID) INNER JOIN Referral ON ArrayTest.ReferralID = Referral.ReferralID " _
+    & "WHERE " & user_list & " AND ((arraytest.Service) = True) AND ((Referral.ReferralID) = " & Me.referral_combo & ") AND ((arraytest.ArrayResultDate) >= #" & start_date_formatted & "#) AND ((arraytest.ArrayResultDate) <= #" & end_date_formatted & "#)) " _
+    & "AND ((arraytest.ArrayResultDate) >= #" & start_date_formatted & "#) AND ((arraytest.ArrayResultDate) <= #" & end_date_formatted & "#)) " _
+    & "GROUP BY ResultCode_1.ResultCode " _
+    & "PIVOT Checker.Initials;"
+    
+    'Update the record source
+    Me.s989_ArrayAnalysisAuthorised.Form.RecordSource = sql_record_source
+End Function
+
+Private Sub Form_Load()
+    'Set record source of the subform when form opens (so that results displayed match the referral type and date range displayed in the boxes)
+    update_recordsource
+End Sub
+
+Private Sub update_Click()
+    'Set record source of the subform when update button is pressed
+    update_recordsource
+End Sub

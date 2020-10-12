@@ -1,0 +1,4 @@
+SELECT Checker.Initials AS [Authoriser 1], Checker_1.Initials AS [Authoriser 2], Referral.Referral, ArrayTest.ArrayResultDate, ArrayTest.ArrayResult, ArrayTest.ArrayTestID, Patients.OverallResultComments, [Lastname] & " " & [Firstname] AS Name, dbo_Patient.PatientID, Patients.InternalPatientID, ResultCode.ResultCode AS PatientResultCode
+FROM (((((ArrayTest INNER JOIN Patients ON ArrayTest.InternalPatientID = Patients.InternalPatientID) INNER JOIN Referral ON ArrayTest.ReferralID = Referral.ReferralID) INNER JOIN dbo_Patient ON Patients.PatientID = dbo_Patient.PatientID) INNER JOIN ResultCode ON Patients.OverallResultCodeID = ResultCode.ResultCodeID) LEFT JOIN Checker ON ArrayTest.Check4ID = Checker.Check1ID) LEFT JOIN Checker AS Checker_1 ON ArrayTest.Check5ID = Checker_1.Check1ID
+WHERE (((Checker.Initials)=[Authorised by?])) OR (((Checker_1.Initials)=[Authorised by?]))
+ORDER BY ArrayTest.ArrayResultDate DESC;
