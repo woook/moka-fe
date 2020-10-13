@@ -495,8 +495,8 @@ End Sub
 
 Private Sub SendReport_Click()
 ''submit for reporting
-Dim rsUSR As dao.Recordset
-Dim rsORG As dao.Recordset
+Dim rsUSR As DAO.Recordset
+Dim rsORG As DAO.Recordset
 Dim usr As String
 Dim cmp As String
 Dim dt As String
@@ -567,7 +567,7 @@ If vbYes = MsgBox("Generate reporting email for this case?", vbYesNo + vbQuestio
         scriptPath = "\\gstt.local\Apps\Moka\Files\Software\100K\generate_email.py"
         ' Build command
         script_command = "cmd.exe /S /C " & pythonPath & " " & scriptPath
-        script_command = script_command & " --to viapathgeneticsoffice@viapath.co.uk "
+        script_command = script_command & " --to dnadutyscientist@viapath.co.uk "
         If Me.Priority = True Then
             script_command = script_command & " --subject ""URGENT authorised array report " & PRU & " to send"""
         Else
@@ -873,7 +873,7 @@ If Not IsNull(Me.ArrayResult) And (Me.StatusID = 4 Or Me.StatusID = 5) Then
     .ReplyTo = "Prenatal-array@gstt.nhs.uk"
     .Subject = subjectline
     .HTMLBody = emailbody
-    .to = emailto
+    .To = emailto
     .BCC = "moka.alerts@gstt.nhs.uk"
     .Send
     End With
