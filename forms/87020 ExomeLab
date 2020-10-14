@@ -1,5 +1,9 @@
 Option Compare Database
 Private includeReferrals As String
+Private ParentsStatusesFilter As String
+Private parentsstatusesboolean As Boolean
+Private parentsusergroupboolean As Boolean
+Private ParentStatusID As String
 Private Sub btn_ExomeStatus_Click()
     DoCmd.OpenForm "87018 ExomeStatus"
 End Sub
@@ -21,6 +25,27 @@ update_referral CallBtnView:=False
 
 
 End Sub
+ Function ParentVisibility()
+'This function removes the non-probands from any trio results when the statuses below are selected from the drop down menu
+'When any other statuses are selected, the non-probands will be displayed
+'displayparentinfo is used update the display to warn users
+'that non-probands wont be shown for the selected statuses
+
+'If a status needs to be added, it needs to be placed in the following location
+
+ParentStatusID = "(((Status.StatusID)<>1202218787) And ((Status.StatusID)<>4) And ((Status.StatusID)<>1202218816) And ((NGSTest.StatusID)<>1202218808 And (NGSTest.StatusID)<>1202218809 And (NGSTest.StatusID)<>1202218810 And (NGSTest.StatusID)<>1202218811 And " & _
+               "(NGSTest.StatusID)<>1202218812 And (NGSTest.StatusID)<>1202218813 And (NGSTest.StatusID)<>1202218814 And (NGSTest.StatusID)<>1202218815 And (NGSTest.StatusID)<>1202218816 And (NGSTest.StatusID)<>1202218822 And (NGSTest.StatusID)<>1202218857 And (NGSTest.StatusID)<>1202218863 And (NGSTest.StatusID)<>1202218864 And (NGSTest.StatusID)<>1202218865 And (NGSTest.StatusID)<>1202218866 And (NGSTest.StatusID)<>1202218867 And (NGSTest.StatusID)<>1202218868 And " & _
+               "(NGSTest.StatusID)<>1202218869 And (NGSTest.StatusID)<>1202218870 And (NGSTest.StatusID)<>2 And (NGSTest.StatusID)<>4))"
+
+If Me.cmb_StatusView = "1202218808" Or Me.cmb_StatusView = "1202218809" Or Me.cmb_StatusView = "1202218810" Or Me.cmb_StatusView = "1202218811" Or Me.cmb_StatusView = "1202218812" Or Me.cmb_StatusView = "1202218813" Or Me.cmb_StatusView = "1202218814" Or Me.cmb_StatusView = "1202218815" Or Me.cmb_StatusView = "1202218816" Or Me.cmb_StatusView = "1202218822" Or Me.cmb_StatusView = "1202218857" Or Me.cmb_StatusView = "1202218863" Or Me.cmb_StatusView = "1202218864" Or Me.cmb_StatusView = "1202218865" Or Me.cmb_StatusView = "1202218866" Or Me.cmb_StatusView = "1202218867" Or Me.cmb_StatusView = "1202218868" Or Me.cmb_StatusView = "1202218869" Or Me.cmb_StatusView = "1202218870" Or Me.cmb_StatusView = "2" Or Me.cmb_StatusView = "4" Then
+    ParentsStatusesFilter = "NGSAnalysis.Pedigree in (SELECT DISTINCT NGSAnalysis.Pedigree FROM NGSAnalysis WHERE NGSAnalysis.Pedigree = 3302)"
+    parentsstatusesboolean = True
+Else
+    ParentsStatusesFilter = "NGSAnalysis.Pedigree in (SELECT DISTINCT NGSAnalysis.Pedigree FROM NGSAnalysis WHERE NGSAnalysis.Pedigree IN (3302,3303,3304))"
+    parentsstatusesboolean = False
+End If
+End Function
+
 Function Unselect()
 ' Use to unselect a test. Sets selection to 0 for all
 Dim unsel As String
@@ -35,6 +60,7 @@ Dim unsel As String
     'DoCmd.DoMenuItem acFormBar, acRecordsMenu, 5, , acMenuVer70
 
 End Function
+
 
 Private Sub Form_Current()
 
@@ -208,6 +234,7 @@ Dim subfrmSQL As String
 Dim AllTotal As Long
 'reload subform calling query to view all
 'This query will be selected as the forms recordsource when WES Trio is not selected on the WES_user_group drop down.
+Call ParentVisibility
 
 
 subfrmSQL = "SELECT DISTINCT NGSTest.Selection, Patients.PatientID AS PRU, NGSTest.NGSTestID, dbo_Patient_table.LastName, dbo_Patient_table.FirstName, dbo_Patient_table.DoB, gw_GenderTable.GenderShort, Referral.Referral, NGSTest.DateRequested, Checker.Name AS RefName, Checker.Initials AS Referrer, NGSPanel.Panel AS PanelA, NGSPanel_1.Panel AS PanelB, Status_1.StatusID AS PatientStatus, NGSWESBatch.BatchName AS WESBatch, Status.StatusID, NGSTest.StatusID, " & _
@@ -229,18 +256,17 @@ subfrmSQLfiltered = "SELECT DISTINCT NGSTest.Selection, Patients.PatientID AS PR
                "FROM ((((((((((((((((NGSTest INNER JOIN Patients ON NGSTest.InternalPatientID = Patients.InternalPatientID) INNER JOIN Referral ON NGSTest.ReferralID = Referral.ReferralID) INNER JOIN Checker ON NGSTest.BookBy = Checker.Check1ID) INNER JOIN NGSPanel ON NGSTest.NGSPanelID = NGSPanel.NGSPanelID) LEFT JOIN NGSPanel AS NGSPanel_1 ON NGSTest.NGSPanelID_B = NGSPanel_1.NGSPanelID) INNER JOIN Status ON NGSTest.StatusID = Status.StatusID) " & _
                "INNER JOIN dbo_Patient_table ON Patients.PatientID = dbo_Patient_table.PatientTrustID) LEFT JOIN DNA ON NGSTest.DNA = DNA.DNANumber) INNER JOIN Status AS Status_1 ON Patients.s_StatusOverall = Status_1.StatusID) LEFT JOIN gw_GenderTable ON dbo_Patient_table.GenderID = gw_GenderTable.GenderID) LEFT JOIN NGSWESBatch ON NGSTest.WESBatch = NGSWESBatch.NGSWESBatchID) LEFT JOIN Checker AS Checker_1 ON NGSTest.Check1ID = Checker_1.Check1ID) " & _
                "LEFT JOIN Checker AS Checker_2 ON NGSTest.Check2ID = Checker_2.Check1ID) LEFT JOIN Checker AS Checker_3 ON NGSTest.Check3ID = Checker_3.Check1ID) LEFT JOIN NGSPanel AS NGSPanel_2 ON NGSTest.NGSPanelID_C = NGSPanel_2.NGSPanelID) LEFT JOIN Checker AS Checker_4 ON NGSTest.Check4ID = Checker_4.Check1ID) INNER JOIN NGSAnalysis ON Patients.InternalPatientID = NGSAnalysis.InternalPatientID " & _
-               "WHERE " & includeReferrals & " And ((((Status.StatusID)<>1202218787 And (Status.StatusID)<>4 And (Status.StatusID)<>1202218816 And (NGSAnalysis.Pedigree)=3302)) OR ((((NGSAnalysis.Pedigree)=3303) OR ((NGSAnalysis.Pedigree)=3304)) AND ((Status.StatusID)<>1202218787) And ((Status.StatusID)<>4) And ((Status.StatusID)<>1202218816) And ((NGSTest.StatusID)<>1202218808 And (NGSTest.StatusID)<>1202218809 And (NGSTest.StatusID)<>1202218810 And (NGSTest.StatusID)<>1202218811 And " & _
-               "(NGSTest.StatusID)<>1202218812 And (NGSTest.StatusID)<>1202218813 And (NGSTest.StatusID)<>1202218814 And (NGSTest.StatusID)<>1202218815 And (NGSTest.StatusID)<>1202218816 And (NGSTest.StatusID)<>1202218822 And (NGSTest.StatusID)<>1202218857 And (NGSTest.StatusID)<>1202218863 And (NGSTest.StatusID)<>1202218864 And (NGSTest.StatusID)<>1202218865 And (NGSTest.StatusID)<>1202218866 And (NGSTest.StatusID)<>1202218867 And (NGSTest.StatusID)<>1202218868 And " & _
-               "(NGSTest.StatusID)<>1202218869 And (NGSTest.StatusID)<>1202218870 " & _
-                "And (NGSTest.StatusID)<>2 And (NGSTest.StatusID)<>4))) " & _
-               "ORDER BY NGSTest.Priority, NGSTest.DateRequested;"
+               "WHERE " & includeReferrals & " And ((((Status.StatusID)<>1202218787 And (Status.StatusID)<>4 And (Status.StatusID)<>1202218816 And (NGSAnalysis.Pedigree)=3302)) OR ((((NGSAnalysis.Pedigree)=3303) OR ((NGSAnalysis.Pedigree)=3304)) AND " & ParentStatusID & ")) " & _
+                "ORDER BY NGSTest.Priority, NGSTest.DateRequested;"
 
 'This sets either of the above SQL Statuses as the recordsource for the form depending on if WES Trio is selected in the user group drop down
 
 If Me.WES_user_group.Column(0) = 1199901235 Then
     [Form_s87020_ExomeLabList].Form.RecordSource = subfrmSQLfiltered
+    parentsusergroupboolean = True
 Else
     [Form_s87020_ExomeLabList].Form.RecordSource = subfrmSQL
+    parentsusergroupboolean = False
 End If
 
 'refresh selection and total count
@@ -446,10 +472,12 @@ Private Sub cmb_StatusView_Click()
 Dim subfrmSQL As String
 Dim AllTotal As Long
 Dim strCriteria As String
-'Call ParentVisibility
+
 ' deselect any selected files and set the select all check box to empty
 Call Unselect
-        
+Call ParentVisibility
+' filter non-probands from trio for selected statuses which are in this function
+
     'refresh selection count
     selTotal = DCount("[Selection]", "s87020_ListWESSamples", "[Selection] = True")
     Me.txt_SelectionCount = selTotal
@@ -464,6 +492,7 @@ Call Unselect
     
 ' reload subform calling querey to view samples are assigned to selected status
 ' if WES batch filter = null do normal SQL
+'if the status selected is in ParentStatusesFilter, the non probands will not show up
 If Not IsNull(cmb_StatusView) Then
     If IsNull(cmb_BatchView) Then
         subfrmSQL = "SELECT DISTINCT NGSTest.Selection, Patients.PatientID AS PRU, NGSTest.NGSTestID, dbo_Patient_table.LastName, dbo_Patient_table.FirstName, dbo_Patient_table.DoB, gw_GenderTable.GenderShort, Referral.Referral, NGSTest.DateRequested, Checker.Name AS RefName, Checker.Initials AS Referrer, NGSPanel.Panel AS PanelA, NGSPanel_1.Panel AS PanelB, Status_1.StatusID AS PatientStatus, NGSWESBatch.BatchName AS WESBatch, Status.StatusID, Status.Status AS TestStatus, NGSTest.ResultComment, Patients.InternalPatientID, Checker_1.Initials AS Checker1, NGSTest.Check1Date, Checker_2.Initials AS Checker2, NGSTest.Check2Date, Checker_3.Initials AS ReportApproved, NGSTest.Check3Date, Patients.s_StatusOverall, NGSPanel.PanelCode AS [Primary], NGSPanel_1.PanelCode AS Secondary, NGSTest.DNA, NGSTest.Priority, NGSTest.Result AS TestResult, NGSPanel_2.PanelCode AS Tertiary, Checker_4.Initials AS check4ID, NGSTest.Check4Date, NGSTest.GWWorksheet " & _
@@ -472,12 +501,39 @@ If Not IsNull(cmb_StatusView) Then
                     "WHERE " & includeReferrals & " And " & ParentsStatusesFilter & "  And Status.StatusID = " & CStr(Me![cmb_StatusView]) & " " & _
                     "ORDER BY NGSTest.Priority , NGSTest.DateRequested;"
             
-        'Debug.Print subfrmSQL
+        Debug.Print "This is parentstatusesboolean in status first loop:" & parentsstatusesboolean
+        
+        
         [Form_s87020_ExomeLabList].Form.RecordSource = subfrmSQL
         Call update_display
+'         If parentsstatusesboolean = True And parentsusergroupboolean = False Then
+'            Me.txt_displayed = Me.txt_displayed & " with status: " + Me![cmb_StatusView].Column(1) & vbNewLine & "Non-probands in WES Trios will not be shown when this status is selected"
+'             If parentsstatusesboolean = True And parentsusergroupboolean = True Then
+'                        Me.txt_displayed = Me.txt_displayed & " with status: " + Me![cmb_StatusView].Column(1) & vbNewLine & "Non-probands in WES Trios will not be shown when this status is selected"
+'        Else
+'             Me.txt_displayed = Me.txt_displayed & " with status: " + Me![cmb_StatusView].Column(1)
+'        End If
+'            End If
+    If parentsstatusesboolean = True And parentsusergroupboolean = False And IsNull(Me.WES_user_group.Column(0)) Then
+        Me.txt_displayed = Me.txt_displayed & " with status: " + Me![cmb_StatusView].Column(1) & vbNewLine & "Non-probands in WES Trios will not be shown when this status is selected"
+    ElseIf parentsstatusesboolean = True And parentsusergroupboolean = True Then
+        Me.txt_displayed = Me.txt_displayed & " with status: " + Me![cmb_StatusView].Column(1) & vbNewLine & "Non-probands will not be shown when this status is selected"
+    Else
         Me.txt_displayed = Me.txt_displayed & " with status: " + Me![cmb_StatusView].Column(1)
+    End If
+    
+    Debug.Print "This is what WES_user_group is:" & Me.WES_user_group.Column(0)
+     
+'    If parentsstatusesboolean = True And parentsusergroupboolean = True Then
+'        Me.txt_displayed = Me.txt_displayed & " with status: " + Me![cmb_StatusView].Column(1) & vbNewLine & "Non-probands in WES Trios will not be shown when this status is selected"
+'    'Else
+'        'Me.txt_displayed = Me.txt_displayed & " with status: " + Me![cmb_StatusView].Column(1)
+'    End If
+'        'Flag on the txt_displayed box when statuses are selected which will only show probands
+        
         
         ' refresh total tally
+        
         strCriteria = " TestStatus = '" & Me.cmb_StatusView.Column(1) & "'"
         AllTotal = DCount("TestStatus", "s87020_ListWESSamples", strCriteria)
         Me.txt_TotalTally = AllTotal
@@ -487,19 +543,26 @@ If Not IsNull(cmb_StatusView) Then
         subfrmSQL = "SELECT DISTINCT NGSTest.Selection, Patients.PatientID AS PRU, NGSTest.NGSTestID, dbo_Patient_table.LastName, dbo_Patient_table.FirstName, dbo_Patient_table.DoB, gw_GenderTable.GenderShort, Referral.Referral, NGSTest.DateRequested, Checker.Name AS RefName, Checker.Initials AS Referrer, NGSPanel.Panel AS PanelA, NGSPanel_1.Panel AS PanelB, Status_1.StatusID AS PatientStatus, NGSWESBatch.BatchName AS WESBatch, Status.StatusID, Status.Status AS TestStatus, NGSTest.ResultComment, Patients.InternalPatientID, Checker_1.Initials AS Checker1, NGSTest.Check1Date, Checker_2.Initials AS Checker2, NGSTest.Check2Date, Checker_3.Initials AS ReportApproved, NGSTest.Check3Date, Patients.s_StatusOverall, NGSPanel.PanelCode AS [Primary], NGSPanel_1.PanelCode AS Secondary, NGSTest.DNA, NGSTest.Priority, NGSTest.Result AS TestResult, NGSPanel_2.PanelCode AS Tertiary, Checker_4.Initials AS check4ID, NGSTest.Check4Date, NGSTest.GWWorksheet " & _
                     "FROM ((((((((((((((((NGSTest INNER JOIN Patients ON NGSTest.InternalPatientID = Patients.InternalPatientID) INNER JOIN Referral ON NGSTest.ReferralID = Referral.ReferralID) INNER JOIN Checker ON NGSTest.BookBy = Checker.Check1ID) INNER JOIN NGSPanel ON NGSTest.NGSPanelID = NGSPanel.NGSPanelID) LEFT JOIN NGSPanel AS NGSPanel_1 ON NGSTest.NGSPanelID_B = NGSPanel_1.NGSPanelID) INNER JOIN Status ON NGSTest.StatusID = Status.StatusID) INNER JOIN dbo_Patient_table ON Patients.PatientID = dbo_Patient_table.PatientTrustID) LEFT JOIN DNA ON NGSTest.DNA = DNA.DNANumber) INNER JOIN Status AS Status_1 ON Patients.s_StatusOverall = Status_1.StatusID) LEFT JOIN gw_GenderTable ON dbo_Patient_table.GenderID = gw_GenderTable.GenderID) " & _
                     "LEFT JOIN NGSWESBatch ON NGSTest.WESBatch = NGSWESBatch.NGSWESBatchID) LEFT JOIN Checker AS Checker_1 ON NGSTest.Check1ID = Checker_1.Check1ID) LEFT JOIN Checker AS Checker_2 ON NGSTest.Check2ID = Checker_2.Check1ID) LEFT JOIN Checker AS Checker_3 ON NGSTest.Check3ID = Checker_3.Check1ID) LEFT JOIN NGSPanel AS NGSPanel_2 ON NGSTest.NGSPanelID_C = NGSPanel_2.NGSPanelID) LEFT JOIN Checker AS Checker_4 ON NGSTest.Check4ID = Checker_4.Check1ID) INNER JOIN NGSAnalysis ON Patients.InternalPatientID = NGSAnalysis.InternalPatientID " & _
-                    "WHERE " & includeReferrals & " And " & ParentsStatusesFilter & " And NGSTest.WESBatch = " & CStr(Me![cmb_BatchView]) & " AND Status.StatusID = " & CStr(cmb_StatusView) & " " & _
+                    "WHERE " & includeReferrals & "And " & ParentsStatusesFilter & " And  NGSTest.WESBatch = " & CStr(Me![cmb_BatchView]) & " AND Status.StatusID = " & CStr(cmb_StatusView) & " " & _
                     "ORDER BY NGSTest.Priority , NGSTest.DateRequested;"
-      
+        Debug.Print "This is parentstatusesboolean in status second loop:" & parentsstatusesboolean
         'Debug.Print subfrmSQL
         [Form_s87020_ExomeLabList].Form.RecordSource = subfrmSQL
         Call update_display
-        Me.txt_displayed = Me.txt_displayed & " in batch " + Me![cmb_BatchView].Column(1) + " with status " + Me![cmb_StatusView].Column(1)
+    If parentsstatusesboolean = True And parentsusergroupboolean = False Then
+        Me.txt_displayed = Me.txt_displayed & " with status: " + Me![cmb_StatusView].Column(1) & vbNewLine & "Non-probands in WES Trios will not be shown when this status is selected"
+    ElseIf parentsstatusesboolean = True And parentsusergroupboolean = True Then
+        Me.txt_displayed = Me.txt_displayed & " with status: " + Me![cmb_StatusView].Column(1) & vbNewLine & "Non-probands will not be shown when this status is selected"
+    Else
+        Me.txt_displayed = Me.txt_displayed & " with status: " + Me![cmb_StatusView].Column(1)
+    End If
+       
         
         ' refresh total tally
         strCriteria = " WESBatch = '" & Me.cmb_BatchView.Column(1) & "' AND TestStatus = '" & Me.cmb_StatusView.Column(1) & "'"
         AllTotal = DCount("TestStatus", "s87020_ListWESSamples", strCriteria)
         Me.txt_TotalTally = AllTotal
-            
+
     End If
 End If
 End Sub
@@ -1143,8 +1206,7 @@ Function update_referral(Optional CallBtnView As Boolean = True)
         ' if the WES_user_group.Value is not null add this to the variable to select for EB lab or WES
         includeReferrals = "NGSTest.ReferralID in (SELECT referralid FROM referral WHERE prioritysorting = " & Me.WES_user_group.Column(0) & ")"
     End If
-    'Debug.Print "This is what WES_user_group: " & Me.WES_user_group.Column(0)
-    'Debug.Print "This is what parent status " & ParentsStatusesFilter
+ 
     ' call the function which refreshes the subform, using the new includeReferral variable
     ' If CallBtnViewAll = True this function will call btn_ViewAll_Click
    If CallBtnView Then
@@ -1161,7 +1223,18 @@ Function update_display()
         user_type_display = Me.WES_user_group.Column(1)
     End If
     ' Set variable bound to the text box - this variable can be further modified by other functions
-    Me.txt_displayed = "All " & user_type_display & " tests currently in progress"
+    'Flag to users that non-probands are filtered in some statuses when the WES user group is selected
+    
+     If parentsusergroupboolean = True And parentsstatusesboolean = False And IsNull(cmb_StatusView) Then
+        Me.txt_displayed = "All " & user_type_display & " tests currently in progress" & vbNewLine & "Some non-probands in WES Trios with certain statuses will not be shown below"
+     ElseIf parentsusergroupboolean = True And parentsstatusesboolean = False And Me.cmb_StatusView <> "1202218808" Or Me.cmb_StatusView <> "1202218809" Or Me.cmb_StatusView <> "1202218810" Or Me.cmb_StatusView <> "1202218811" Or Me.cmb_StatusView <> "1202218812" Or Me.cmb_StatusView <> "1202218813" Or Me.cmb_StatusView <> "1202218814" Or Me.cmb_StatusView <> "1202218815" Or Me.cmb_StatusView <> "1202218816" Or Me.cmb_StatusView <> "1202218822" Or Me.cmb_StatusView <> "1202218857" Or Me.cmb_StatusView <> "1202218863" Or Me.cmb_StatusView <> "1202218864" Or Me.cmb_StatusView <> "1202218865" Or Me.cmb_StatusView <> "1202218866" Or Me.cmb_StatusView <> "1202218867" Or Me.cmb_StatusView <> "1202218868" Or Me.cmb_StatusView <> "1202218869" Or Me.cmb_StatusView <> "1202218870" Or Me.cmb_StatusView <> "2" Or Me.cmb_StatusView <> "4" Then
+        Me.txt_displayed = "All " & user_type_display & " tests currently in progress"
+    Else
+        Me.txt_displayed = "All " & user_type_display & " tests currently in progress"
+    End If
+   Debug.Print "This is what usergroupboolean:" & parentsusergroupboolean
+   Debug.Print "This is what statusboolean:" & parentsstatusesboolean
+   Debug.Print "This is what cmb_statusview" & cmb_StatusView
 End Function
 
 
