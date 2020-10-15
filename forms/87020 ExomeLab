@@ -26,17 +26,17 @@ update_referral CallBtnView:=False
 
 End Sub
  Function ParentVisibility()
-'This function removes the non-probands from any trio results when the statuses below are selected from the drop down menu
-'When any other statuses are selected, the non-probands will be displayed
-'displayparentinfo is used update the display to warn users
-'that non-probands wont be shown for the selected statuses
+'Function filteres non-probands with certain statuses from showing up in results
+'ParentsStatusID is a string to be used when no status is selected and WES Trio is selected in WES_user_group
+'If non-proabnds have these statuses, they will not show in the results
 
-'If a status needs to be added, it needs to be placed in the following location
-
+'String for use in filtering where non-probands will not show up when WES_user_group filter select
 ParentStatusID = "(((Status.StatusID)<>1202218787) And ((Status.StatusID)<>4) And ((Status.StatusID)<>1202218816) And ((NGSTest.StatusID)<>1202218808 And (NGSTest.StatusID)<>1202218809 And (NGSTest.StatusID)<>1202218810 And (NGSTest.StatusID)<>1202218811 And " & _
-               "(NGSTest.StatusID)<>1202218812 And (NGSTest.StatusID)<>1202218813 And (NGSTest.StatusID)<>1202218814 And (NGSTest.StatusID)<>1202218815 And (NGSTest.StatusID)<>1202218816 And (NGSTest.StatusID)<>1202218822 And (NGSTest.StatusID)<>1202218857 And (NGSTest.StatusID)<>1202218863 And (NGSTest.StatusID)<>1202218864 And (NGSTest.StatusID)<>1202218865 And (NGSTest.StatusID)<>1202218866 And (NGSTest.StatusID)<>1202218867 And (NGSTest.StatusID)<>1202218868 And " & _
+               "(NGSTest.StatusID)<>1202218812 And (NGSTest.StatusID)<>1202218813 And (NGSTest.StatusID)<>1202218814 And (NGSTest.StatusID)<>1202218815 And (NGSTest.StatusID)<>1202218816 And (NGSTest.StatusID)<>1202218822 And (NGSTest.StatusID)<>1202218857 And " & _
+               "(NGSTest.StatusID)<>1202218863 And (NGSTest.StatusID)<>1202218864 And (NGSTest.StatusID)<>1202218865 And (NGSTest.StatusID)<>1202218866 And (NGSTest.StatusID)<>1202218867 And (NGSTest.StatusID)<>1202218868 And " & _
                "(NGSTest.StatusID)<>1202218869 And (NGSTest.StatusID)<>1202218870 And (NGSTest.StatusID)<>2 And (NGSTest.StatusID)<>4))"
 
+'This takes the users selection of status and uses this to decide if non-probands will show up or not
 If Me.cmb_StatusView = "1202218808" Or Me.cmb_StatusView = "1202218809" Or Me.cmb_StatusView = "1202218810" Or Me.cmb_StatusView = "1202218811" Or Me.cmb_StatusView = "1202218812" Or Me.cmb_StatusView = "1202218813" Or Me.cmb_StatusView = "1202218814" Or Me.cmb_StatusView = "1202218815" Or Me.cmb_StatusView = "1202218816" Or Me.cmb_StatusView = "1202218822" Or Me.cmb_StatusView = "1202218857" Or Me.cmb_StatusView = "1202218863" Or Me.cmb_StatusView = "1202218864" Or Me.cmb_StatusView = "1202218865" Or Me.cmb_StatusView = "1202218866" Or Me.cmb_StatusView = "1202218867" Or Me.cmb_StatusView = "1202218868" Or Me.cmb_StatusView = "1202218869" Or Me.cmb_StatusView = "1202218870" Or Me.cmb_StatusView = "2" Or Me.cmb_StatusView = "4" Then
     ParentsStatusesFilter = "NGSAnalysis.Pedigree in (SELECT DISTINCT NGSAnalysis.Pedigree FROM NGSAnalysis WHERE NGSAnalysis.Pedigree = 3302)"
     parentsstatusesboolean = True
@@ -44,6 +44,7 @@ Else
     ParentsStatusesFilter = "NGSAnalysis.Pedigree in (SELECT DISTINCT NGSAnalysis.Pedigree FROM NGSAnalysis WHERE NGSAnalysis.Pedigree IN (3302,3303,3304))"
     parentsstatusesboolean = False
 End If
+
 End Function
 
 Function Unselect()
@@ -260,6 +261,7 @@ subfrmSQLfiltered = "SELECT DISTINCT NGSTest.Selection, Patients.PatientID AS PR
                 "ORDER BY NGSTest.Priority, NGSTest.DateRequested;"
 
 'This sets either of the above SQL Statuses as the recordsource for the form depending on if WES Trio is selected in the user group drop down
+'parentsusergroupboolen is to assign the correct text to txt_display to warn users it non-probands will be included
 
 If Me.WES_user_group.Column(0) = 1199901235 Then
     [Form_s87020_ExomeLabList].Form.RecordSource = subfrmSQLfiltered
@@ -492,7 +494,7 @@ Call ParentVisibility
     
 ' reload subform calling querey to view samples are assigned to selected status
 ' if WES batch filter = null do normal SQL
-'if the status selected is in ParentStatusesFilter, the non probands will not show up
+'if the status selected is in ParentStatusesFilter, non probands will not show up
 If Not IsNull(cmb_StatusView) Then
     If IsNull(cmb_BatchView) Then
         subfrmSQL = "SELECT DISTINCT NGSTest.Selection, Patients.PatientID AS PRU, NGSTest.NGSTestID, dbo_Patient_table.LastName, dbo_Patient_table.FirstName, dbo_Patient_table.DoB, gw_GenderTable.GenderShort, Referral.Referral, NGSTest.DateRequested, Checker.Name AS RefName, Checker.Initials AS Referrer, NGSPanel.Panel AS PanelA, NGSPanel_1.Panel AS PanelB, Status_1.StatusID AS PatientStatus, NGSWESBatch.BatchName AS WESBatch, Status.StatusID, Status.Status AS TestStatus, NGSTest.ResultComment, Patients.InternalPatientID, Checker_1.Initials AS Checker1, NGSTest.Check1Date, Checker_2.Initials AS Checker2, NGSTest.Check2Date, Checker_3.Initials AS ReportApproved, NGSTest.Check3Date, Patients.s_StatusOverall, NGSPanel.PanelCode AS [Primary], NGSPanel_1.PanelCode AS Secondary, NGSTest.DNA, NGSTest.Priority, NGSTest.Result AS TestResult, NGSPanel_2.PanelCode AS Tertiary, Checker_4.Initials AS check4ID, NGSTest.Check4Date, NGSTest.GWWorksheet " & _
@@ -506,31 +508,16 @@ If Not IsNull(cmb_StatusView) Then
         
         [Form_s87020_ExomeLabList].Form.RecordSource = subfrmSQL
         Call update_display
-'         If parentsstatusesboolean = True And parentsusergroupboolean = False Then
-'            Me.txt_displayed = Me.txt_displayed & " with status: " + Me![cmb_StatusView].Column(1) & vbNewLine & "Non-probands in WES Trios will not be shown when this status is selected"
-'             If parentsstatusesboolean = True And parentsusergroupboolean = True Then
-'                        Me.txt_displayed = Me.txt_displayed & " with status: " + Me![cmb_StatusView].Column(1) & vbNewLine & "Non-probands in WES Trios will not be shown when this status is selected"
-'        Else
-'             Me.txt_displayed = Me.txt_displayed & " with status: " + Me![cmb_StatusView].Column(1)
-'        End If
-'            End If
-    If parentsstatusesboolean = True And parentsusergroupboolean = False And IsNull(Me.WES_user_group.Column(0)) Then
-        Me.txt_displayed = Me.txt_displayed & " with status: " + Me![cmb_StatusView].Column(1) & vbNewLine & "Non-probands in WES Trios will not be shown when this status is selected"
-    ElseIf parentsstatusesboolean = True And parentsusergroupboolean = True Then
-        Me.txt_displayed = Me.txt_displayed & " with status: " + Me![cmb_StatusView].Column(1) & vbNewLine & "Non-probands will not be shown when this status is selected"
-    Else
-        Me.txt_displayed = Me.txt_displayed & " with status: " + Me![cmb_StatusView].Column(1)
-    End If
-    
-    Debug.Print "This is what WES_user_group is:" & Me.WES_user_group.Column(0)
-     
-'    If parentsstatusesboolean = True And parentsusergroupboolean = True Then
-'        Me.txt_displayed = Me.txt_displayed & " with status: " + Me![cmb_StatusView].Column(1) & vbNewLine & "Non-probands in WES Trios will not be shown when this status is selected"
-'    'Else
-'        'Me.txt_displayed = Me.txt_displayed & " with status: " + Me![cmb_StatusView].Column(1)
-'    End If
-'        'Flag on the txt_displayed box when statuses are selected which will only show probands
         
+       'Ensure the text in txt_displayed is correct for the combination of WES_user_group and cmb_StatusView which have been selected
+        If parentsstatusesboolean = True And parentsusergroupboolean = False And IsNull(Me.WES_user_group.Column(0)) Then
+             Me.txt_displayed = Me.txt_displayed & " with status: " + Me![cmb_StatusView].Column(1) & vbNewLine & "Non-probands in WES Trios will not be shown when this status is selected"
+      ElseIf parentsstatusesboolean = True And parentsusergroupboolean = True Then
+          Me.txt_displayed = Me.txt_displayed & " with status: " + Me![cmb_StatusView].Column(1) & vbNewLine & "Non-probands will not be shown when this status is selected"
+      Else
+          Me.txt_displayed = Me.txt_displayed & " with status: " + Me![cmb_StatusView].Column(1)
+      End If
+           
         
         ' refresh total tally
         
@@ -549,13 +536,15 @@ If Not IsNull(cmb_StatusView) Then
         'Debug.Print subfrmSQL
         [Form_s87020_ExomeLabList].Form.RecordSource = subfrmSQL
         Call update_display
-    If parentsstatusesboolean = True And parentsusergroupboolean = False Then
-        Me.txt_displayed = Me.txt_displayed & " with status: " + Me![cmb_StatusView].Column(1) & vbNewLine & "Non-probands in WES Trios will not be shown when this status is selected"
-    ElseIf parentsstatusesboolean = True And parentsusergroupboolean = True Then
-        Me.txt_displayed = Me.txt_displayed & " with status: " + Me![cmb_StatusView].Column(1) & vbNewLine & "Non-probands will not be shown when this status is selected"
-    Else
-        Me.txt_displayed = Me.txt_displayed & " with status: " + Me![cmb_StatusView].Column(1)
-    End If
+        
+     'Ensure the text in txt_displayed is correct for the combination of WES_user_group and cmb_StatusView which have been selected
+     If parentsstatusesboolean = True And parentsusergroupboolean = False Then
+         Me.txt_displayed = Me.txt_displayed & " with status: " + Me![cmb_StatusView].Column(1) & vbNewLine & "Non-probands in WES Trios will not be shown when this status is selected"
+     ElseIf parentsstatusesboolean = True And parentsusergroupboolean = True Then
+         Me.txt_displayed = Me.txt_displayed & " with status: " + Me![cmb_StatusView].Column(1) & vbNewLine & "Non-probands will not be shown when this status is selected"
+     Else
+         Me.txt_displayed = Me.txt_displayed & " with status: " + Me![cmb_StatusView].Column(1)
+     End If
        
         
         ' refresh total tally
@@ -1225,6 +1214,8 @@ Function update_display()
     ' Set variable bound to the text box - this variable can be further modified by other functions
     'Flag to users that non-probands are filtered in some statuses when the WES user group is selected
     
+    'Ensure correct text in txt_displayed for WES_user_group and status
+    'Ensure that when statuses are selected when non-probands will show up, the filtered txt_displayed message is not shown
      If parentsusergroupboolean = True And parentsstatusesboolean = False And IsNull(cmb_StatusView) Then
         Me.txt_displayed = "All " & user_type_display & " tests currently in progress" & vbNewLine & "Some non-probands in WES Trios with certain statuses will not be shown below"
      ElseIf parentsusergroupboolean = True And parentsstatusesboolean = False And Me.cmb_StatusView <> "1202218808" Or Me.cmb_StatusView <> "1202218809" Or Me.cmb_StatusView <> "1202218810" Or Me.cmb_StatusView <> "1202218811" Or Me.cmb_StatusView <> "1202218812" Or Me.cmb_StatusView <> "1202218813" Or Me.cmb_StatusView <> "1202218814" Or Me.cmb_StatusView <> "1202218815" Or Me.cmb_StatusView <> "1202218816" Or Me.cmb_StatusView <> "1202218822" Or Me.cmb_StatusView <> "1202218857" Or Me.cmb_StatusView <> "1202218863" Or Me.cmb_StatusView <> "1202218864" Or Me.cmb_StatusView <> "1202218865" Or Me.cmb_StatusView <> "1202218866" Or Me.cmb_StatusView <> "1202218867" Or Me.cmb_StatusView <> "1202218868" Or Me.cmb_StatusView <> "1202218869" Or Me.cmb_StatusView <> "1202218870" Or Me.cmb_StatusView <> "2" Or Me.cmb_StatusView <> "4" Then
@@ -1232,9 +1223,7 @@ Function update_display()
     Else
         Me.txt_displayed = "All " & user_type_display & " tests currently in progress"
     End If
-   Debug.Print "This is what usergroupboolean:" & parentsusergroupboolean
-   Debug.Print "This is what statusboolean:" & parentsstatusesboolean
-   Debug.Print "This is what cmb_statusview" & cmb_StatusView
+  
 End Function
 
 
