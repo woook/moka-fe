@@ -11,8 +11,8 @@ End Sub
 Private Sub By_DblClick(Cancel As Integer)
     
     Dim Sql As String
-    sql = "UPDATE ArrayLabelling SET ArrayLabelling.Labeller = [Hyb'ed by? (AD: 1201865664 AER:1201865631 DER: 1201865538 RB: 1165930735 SE: 1201865641 SS: 1201865626 )] WHERE ArrayLabelling.Labeller Is Null"
-    DoCmd.RunSQL sql
+    Sql = "UPDATE ArrayLabelling SET ArrayLabelling.Labeller = [Hyb'ed by? (AD: 1201865664 AER:1201865631 DER: 1201865538 RB: 1165930735 SE: 1201865641 SS: 1201865626 ASS: 1201865678 )] WHERE ArrayLabelling.Labeller Is Null"
+    DoCmd.RunSQL Sql
     Me.Requery
     
 End Sub
