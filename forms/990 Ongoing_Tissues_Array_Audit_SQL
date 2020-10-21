@@ -1,0 +1,4 @@
+SELECT ArrayTest.SpecimenNo, Patients.BookinLastName, Patients.BookinFirstName, v_DNALabellingHybPatients.HybID, ArrayTest.InternalPatientID, dbo_specimenlinked.DateReceived, Status.Status_old
+FROM (Status INNER JOIN (v_DNALabellingHybPatients INNER JOIN (Patients INNER JOIN ArrayTest ON Patients.InternalPatientID = ArrayTest.InternalPatientID) ON v_DNALabellingHybPatients.DNALabellingID = ArrayTest.DNALabellingID) ON Status.StatusID = ArrayTest.StatusID) INNER JOIN dbo_specimenlinked ON ArrayTest.SpecimenNo = dbo_specimenlinked.SpecimenTrustID
+WHERE (((dbo_specimenlinked.DateReceived) Between [Ongoing Tissues Audit: Please enter a start date in the format DD/MM/YYYY] And DateAdd("d",1,[Ongoing Tissues Audit: Please enter an end date in the format DD/MM/YYYY])) AND ((dbo_specimenlinked.SpecimenTypeID)=9) AND ((Status.StatusID)<>4 And (Status.StatusID)<>1168443127))
+ORDER BY dbo_specimenlinked.DateReceived;
