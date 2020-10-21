@@ -1,0 +1,8 @@
+Option Compare Database
+
+''When user double clicks Ongoing Tissues Audit on the menu open this form
+Private Sub status_DblClick(Cancel As Integer)
+    Dim stDocName As String
+    stDocName = "990 Ongoing_Tissues_Array_Audit"
+    DoCmd.OpenForm stDocName
+End Sub
