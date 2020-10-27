@@ -19,11 +19,10 @@ Me.cmb_StatusView.Value = Null
 
 
 Cmb_Approver.Visible = False
-Me.txt_displayed = "SELECT A FILTER TO VIEW CASES"
-update_referral CallBtnView:=False
+
 'Ensures that the btn_ViewAll_Click function is not called in this instance, as part of the update_referral function
 'This is to speed up the loading time of this form for users
-
+update_referral CallBtnView:=False
 
 End Sub
  Function TrioFiltering()
@@ -41,7 +40,6 @@ If Me.WES_user_group.Column(1) = "WES Trio" Then
                "(NGSTest.StatusID)<>1202218869 And (NGSTest.StatusID)<>1202218870 And (NGSTest.StatusID)<>2 And (NGSTest.StatusID)<>4))"
                FilteringTriosUserGroup = "NGSTest.NGSTestID In (SELECT NGSTest.NGSTestID FROM NGSTest WHERE (((Status.StatusID)<>1202218787 And (Status.StatusID)<>4 And (Status.StatusID)<>1202218816 And (NGSAnalysis.Pedigree)=3302) OR  " & ParentStatusID & "))"
 End If
-
 
 'This will filter non-probands when certain statuses are selected in the cmb_StatusView drop down box
 'FilteringTriosStatusBoolean facilitates filtering and setting the text displayed on the dashboard to users
@@ -76,7 +74,6 @@ Dim AllTotal As Long
 Cmb_Approver.Visible = False
 ' Deselct all selected samples
 Check_selectAll.Value = False
-
 
 'refresh selection count
 AllTotal = DCount("NGSTestID", "s87020_ListWESSamples", "[s_StatusOverall] = 1202218798")
