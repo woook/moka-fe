@@ -38,7 +38,7 @@ If Me.WES_user_group.Column(1) = "WES Trio" Then
                "(NGSTest.StatusID)<>1202218812 And (NGSTest.StatusID)<>1202218813 And (NGSTest.StatusID)<>1202218814 And (NGSTest.StatusID)<>1202218815 And (NGSTest.StatusID)<>1202218816 And (NGSTest.StatusID)<>1202218822 And (NGSTest.StatusID)<>1202218857 And " & _
                "(NGSTest.StatusID)<>1202218863 And (NGSTest.StatusID)<>1202218864 And (NGSTest.StatusID)<>1202218865 And (NGSTest.StatusID)<>1202218866 And (NGSTest.StatusID)<>1202218867 And (NGSTest.StatusID)<>1202218868 And " & _
                "(NGSTest.StatusID)<>1202218869 And (NGSTest.StatusID)<>1202218870 And (NGSTest.StatusID)<>2 And (NGSTest.StatusID)<>4))"
-               FilteringTriosUserGroup = "NGSTest.NGSTestID In (SELECT NGSTest.NGSTestID FROM NGSTest WHERE (((Status.StatusID)<>1202218787 And (Status.StatusID)<>4 And (Status.StatusID)<>1202218816 And (NGSAnalysis.Pedigree)=3302) OR  " & ParentStatusID & "))"
+               FilteringTriosUserGroup = "NGSTest.NGSTestID In (SELECT NGSTest.NGSTestID FROM NGSTest WHERE (((Status.StatusID)<>1202218787 And (Status.StatusID)<>4 And (Status.StatusID)<>1202218816 And (NGSAnalysis.Pedigree)=3302) OR  " & FilteredStatuses & "))"
 End If
 
 'This will filter non-probands when certain statuses are selected in the cmb_StatusView drop down box
