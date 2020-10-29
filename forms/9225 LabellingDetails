@@ -28,8 +28,8 @@ If (Response = vbOK And Not (Recordset.BOF And Recordset.EOF)) Then
     Dim rn As String
     rn = InputBox("Run number? e.g. 100722")
     Dim t As String
-    Do Until t = "RB" Or t = "AER" Or t = "SE" Or t = "DER" Or t = "AD" Or t = "SS"
-        t = InputBox("Who is labelling? (RB / AER / SE / DER / AD / SS)")
+    Do Until t = "RB" Or t = "AER" Or t = "SE" Or t = "DER" Or t = "AD" Or t = "SS" Or t = "ASS"
+        t = InputBox("Who is labelling? (RB / AER / SE / DER / AD / SS / ASS)")
     Loop
     If t = "SS" Then
         t = 1201865626
@@ -43,6 +43,8 @@ If (Response = vbOK And Not (Recordset.BOF And Recordset.EOF)) Then
         t = 1201865538
         ElseIf t = "AD" Then
         t = 1201865664
+        ElseIf t = "ASS" Then
+        t = 1201865678
         End If
     Dim rc3 As Integer
     rc3 = 0
