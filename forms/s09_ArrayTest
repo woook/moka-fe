@@ -567,7 +567,7 @@ If vbYes = MsgBox("Generate reporting email for this case?", vbYesNo + vbQuestio
         scriptPath = "\\gstt.local\Apps\Moka\Files\Software\100K\generate_email.py"
         ' Build command
         script_command = "cmd.exe /S /C " & pythonPath & " " & scriptPath
-        script_command = script_command & " --to dnadutyscientist@viapath.co.uk "
+        script_command = script_command & " --to ViapathGeneticsOffice@gstt.nhs.uk "
         If Me.Priority = True Then
             script_command = script_command & " --subject ""URGENT authorised array report " & PRU & " to send"""
         Else
