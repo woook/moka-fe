@@ -1,0 +1,10 @@
+Private Sub Combo32_DblClick(Cancel As Integer)
+'''Open best practice guideline on double click
+Dim filepath As String
+Dim objShell As Object
+
+Set objShell = CreateObject("Wscript.Shell")
+'''set path to pdf
+objShell.Run "\\gstt.local\shared\Genetics_Data2\Array\Documents\Recommendations-for-the-use-of-chromosome-microarray-in-pregnancy.pdf"
+
+End Sub
