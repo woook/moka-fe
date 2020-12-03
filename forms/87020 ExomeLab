@@ -15,7 +15,9 @@ Me.cmb_BatchView.Value = Null
 Me.cmb_StatusView.Value = Null
 
 Cmb_Approver.Visible = False
-Call update_referral
+'Ensures that the btn_ViewAll_Click function is not called in this instance, as part of the update_referral function
+'This is to speed up the loading time of this form for users
+update_referral CallBtnView:=False
 
 End Sub
 
@@ -42,7 +44,7 @@ Dim AllTotal As Long
 Cmb_Approver.Visible = False
 ' Deselct all selected samples
 Check_selectAll.Value = False
-Call Unselect
+
 
 
 'refresh selection count
@@ -551,9 +553,9 @@ End Sub
 
 Private Sub btn_BatchAssign_Click()
 ' Assign a/multile WES tests to a Batch
-Dim rsWES As dao.Recordset
-Dim rsAssign As dao.Recordset
-Dim rsBatch As dao.Recordset
+Dim rsWES As DAO.Recordset
+Dim rsAssign As DAO.Recordset
+Dim rsBatch As DAO.Recordset
 Dim batchTotal As Long
 Dim selTotal As Long
 Dim strSQL As String
@@ -800,7 +802,7 @@ End Sub
 
 
 Private Sub btn_UpdateStatus_Click()
-Dim rsStatus As dao.Recordset
+Dim rsStatus As DAO.Recordset
 Dim selTotal As Long
 Dim strStatus As String
 Dim usr As String
@@ -1111,7 +1113,9 @@ Private Sub WES_user_group_AfterUpdate()
         Call update_display
     End If
 End Sub
-Function update_referral()
+Function update_referral(Optional CallBtnView As Boolean = True) As Long
+
+     '' Optional argument in place so that CallBtnViewAll is set to false on Form_Load which will speed up form loadin
     '' This function alters the includeReferrals variable to filter the subform to display all samples, or only WES or only EB samples
     '' InclueReferrals is a string used in WHERE clause of subform recordsource
     
@@ -1127,7 +1131,11 @@ Function update_referral()
     End If
     
     ' call the function which refreshes the subform, using the new includeReferral variable
-    Call btn_ViewAll_Click
+     ' If CallBtnViewAll = True this function will call btn_ViewAll_Click
+
+    If CallBtnView Then
+        Call btn_ViewAll_Click
+    End If
     
 End Function
 Function update_display()
