@@ -1050,6 +1050,7 @@ Private Sub StatusID_AfterUpdate()
     Dim Q As ADODB.Recordset
     Dim U As ADODB.Recordset
     Dim rs As ADODB.Recordset
+    Dim rsTestGroup As ADODB.Recordset
     Dim l As String
     Dim v As String
     Dim b As String
@@ -1059,10 +1060,68 @@ Private Sub StatusID_AfterUpdate()
     
     Set Q = New ADODB.Recordset
     Set U = New ADODB.Recordset
+   
     
     dt = Format(Now, "dd/mmm/yyyy Hh:Nn:ss")
     usr = VBA.Environ("USERNAME")
     cn = VBA.Environ("COMPUTERNAME")
+
+    
+    'If patient is in a trio, update the status of all the other memebers of that trio to the same status
+    If Me.[Referral] = "WES Trio" Then
+            
+    ' Save the record on the form before updating with vba SQL to prevent write conflict
+    ' As the patient currently on the form will have just been update by the bound drop down box
+        Me.Dirty = False
+        'Iterate over all NGSTests linked by NGSAnalysis and update NGSTest.StatusID to the one selected in the StatusID drop down
+        'When any memeber of a trio is selected, the others linked to them via NGSAnalysis group ID will also be updated
+         ' Get an array of all ngstests with the same NGSAnalysis group ID as the current NGSTestID
+        Set rsTestGroup = New ADODB.Recordset
+        sqlGroupedNGSTests = "SELECT ngstestid, internalpatientid " & _
+                             "  FROM ngsanalysis                  " & _
+                             " WHERE ngsanalysisgroupid =         " & _
+                             "       (SELECT ngsanalysisgroupid   " & _
+                             "          FROM ngsanalysis          " & _
+                             "               LEFT JOIN ngstest    " & _
+                             "                      ON ngstest.ngstestid = ngsanalysis.ngstestid " & _
+                             "         WHERE ngstest.ngstestid = " & Me.[NGSTestID] & " ) "
+        rsTestGroup.Open sqlGroupedNGSTests, CurrentProject.Connection, adOpenKeyset
+        ' Display a warining to the user that they are updating all the patients in the trios status
+                If (rsTestGroup.RecordCount > 1) And MsgBox("NGSTestID " & Me.[NGSTestID] & " is in a group of " & rsTestGroup.RecordCount & " tests. You are about to update the status of all other tests in this group. Continue?", vbYesNo Or vbExclamation, "Update all tests in referral group?") = vbNo Then
+                    Cancel = True
+                    Exit Sub
+                End If
+        
+                ' Iterate over all NGSTests linked by NGSAnalysis and update their status to what is in the StatusID drop down
+                With rsTestGroup
+                       .MoveLast
+                       .MoveFirst
+                           While (Not .EOF)
+                                        ' SQL to update statuses
+                                        strUpd8Status = "UPDATE NGSTest " & _
+                                                        "   SET StatusID = " & Me!StatusID.Column(0) & _
+                                                        " WHERE NGSTest.NGSTestID = " & rsTestGroup!NGSTestID
+                                                        
+                                     ' update patient log
+                                        strLogSQL = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) " & _
+                                                       "VALUES(" & rsTestGroup!InternalPatientID & ",'NGS: WES test status updated to " + Me!StatusID.Column(1) + " for test requested " & Me![DateRequested] & " NGS testID " & rsTestGroup!NGSTestID & ". ',#" + dt + "#,'" + usr + "','" + cmp + "')"
+                                        strLogMemo = "INSERT INTO NGSLogMemo(InternalPatientID, Type, LinkID, LogMemoEntry, [Date], Login, PCName) " & _
+                                                           "VALUES (" + CStr(rsTestGroup!InternalPatientID) + ", 1, " + CStr(rsTestGroup!NGSTestID) + ",'NGS WES test status updated to: " + Me!StatusID.Column(1) + "' ,#" + dt + "#,'" + usr + "','" + cn + "')"
+                                        
+                                        DoCmd.SetWarnings False
+                                        DoCmd.RunSQL strUpd8Status
+                                        DoCmd.RunSQL strLogSQL
+                                        DoCmd.RunSQL strLogMemo
+                                        DoCmd.SetWarnings True
+                                           .MoveNext
+                           Wend
+                End With
+    End If
+         ' Clear the rsTestGroup recordset for reuse in future loops
+         rsTestGroup.Close
+         Set rsTestGroup = Nothing
+    
+
     
     ' If status is changed to 'Batching' check if WES test has been assigned to a WES Batch. If user confrms continuation remove sample from named WES batch
     If Me.StatusID = 1202218803 And Not IsNull(Me.WESBatch) Then
@@ -1095,8 +1154,10 @@ Private Sub StatusID_AfterUpdate()
         End If
     ' if the status == test failed
     ElseIf Me.StatusID = 1202218816 Then
+    
+        
         ' set query to change patient status to complete
-        update_query = "Update Patients Set s_StatusOverall = 4 where InternalPatientID = " & CStr(Me![InternalPatientID])
+        update_query = "UPDATE Patients SET s_StatusOverall = 4 WHERE InternalPatientID = " & CStr(Me![InternalPatientID])
         ' create recordset for the update query
         Set rs = New ADODB.Recordset
         ' execute the update query
