@@ -1046,38 +1046,36 @@ ElseIf (Me.StatusID = 1202218811 Or Me.StatusID = 1202218812) And IsNull(Me.Pare
 End If
 End Sub
 
-
+' This function will update the status of the rest of the people in duo or trio to match the person on the board
+' It will also update the logs to state the changes that have been made
+' It will change things for singletons as well
 Private Sub StatusID_AfterUpdate()
 
-    Dim Q As ADODB.Recordset
-    Dim U As ADODB.Recordset
-    Dim rs As ADODB.Recordset
     Dim rsTestGroup As ADODB.Recordset
     Dim l As String
-    Dim m As String
     Dim v As String
     Dim b As String
     Dim dt As String
     Dim usr As String
     Dim cn As String
     Dim Selection As Integer
-    
-    
-    Set Q = New ADODB.Recordset
-    Set U = New ADODB.Recordset
-   
-    
+    Dim counter As Integer
+    Dim countertwo As Integer
+  
     dt = Format(Now, "dd/mmm/yyyy Hh:Nn:ss")
     usr = VBA.Environ("USERNAME")
     cn = VBA.Environ("COMPUTERNAME")
     
-  
+    ' Counters to be used to determine if pop ups flag up or not
+     counter = 0
+     countertwo = 0
     ' Save the record on the form before updating with vba SQL to prevent write conflict
     ' As the patient currently on the form will have just been update by the bound drop down box
         Me.Dirty = False
-        'Iterate over all NGSTests linked by NGSAnalysis and update NGSTest.StatusID to the one selected in the StatusID drop down
-        'When any memeber of a trio is selected, the others linked to them via NGSAnalysis group ID will also be updated
-         ' Get an array of all ngstests with the same NGSAnalysis group ID as the current NGSTestID
+        ' Iterate over all NGSTests linked by NGSAnalysis and update NGSTest.StatusID to the one selected in the StatusID drop down
+        ' When any memeber of a trio is selected, the others linked to them via NGSAnalysis group ID will also be updated
+        ' Get an array of all ngstests with the same NGSAnalysis group ID as the current NGSTestID
+        ' If the patient is not in a trio, still get a recordset following these rules
         Set rsTestGroup = New ADODB.Recordset
         sqlGroupedNGSTests = "SELECT ngstestid, internalpatientid, daterequested " & _
                              "  FROM ngsanalysis                  " & _
@@ -1088,67 +1086,158 @@ Private Sub StatusID_AfterUpdate()
                              "                      ON ngstest.ngstestid = ngsanalysis.ngstestid " & _
                              "         WHERE ngstest.ngstestid = " & Me.[NGSTestID] & " ) "
         rsTestGroup.Open sqlGroupedNGSTests, CurrentProject.Connection, adOpenKeyset
-
-        ' If status is changed to 'Batching' check if WES test has been assigned to a WES Batch. If user confrms continuation remove sample from named WES batch
-            If Me.StatusID = 1202218803 And Not IsNull(Me.WESBatch) Then
-                With rsTestGroup
-                Debug.Print rsTestGroup!NGSTestID
-                Debug.Print "This is first if"
-                    If MsgBox("This test has already been assigned to WES Batch: " & Me![WESBatch] & vbNewLine & "Continuing will remove " & rsTestGroup.RecordCount & " test from this WES Batch." & vbNewLine & vbNewLine & "Do you wish to proceed?", vbYesNo Or vbExclamation, "TEST ALREADY ASSIGNED TO WES BATCH") = vbNo Then
-                    Selection = 0 ' user wants to cancel
-                    Else
-                    Selection = 1 ' user wants to continue
+        With rsTestGroup
+            While (Not .EOF)
+            ' If status is changed to 'Batching' check if WES test has been assigned to a WES Batch. If user confrms continuation remove sample from named WES batch
+                If Me.StatusID = 1202218803 And Not IsNull(Me.WESBatch) Then
+                    Debug.Print rsTestGroup!NGSTestID
+                    Debug.Print "This is first if"
+                    ' In a trio, display the pop up box once for each group instead of for each patient in test group
+                     If counter < 1 Then
+                        If MsgBox("This test has already been assigned to WES Batch: " & Me![WESBatch] & vbNewLine & "Continuing will remove " & rsTestGroup.RecordCount & " test from this WES Batch." & vbNewLine & vbNewLine & "Do you wish to proceed?", vbYesNo Or vbExclamation, "TEST ALREADY ASSIGNED TO WES BATCH") = vbNo Then
+                        Selection = 0 ' User wants to cancel
+                        Else
+                        Selection = 1 ' User wants to continue
+                        counter = counter + 1
+                        End If
                     End If
-                        While (Not .EOF)
-                            If Selection = 0 Then
-                                Debug.Print "When user clicks no first for batching"
-                                Debug.Print rsTestGroup!NGSTestID
-                                strUpd8Status = "UPDATE NGSTest SET NGSTest.StatusID = 1202218807 WHERE NGSTest.NGSTestID = " & rsTestGroup!NGSTestID ' set status to assessment by default
-                                l = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" & rsTestGroup!InternalPatientID & ",'NGS: WES test status updated to " & Me![StatusID].Column(1) & " as default. For test requested " & rsTestGroup!DateRequested & ".',#" + dt + "#,'" + usr + "','" + cn + "')"
-                                v = "INSERT INTO NGSLogMemo(InternalPatientID, Type, LinkID, LogMemoEntry, [Date], Login, PCName) VALUES(" & rsTestGroup!InternalPatientID & ", 1, " & rsTestGroup!NGSTestID & ",'NGS: WES test status updated to: " & Me![StatusID].Column(1) & ".',#" + dt + "#,'" + usr + "','" + cn + "')"
-                                DoCmd.SetWarnings False
-                                DoCmd.RunSQL strUpd8Status
-                                DoCmd.RunSQL l
-                                DoCmd.RunSQL v
-                                DoCmd.SetWarnings True
-                                .MoveNext
-                                Cancel = True
-                        Wend
-                            Else
-                                If MsgBox("This test has already been assigned to WES Batch: " & Me![WESBatch] & vbNewLine & "Continuing will remove " & rsTestGroup.RecordCount & " test from this WES Batch." & vbNewLine & vbNewLine & "Do you wish to proceed?", vbYesNo Or vbExclamation, "TEST ALREADY ASSIGNED TO WES BATCH") = vbNo Then
-                                Selection = 0 ' user wants to cancel
+                        
+                                ' User wants to cancel
+                                If Selection = 0 Then
+                                    Debug.Print "When user clicks no first for batching"
+                                    Debug.Print rsTestGroup!NGSTestID
+                                    ' If the user wants to cancel, automatically change the patients statuses to assesment
+                                    strUpd8Status = "UPDATE NGSTest SET NGSTest.StatusID = 1202218807 WHERE NGSTest.NGSTestID = " & rsTestGroup!NGSTestID ' set status to assessment by default
+                                    ' Update logs to reflect change made to status
+                                    l = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" & rsTestGroup!InternalPatientID & ",'NGS: WES test status updated to " & Me![StatusID].Column(1) & " as default. For test requested " & rsTestGroup!DateRequested & ".',#" + dt + "#,'" + usr + "','" + cn + "')"
+                                    v = "INSERT INTO NGSLogMemo(InternalPatientID, Type, LinkID, LogMemoEntry, [Date], Login, PCName) VALUES(" & rsTestGroup!InternalPatientID & ", 1, " & rsTestGroup!NGSTestID & ",'NGS: WES test status updated to: " & Me![StatusID].Column(1) & ".',#" + dt + "#,'" + usr + "','" + cn + "')"
+                                    ' Run the SQL strings above
+                                    DoCmd.SetWarnings False
+                                    DoCmd.RunSQL strUpd8Status
+                                    DoCmd.RunSQL l
+                                    DoCmd.RunSQL v
+                                    DoCmd.SetWarnings True
+                                    .MoveNext
+                                    Cancel = True
                                 Else
-                                Selection = 1 ' user wants to continue
-                                End If
-                                    While (Not .EOF)
-                                        If Selection = 0 Then
-                                            Debug.Print "When user clicks yes and then no for batching"
-                                            Debug.Print rsTestGroup!NGSTestID
-                                            strUpd8Status = "UPDATE NGSTest SET NGSTest.StatusID = 1202218807 WHERE NGSTest.NGSTestID = " & rsTestGroup!NGSTestID ' set status to assessment by default
-                                            l = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" & rsTestGroup!InternalPatientID & ",'NGS: WES test status updated to " & Me![StatusID].Column(1) & " as default. For test requested " & rsTestGroup!DateRequested & ".',#" + dt + "#,'" + usr + "','" + cn + "')"
-                                            v = "INSERT INTO NGSLogMemo(InternalPatientID, Type, LinkID, LogMemoEntry, [Date], Login, PCName) VALUES(" & rsTestGroup!InternalPatientID & ", 1, " & rsTestGroup!NGSTestID & ",'NGS: WES test status updated to: " & Me![StatusID].Column(1) & ".',#" + dt + "#,'" + usr + "','" + cn + "')"
-                                            DoCmd.SetWarnings False
-                                            DoCmd.RunSQL strUpd8Status
-                                            DoCmd.RunSQL l
-                                            DoCmd.RunSQL v
-                                            DoCmd.SetWarnings True
-                                            .MoveNext
-                                            Cancel = True
+                                    ' Display the pop up box once for each group instead of for each patient in test group
+                                    If countertwo < 1 Then
+                                        If MsgBox("This test has already been assigned to WES Batch: " & Me![WESBatch] & vbNewLine & "Are you sure you wish to remove " & rsTestGroup.RecordCount & " test from this WES Batch." & vbNewLine & vbNewLine & "Do you wish to proceed?", vbYesNo Or vbExclamation, "TEST ALREADY ASSIGNED TO WES BATCH") = vbNo Then
+                                        Selection = 0 ' User wants to cancel
                                         Else
-                                            Debug.Print "When user clicks yes and then yes for batching"
+                                        Selection = 1 ' User wants to continue
+                                        countertwo = countertwo + 1
                                         End If
-                                    Wend
+                                    End If
+                                            ' User wants to cancel
+                                            If Selection = 0 Then
+                                                Debug.Print "When user clicks yes and then no for batching"
+                                                Debug.Print rsTestGroup!NGSTestID
+                                                ' If the user wants to cancel, automatically change the patients statuses to assesment
+                                                strUpd8Status = "UPDATE NGSTest SET NGSTest.StatusID = 1202218807 WHERE NGSTest.NGSTestID = " & rsTestGroup!NGSTestID ' set status to assessment by default
+                                                ' Update logs to reflect change made to status
+                                                l = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" & rsTestGroup!InternalPatientID & ",'NGS: WES test status updated to " & Me![StatusID].Column(1) & " as default. For test requested " & rsTestGroup!DateRequested & ".',#" + dt + "#,'" + usr + "','" + cn + "')"
+                                                v = "INSERT INTO NGSLogMemo(InternalPatientID, Type, LinkID, LogMemoEntry, [Date], Login, PCName) VALUES(" & rsTestGroup!InternalPatientID & ", 1, " & rsTestGroup!NGSTestID & ",'NGS: WES test status updated to: " & Me![StatusID].Column(1) & ".',#" + dt + "#,'" + usr + "','" + cn + "')"
+                                                ' Run the SQL strings above
+                                                DoCmd.SetWarnings False
+                                                DoCmd.RunSQL strUpd8Status
+                                                DoCmd.RunSQL l
+                                                DoCmd.RunSQL v
+                                                DoCmd.SetWarnings True
+                                                .MoveNext
+                                                Cancel = True
+                                            Else
+                                                'Debug.Print "When user clicks yes and then yes for batching"
+                                                Debug.Print "This is when user clicks yes twice for batching "
+                                                Debug.Print rsTestGroup!NGSTestID
+                                                ' Update all the patients statuses to batching & remove their current WES batch number
+                                                strUpd8Status = "UPDATE NGSTest SET NGSTest.StatusID = 1202218803 WHERE NGSTest.NGSTestID = " & rsTestGroup!NGSTestID
+                                                strUpd8WESBatch = "UPDATE NGSTest SET WESbatch = Null WHERE NGSTest.NGSTestID = " & rsTestGroup!NGSTestID
+                                                ' Update logs to reflect change made to status
+                                                l = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" & rsTestGroup!InternalPatientID & ",'NGS: WES test status updated to " & Me![StatusID].Column(1) & " as default. For test requested " & rsTestGroup!DateRequested & ".',#" + dt + "#,'" + usr + "','" + cn + "')"
+                                                v = "INSERT INTO NGSLogMemo(InternalPatientID, Type, LinkID, LogMemoEntry, [Date], Login, PCName) VALUES(" & rsTestGroup!InternalPatientID & ", 1, " & rsTestGroup!NGSTestID & ",'NGS: WES test status updated to: " & Me![StatusID].Column(1) & ".',#" + dt + "#,'" + usr + "','" + cn + "')"
+                                                b = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" & rsTestGroup!InternalPatientID & ", ' Test removed from WES batch " & Me![WESBatch] & " form NGS test " & rsTestGroup!NGSTestID & ".',#" + dt + "#,'" + usr + "','" + cn + "')"
+                                                ' Run the SQL strings above
+                                                DoCmd.SetWarnings False
+                                                DoCmd.RunSQL strUpd8Status
+                                                DoCmd.RunSQL strUpd8WESBatch
+                                                DoCmd.RunSQL l
+                                                DoCmd.RunSQL v
+                                                DoCmd.RunSQL b
+                                                DoCmd.SetWarnings True
+                                                .MoveNext
+                                            End If
+                                End If
+                ' If the status == test failed regardless of triop
+                ElseIf Me.StatusID = 1202218816 Then
+                     Debug.Print "This if status changed to test failed"
+                     Debug.Print rsTestGroup!NGSTestID
+                       '  Display the pop up box once for each group instead of for each patient in test group
+                       If counter < 1 And Me.Referral = "WES Trio" Then
+                            If (rsTestGroup.RecordCount > 1) And MsgBox("NGSTestID " & Me.[NGSTestID] & " is in a group of " & rsTestGroup.RecordCount & " tests. You are about to update the status of all other tests in this group to test failed. Continue?", vbYesNo Or vbExclamation, "Update all tests in referral group?") = vbNo Then
+                            Debug.Print "test failed and patient in a trio"
+                            Cancel = True
+                            Exit Sub
                             End If
-                    End With
-            End If
-                   
-          
-        Me.Parent.Form.Requery
-        Set Q = Nothing
-        Set U = Nothing
-        Set rsTestGroup = Nothing
+                            counter = counter + 1
+                       End If
+                         '  If there is more than one patient in this test group update all their statuses to test failed
+                         '  If there is one patient or multiple patients in test group change patient status to complete in patients table to match ngstest status
+                         strUpd8Status = "UPDATE NGSTest SET NGSTest.StatusID = 1202218816 WHERE NGSTest.NGSTestID = " & rsTestGroup!NGSTestID
+                         update_query = "UPDATE Patients SET s_StatusOverall = 4 WHERE InternalPatientID = " & rsTestGroup!InternalPatientID
+                         ' Update logs to reflect change made to status
+                         l = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" & rsTestGroup!InternalPatientID & ",'NGS: WES test status updated to " + Me![StatusID].Column(1) + " for test requested " & rsTestGroup!DateRequested & ". Patient Status set to Complete',#" + dt + "#,'" + usr + "','" + cn + "')"
+                         v = "INSERT INTO NGSLogMemo(InternalPatientID, Type, LinkID, LogMemoEntry, [Date], Login, PCName) VALUES(" & rsTestGroup!InternalPatientID & ", 1, " & rsTestGroup!NGSTestID & ",'NGS: WES test status updated to: " & Me![StatusID].Column(1) & ". Patient Status set to Complete' ,#" + dt + "#,'" + usr + "','" + cn + "')"
+                         ' Run the SQL strings above
+                         DoCmd.SetWarnings False
+                         DoCmd.RunSQL strUpd8Status
+                         DoCmd.RunSQL update_query
+                         DoCmd.RunSQL l
+                         DoCmd.RunSQL v
+                         DoCmd.SetWarnings True
+                         .MoveNext
+                ' This will update all of the patients in the trio to the same status as the one which has been changed via the drop down box
+                ElseIf Me.Referral = "WES Trio" Then
+                     Debug.Print "This if status not changed to batching or completed"
+                     ' Display the pop up box once for each group instead of for each patient in test group
+                     If counter < 1 Then
+                        If (rsTestGroup.RecordCount > 1) And MsgBox("NGSTestID " & Me.[NGSTestID] & " is in a group of " & rsTestGroup.RecordCount & " tests. You are about to update the status of all other tests in this group. Continue?", vbYesNo Or vbExclamation, "Update all tests in referral group?") = vbNo Then
+                            Cancel = True
+                            Exit Sub
+                        End If
+                        counter = counter + 1
+                    End If
+                    ' Update everyone else in the trio to the same status
+                    strUpd8Status = "UPDATE NGSTest SET StatusID = " & Me!StatusID.Column(0) & " WHERE NGSTest.NGSTestID = " & rsTestGroup!NGSTestID
+                    ' Update logs to reflect change made to status
+                    l = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" & rsTestGroup!InternalPatientID & ",'NGS: WES test status updated to " & Me![StatusID].Column(1) & " as default. For test requested " & rsTestGroup!DateRequested & ".',#" + dt + "#,'" + usr + "','" + cn + "')"
+                    v = "INSERT INTO NGSLogMemo(InternalPatientID, Type, LinkID, LogMemoEntry, [Date], Login, PCName) VALUES(" & rsTestGroup!InternalPatientID & ", 1, " & rsTestGroup!NGSTestID & ",'NGS: WES test status updated to: " + Me![StatusID].Column(1) + "' ,#" + dt + "#,'" + usr + "','" + cn + "')"
+                    ' Run the SQL strings above
+                    DoCmd.SetWarnings False
+                    DoCmd.RunSQL strUpd8Status
+                    DoCmd.RunSQL l
+                    DoCmd.RunSQL v
+                    DoCmd.SetWarnings True
+                     .MoveNext
+                Else
+                    ' Nothing needs to happen, move to EOF and exit while and if
+                    .MoveNext
+                    Debug.Print "This is if nothing needs to happen"
+                End If
+            Wend
+        End With
         
-        End Sub
+        ' Close the record set, set all strings to null
+        ' Set record set to null
+        rsTestGroup.Close
+        Me.Parent.Form.Requery
+        l = vbNullString
+        v = vbNullString
+        b = vbNullString
+        Set rsTestGroup = Nothing
+           
+
+End Sub
 
 
 Private Sub StatusID_GotFocus()
@@ -1756,5 +1845,3 @@ Dim stDocName As String
 End Sub
 
 
-
-        
