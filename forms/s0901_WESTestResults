@@ -422,7 +422,7 @@ Private Sub Primary_Panel_DblClick(Cancel As Integer)
             rst.MoveNext
         Loop
         'Close the connection to database
-        rst.Close
+        rst.close
         Set rst = Nothing
         
     'Open folder containing file
@@ -458,7 +458,7 @@ Private Sub Secondary_Panel_DblClick(Cancel As Integer)
             rst.MoveNext
         Loop
         'Close the connection to database
-        rst.Close
+        rst.close
         Set rst = Nothing
         
     'Open folder containing file
@@ -529,7 +529,7 @@ Private Sub TertiaryPanel_DblClick(Cancel As Integer)
             rst.MoveNext
         Loop
         'Close the connection to database
-        rst.Close
+        rst.close
         Set rst = Nothing
         
     'Open folder containing file
@@ -1059,16 +1059,16 @@ Private Sub StatusID_AfterUpdate()
     Dim usr As String
     Dim cn As String
     Dim Selection As Integer
-    Dim counter As Integer
-    Dim countertwo As Integer
+    Dim Counter As Integer
+    Dim Countertwo As Integer
   
     dt = Format(Now, "dd/mmm/yyyy Hh:Nn:ss")
     usr = VBA.Environ("USERNAME")
     cn = VBA.Environ("COMPUTERNAME")
     
-    ' Counters to be used to determine if pop ups flag up or not
-     counter = 0
-     countertwo = 0
+    ' Counters to be used to determine if pop ups flag up or not for analysis groups with more than one person
+     Counter = 0
+     Countertwo = 0
     ' Save the record on the form before updating with vba SQL to prevent write conflict
     ' As the patient currently on the form will have just been update by the bound drop down box
         Me.Dirty = False
@@ -1080,39 +1080,24 @@ Private Sub StatusID_AfterUpdate()
         sqlGroupedNGSTests = " SELECT NGSAnalysis.NGSTestID, NGSAnalysis.InternalPatientID, NGSAnalysis.DateRequested, NGSTest.ReferralID " & _
                              " FROM (NGSAnalysis INNER JOIN NGSTest ON NGSAnalysis.NGSTestID = NGSTest.NGSTestID)" & _
                              " INNER JOIN Referral ON NGSTest.ReferralID = Referral.ReferralID " & _
-                            " WHERE (((NGSAnalysis.NGSAnalysisGroupID)=(SELECT NGSAnalysis.NGSAnalysisGroupID " & _
-                            " FROM NGSAnalysis INNER JOIN NGSTest ON NGSAnalysis.NGSTestID = NGSTest.NGSTestID WHERE [NGSTest].NGSTestID = " & Me.[NGSTestID] & ")))"
-'        sqlGroupedNGSTests = "SELECT ngsanalysis.ngstestid, ngsanalysis.internalpatientid, ngsanalysis.daterequested, ngstest.referralid,  " & _
-'                             "  FROM (ngsanalysis                  " & _
-'                             " INNER JOIN ngstest                 " & _
-'                             " ON ngstest.ngstestID = ngsanalysis.ngstestid ) NGSTest INNER JOIN Referral ON NGSTest.ReferralID = Referral.ReferralID)" & _
-'                             " WHERE ngsanalysisgroupid =         " & _
-'                             "       (SELECT ngsanalysisgroupid   " & _
-'                             "          FROM ngsanalysis          " & _
-'                             "               LEFT JOIN ngstest    " & _
-'                             "                      ON ngstest.ngstestid = ngsanalysis.ngstestid " & _
-'                             "         WHERE ngstest.ngstestid = " & Me.[NGSTestID] & " ) "
+                             " WHERE (((NGSAnalysis.NGSAnalysisGroupID)=(SELECT NGSAnalysis.NGSAnalysisGroupID " & _
+                             " FROM NGSAnalysis INNER JOIN NGSTest ON NGSAnalysis.NGSTestID = NGSTest.NGSTestID WHERE [NGSTest].NGSTestID = " & Me.[NGSTestID] & ")))"
         rsTestGroup.Open sqlGroupedNGSTests, CurrentProject.Connection, adOpenKeyset
         With rsTestGroup
             While (Not .EOF)
             ' If status is changed to 'Batching' check if WES test has been assigned to a WES Batch. If user confrms continuation remove sample from named WES batch
                 If Me.StatusID = 1202218803 And Not IsNull(Me.WESBatch) Then
-                    Debug.Print rsTestGroup!NGSTestID
-                    Debug.Print "This is first if"
                     ' In a trio, display the pop up box once for each group instead of for each patient in test group
-                     If counter < 1 Then
+                     If Counter < 1 Then
                         If MsgBox("This test has already been assigned to WES Batch: " & Me![WESBatch] & vbNewLine & "Continuing will remove " & rsTestGroup.RecordCount & " test from this WES Batch." & vbNewLine & vbNewLine & "Do you wish to proceed?", vbYesNo Or vbExclamation, "TEST ALREADY ASSIGNED TO WES BATCH") = vbNo Then
                         Selection = 0 ' User wants to cancel
                         Else
                         Selection = 1 ' User wants to continue
-                        counter = counter + 1
+                        Counter = Counter + 1
                         End If
                     End If
-                        
-                                ' User wants to cancel
+                               ' User wants to cancel
                                 If Selection = 0 Then
-                                    Debug.Print "When user clicks no first for batching"
-                                    Debug.Print rsTestGroup!NGSTestID
                                     ' If the user wants to cancel, automatically change the patients statuses to assesment
                                     strUpd8Status = "UPDATE NGSTest SET NGSTest.StatusID = 1202218807 WHERE NGSTest.NGSTestID = " & rsTestGroup!NGSTestID ' set status to assessment by default
                                     ' Update logs to reflect change made to status
@@ -1128,18 +1113,16 @@ Private Sub StatusID_AfterUpdate()
                                     Cancel = True
                                 Else
                                     ' Display the pop up box once for each group instead of for each patient in test group
-                                    If countertwo < 1 Then
+                                    If Countertwo < 1 Then
                                         If MsgBox("This test has already been assigned to WES Batch: " & Me![WESBatch] & vbNewLine & "Are you sure you wish to remove " & rsTestGroup.RecordCount & " test from this WES Batch." & vbNewLine & vbNewLine & "Do you wish to proceed?", vbYesNo Or vbExclamation, "TEST ALREADY ASSIGNED TO WES BATCH") = vbNo Then
                                         Selection = 0 ' User wants to cancel
                                         Else
                                         Selection = 1 ' User wants to continue
-                                        countertwo = countertwo + 1
+                                        Countertwo = Countertwo + 1
                                         End If
                                     End If
                                             ' User wants to cancel
                                             If Selection = 0 Then
-                                                Debug.Print "When user clicks yes and then no for batching"
-                                                Debug.Print rsTestGroup!NGSTestID
                                                 ' If the user wants to cancel, automatically change the patients statuses to assesment
                                                 strUpd8Status = "UPDATE NGSTest SET NGSTest.StatusID = 1202218807 WHERE NGSTest.NGSTestID = " & rsTestGroup!NGSTestID ' set status to assessment by default
                                                 ' Update logs to reflect change made to status
@@ -1154,9 +1137,6 @@ Private Sub StatusID_AfterUpdate()
                                                 .MoveNext
                                                 Cancel = True
                                             Else
-                                                'Debug.Print "When user clicks yes and then yes for batching"
-                                                Debug.Print "This is when user clicks yes twice for batching "
-                                                Debug.Print rsTestGroup!NGSTestID
                                                 ' Update all the patients statuses to batching & remove their current WES batch number
                                                 strUpd8Status = "UPDATE NGSTest SET NGSTest.StatusID = 1202218803 WHERE NGSTest.NGSTestID = " & rsTestGroup!NGSTestID
                                                 strUpd8WESBatch = "UPDATE NGSTest SET WESbatch = Null WHERE NGSTest.NGSTestID = " & rsTestGroup!NGSTestID
@@ -1177,17 +1157,14 @@ Private Sub StatusID_AfterUpdate()
                                 End If
                 ' If the status == test failed regardless of if it's a trio
                 ElseIf Me.StatusID = 1202218816 Then
-                     Debug.Print "This if status changed to test failed"
-                     Debug.Print rsTestGroup!NGSTestID
                        '  Display the pop up box once for each group instead of for each patient in test group
                         ' Using GroupTypeID ensures trios and duo are captured here
-                        If counter < 1 And Me.GroupTypeID = 14 Then
+                        If Counter < 1 And Me.GroupTypeID = 14 Then
                             If (rsTestGroup.RecordCount > 1) And MsgBox("NGSTestID " & Me.[NGSTestID] & " is in a group of " & rsTestGroup.RecordCount & " tests. You are about to update the status of all other tests in this group to test failed. Continue?", vbYesNo Or vbExclamation, "Update all tests in referral group?") = vbNo Then
-                            Debug.Print "test failed and patient in a trio"
                             Cancel = True
                             Exit Sub
                             End If
-                            counter = counter + 1
+                            Counter = Counter + 1
                        End If
                          '  If there is more than one patient in this test group update all their statuses to test failed
                          '  If there is one patient or multiple patients in test group change patient status to complete in patients table to match ngstest status
@@ -1206,14 +1183,13 @@ Private Sub StatusID_AfterUpdate()
                          .MoveNext
                 ' This will update all of the patients in rsTestGroup to the same status as the one which has been changed via the drop down box on the subform
                 ElseIf rsTestGroup.RecordCount > 1 Then
-                     Debug.Print "This if status not changed to batching or completed"
                      ' Display the pop up box once for each group instead of for each patient in test group
-                     If counter < 1 Then
+                     If Counter < 1 Then
                         If (rsTestGroup.RecordCount > 1) And MsgBox("NGSTestID " & Me.[NGSTestID] & " is in a group of " & rsTestGroup.RecordCount & " tests. You are about to update the status of all other tests in this group. Continue?", vbYesNo Or vbExclamation, "Update all tests in referral group?") = vbNo Then
                             Cancel = True
                             Exit Sub
                         End If
-                        counter = counter + 1
+                        Counter = Counter + 1
                     End If
                     ' Update everyone else in the trio to the same status
                     strUpd8Status = "UPDATE NGSTest SET StatusID = " & Me!StatusID.Column(0) & " WHERE NGSTest.NGSTestID = " & rsTestGroup!NGSTestID
@@ -1230,14 +1206,13 @@ Private Sub StatusID_AfterUpdate()
                 Else
                     ' Nothing needs to happen, move to EOF and exit while and if
                     .MoveNext
-                    Debug.Print "This is if nothing needs to happen"
                 End If
             Wend
         End With
         
         ' Close the record set, set all strings to null
         ' Set record set to null
-        rsTestGroup.Close
+        rsTestGroup.close
         Me.Parent.Form.Requery
         l = vbNullString
         v = vbNullString
