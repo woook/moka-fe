@@ -1077,14 +1077,21 @@ Private Sub StatusID_AfterUpdate()
         ' Get an array of all ngstests with the same NGSAnalysis group ID as the current NGSTestID
         ' If the patient is not in a trio, still get a recordset following these rules
         Set rsTestGroup = New ADODB.Recordset
-        sqlGroupedNGSTests = "SELECT ngstestid, internalpatientid, daterequested " & _
-                             "  FROM ngsanalysis                  " & _
-                             " WHERE ngsanalysisgroupid =         " & _
-                             "       (SELECT ngsanalysisgroupid   " & _
-                             "          FROM ngsanalysis          " & _
-                             "               LEFT JOIN ngstest    " & _
-                             "                      ON ngstest.ngstestid = ngsanalysis.ngstestid " & _
-                             "         WHERE ngstest.ngstestid = " & Me.[NGSTestID] & " ) "
+        sqlGroupedNGSTests = " SELECT NGSAnalysis.NGSTestID, NGSAnalysis.InternalPatientID, NGSAnalysis.DateRequested, NGSTest.ReferralID " & _
+                             " FROM (NGSAnalysis INNER JOIN NGSTest ON NGSAnalysis.NGSTestID = NGSTest.NGSTestID)" & _
+                             " INNER JOIN Referral ON NGSTest.ReferralID = Referral.ReferralID " & _
+                            " WHERE (((NGSAnalysis.NGSAnalysisGroupID)=(SELECT NGSAnalysis.NGSAnalysisGroupID " & _
+                            " FROM NGSAnalysis INNER JOIN NGSTest ON NGSAnalysis.NGSTestID = NGSTest.NGSTestID WHERE [NGSTest].NGSTestID = " & Me.[NGSTestID] & ")))"
+'        sqlGroupedNGSTests = "SELECT ngsanalysis.ngstestid, ngsanalysis.internalpatientid, ngsanalysis.daterequested, ngstest.referralid,  " & _
+'                             "  FROM (ngsanalysis                  " & _
+'                             " INNER JOIN ngstest                 " & _
+'                             " ON ngstest.ngstestID = ngsanalysis.ngstestid ) NGSTest INNER JOIN Referral ON NGSTest.ReferralID = Referral.ReferralID)" & _
+'                             " WHERE ngsanalysisgroupid =         " & _
+'                             "       (SELECT ngsanalysisgroupid   " & _
+'                             "          FROM ngsanalysis          " & _
+'                             "               LEFT JOIN ngstest    " & _
+'                             "                      ON ngstest.ngstestid = ngsanalysis.ngstestid " & _
+'                             "         WHERE ngstest.ngstestid = " & Me.[NGSTestID] & " ) "
         rsTestGroup.Open sqlGroupedNGSTests, CurrentProject.Connection, adOpenKeyset
         With rsTestGroup
             While (Not .EOF)
@@ -1168,12 +1175,13 @@ Private Sub StatusID_AfterUpdate()
                                                 .MoveNext
                                             End If
                                 End If
-                ' If the status == test failed regardless of triop
+                ' If the status == test failed regardless of if it's a trio
                 ElseIf Me.StatusID = 1202218816 Then
                      Debug.Print "This if status changed to test failed"
                      Debug.Print rsTestGroup!NGSTestID
                        '  Display the pop up box once for each group instead of for each patient in test group
-                       If counter < 1 And Me.Referral = "WES Trio" Then
+                        ' Using GroupTypeID ensures trios and duo are captured here
+                        If counter < 1 And Me.GroupTypeID = 14 Then
                             If (rsTestGroup.RecordCount > 1) And MsgBox("NGSTestID " & Me.[NGSTestID] & " is in a group of " & rsTestGroup.RecordCount & " tests. You are about to update the status of all other tests in this group to test failed. Continue?", vbYesNo Or vbExclamation, "Update all tests in referral group?") = vbNo Then
                             Debug.Print "test failed and patient in a trio"
                             Cancel = True
@@ -1196,8 +1204,8 @@ Private Sub StatusID_AfterUpdate()
                          DoCmd.RunSQL v
                          DoCmd.SetWarnings True
                          .MoveNext
-                ' This will update all of the patients in the trio to the same status as the one which has been changed via the drop down box
-                ElseIf Me.Referral = "WES Trio" Then
+                ' This will update all of the patients in rsTestGroup to the same status as the one which has been changed via the drop down box on the subform
+                ElseIf rsTestGroup.RecordCount > 1 Then
                      Debug.Print "This if status not changed to batching or completed"
                      ' Display the pop up box once for each group instead of for each patient in test group
                      If counter < 1 Then
